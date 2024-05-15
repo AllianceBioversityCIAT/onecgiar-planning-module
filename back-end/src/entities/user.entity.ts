@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Submission } from './submission.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { InitiativeRoles } from './initiative-roles.entity';
-
+import { History } from './history.entity';
 export enum userRole {
   USER = 'user',
   ADMIN = 'admin',
@@ -45,4 +45,8 @@ export class User {
 
   @OneToMany(() => InitiativeRoles, (initiativeRoles) => initiativeRoles.user)
   user_init_roles: InitiativeRoles[];
+
+  @OneToMany(() => History, (history) => history.user)
+  history: History[];
+
 }

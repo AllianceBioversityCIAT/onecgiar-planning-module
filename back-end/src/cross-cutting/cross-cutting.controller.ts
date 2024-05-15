@@ -1,5 +1,5 @@
 
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, Request } from '@nestjs/common';
 import { CrossCuttingService } from './cross-cutting.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
@@ -55,19 +55,19 @@ export class CrossCuttingController {
   @ApiBearerAuth()
   @ApiBody({ type: updateCrossCuttingReq })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body) {
-    return this.CrossCuttingService.update(id, body);
+  update(@Param('id') id: string, @Body() body, @Request() req) {
+    return this.CrossCuttingService.update(id, body, req.user);
   }
   @ApiBearerAuth()
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.CrossCuttingService.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    return this.CrossCuttingService.remove(id, req.user);
   }
 
   @ApiBearerAuth()
   @ApiBody({ type: updateCrossCuttingReq })
   @Post()
-  create(@Body() body) {
-    return this.CrossCuttingService.create(body);
+  create(@Body() body, @Request() req) {
+    return this.CrossCuttingService.create(body, req.user);
   }
 }

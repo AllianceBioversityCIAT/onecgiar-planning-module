@@ -29,6 +29,8 @@ import { EmailModule } from 'src/email/email.module';
 import { Email } from 'src/entities/email.entity';
 import { Variable } from 'src/entities/variable.entity';
 import { EmailService } from 'src/email/email.service';
+import { History } from 'src/entities/history.entity';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -48,7 +50,8 @@ import { EmailService } from 'src/email/email.service';
       IpsrValue,
       // InitiativeMelia,
       Email,
-      Variable
+      Variable,
+      History
     ]),
     HttpModule,
     CacheModule.register(),

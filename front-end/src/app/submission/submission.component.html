@@ -1184,13 +1184,14 @@
                               ][item.id][per.id]
                             "
                             (change)="
-                              changeEnable(
+                              changeEnable( 
                                 partner.code,
                                 wp.ost_wp.wp_official_code,
                                 item.id,
+                                item?.ipsr?.id ? item?.ipsr.title : item.title,
                                 per.id,
                                 $event
-                              )
+                              ) 
                             "
                           ></mat-checkbox>
                         </td>
@@ -1231,6 +1232,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code,
                                   item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
                                   'percent'
                                 )
                               "
@@ -1263,6 +1265,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code,
                                   item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
                                   'percent'
                                 )
                               "
@@ -1373,7 +1376,8 @@
                                     toggleNoValues(
                                       partner.code,
                                       wp.ost_wp.wp_official_code,
-                                      item.id
+                                      item.id,
+                                      item?.ipsr?.id ? item?.ipsr.title : item.title
                                     )
                                   "
                                   matTooltip="No budget assigned"
@@ -1420,6 +1424,7 @@
                                 partner.code,
                                 wp.ost_wp.wp_official_code,
                                 item.id,
+                                item?.ipsr?.id ? item?.ipsr.title : item.title,
                                 'budget'
                               )
                             "
@@ -1455,6 +1460,7 @@
                                 partner.code,
                                 wp.ost_wp.wp_official_code,
                                 item.id,
+                                item?.ipsr?.id ? item?.ipsr.title : item.title,
                                 'budget'
                               )
                             "
