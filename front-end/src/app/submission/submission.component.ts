@@ -24,6 +24,7 @@ import { InitiativesService } from "../services/initiatives.service";
 import { filter, from, iif, of, switchMap, tap } from "rxjs";
 import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
+import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
 
 @Component({
   selector: "app-submission",
@@ -830,8 +831,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     }
 
     for (let wp of this.wps) {
-      console.log('wp =>', wp)
-
       this.allData[wp.ost_wp.wp_official_code] = await this.getDataForWp(
         wp.id,
         null,
@@ -1026,7 +1025,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         if (dialogResult == true) {
           await this.submissionService.cancelSubmission(
             this.initiative_data.latest_submission.id,
-            { status: this.initiative_data.latest_submission.status }
+            { status: this.initiative_data.latest_submission.status,initiative_id: this.initiative_data.id }
           ).then(
             async () => {
               this.initiative_data = await this.submissionService.getInitiative(
@@ -1492,5 +1491,18 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id,
       this.organizationSelected
     );
+  }
+
+
+  openHistoryDialog(initiative_id: number) {
+    this.dialog
+    .open(HistoryOfChangeComponent, {
+      width: '600px',
+      maxWidth: '700px',
+      maxHeight: '500px',
+      data: {
+        initiative_id: initiative_id
+      },
+    })
   }
 }

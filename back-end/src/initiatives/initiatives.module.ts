@@ -17,6 +17,7 @@ import { WsGuard } from 'src/ws.guard';
 import { ChatGateway } from './gateway';
 import { Submission } from 'src/entities/submission.entity';
 import { EmailModule } from 'src/email/email.module';
+import { History } from 'src/entities/history.entity';
 
 
 @Module({
@@ -30,6 +31,7 @@ import { EmailModule } from 'src/email/email.module';
       User,
       Variable,
       Email,
+      History
     ]),
     HttpModule,
     UsersModule,

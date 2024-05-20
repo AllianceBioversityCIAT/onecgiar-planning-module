@@ -132,7 +132,7 @@ export class CrossCuttingService {
         history.item_name = 'Cross-Cutting';
         history.resource_property = `Delete cross-cutting`;
         history.old_value = cross.title;
-        history.new_value = cross?.description;
+        history.new_value = null;
         history.user_id = user.id;
         history.initiative_id = cross.initiative_id;
         return await this.HistoryRepository.save(history);

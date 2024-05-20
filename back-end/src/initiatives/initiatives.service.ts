@@ -20,6 +20,7 @@ import { InitiativeRoles } from 'src/entities/initiative-roles.entity';
 import { EmailService } from 'src/email/email.service';
 import { User, userRole } from 'src/entities/user.entity';
 import { ChatMessageRepositoryService } from './chat-group-repository/chat-group-repository.service';
+import { History } from 'src/entities/history.entity';
 
 @Injectable()
 export class InitiativesService {
@@ -56,6 +57,8 @@ export class InitiativesService {
     private workPackageRepository: Repository<WorkPackage>,
     @InjectRepository(InitiativeRoles)
     public iniRolesRepository: Repository<InitiativeRoles>,
+    @InjectRepository(History)
+    public historyRepository: Repository<History>,
     @InjectRepository(User)
     public userRepository: Repository<User>,
     private emailService: EmailService,
@@ -316,6 +319,18 @@ export class InitiativesService {
       throw new BadRequestException(errorMsg);
     }
   }
+
+  async getInitHistory(initiative_id: number) {
+    return await this.historyRepository.find({
+      where: {
+        initiative_id: initiative_id
+      },
+      relations: ['user', 'initiative', 'organization', 'work_package', 'period'],
+      order: {
+        id: "DESC",
+    },
+    })
+  } 
 
   async deleteRole(initiative_id, id) {
     const roles = await this.iniRolesRepository.findOne({

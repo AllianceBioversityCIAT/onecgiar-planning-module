@@ -70,8 +70,8 @@ export class SubmissionController {
   @ApiBearerAuth()
   @ApiBody({ type: updateLatestSubmitionStatus })
   @ApiBearerAuth()
-  updateLatestSubmitionStatus(@Param('id') id, @Body() data) {
-    return this.submissionService.updateLatestSubmitionStatus(id, data)
+  updateLatestSubmitionStatus(@Param('id') id, @Body() data, @Request() req) {
+    return this.submissionService.updateLatestSubmitionStatus(id, data, req.user)
   }
 
   @Post('save/:id')

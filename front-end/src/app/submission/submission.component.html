@@ -134,6 +134,16 @@
               <!-- btn-1 -->
               <div class="risk-report-button-box">
                 <button
+                  class="risk-report-button-box__btn btn--white"
+                  mat-raised-button
+                  (click)="openHistoryDialog(this.initiative_data.id)"
+                >
+                History of change
+                </button>
+              </div>
+
+              <div class="risk-report-button-box">
+                <button
                   *ngIf="!this.isCenter"
                   class="risk-report-button-box__btn btn--white"
                   mat-raised-button
@@ -917,6 +927,15 @@
             <div class="risk-report-btn-box">
               <div class="risk-report-button-box">
                 <button
+                  class="risk-report-button-box__btn btn--white"
+                  mat-raised-button
+                  (click)="openHistoryDialog(this.initiative_data.id)"
+                >
+                History of change
+                </button>
+              </div>
+              <div class="risk-report-button-box">
+                <button
                   *ngIf="!this.isCenter"
                   class="risk-report-button-box__btn btn--white"
                   mat-raised-button
@@ -935,7 +954,7 @@
                     initiative_data.official_code
                   }}/team-members"
                 >
-                  Team members
+                  Team Members
                 </button>
               </div>
 

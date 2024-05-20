@@ -137,8 +137,6 @@ export class SubmissionService {
         }
         const history = this.historyRepository.create();
         history.resource_property = data.status ? 'Mark as complete' : 'Mark as uncomplete';
-        history.old_value = oldData.status == true ? 'True' : 'False';
-        history.new_value = data.status == true ? 'True' : 'False';
         history.user_id = reqUser.id;
         history.initiative_id = data.initiative_id;
         history.organization_id = organization_code;
@@ -270,7 +268,6 @@ export class SubmissionService {
           await this.resultValuesRepository.save(value);
         }
       }
-  
       let oldWpBudgets = await this.wpBudgetRepository.find({
         where: {
           initiative_id: initiative_id,
@@ -285,8 +282,6 @@ export class SubmissionService {
           reload: true,
         });
       }
-  
-  
       let oldCross = await this.CrossCuttingRepository.find({
         where: {
           initiative_id: initiative_id,
@@ -310,7 +305,6 @@ export class SubmissionService {
           },
         );
       }
-  
       let oldIpsrValues = await this.ipsrValueRepository.find({
         where: {
           initiative_id: initiative_id,
@@ -335,7 +329,6 @@ export class SubmissionService {
           },
         );
       }
-  
       const date = new Date();
       await this.initiativeRepository.update(initiative_id, {
         last_update_at: date,
@@ -346,7 +339,6 @@ export class SubmissionService {
         where: { id: submissionObject.id },
         relations: ['user', 'phase'],
       });
-  
       if(data) {
         const admins = await this.userRepository.find({where : {
           role: userRole.ADMIN
@@ -354,31 +346,31 @@ export class SubmissionService {
         const init = await this.initiativeRepository.findOne({where : {
           id : initiative_id,
           roles: {
-            role : In(['Leader' , 'Coordinator']) 
+            role : In(['Leader' , 'Coordinator'])
           }
         },
         relations: ['roles', 'roles.user']
         })
-  
         //if (Leader && Coordinator) not exist
         const initAdmin = await this.initiativeRepository.findOne({where : {
           id : initiative_id,
         },
         })
-  
         // users (Leader && Coordinator)
         const users = init?.roles.map(d => d.user);
-  
         for(let admin of admins) {
           this.emailService.sendEmailTobyVarabel(admin, 3, initAdmin, null, null, null, null, null, null)
         }
-  
         if(users)
           for(let user of users) {
             this.emailService.sendEmailTobyVarabel(user, 4, init, null, null, null, null, null, null)
           }
-  
-      } 
+      }
+        const history = this.historyRepository.create();
+        history.resource_property = 'Submit';
+        history.user_id = user_id;
+        history.initiative_id = initiative_id;
+        await this.historyRepository.save(history);
       return data
     } catch (error) {
       throw new BadRequestException('Connection Error')
@@ -607,23 +599,33 @@ export class SubmissionService {
       } else if(key == 'value') {
         if(oldResult.value == 0 && newValues.value != 0) {
           history.resource_property = 'Add percentage';
+          history.old_value = null;
+          history.new_value = newValues.value.toString() + '%';
         } else if(oldResult.value != 0 && newValues.value != 0) {
           history.resource_property = 'Edit percentage';
+          history.old_value = oldResult.value.toString() + '%';
+          history.new_value = newValues.value.toString() + '%';
         } else {
           history.resource_property = 'Remove percentage';
+          history.old_value = oldResult.value.toString() + '%';
+          history.new_value = null;
         }
-        history.old_value = oldResult.value.toString();
-        history.new_value = newValues.value.toString();
+        
       } else if(key == 'budget') {
         if(oldResult.budget == '0' && newValues.budget != '0') {
           history.resource_property = 'Add budget';
+          history.old_value = null;
+          history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
         } else if(oldResult.budget != '0' && newValues.budget != '0') {
           history.resource_property = 'Edit budget';
+          history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
+          history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
         } else {
           history.resource_property = 'Remove budget';
+          history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
+          history.new_value = null;
         }
-        history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
-        history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
+
       }
       history.item_name = item_title;
       history.user_id = user.id;
@@ -686,13 +688,18 @@ export class SubmissionService {
 
           if(oldData.budget == '' && data.budget != '') {
             history.resource_property = 'Add total budget';
+            history.old_value = null;
+            history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
           } else if(oldData.budget != '' && data.budget != '') {
             history.resource_property = 'Edit total budget';
+            history.old_value = oldData.budget == '' ? '0' : Number(oldData.budget).toString();
+            history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
           } else {
             history.resource_property = 'Remove total budget';
+            history.old_value = oldData.budget == '' ? '0' : Number(oldData.budget).toString();
+            history.new_value = null;
           }
-          history.old_value = oldData.budget == '' ? '0' : Number(oldData.budget).toString();
-          history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
+
 
 
           history.item_name = null;
@@ -724,7 +731,7 @@ export class SubmissionService {
           if(oldData.budget == undefined && data.budget != '') {
             history.resource_property = 'Add total budget';
           } 
-          history.old_value = '0';
+          history.old_value = null;
           history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
 
 
@@ -2287,19 +2294,24 @@ export class SubmissionService {
     this.allvalueChange();
   }
 
-  async updateLatestSubmitionStatus(id, data) {
-    try {
-      const submission = await this.submissionRepository.findOne({
-        where: {
-          id: id
-        }
-      });
-  
-      submission.status = SubmissionStatus.DRAFT;
-      await this.submissionRepository.save(submission);
-    } catch (error) {
-      throw new BadRequestException('Connection Error')
-    }
+  async updateLatestSubmitionStatus(id, data, user) {
+    const submission = await this.submissionRepository.findOne({
+      where: {
+        id: id
+      }
+    });
 
+    submission.status = SubmissionStatus.DRAFT;
+    await this.submissionRepository.save(submission).then(
+      async () => {
+        const history = this.historyRepository.create();
+        history.resource_property = `Cancel submit for version Id: ${id}`;
+        history.user_id = user.id;
+        history.initiative_id = data.initiative_id;
+        await this.historyRepository.save(history);
+      }, (error) => {
+        console.log(error)
+      }
+    );
   }
 }

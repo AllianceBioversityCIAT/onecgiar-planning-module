@@ -30,6 +30,7 @@ import {
   updateRoleReq,
   updateRoleResponse,
   allowedToAccessChat,
+  getInitHistoryResponse,
 } from 'src/DTO/initiatives.dto';
 import { Initiative } from 'src/entities/initiative.entity';
 import { User } from 'src/entities/user.entity';
@@ -113,6 +114,16 @@ export class InitiativesController {
       where: { initiative_id: id },
       relations: ['user', 'organizations'],
     });
+  }
+
+  @Get(':id/history')
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    description: '',
+    type: [getInitHistoryResponse],
+  })
+  getInitHistory(@Param('id') id: number) {
+    return this.initiativesService.getInitHistory(id);
   }
 
   @Post(':initiative_id/roles')
