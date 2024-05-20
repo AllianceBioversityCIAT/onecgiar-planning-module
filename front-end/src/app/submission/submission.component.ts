@@ -831,8 +831,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     }
 
     for (let wp of this.wps) {
-      console.log('wp =>', wp)
-
       this.allData[wp.ost_wp.wp_official_code] = await this.getDataForWp(
         wp.id,
         null,
