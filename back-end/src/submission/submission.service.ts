@@ -87,12 +87,6 @@ export class SubmissionService {
       phase_id,
     });
 
-    let oldData = {
-      initiative_id: initiative_id,
-      organization_code: organization_code,
-      phase_id: phase_id,
-      status: center_status.status
-    };
 
     if (!center_status) center_status = this.centerStatusRepo.create();
     center_status.initiative_id = initiative_id;
