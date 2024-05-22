@@ -82,6 +82,16 @@ export class InitiativesController {
     return this.initiativesService.findAllFull(query, req);
   }
 
+  @Get('track')
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    description: '',
+    type: [initiativeFull],
+  })
+  async exportInitPORB() {
+    return this.initiativesService.exportInitForTrack();
+  }
+
   ///edit by me
   @Get('getAll')
   @ApiBearerAuth()
@@ -89,8 +99,8 @@ export class InitiativesController {
     description: '',
     type: [initiativeFull],
   })
-  async getAllFull(@Query() query: any, @Req() req) {
-    return this.initiativesService.getAllFull(query, req);
+  async getAllFull() {
+    return this.initiativesService.getAllFull();
   }
 
   @Get(':id')

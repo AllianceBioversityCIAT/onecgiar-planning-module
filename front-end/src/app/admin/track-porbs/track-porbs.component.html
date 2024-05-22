@@ -58,6 +58,7 @@
             <button
               class="risk-report-button-box__btn btn--chestnut"
               mat-raised-button
+              (click)="exportData()"
             >
               <mat-icon class="create-risk-1">
                 <svg
@@ -125,7 +126,7 @@
       <ng-container matColumnDef="updated by">
         <th mat-header-cell *matHeaderCellDef>Updated by</th>
         <td mat-cell *matCellDef="let element">
-          {{ element.createdAt | date : "short" }}
+          {{ getLastUpdatedBy(element.history) }}
         </td>
       </ng-container>
 
