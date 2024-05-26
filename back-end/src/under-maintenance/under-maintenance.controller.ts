@@ -8,26 +8,26 @@ export class UnderMaintenanceController {
   constructor(private underMaintenanceService: UnderMaintenanceService) {}
 
   @Get('')
-  getConstants() {
+  getMessage() {
     return this.underMaintenanceService.getUnderMaintenance();
   }
 
   @ApiBearerAuth()
   // @Roles()
   @Get('status')
-  system_publish() {
+  getStatus() {
     return this.underMaintenanceService.getStatus();
   }
 
   @ApiBearerAuth()
   @Roles()
   @Patch('update-status')
-  updatePublishValue(@Body() status: string) {
+  updateStatus(@Body() status: string) {
     return this.underMaintenanceService.changeStatus(status);
   }
 
   @Put()
-  editConstant(@Body() data: any) {
+  editMessage(@Body() data: any) {
     return this.underMaintenanceService.editUnderMaintenance(data);
   }
 }

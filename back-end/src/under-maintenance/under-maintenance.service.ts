@@ -19,21 +19,21 @@ export class UnderMaintenanceService {
   }
 
   async changeStatus(value: any) {
-    const publish = await this.underMaintenanceRepository.findOne({
+    const message = await this.underMaintenanceRepository.findOne({
       where: { id: 1 },
     });
-    publish.status = value.status;
-    return await this.underMaintenanceRepository.save(publish);
+    message.status = value.status;
+    return await this.underMaintenanceRepository.save(message);
   }
 
   async editUnderMaintenance(data: any) {
     try {
-      const constant = await this.underMaintenanceRepository.findOne({
+      const message = await this.underMaintenanceRepository.findOne({
         where: { id: data.id },
       });
 
-      constant.value = data.value;
-      return await this.underMaintenanceRepository.save(constant);
+      message.value = data.value;
+      return await this.underMaintenanceRepository.save(message);
     } catch (error) {
       console.error(error);
     }

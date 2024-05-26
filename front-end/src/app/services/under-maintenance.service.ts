@@ -14,25 +14,14 @@ export class UnderMaintenanceService {
   // }
   constructor(private http: HttpClient) {}
 
-  underMaintenanceHold: any = [];
-  k: boolean;
-
-  addToUnderMaintenanceHold(value: string) {
-    this.underMaintenanceHold.push({ value: value });
-  }
-
-  async updateSubmitStatus(status: any) {
-    const data = { status: status };
-    return firstValueFrom(
-      this.http
-        .patch(environment.api_url + `/constants/update-system-submit`, data)
-        .pipe(map((d) => d))
-    ).catch((e) => false);
-  }
-
-  async onActive(active: boolean) {
-    return (this.k = active);
-  }
+  // async updateSubmitStatus(status: any) {
+  //   const data = { status: status };
+  //   return firstValueFrom(
+  //     this.http
+  //       .patch(environment.api_url + `/constants/update-system-submit`, data)
+  //       .pipe(map((d) => d))
+  //   ).catch((e) => false);
+  // }
 
   async getUnderMaintenance() {
     return firstValueFrom(
