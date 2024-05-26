@@ -24,6 +24,7 @@ import { EmailsComponent } from "./admin/emails/emails.component";
 import { TrackPORBsComponent } from "./admin/track-porbs/track-porbs.component";
 import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
 import { UserGuard } from "./guards/under-maintenance.guard";
+import { UnderMaintenanceService } from "./services/under-maintenance.service";
 
 const routes: Routes = [
   {
@@ -105,4 +106,6 @@ const routes: Routes = [
   ],
   exports: [RouterModule],
 })
-export class AppRoutingModule {}
+export class AppRoutingModule {
+  constructor(private underMaintenanceService: UnderMaintenanceService) {}
+}

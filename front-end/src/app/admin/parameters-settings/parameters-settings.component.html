@@ -33,64 +33,94 @@
       </mat-card-content>
     </mat-card>
 
+    <div class="under-m-container">
+      <!-- step-1 -->
+      <div class="under-m-t-box">
+        <div><p class="under-title">Activate maintenance mode now</p></div>
+
+        <div class="under-icon">
+          <mat-icon
+            *ngFor="let mes of Messages"
+            class="edit-icon"
+            matTooltip="Edit Message"
+            (click)="editUnderMaintenance(mes)"
+            >edit</mat-icon
+          >
+
+          <mat-slide-toggle
+            [checked]="isActivateToggled"
+            (change)="onActivateChecked()"
+          ></mat-slide-toggle>
+        </div>
+      </div>
+
+      <!-- step-2 -->
+      <div>
+        <p class="under-m-subtitle">Message :</p>
+      </div>
+
+      <!-- step-3 -->
+      <div class="under-m-message-box">
+        <p
+          class="under-m-message"
+          *ngFor="let mes of Messages"
+          [innerHTML]="mes.value"
+        ></p>
+      </div>
+    </div>
+
     <!-- <div class="table-content">
-            <h2 class="title">Constants Table</h2>
-            <div class="table-box mat-elevation-z8">
-              <table mat-table [dataSource]="constants">
-   
-                <ng-container matColumnDef="id">
-                  <th mat-header-cell *matHeaderCellDef>
-                    <span class="h1 th-1-m">ID</span>
-                  </th>
-                  <td mat-cell *matCellDef="let element">{{ element.id }}</td>
-                </ng-container>
-          
-                <ng-container matColumnDef="lable">
-                  <th mat-header-cell *matHeaderCellDef>
-                    <span class="th-2-m">Label</span>
-                  </th>
-                  <td mat-cell *matCellDef="let element">
-                    <span class="td-3-h">{{ element.label }}</span>
-                  </td>
-                </ng-container>
-          
-                <ng-container matColumnDef="value">
-                  <th mat-header-cell *matHeaderCellDef>
-                    <span class="h3">Value</span>
-                  </th>
-                  <td mat-cell *matCellDef="let element">
-                    <span class="td-h">{{ element.value }}</span>
-                  </td>
-                </ng-container>
-          
-                <ng-container matColumnDef="action">
-                  <th mat-header-cell *matHeaderCellDef>
-                    <span class="h5">Action</span>
-                  </th>
-                  <td mat-cell *matCellDef="let element">
-                    <div class="m">
-                      <mat-icon
-                        class="edit-icon"
-                        matTooltip="Edit"
-                        (click)="editConstant(element)"
-                        >edit</mat-icon
-                      >
-                    </div>
-                  </td>
-                </ng-container>
-          
-                <tr
-                  class="table-header"
-                  mat-header-row
-                  *matHeaderRowDef="displayedColumns"
-                ></tr>
-                <tr
-                  class="table-header"
-                  mat-row
-                  *matRowDef="let row; columns: displayedColumns"
-                ></tr>
-              </table>
-            </div>
-          </div> -->
+      <h2 class="title">Constants Table</h2>
+      <div class="table-box mat-elevation-z8">
+        <table mat-table [dataSource]="constants">
+      
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>
+              <span class="h1 th-1-m">ID</span>
+            </th>
+            <td mat-cell *matCellDef="let element">{{ element.id }}</td>
+          </ng-container>
+
+
+        
+          <ng-container matColumnDef="value">
+            <th mat-header-cell *matHeaderCellDef>
+              <span class="h3">Value</span>
+            </th>
+            <td mat-cell *matCellDef="let element" [innerHTML]="element.value">
+            
+            </td>
+          </ng-container>
+
+      
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef>
+              <span class="h5">Action</span>
+            </th>
+            <td mat-cell *matCellDef="let element">
+              <div class="m">
+                <mat-icon
+                  class="edit-icon"
+                  matTooltip="Edit"
+                  (click)="editUnderMaintenance(element)"
+                  >edit</mat-icon
+                >
+              </div>
+            </td>
+          </ng-container>
+
+          <tr
+            class="table-header"
+            mat-header-row
+            *matHeaderRowDef="displayedColumns"
+          ></tr>
+          <tr
+            class="table-header"
+            mat-row
+            *matRowDef="let row; columns: displayedColumns"
+          ></tr>
+        </table>
+      </div>
+    </div> -->
   </div>
 </div>

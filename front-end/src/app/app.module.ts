@@ -62,7 +62,7 @@ import { IpsrDialogComponent } from "./admin/ipsr/ipsr-dialog/ipsr-dialog.compon
 import { PhaseInitiativesComponent } from "./admin/phases/phase-initiatives/phase-initiatives.component";
 import { AssignOrganizationsComponent } from "./assign-organizations/assign-organizations.component";
 import { SpinnerComponent } from "./spinner/spinner.component";
-
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { LoadingInterceptor } from "./loading.interceptor";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatRadioModule } from "@angular/material/radio";
@@ -79,6 +79,8 @@ import { PopoverModule } from "./share/popover/popover.module";
 import { PopoverManagementComponent } from "./admin/popover-management/popover-management.component";
 import { PopoverDialogComponent } from "./admin/popover-management/popover-dialog/popover-dialog.component";
 import { EditorModule } from "./share/editor/editor.module";
+// import { EditorModules,TINYMCE_SCRIPT_SRC } from "@tinymce/tinymce-angular";
+// import { NgxEditorModule } from "ngx-editor";
 import { TrustHTMLModule } from "./share/trust-html/trust-html.module";
 import { SortPipe } from "./share/pipes/sort.pipe";
 import { EmailsComponent } from "./admin/emails/emails.component";
@@ -88,7 +90,8 @@ import { TimeagoModule } from "ngx-timeago";
 import { CustomMessageComponent } from "./custom-message/custom-message.component";
 import { TrackPORBsComponent } from "./admin/track-porbs/track-porbs.component";
 import { HighchartsChartModule } from "highcharts-angular";
-import { UnderMaintenancePageComponent } from './under-maintenance-page/under-maintenance-page.component';
+import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
+import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-under-maintenance/edit-under-maintenance.component";
 
 @NgModule({
   declarations: [
@@ -140,6 +143,7 @@ import { UnderMaintenancePageComponent } from './under-maintenance-page/under-ma
     CustomMessageComponent,
     TrackPORBsComponent,
     UnderMaintenancePageComponent,
+    EditUnderMaintenanceComponent,
   ],
   imports: [
     BrowserModule,
@@ -159,6 +163,7 @@ import { UnderMaintenancePageComponent } from './under-maintenance-page/under-ma
     MatButtonModule,
     ReactiveFormsModule,
     MatMenuModule,
+    MatProgressSpinnerModule,
 
     NgxJsonViewerModule,
     MatFormFieldModule,
@@ -181,6 +186,7 @@ import { UnderMaintenancePageComponent } from './under-maintenance-page/under-ma
     SatPopoverModule,
     PopoverModule,
     EditorModule,
+
     TrustHTMLModule,
     ChatModule,
     HighchartsChartModule,
@@ -198,6 +204,10 @@ import { UnderMaintenancePageComponent } from './under-maintenance-page/under-ma
       useClass: LoadingInterceptor,
       multi: true,
     },
+    // {
+    //   provide: TINYMCE_SCRIPT_SRC,
+    //   useValue: "tinymce/tinymce.min.js",
+    // },
     SortPipe,
   ],
   bootstrap: [AppComponent],

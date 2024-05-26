@@ -2,42 +2,91 @@
 @import "../../sass/pages/admin-module/user-management";
 @import "../../sass/components/table-user-management";
 
-
-:host{
-    ::ng-deep.mat-mdc-slide-toggle
+:host {
+  ::ng-deep.mat-mdc-slide-toggle
     .mdc-switch.mdc-switch--selected:enabled
     .mdc-switch__handle::after {
     /* background: var(--mdc-switch-selected-handle-color, var(--mdc-theme-primary, #6200ee)); */
-    background: #9E553E !important;
+    background: #9e553e !important;
   }
 }
 
-
-
-
-:host{
-    ::ng-deep.mat-mdc-slide-toggle.mat-accent {
-        --mdc-switch-selected-focus-state-layer-color: #9E553E !important;
-        --mdc-switch-selected-handle-color: #9E553E !important;
-        --mdc-switch-selected-hover-state-layer-color: #9E553E !important;
-        --mdc-switch-selected-pressed-state-layer-color: #9E553E !important;
-        --mdc-switch-selected-focus-handle-color: ##9E553E !important;
-        --mdc-switch-selected-hover-handle-color: #9E553E !important;
-        --mdc-switch-selected-pressed-handle-color: #9E553E !important;
-        --mdc-switch-selected-focus-track-color: #9E553E !important;
-        --mdc-switch-selected-hover-track-color: #9E553E !important;
-        --mdc-switch-selected-pressed-track-color: #9E553E !important;
-        --mdc-switch-selected-track-color: #9E553E !important;
-      }
+:host {
+  ::ng-deep.mat-mdc-slide-toggle.mat-accent {
+    --mdc-switch-selected-focus-state-layer-color: #9e553e !important;
+    --mdc-switch-selected-handle-color: #9e553e !important;
+    --mdc-switch-selected-hover-state-layer-color: #9e553e !important;
+    --mdc-switch-selected-pressed-state-layer-color: #9e553e !important;
+    --mdc-switch-selected-focus-handle-color: ##9e553e !important;
+    --mdc-switch-selected-hover-handle-color: #9e553e !important;
+    --mdc-switch-selected-pressed-handle-color: #9e553e !important;
+    --mdc-switch-selected-focus-track-color: #9e553e !important;
+    --mdc-switch-selected-hover-track-color: #9e553e !important;
+    --mdc-switch-selected-pressed-track-color: #9e553e !important;
+    --mdc-switch-selected-track-color: #9e553e !important;
+  }
 }
 
-
-
-
-:hosT{
-    ::ng-deep.mat-mdc-slide-toggle
+:host {
+  ::ng-deep.mat-mdc-slide-toggle
     .mdc-switch.mdc-switch--unselected:enabled
     .mdc-switch__handle::after {
-    background: #9E553E !important;
+    background: #9e553e !important;
   }
+}
+
+.under-m-container {
+  border: 2px solid #80808033;
+  border-radius: 1rem;
+  margin-top: 9.6rem;
+  padding: 2rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.under-m-t-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  // color: #e67e22;
+  text-decoration: none;
+  border-bottom: 1px solid #0000002a;
+  padding-bottom: 2px;
+  transition: all 0.3s;
+}
+
+.under-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.under-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 3rem;
+  letter-spacing: 0.75px;
+  color: #000000;
+  margin-bottom: 0;
+}
+
+.under-m-subtitle {
+  font-family: "Poppins", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 3rem;
+  letter-spacing: 0.75px;
+  color: #000000;
+  margin-bottom: 0;
+}
+
+.under-m-message-box {
+  border: 2px solid #80808033;
+  border-radius: 1rem;
+  padding: 3.2rem;
 }

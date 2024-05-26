@@ -12,20 +12,14 @@
             class="variety-tools__logo-box__logo"
             alt="~/Frontend/images/Reporting-tool.svg"
           /> -->
-          <a
-            href=" https://reporting.cgiar.org/login"
-            target="_blank"
-            class="variety-tools__logo-box__title cool-link"
-            >Dear User,</a
-          >
         </div>
         <div class="variety-tools__text-box">
-          <p class="variety-tools__text-box__text">
-            Due to scheduled maintenance activity the Planning module will not
-            be available until May 24th (latest). Please accept our sincere
-            apologies for any inconvenience that this may cause.
-          </p>
-          <p class="variety-tools__text-box__text">Kind regards,</p>
+          <p
+            *ngFor="let item of constants"
+            class="variety-tools__text-box__text"
+            [innerHTML]="item.value"
+          ></p>
+          <!-- <p class="variety-tools__text-box__text">Kind regards,</p>
           <p class="variety-tools__text-box__text">D&D team</p>
           <p class="variety-tools__text-box__text">
             For user support kindly contact
@@ -35,7 +29,7 @@
             >
               prmstechsupport@cgiar.org &rarr;</a
             >
-          </p>
+          </p> -->
         </div>
       </div>
     </div>
