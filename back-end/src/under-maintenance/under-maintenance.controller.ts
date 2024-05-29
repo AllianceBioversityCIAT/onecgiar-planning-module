@@ -22,7 +22,7 @@ export class UnderMaintenanceController {
   @ApiBearerAuth()
   @Roles()
   @Patch('update-status')
-  updateStatus(@Body() status: string) {
+  updateStatus(@Body() status: boolean) {
     return this.underMaintenanceService.changeStatus(status);
   }
 

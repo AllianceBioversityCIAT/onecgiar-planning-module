@@ -11,6 +11,6 @@ export class underMaintenance {
   value: string;
 
   @ApiProperty()
-  @Column({ type: 'text', nullable: true })
-  status: string;
+  @Column()
+  status: boolean;
 }
