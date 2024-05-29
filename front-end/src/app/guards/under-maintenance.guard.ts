@@ -34,7 +34,7 @@ export class UserGuard {
     console.log(isUser);
 
     this.hold.push(await this.underMaintenanceService.getUnderMaintenance());
-
+    for (let item of this.hold) this.k = item[0].status;
     // if (UserGuard)
     //   if (this.k === 0) return this.router.navigateByUrl("/under");
     //   else return this.router.navigateByUrl("/");
