@@ -38,6 +38,11 @@ export class Initiative {
   @Column()
   stageId: number;
 
+
+  @ApiProperty()
+  @Column()
+  type_id: number;
+
   @ApiProperty()
   @Column()
   short_name: string;
