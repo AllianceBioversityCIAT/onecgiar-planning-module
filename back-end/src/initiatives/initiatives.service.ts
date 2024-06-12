@@ -291,6 +291,10 @@ export class InitiativesService {
   }
 
   async updateRoles(initiative_id, id, initiativeRoles: InitiativeRoles, user) {
+    const currentRole = await this.iniRolesRepository.findOne({
+      where: { id: initiativeRoles.id },
+    });
+
     let errorMsg = null;
     const found_roles = await this.iniRolesRepository.findOne({
       where: { initiative_id, id },
@@ -312,6 +316,9 @@ export class InitiativesService {
     }
     if (user.role != 'admin' && initiativeRoles.role == 'Leader')
       errorMsg = 'Only Admin Can Add Leader';
+
+    if (user.role != 'admin' && currentRole.role == 'Leader')
+      errorMsg = 'Admin Only Can edit Leader';
 
     if (!errorMsg) {
       return await this.iniRolesRepository.save(initiativeRoles);
