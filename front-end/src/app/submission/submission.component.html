@@ -767,7 +767,49 @@
                           </td>
                         </tr>
                       </ng-container>
+
                       <!-- /////////// -->
+
+                      <ng-container *ngIf="item.category == 'IPSR'">
+                        <tr *ngIf="item.isExpand">
+                          <td colspan="12">
+                            <table class="table table-sm">
+                              <thead>
+                                <th
+                                  style="
+                                    background: none;
+                                    text-align: left;
+                                    color: #0f212f;
+                                  "
+                                >
+                                  Description:
+                                </th>
+                              </thead>
+                              <tbody>
+                                <tr
+                                  style="background: none"
+                                  *ngIf="
+                                    !item?.initiativeMelia?.meliaType?.name
+                                  "
+                                >
+                                  <td
+                                    style="
+                                      background: none;
+                                      border: none;
+                                      text-align: left;
+                                      background-color: none;
+                                      font-size: 1.3rem;
+                                      color: #0f212f;
+                                    "
+                                  >
+                                    {{ item?.ipsr.description }}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </ng-container>
                     </ng-container>
                     <tr class="total">
                       <td [attr.colspan]="wp.id == 'IPSR' ? 2 : 3">
