@@ -52,30 +52,47 @@
             >Organizations<span class="star">*</span></mat-label
           >
         </div>
-
-        <ng-select
-          appendTo="body"
-          [items]="organizations | sort : 'asc' : 'acronym'"
-          bindValue="code"
-          appearance="outline"
-          bindLabel="name"
-          [multiple]="true"
-          [closeOnSelect]="false"
-          formControlName="organizations"
-          placeholder="Organizations"
-        >
-          <ng-template ng-label-tmp let-item="item">
-            <span>{{ item.acronym }}</span> -
-            <span>{{ item.name }}</span>
-          </ng-template>
-          <ng-template ng-option-tmp let-item="item" let-index="index">
-            <span>{{ item.acronym }}</span> -
-            <span>{{ item.name }}</span>
-          </ng-template>
-        </ng-select>
+        <div class="kk">
+          <ng-select
+            [appendTo]="'.kk'"
+            [items]="organizations | sort : 'asc' : 'acronym'"
+            bindValue="code"
+            appearance="outline"
+            bindLabel="name"
+            [multiple]="true"
+            [closeOnSelect]="false"
+            formControlName="organizations"
+            placeholder="Organizations"
+          >
+            <ng-template ng-optgroup-tmp ng-label-tmp let-item="item">
+              <span>{{ item.acronym }}</span> -
+              <span>{{ item.name }}</span>
+            </ng-template>
+            <ng-template ng-option-tmp let-item="item" let-index="index">
+              <span>{{ item.acronym }}</span> -
+              <span>{{ item.name }}</span>
+            </ng-template>
+          </ng-select>
+        </div>
       </div>
 
-      <!-- <div class="form-dialog-content__field--grid-column">
+      <!-- <mat-select
+      formControlName="organizations"
+      multiple
+      [compareWith]="compareOrganization"
+    >
+
+  
+      
+      <mat-option
+        *ngFor="let organization of organizations | orderSelectPipe"
+        [value]="organization"
+      >
+        {{ organization.name }}
+      </mat-option>
+    </mat-select> -->
+      <!-- 
+      <div class="form-dialog-content__field--grid-column">
         <div class="form-dialog-content__title-box">
           <mat-label class="form-dialog-content__title-box__title"
             >Organizations<span class="star">*</span></mat-label
@@ -87,8 +104,27 @@
           hideRequiredMarker
           appearance="outline"
         >
-          <mat-select formControlName="organizations" multiple>
-           
+          <mat-select
+            formControlName="organizations"
+            multiple
+            [(ngModel)]="selectedFood"
+            (ngModelChange)="kk()"
+          >
+            <mat-select-trigger>
+              <mat-chip-listbox>
+                <mat-chip
+                  *ngFor="
+                    let organization of assignOrgsForm.value.organizations
+                  "
+                  [removable]="true"
+                  (removed)="onToppingRemoved(organization)"
+                >
+                  <strong class="official-color">{{ k }}</strong>
+
+                  <mat-icon matChipRemove>cancel</mat-icon>
+                </mat-chip>
+              </mat-chip-listbox>
+            </mat-select-trigger>
 
             <mat-option
               [value]="organization.code"

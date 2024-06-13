@@ -641,3 +641,31 @@
   margin-bottom: 1.8rem !important;
   margin-left: -1rem !important;
 }
+
+:host::ng-deep .ng-dropdown-panel {
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 auto;
+  overflow: visible !important;
+  z-index: 9999999 !important;
+  display: contents !important;
+}
+
+// ::ng-deep.ng-dropdown-panel {
+//   top: 0;
+//   left: 0;
+// }
+
+// ::ng-deep.ng-select .ng-dropdown-panel {
+//   top: auto;
+//   left: auto;
+// }
+
+.kk {
+  position: relative;
+}
+
+:host ::ng-deep.ng-dropdown-panel .ng-dropdown-panel-items {
+  border: 2px solid rgba(128, 128, 128, 0.2980392157) !important;
+}

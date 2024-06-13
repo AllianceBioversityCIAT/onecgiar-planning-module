@@ -51,7 +51,12 @@ export class TrackPORBsComponent {
   result: any = [];
   pieChart: any = null;
 
-  columnsToDisplay: string[] = ["id", "title", "updated by", "status"];
+  columnsToDisplay: string[] = [
+    "official_code",
+    "title",
+    "updated by",
+    "status",
+  ];
   dataSource: MatTableDataSource<any>;
 
   async ngOnInit() {

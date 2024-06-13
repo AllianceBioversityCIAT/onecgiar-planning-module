@@ -25,6 +25,7 @@ import { History } from 'src/entities/history.entity';
 import * as XLSX from 'xlsx-js-style';
 import { join } from 'path';
 import { createReadStream, unlink } from 'fs';
+import { Result } from 'src/entities/result.entity';
 
 @Injectable()
 export class InitiativesService {
@@ -56,7 +57,7 @@ export class InitiativesService {
   constructor(
     private readonly httpService: HttpService,
     @InjectRepository(Initiative)
-    private initiativeRepository: Repository<Initiative>,
+    public initiativeRepository: Repository<Initiative>,
     @InjectRepository(WorkPackage)
     private workPackageRepository: Repository<WorkPackage>,
     @InjectRepository(InitiativeRoles)
@@ -65,6 +66,8 @@ export class InitiativesService {
     public historyRepository: Repository<History>,
     @InjectRepository(User)
     public userRepository: Repository<User>,
+    @InjectRepository(Result)
+    public resultRepository: Repository<Result>,
     private emailService: EmailService,
     private chatGroupRepositoryService: ChatMessageRepositoryService,
   ) {}
@@ -421,6 +424,10 @@ export class InitiativesService {
   }
 
   async updateRoles(initiative_id, id, initiativeRoles: InitiativeRoles, user) {
+    const currentRole = await this.iniRolesRepository.findOne({
+      where: { id: initiativeRoles.id },
+    });
+
     let errorMsg = null;
     const found_roles = await this.iniRolesRepository.findOne({
       where: { initiative_id, id },
@@ -442,6 +449,9 @@ export class InitiativesService {
     }
     if (user.role != 'admin' && initiativeRoles.role == 'Leader')
       errorMsg = 'Only Admin Can Add Leader';
+
+    if (user.role != 'admin' && currentRole.role == 'Leader')
+      errorMsg = 'Admin Only Can edit Leader';
 
     if (!errorMsg) {
       return await this.iniRolesRepository.save(initiativeRoles);

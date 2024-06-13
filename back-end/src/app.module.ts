@@ -22,6 +22,7 @@ import { AppController } from './app.controller';
 import { EmailModule } from './email/email.module';
 import { VariableModule } from './variable/variable.module';
 import { WsGuard } from './ws.guard';
+import { UnderMaintenanceModule } from './under-maintenance/under-maintenance.module';
 
 @Module({
   controllers:[AppController],
@@ -58,6 +59,7 @@ import { WsGuard } from './ws.guard';
     PopoverModule,
     EmailModule,
     VariableModule,
+    UnderMaintenanceModule,
     
   ],
 })

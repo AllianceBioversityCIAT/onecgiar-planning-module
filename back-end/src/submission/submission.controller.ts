@@ -182,7 +182,13 @@ export class SubmissionController {
                   d.category == 'EOI' ||
                   d.category == 'OUTCOME') &&
                   d?.flow_id == dd?.data?.version_id,
-            ),
+            )
+            .map((items:any)=>{
+              if(items?.related_node_id && items.category != 'WP')
+              if(items?.id)
+              items['id']=items?.related_node_id
+            return items;
+            }),
           ),
           catchError((error: AxiosError) => {
             console.error(error);

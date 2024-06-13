@@ -22,10 +22,24 @@ import { ParametersSettingsComponent } from "./admin/parameters-settings/paramet
 import { PopoverManagementComponent } from "./admin/popover-management/popover-management.component";
 import { EmailsComponent } from "./admin/emails/emails.component";
 import { TrackPORBsComponent } from "./admin/track-porbs/track-porbs.component";
+import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
+import { UserGuard } from "./guards/under-maintenance.guard";
+import { UnderMaintenanceService } from "./services/under-maintenance.service";
 
 const routes: Routes = [
-  { path: "", component: InitiativesComponent, canActivate: [AuthGuard] },
+  {
+    path: "under",
+    component: UnderMaintenancePageComponent,
+  },
+
+  {
+    path: "",
+    component: InitiativesComponent,
+    canActivate: [UserGuard],
+  },
+
   { path: "auth", component: AuthComponent },
+
   {
     path: "admin",
     component: AdminComponent,
@@ -92,4 +106,6 @@ const routes: Routes = [
   ],
   exports: [RouterModule],
 })
-export class AppRoutingModule {}
+export class AppRoutingModule {
+  constructor(private underMaintenanceService: UnderMaintenanceService) {}
+}

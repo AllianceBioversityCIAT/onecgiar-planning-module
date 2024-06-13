@@ -1,0 +1,312 @@
+@import "../../../sass/pages/admin-module/user-management";
+@import "../../../sass/layout/admin-module/user-management";
+// mat-option {
+//   cursor: url(../../../assets/shared-image/Vector-cursor.svg), pointer !important;
+// }
+// mat-form-field {
+//   width: 100%;
+// }
+
+// mat-option {
+//   cursor: url(../../../assets/shared-image/Vector-cursor.svg), pointer !important;
+// }
+
+.phase-box {
+  width: auto;
+  height: auto;
+  background-color: #ffffff;
+}
+
+// .form-dialog-header {
+//   display: flex;
+//   justify-content: space-around;
+//   align-items: center;
+//   height: 4.5rem;
+//   padding: 0 0.5rem;
+//   // border-radius: 0.2rem 0.2rem 0rem 0;
+//   background-color: #0f212f;
+
+//   &__text-box {
+//     width: 62.4rem;
+//     height: 2.4rem;
+//     font-family: "Poppins", sans-serif !important;
+
+//     font-size: 1.6rem;
+//     font-weight: 500;
+//     line-height: 2.4rem;
+//     letter-spacing: 0em;
+//     text-align: left;
+//     color: #ffffff;
+//   }
+
+//   &__icon-box {
+//     // width: 1.8rem;
+
+//     // style="background-color: #2a2e45; border: none; cursor: pointer"
+
+//     &__btn {
+//       border: none;
+//       background-color: #0f212f;
+//       cursor: pointer;
+//     }
+//   }
+// }
+.form-dialog-content {
+  max-width: 57.8rem;
+  margin: 2rem auto 2rem;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-dialog-conten-button-box-3 {
+  text-align: right;
+  margin-top: 2.5rem !important;
+}
+
+:host {
+  ::ng-deep.mat-mdc-icon-button.mat-mdc-button-base {
+    color: #0060ef !important;
+  }
+}
+
+// :host {
+//   ::ng-deep.mat-mdc-dialog-actions.mat-mdc-dialog-actions-align-end,
+//   .mat-mdc-dialog-actions[align="end"] {
+//     justify-content: flex-end;
+//     padding: 0 4rem 0 0 !important;
+//   }
+// }
+
+// :host {
+//   ::ng-deep.mdc-dialog .mdc-dialog__content {
+//     padding: 20px 24px 20px 24px !important;
+//   }
+// }
+
+textarea::-webkit-scrollbar {
+  width: 0.8rem;
+}
+
+textarea::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px #d9d9d9;
+  border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(to right bottom, #9e553e, #7c4230);
+  outline: 1px solid rgba(112, 128, 144, 0.303);
+  border-radius: 4px;
+}
+
+textarea {
+  height: 100px;
+  resize: none;
+
+  cursor: auto;
+}
+textarea::placeholder {
+  color: #ffffff;
+}
+
+.texta {
+  height: 13rem !important;
+  // margin-bottom: 3rem;
+}
+
+.m-t {
+  margin-top: 8rem !important;
+}
+.check-box {
+  position: relative;
+  bottom: -60px;
+}
+:host {
+  ::ng-deep.mat-mdc-form-field-error {
+    color: var(--mdc-theme-error, #f44336);
+    font-size: 1.3rem !important;
+    // animation: moveInBottom 0.5s ease-out 0.75s !important;
+    // animation-fill-mode: backwards !important;
+    animation-name: moveInLeft !important;
+    animation-duration: 1s !important;
+    animation-timing-function: ease-out !important;
+  }
+}
+
+@keyframes moveInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-10rem);
+  }
+  80% {
+    transform: translateX(1rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
+  }
+}
+
+@keyframes moveInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(10rem);
+  }
+  80% {
+    transform: translateX(-1rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
+  }
+}
+
+@keyframes moveInBottom {
+  0% {
+    opacity: 0;
+    transform: translateY(3rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
+  }
+}
+
+::ng-deep .mdc-text-field--invalid .mdc-notched-outline > * {
+  border-color: rgba(255, 0, 0, 0) !important;
+}
+
+.risk-report-btn-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  color: #b9b9b9;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 15px;
+  transition: all 0.3s;
+}
+
+.create-risk {
+  width: 2.1rem !important;
+  height: 2.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: -0.1rem;
+  left: 0.5rem;
+}
+
+.create-risk-2 {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: 0.4rem;
+  left: 0.5rem;
+}
+.risk-report-title-box {
+  text-align: center;
+  padding: 4.8rem 0;
+  &__title {
+    color: #0f212f;
+    text-align: center;
+    font-family: "Poppins", sans-serif !important;
+    font-size: 2.2rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+  }
+}
+
+@keyframes moveInBottom {
+  0% {
+    opacity: 0;
+    transform: translateY(3rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
+  }
+}
+
+.btn,
+.btn:link,
+.btn:visited {
+  color: #ffffff !important;
+  text-align: center;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 1.4rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  text-decoration: none;
+
+  display: inline-block;
+
+  transition: all 0.2s;
+  position: relative;
+
+  border: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+}
+.btn:hover::after {
+  transform: scaleX(1.4) scaleY(1.6);
+  opacity: 0;
+}
+
+.btn:active,
+.btn:focus {
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+}
+
+.btn--white {
+  background-color: #04030f !important;
+  color: #ffffff !important;
+}
+.btn--white::after {
+  background-color: #04030f !important;
+}
+
+.btn--chestnut {
+  background-color: #9e553e !important;
+  color: #ffffff;
+}
+.btn--chestnut::after {
+  background-color: #9e553e !important;
+}
+
+.btn--white-2 {
+  background-image: linear-gradient(to right, #436280, #30455b);
+  color: #ffffff;
+}
+.btn--white-2::after {
+  background-image: linear-gradient(to right, #436280, #30455b);
+}
+
+.btn::after {
+  content: "";
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+  border-radius: 10rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  transition: all 0.4s;
+}
+
+.btn--animated {
+  animation: moveInBottom 0.5s ease-out 0.85s;
+  animation-fill-mode: backwards;
+}

@@ -18,6 +18,8 @@ import { ChatGateway } from './gateway';
 import { Submission } from 'src/entities/submission.entity';
 import { EmailModule } from 'src/email/email.module';
 import { History } from 'src/entities/history.entity';
+import { Result } from 'src/entities/result.entity';
+
 
 
 @Module({
@@ -31,7 +33,8 @@ import { History } from 'src/entities/history.entity';
       User,
       Variable,
       Email,
-      History
+      History,
+      Result
     ]),
     HttpModule,
     UsersModule,

@@ -665,7 +665,7 @@
                                 ? item?.ipsr.title + " (" + item.value + ")"
                                 : item.title
                             }}
-                            <ng-container *ngIf="item?.ipsr?.id">
+                            <!-- <ng-container *ngIf="item?.ipsr?.id">
                               <mat-icon
                                 class="ipsr-icon"
                                 *ngIf="item?.description"
@@ -673,7 +673,7 @@
                                 matTooltipPosition="above"
                                 >help</mat-icon
                               >
-                            </ng-container>
+                            </ng-container> -->
 
                             <ng-container
                               *ngIf="item?.category == 'Cross Cutting'"
@@ -777,7 +777,57 @@
                           </td>
                         </tr>
                       </ng-container>
+
                       <!-- /////////// -->
+
+                      <!-- <ng-container *ngIf="item?.ipsr?.id">
+                        <mat-icon
+                          class="ipsr-icon"
+                          *ngIf="item?.description"
+                          [matTooltip]="item?.description"
+                          matTooltipPosition="above"
+                          >help</mat-icon
+                        >
+                      </ng-container> -->
+
+                      <ng-container *ngIf="item?.ipsr?.id">
+                        <tr *ngIf="item.isExpand">
+                          <td colspan="12">
+                            <table class="table table-sm">
+                              <thead>
+                                <th
+                                  style="
+                                    background: none;
+                                    text-align: left;
+                                    color: #0f212f;
+                                  "
+                                >
+                                  Description:
+                                </th>
+                              </thead>
+                              <tbody>
+                                <tr
+                                  style="background: none"
+                                  *ngIf="item?.description"
+                                >
+                                  <td
+                                    style="
+                                      background: none;
+                                      border: none;
+                                      text-align: left;
+                                      background-color: none;
+                                      font-size: 1.3rem;
+                                      color: #0f212f;
+                                    "
+                                  >
+                                    {{ item?.description }}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </ng-container>
                     </ng-container>
                     <tr class="total">
                       <td [attr.colspan]="wp.id == 'IPSR' ? 2 : 3">
@@ -1130,7 +1180,7 @@
                               : item.title
                           }}
                         </ng-container>
-                        <ng-container *ngIf="item?.ipsr?.id">
+                        <!-- <ng-container *ngIf="item?.ipsr?.id">
                           <mat-icon
                             class="ipsr-icon"
                             *ngIf="item?.description"
@@ -1138,7 +1188,7 @@
                             matTooltipPosition="above"
                             >help</mat-icon
                           >
-                        </ng-container>
+                        </ng-container> -->
 
                         <ng-container *ngIf="item?.category == 'Cross Cutting'">
                           <!-- <mat-icon
@@ -1153,6 +1203,53 @@
                             style="background: none; border: none; float: right"
                             (click)="item.isExpand = !item.isExpand"
                             *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
+                            <i *ngIf="!item.isExpand" class="bi-chevron-right">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="10"
+                                viewBox="0 0 16 10"
+                                fill="none"
+                              >
+                                <path
+                                  d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
+                                  fill="#0f212f"
+                                />
+                              </svg>
+                            </i>
+                            <i *ngIf="item.isExpand" class="bi-chevron-up">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="10"
+                                viewBox="0 0 16 10"
+                                fill="none"
+                              >
+                                <path
+                                  d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
+                                  fill="#0f212f"
+                                />
+                              </svg>
+                            </i>
+                          </button>
+                        </ng-container>
+
+                        <!-- /////////////////////////////////////////// -->
+
+                        <ng-container *ngIf="item?.ipsr?.id">
+                          <!-- <mat-icon
+                            class="ipsr-icon"
+                            *ngIf="item?.description"
+                            [matTooltip]="item?.description"
+                            matTooltipPosition="above"
+                            >help</mat-icon
+                          > -->
+
+                          <button
+                            style="background: none; border: none; float: right"
+                            (click)="item.isExpand = !item.isExpand"
+                            *ngIf="item?.description"
                           >
                             <i *ngIf="!item.isExpand" class="bi-chevron-right">
                               <svg
@@ -1532,6 +1629,45 @@
                                         ")"
                                       : item.description
                                   }}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </ng-container>
+
+                    <ng-container *ngIf="item?.ipsr?.id">
+                      <tr *ngIf="item.isExpand">
+                        <td colspan="12">
+                          <table class="table table-sm">
+                            <thead>
+                              <th
+                                style="
+                                  background: none;
+                                  text-align: left;
+                                  color: #0f212f;
+                                "
+                              >
+                                Description:
+                              </th>
+                            </thead>
+                            <tbody>
+                              <tr
+                                style="background: none"
+                                *ngIf="item?.description"
+                              >
+                                <td
+                                  style="
+                                    background: none;
+                                    border: none;
+                                    text-align: left;
+                                    background-color: none;
+                                    font-size: 1.3rem;
+                                    color: #0f212f;
+                                  "
+                                >
+                                  {{ item?.description }}
                                 </td>
                               </tr>
                             </tbody>

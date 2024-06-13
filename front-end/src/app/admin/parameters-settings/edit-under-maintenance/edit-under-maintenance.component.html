@@ -1,0 +1,75 @@
+<div class="form-dialog-header">
+  <div class="form-dialog-header__text-box">
+    <p class="form-dialog-header__text-box__text">Under maintenance mode</p>
+  </div>
+
+  <div class="form-dialog-header__icon-box">
+    <button class="form-dialog-header__icon-box__btn" (click)="onCloseDialog()">
+      <mat-icon class="form-dialog-header__icon-box__icon-size">
+        <img
+          class="form-dialog-header__icon-box__icon-size__icon"
+          src="../../../assets/shared-image/Vector-close.svg"
+          alt="~/Frontend/images/icon _ Vector-close"
+        />
+      </mat-icon>
+    </button>
+  </div>
+</div>
+
+<div class="form-dialog-content">
+  <form [formGroup]="constantForm" class="form-dialog-content">
+    <!-- //Email filed----- -->
+
+    <div class="form-dialog-content__field--grid-column">
+      <div class="form-dialog-content__title-box">
+        <mat-label class="form-dialog-content__title-box__title"
+          >Message</mat-label
+        >
+      </div>
+
+      <app-editor
+        [form]="constantForm"
+        [controller]="'value'"
+        [showToolbar]="true"
+        [withoutUpload]="true"
+        [placeholder]="'Ex. It should have...'"
+      ></app-editor>
+      <!-- 
+      <mat-form-field
+        class="form-dialog-content__field"
+        floatLabel="always"
+        hideRequiredMarker
+        appearance="outline"
+      >
+        <textarea
+          matInput
+          formControlName="value"
+          placeholder="value"
+        ></textarea>
+        <mat-error
+          class="error"
+          *ngIf="constantForm.controls?.value?.errors?.['required']"
+          >Value is required</mat-error
+        >
+      </mat-form-field> -->
+    </div>
+
+    <!-- //Update Button----- -->
+    <div class="form-dialog-conten-button-box-2">
+      <div class="form-dialog-conten-button-flex">
+        <div class="form-dialog-conten-button-box">
+          <div class="form-dialog-conten__button-box">
+            <button
+              class="form-dialog-conten__button-box__btn"
+              type="submit"
+              mat-raised-button
+              (click)="onSubmit()"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

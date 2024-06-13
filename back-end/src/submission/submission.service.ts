@@ -1755,7 +1755,8 @@ export class SubmissionService {
     }
     if(organization) 
       partners = partners.filter((d:any) => d.code == organization.code);
-    for (let partner of partners) {
+      partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()))
+      for (let partner of partners) {
       let mergesPartners = [];
       let ArrayOfArrays;
       if(initId)

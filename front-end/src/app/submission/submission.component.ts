@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
+import { Component, HostListener, OnDestroy, OnInit } from "@angular/core";
 
 import { SubmissionService } from "../services/submission.service";
 import { AppSocket } from "../socket.service";
@@ -893,18 +893,38 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   leaders: any[] = [];
   organizationSelected: any = "";
   initUser: any;
-  async ngOnInit() {
-    this.socket.on('disconnect', () => {
-      this.dialog
+  connectDialogState = false;
+
+  @HostListener('window:offline', ['$event'])
+  offline(event: any) {
+    this.handelDisconnect();
+  }
+
+  @HostListener('window:online', ['$event'])
+  online(event: any) {
+    this.handelConnect()
+  }
+
+  handelDisconnect = () => {
+    if (this.connectDialogState) return;
+    this.connectDialogState = true;
+    this.dialog
       .open(CustomMessageComponent, {
         disableClose: true,
       })
-    });
+  }
 
-    this.socket.on('connect', () => {
-      this.dialog.closeAll();
-      this.InitData();
-    });
+  handelConnect = () => {
+    this.connectDialogState = false;
+    this.dialog.closeAll();
+    this.InitData();
+  }
+
+
+  async ngOnInit() {
+    this.socket.on('connect_error', this.handelDisconnect);
+    this.socket.on('disconnect', this.handelDisconnect);
+    this.socket.on('connect', this.handelConnect);
     this.user = this.AuthService.getLoggedInUser();
     this.params = this.activatedRoute?.snapshot.params;
     this.phase = await this.phasesService.getActivePhase();
