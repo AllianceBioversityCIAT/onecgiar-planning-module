@@ -1,5 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import * as saveAs from "file-saver";
 import { Observable, firstValueFrom, map } from "rxjs";
 import { environment } from "src/environments/environment";
 
@@ -13,6 +14,14 @@ export class InitiativesService {
     return firstValueFrom(
       this.http
         .get(environment.api_url + "/initiatives/" + id)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
+  async getInitiativeHistory(id: number) {
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + "/initiatives/" + id + "/history")
         .pipe(map((d: any) => d))
     ).catch((e) => false);
   }
@@ -46,6 +55,17 @@ export class InitiativesService {
           .pipe(map((d: any) => d))
       );
     }
+  }
+
+  async exportInitiativesForTrackPORBs() {
+    const data = await firstValueFrom(
+      this.http
+        .get(environment.api_url+`/initiatives/track`, {
+          responseType: "blob",
+        })
+        .pipe(map((d: Blob) => d))
+    );
+    saveAs(data, 'Initiatives.xlsx')
   }
 
   async getInitiativesOnly() {

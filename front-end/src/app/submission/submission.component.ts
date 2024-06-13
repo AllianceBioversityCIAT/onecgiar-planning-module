@@ -24,6 +24,7 @@ import { InitiativesService } from "../services/initiatives.service";
 import { filter, from, iif, of, switchMap, tap } from "rxjs";
 import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
+import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
 
 @Component({
   selector: "app-submission",
@@ -119,7 +120,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       return this.totals[code][id];
   }
   timeCalc: any;
-  async changeCalc(partner_code: any, wp_id: any, item_id: any, type: string) { 
+  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title :string, type: string) { 
     if (this.timeCalc) clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
       let percentValue;
@@ -158,6 +159,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           partner_code: partner_code,
           wp_id: wp_id,
           item_id: item_id,
+          item_title: item_title,
           percent_value: percentValue,
           budget_value: budgetValue,
           no_budget: this.noValuesAssigned[partner_code][wp_id][item_id],
@@ -234,10 +236,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       !this.toggleSummaryValues[wp_official_code];
   }
 
-  async toggleNoValues(partner_code: any, wp_official_code: any, item_id: any) {
+  async toggleNoValues(partner_code: any, wp_official_code: any, item_id: any, item_name: string) {
     this.values[partner_code][wp_official_code][item_id] = 0;
     this.displayValues[partner_code][wp_official_code][item_id] = 0;
-    this.changeCalc(partner_code, wp_official_code, item_id, "percent");
+    this.changeCalc(partner_code, wp_official_code, item_id, item_name, "percent");
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -348,6 +350,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     partner_code: any,
     wp_id: any,
     item_id: any,
+    title: string,
     per_id: number,
     event: any
   ) {
@@ -361,6 +364,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         partner_code,
         wp_id,
         item_id,
+        title,
         per_id,
         value: event.checked,
         phase_id: this.phase.id,
@@ -373,7 +377,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     ) {
       this.values[partner_code][wp_id][item_id] = 0;
       this.displayValues[partner_code][wp_id][item_id] = 0;
-      this.changeCalc(partner_code, wp_id, item_id, "percent");
+      this.changeCalc(partner_code, wp_id, item_id, title, "percent");
     }
     if (result)
       this.socket.emit("setDataValues", {
@@ -878,6 +882,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
       }
     })
+
+    console.log('allData =>', this.allData)
   }
   savedValues: any = null;
   isCenter: boolean = false;
@@ -1039,7 +1045,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         if (dialogResult == true) {
           await this.submissionService.cancelSubmission(
             this.initiative_data.latest_submission.id,
-            { status: this.initiative_data.latest_submission.status }
+            { status: this.initiative_data.latest_submission.status,initiative_id: this.initiative_data.id }
           ).then(
             async () => {
               this.initiative_data = await this.submissionService.getInitiative(
@@ -1505,5 +1511,18 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id,
       this.organizationSelected
     );
+  }
+
+
+  openHistoryDialog(initiative_id: number) {
+    this.dialog
+    .open(HistoryOfChangeComponent, {
+      width: '600px',
+      maxWidth: '700px',
+      maxHeight: '500px',
+      data: {
+        initiative_id: initiative_id
+      },
+    })
   }
 }

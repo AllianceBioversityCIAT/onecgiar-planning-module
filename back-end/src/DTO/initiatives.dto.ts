@@ -539,3 +539,122 @@ export class  initiativeFull {
     @ApiProperty()
     allowed: boolean
   }
+
+
+
+  export class  Period {
+    @ApiProperty()
+    id: number;
+    @ApiProperty()
+    year: number;
+    @ApiProperty()
+    quarter: string;
+  }
+
+  export class  Workpackage {
+    @ApiProperty()
+    wp_id: number;
+    @ApiProperty()
+    name: string;
+    @ApiProperty()
+    acronym: string;
+    @ApiProperty()
+    results?: any;
+    @ApiProperty()
+    stage_id: number;
+    @ApiProperty()
+    initiative_id: number;
+    @ApiProperty()
+    pathway_content: string;
+    @ApiProperty()
+    wp_official_code: string;
+    @ApiProperty()
+    initiative_status: string;
+    @ApiProperty()
+    initiative_offical_code: string;
+  }
+  export class  Organization {
+    @ApiProperty()
+    code: number;
+    @ApiProperty()
+    name: string;
+    @ApiProperty()
+    acronym: string;
+  }
+  export class Initiatives {
+    @ApiProperty()
+    id: number;
+    @ApiProperty()
+    name: string;
+    @ApiProperty()
+    active: number;
+    @ApiProperty()
+    status: string;
+    @ApiProperty()
+    stageId: number;
+    @ApiProperty()
+    short_name: string;
+    @ApiProperty()
+    description: string;
+    @ApiProperty()
+    official_code: string;
+    @ApiProperty()
+    action_area_id: string;
+    @ApiProperty()
+    action_area_description: string;
+    @ApiProperty()
+    last_update_at: string;
+    @ApiProperty()
+    last_submitted_at: string;
+    @ApiProperty()
+    latest_submission_id: number;
+  }
+  export class  User {
+    @ApiProperty()
+    id: number;
+    @ApiProperty()
+    email: string;
+    @ApiProperty()
+    first_name: string;
+    @ApiProperty()
+    last_name: string;
+    @ApiProperty()
+    role: string;
+    @ApiProperty()
+    full_name: string;
+  }
+  export class  getInitHistoryResponse {
+    @ApiProperty()
+    id: number;
+    @ApiProperty()
+    item_name: string;
+    @ApiProperty()
+    resource_property: string;
+    @ApiProperty()
+    old_value: string;
+    @ApiProperty()
+    new_value: string;
+    @ApiProperty()
+    user_id: number;
+    @ApiProperty()
+    initiative_id: number;
+    @ApiProperty()
+    organization_id: number;
+    @ApiProperty()
+    wp_id: number;
+    @ApiProperty()
+    period_id: number;
+    @ApiProperty()
+    createdAt: string;
+    @ApiProperty()
+    user: User;
+    @ApiProperty()
+    initiative: Initiatives;
+    @ApiProperty()
+    organization: Organization;
+    @ApiProperty()
+    work_package: Workpackage;
+    @ApiProperty()
+    period: Period;
+  }
+

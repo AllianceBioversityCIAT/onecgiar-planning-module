@@ -30,6 +30,7 @@ import { CrossCutting } from 'src/entities/cross-cutting.entity';
 import { IpsrValue } from 'src/entities/ipsr-value.entity';
 // import { InitiativeMelia } from 'src/entities/initiative-melia.entity';
 import { EmailService } from 'src/email/email.service';
+import { History } from 'src/entities/history.entity';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -51,6 +52,8 @@ export class SubmissionService {
     private centerStatusRepo: Repository<CenterStatus>,
     @InjectRepository(WpBudget)
     private wpBudgetRepository: Repository<WpBudget>,
+    @InjectRepository(History)
+    private historyRepository: Repository<History>,
     private CrossCuttingService: CrossCuttingService,
     private IpsrValueService: IpsrValueService,
     private PhasesService: PhasesService,
@@ -74,7 +77,7 @@ export class SubmissionService {
       return obj;
     } else return { id: 'DESC' };
   }
-  async updateCenterStatus(data, reqUser) { 
+  async updateCenterStatus(data, reqUser) {
     const { initiative_id, organization_code, phase_id, status, organization } = data;
 
     let center_status: CenterStatus;
@@ -83,6 +86,8 @@ export class SubmissionService {
       organization_code,
       phase_id,
     });
+
+
     if (!center_status) center_status = this.centerStatusRepo.create();
     center_status.initiative_id = initiative_id;
     center_status.organization_code = organization_code;
@@ -124,13 +129,19 @@ export class SubmissionService {
             }
           }
         }
+        const history = this.historyRepository.create();
+        history.resource_property = data.status ? 'Mark as complete' : 'Mark as uncomplete';
+        history.user_id = reqUser.id;
+        history.initiative_id = data.initiative_id;
+        history.organization_id = organization_code;
+        await this.historyRepository.save(history);
       }, (error) => {
         console.error(error)
       }
     );
 
     return { message: 'Data Saved' };
-  } 
+  }
   async updateStatusBySubmittionID(id, data) {
     return await this.submissionRepository.update(id, data).then(
       async () => {
@@ -251,7 +262,6 @@ export class SubmissionService {
           await this.resultValuesRepository.save(value);
         }
       }
-  
       let oldWpBudgets = await this.wpBudgetRepository.find({
         where: {
           initiative_id: initiative_id,
@@ -266,8 +276,6 @@ export class SubmissionService {
           reload: true,
         });
       }
-  
-  
       let oldCross = await this.CrossCuttingRepository.find({
         where: {
           initiative_id: initiative_id,
@@ -291,7 +299,6 @@ export class SubmissionService {
           },
         );
       }
-  
       let oldIpsrValues = await this.ipsrValueRepository.find({
         where: {
           initiative_id: initiative_id,
@@ -316,7 +323,6 @@ export class SubmissionService {
           },
         );
       }
-  
       const date = new Date();
       await this.initiativeRepository.update(initiative_id, {
         last_update_at: date,
@@ -327,7 +333,6 @@ export class SubmissionService {
         where: { id: submissionObject.id },
         relations: ['user', 'phase'],
       });
-  
       if(data) {
         const admins = await this.userRepository.find({where : {
           role: userRole.ADMIN
@@ -335,31 +340,31 @@ export class SubmissionService {
         const init = await this.initiativeRepository.findOne({where : {
           id : initiative_id,
           roles: {
-            role : In(['Leader' , 'Coordinator']) 
+            role : In(['Leader' , 'Coordinator'])
           }
         },
         relations: ['roles', 'roles.user']
         })
-  
         //if (Leader && Coordinator) not exist
         const initAdmin = await this.initiativeRepository.findOne({where : {
           id : initiative_id,
         },
         })
-  
         // users (Leader && Coordinator)
         const users = init?.roles.map(d => d.user);
-  
         for(let admin of admins) {
           this.emailService.sendEmailTobyVarabel(admin, 3, initAdmin, null, null, null, null, null, null)
         }
-  
         if(users)
           for(let user of users) {
             this.emailService.sendEmailTobyVarabel(user, 4, init, null, null, null, null, null, null)
           }
-  
-      } 
+      }
+        const history = this.historyRepository.create();
+        history.resource_property = 'Submit';
+        history.user_id = user_id;
+        history.initiative_id = initiative_id;
+        await this.historyRepository.save(history);
       return data
     } catch (error) {
       throw new BadRequestException('Connection Error')
@@ -459,9 +464,9 @@ export class SubmissionService {
       throw new BadRequestException('getSaved error');
     }
   }
-  async saveResultData(id, data: any) {
+  async saveResultData(id, data: any, user) {
     const initiativeId = id;
-    const { partner_code, wp_id, item_id, per_id, value, phase_id } = data;
+    const { partner_code, wp_id, item_id, per_id, value, phase_id, title } = data;
 
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
@@ -514,20 +519,38 @@ export class SubmissionService {
       newResultPeriodValue.value = value;
       newResultPeriodValue.period = periodObject;
       newResultPeriodValue.result = resultObject;
-      await this.resultValuesRepository.save(newResultPeriodValue);
+      await this.resultValuesRepository.save(newResultPeriodValue).then(
+        async (data) => {
+          const history = this.historyRepository.create();
+          history.item_name = title;
+          history.resource_property = value ? 'Checked period' : 'unchecked period';
+          history.old_value = newResultPeriodValue.value == true ? 'False' : 'True';
+          history.new_value = value == true ? 'True' : 'False';
+          history.user_id = user.id;
+          history.initiative_id = id;
+          history.organization_id = partner_code;
+          history.wp_id = workPackageObject.wp_id;
+          history.period = data.period;
+          await this.historyRepository.save(history);
+        }, 
+        (error) =>{
+          console.error(error);
+        }
+      );
     }
     await this.initiativeRepository.update(initiativeId, {
       last_update_at: new Date(),
     });
     return { message: 'Data saved' };
   }
-  async saveResultDataValue(id, data: any) {
+  async saveResultDataValue(id, data: any, user) { 
     const initiativeId = id;
 
     const {
       partner_code,
       wp_id,
       item_id,
+      item_title,
       percent_value,
       budget_value,
       no_budget,
@@ -550,6 +573,64 @@ export class SubmissionService {
       phase_id
     });
 
+    const newValues = {
+      value : percent_value,
+      budget : budget_value.toString(),
+      no_budget : no_budget,
+    }
+    
+
+    const objDifference = this.getDifference(oldResult, newValues);
+
+    Object.keys(objDifference).forEach(async key => {
+      const value = objDifference[key];
+      const history = this.historyRepository.create();
+
+      if(key == 'no_budget') {
+        history.resource_property = value ? 'Checked result as no budget assigned' : 'unchecked result as no budget assigned';
+        history.old_value = value == true ? 'False' : 'True';
+        history.new_value = value == true ? 'True' : 'False';
+      } else if(key == 'value') {
+        if(oldResult.value == 0 && newValues.value != 0) {
+          history.resource_property = 'Add percentage';
+          history.old_value = null;
+          history.new_value = newValues.value.toString() + '%';
+        } else if(oldResult.value != 0 && newValues.value != 0) {
+          history.resource_property = 'Edit percentage';
+          history.old_value = oldResult.value.toString() + '%';
+          history.new_value = newValues.value.toString() + '%';
+        } else {
+          history.resource_property = 'Remove percentage';
+          history.old_value = oldResult.value.toString() + '%';
+          history.new_value = null;
+        }
+        
+      } else if(key == 'budget') {
+        if(oldResult.budget == '0' && newValues.budget != '0') {
+          history.resource_property = 'Add budget';
+          history.old_value = null;
+          history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
+        } else if(oldResult.budget != '0' && newValues.budget != '0') {
+          history.resource_property = 'Edit budget';
+          history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
+          history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
+        } else {
+          history.resource_property = 'Remove budget';
+          history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
+          history.new_value = null;
+        }
+
+      }
+      history.item_name = item_title;
+      history.user_id = user.id;
+      history.initiative_id = id;
+      history.organization_id = partner_code;
+      history.wp_id = workPackageObject.wp_id;
+      
+      await this.historyRepository.save(history);
+    });
+
+
     if (oldResult) {
       oldResult.value = percent_value;
       oldResult.budget = budget_value;
@@ -562,10 +643,14 @@ export class SubmissionService {
       last_update_at: new Date(),
     });
     return { message: 'Data saved' };
+  } 
+
+  getDifference(a,b) {
+    return Object.fromEntries(Object.entries(b).filter(([key, val]) => key in a && a[key] !== val));
   }
+  async saveWpBudget(initiativeId: number, data: any, user) { 
 
-
-  async saveWpBudget(initiativeId: number, data: any) {
+    
     const { partner_code, wp_id, budget, phaseId } = data;
     let workPackageObject = await this.workPackageRepository.findOneBy({
       wp_official_code: wp_id,
@@ -579,9 +664,49 @@ export class SubmissionService {
       phase_id: phaseId
     });
 
+    const oldData: any = {
+      initiative_id: initiativeId,
+      organization_code: partner_code,
+      wp_id: workPackageObject.wp_id,
+      budget: oldWpBudget?.budget,
+      submission_id: null,
+      phase_id: phaseId
+    };
+
     if (oldWpBudget) {
       oldWpBudget.budget = budget;
-      await this.wpBudgetRepository.save(oldWpBudget);
+
+      await this.wpBudgetRepository.save(oldWpBudget).then(
+        async (data) => {
+          const history = this.historyRepository.create();
+
+          if(oldData.budget == '' && data.budget != '') {
+            history.resource_property = 'Add total budget';
+            history.old_value = null;
+            history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
+          } else if(oldData.budget != '' && data.budget != '') {
+            history.resource_property = 'Edit total budget';
+            history.old_value = oldData.budget == '' ? '0' : Number(oldData.budget).toString();
+            history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
+          } else {
+            history.resource_property = 'Remove total budget';
+            history.old_value = oldData.budget == '' ? '0' : Number(oldData.budget).toString();
+            history.new_value = null;
+          }
+
+
+
+          history.item_name = null;
+          history.user_id = user.id;
+          history.initiative_id = initiativeId;
+          history.organization_id = partner_code;
+          history.wp_id = workPackageObject.wp_id;
+          await this.historyRepository.save(history);
+        }, 
+        (error) => {
+          console.log(error)
+        }
+      );
     } else {
       const data: any = {
         initiative_id: initiativeId,
@@ -593,14 +718,35 @@ export class SubmissionService {
       };
 
       const newWpBudget = this.wpBudgetRepository.create(data);
-      this.wpBudgetRepository.save(newWpBudget);
+      this.wpBudgetRepository.save(newWpBudget).then(
+        async (data: any) => {
+          const history = this.historyRepository.create();
+
+          if(oldData.budget == undefined && data.budget != '') {
+            history.resource_property = 'Add total budget';
+          } 
+          history.old_value = null;
+          history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
+
+
+          history.item_name = null;
+          history.user_id = user.id;
+          history.initiative_id = initiativeId;
+          history.organization_id = partner_code;
+          history.wp_id = workPackageObject.wp_id;
+          await this.historyRepository.save(history);
+        }, 
+        (error) => {
+          console.log(error)
+        }
+      );;
     }
 
     await this.initiativeRepository.update(initiativeId, {
       last_update_at: new Date(),
     });
     return { message: 'Data saved' };
-  }
+  } 
 
   async getWpsBudgets(initiative_id: number, phaseId: any) {
     const wpBudgets = await this.wpBudgetRepository.find({
@@ -2143,19 +2289,24 @@ export class SubmissionService {
     this.allvalueChange();
   }
 
-  async updateLatestSubmitionStatus(id, data) {
-    try {
-      const submission = await this.submissionRepository.findOne({
-        where: {
-          id: id
-        }
-      });
-  
-      submission.status = SubmissionStatus.DRAFT;
-      await this.submissionRepository.save(submission);
-    } catch (error) {
-      throw new BadRequestException('Connection Error')
-    }
+  async updateLatestSubmitionStatus(id, data, user) {
+    const submission = await this.submissionRepository.findOne({
+      where: {
+        id: id
+      }
+    });
 
+    submission.status = SubmissionStatus.DRAFT;
+    await this.submissionRepository.save(submission).then(
+      async () => {
+        const history = this.historyRepository.create();
+        history.resource_property = `Cancel submit for version Id: ${id}`;
+        history.user_id = user.id;
+        history.initiative_id = data.initiative_id;
+        await this.historyRepository.save(history);
+      }, (error) => {
+        console.log(error)
+      }
+    );
   }
 }

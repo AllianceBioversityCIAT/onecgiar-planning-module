@@ -70,8 +70,8 @@ export class SubmissionController {
   @ApiBearerAuth()
   @ApiBody({ type: updateLatestSubmitionStatus })
   @ApiBearerAuth()
-  updateLatestSubmitionStatus(@Param('id') id, @Body() data) {
-    return this.submissionService.updateLatestSubmitionStatus(id, data)
+  updateLatestSubmitionStatus(@Param('id') id, @Body() data, @Request() req) {
+    return this.submissionService.updateLatestSubmitionStatus(id, data, req.user)
   }
 
   @Post('save/:id')
@@ -98,21 +98,21 @@ export class SubmissionController {
   @Post('save_result_values/:id')
   @ApiBody({ type: save_result_values_req })
   @ApiBearerAuth()
-  async save_result_values(@Param('id') id, @Body() data) {
-    return this.submissionService.saveResultData(id, data);
+  async save_result_values(@Param('id') id, @Body() data, @Request() req) {
+    return this.submissionService.saveResultData(id, data, req.user);
   }
   @Post('save_result_value/:id')
   @ApiBody({ type: save_result_values_req })
   @ApiBearerAuth()
-  async save_result_value(@Param('id') id, @Body() data) {
-    return this.submissionService.saveResultDataValue(id, data);
+  async save_result_value(@Param('id') id, @Body() data , @Request() req) {
+    return this.submissionService.saveResultDataValue(id, data, req.user);
   }
 
   @Post('save_wp_budget/:id')
   @ApiBody({ type: saveWpBudgetReq })
   @ApiBearerAuth()
-  async saveWpBudget(@Param('id') id: string, @Body() data: any) {
-    return this.submissionService.saveWpBudget(+id, data);
+  async saveWpBudget(@Param('id') id: string, @Body() data: any, @Request() req) {
+    return this.submissionService.saveWpBudget(+id, data, req.user);
   }
 
   @Get('wp_budgets/:id/phase/:phaseId')

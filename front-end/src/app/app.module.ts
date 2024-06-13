@@ -90,8 +90,10 @@ import { TimeagoModule } from "ngx-timeago";
 import { CustomMessageComponent } from "./custom-message/custom-message.component";
 import { TrackPORBsComponent } from "./admin/track-porbs/track-porbs.component";
 import { HighchartsChartModule } from "highcharts-angular";
+import { HistoryOfChangeComponent } from './submission/history-of-change/history-of-change.component';
 import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
 import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-under-maintenance/edit-under-maintenance.component";
+
 
 @NgModule({
   declarations: [
@@ -142,8 +144,9 @@ import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-
     EmailBodyComponent,
     CustomMessageComponent,
     TrackPORBsComponent,
+    HistoryOfChangeComponent,
     UnderMaintenancePageComponent,
-    EditUnderMaintenanceComponent,
+    EditUnderMaintenanceComponent
   ],
   imports: [
     BrowserModule,
@@ -164,7 +167,6 @@ import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-
     ReactiveFormsModule,
     MatMenuModule,
     MatProgressSpinnerModule,
-
     NgxJsonViewerModule,
     MatFormFieldModule,
     MatInputModule,
@@ -186,7 +188,6 @@ import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-
     SatPopoverModule,
     PopoverModule,
     EditorModule,
-
     TrustHTMLModule,
     ChatModule,
     HighchartsChartModule,

@@ -4,9 +4,10 @@ import { IpsrValueService } from './ipsr-value.service';
 import { IpsrValue } from 'src/entities/ipsr-value.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IpsrModule } from 'src/ipsr/ipsr.module';
+import { History } from 'src/entities/history.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([IpsrValue]),IpsrModule],
+  imports: [TypeOrmModule.forFeature([IpsrValue, History]),IpsrModule],
   controllers: [IpsrValueController],
   providers: [IpsrValueService],
   exports: [IpsrValueService]

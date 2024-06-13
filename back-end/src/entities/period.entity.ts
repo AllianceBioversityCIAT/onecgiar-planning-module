@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { ResultPeriodValues } from './resultPeriodValues.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { History } from './history.entity';
 
 @Entity()
 export class Period {
@@ -33,4 +34,8 @@ export class Period {
     (resultPeriodValues) => resultPeriodValues.period,
   )
   values: ResultPeriodValues[];
+
+
+  @OneToMany(() => History, (history) => history.period)
+  history: History[];
 }

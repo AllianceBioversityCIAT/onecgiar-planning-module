@@ -8,6 +8,7 @@ import {
 import { Result } from './result.entity';
 import { Initiative } from './initiative.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { History } from './history.entity';
 
 @Entity()
 export class Organization {
@@ -28,4 +29,7 @@ export class Organization {
 
   @OneToMany(() => Result, (result) => result.organization)
   results: Result[];
+
+  @OneToMany(() => History, (history) => history.organization)
+  history: History[];
 }

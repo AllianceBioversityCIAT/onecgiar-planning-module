@@ -14,7 +14,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { InitiativeRoles } from './initiative-roles.entity';
 import { IpsrValue } from './ipsr-value.entity';
 import { CenterStatus } from './center-status.entity';
-// import { InitiativeMelia } from './initiative-melia.entity';
+import { History } from './history.entity';
 
 @Entity()
 export class Initiative {
@@ -112,6 +112,10 @@ export class Initiative {
   @ManyToOne(() => Submission)
   @JoinColumn({ name: 'latest_submission_id' })
   latest_submission: Submission;
+
+
+  @OneToMany(() => History, (history) => history.initiative)
+  history: History[];
 
   // @ManyToMany(() => Melia, (melia) => melia.other_initiatives)
   // melia: Melia[];

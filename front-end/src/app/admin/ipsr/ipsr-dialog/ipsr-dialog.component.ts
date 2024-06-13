@@ -35,7 +35,7 @@ export class IpsrDialogComponent implements OnInit {
     this.ipsrForm = this.fb.group({
       title: [null, Validators.required],
       description: [null, Validators.required],
-      need_in_description: [null],
+      need_in_description: [false],
     });
     if (this.ipsrId) {
       let { id, ...ipsrValues } = await this.ipsrService.getIpsr(this.ipsrId);

@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   UseGuards,
+  Request
 } from '@nestjs/common';
 import { IpsrValueService } from './ipsr-value.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -58,7 +59,7 @@ export class IpsrValueController {
   }
   @ApiBody({ type: createIpsrValue })
   @Post()
-  create(@Body() body) {
-    return this.ipsrValueService.save(body);
+  create(@Body() body, @Request() req) {
+    return this.ipsrValueService.save(body, req.user);
   }
 }

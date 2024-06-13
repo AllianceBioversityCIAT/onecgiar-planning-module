@@ -39,7 +39,6 @@ export class TrackPORBsComponent {
   length!: number;
   pageSize: number = 10;
   pageIndex: number = 1;
-  allfilters: any;
 
   filters: any = null;
 
@@ -68,7 +67,6 @@ export class TrackPORBsComponent {
 
     this.phase = await this.phasesService.getActivePhase();
 
-    console.log(this.phase);
 
     this.pieChart = {
       chart: {
@@ -171,7 +169,6 @@ export class TrackPORBsComponent {
 
   async getInitiativesOnly() {
     this.initiativesOnly = await this.initiativesService.getInitiativesOnly();
-    console.log(this.initiativesOnly);
     const arr = [];
     for (let i = 0; i < this.initiativesOnly.result.length; i++) {
       arr.push(
@@ -184,7 +181,6 @@ export class TrackPORBsComponent {
           : "Draft"
       );
     }
-    console.log(arr);
     this.status = arr.reduce(
       (b, c) => (
         (
@@ -200,26 +196,35 @@ export class TrackPORBsComponent {
       .map((d: any) => {
         return { name: d.el, y: +d.count };
       });
-    console.log(this.result);
   }
 
-  async getInitiatives(filters = null) {
+  async getInitiatives() {
     if (this.authService.getLoggedInUser())
       this.initiatives = await this.initiativesService.getInitiatives(
-        filters,
+        null,
         this.pageIndex,
         this.pageSize
       );
     this.dataSource = new MatTableDataSource(this.initiatives?.result);
     this.length = this.initiatives.count;
 
-    console.log(this.initiatives);
   }
 
   async pagination(event: PageEvent) {
     this.pageIndex = event.pageIndex + 1;
     this.pageSize = event.pageSize;
-    this.getInitiatives(this.allfilters);
+    this.getInitiatives();
+  }
+
+  getLastUpdatedBy(history: any[]) {
+    let userName = history.reduce((prevValue, currValue) => {
+      return (prevValue.id > currValue.id ? prevValue.user.full_name : currValue.user.full_name);
+    }, '-');
+    return userName
+  }
+
+  async exportData() {
+    await this.initiativesService.exportInitiativesForTrackPORBs();
   }
 
   Highcharts: typeof Highcharts = Highcharts;

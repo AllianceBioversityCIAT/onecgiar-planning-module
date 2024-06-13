@@ -134,6 +134,16 @@
               <!-- btn-1 -->
               <div class="risk-report-button-box">
                 <button
+                  class="risk-report-button-box__btn btn--white"
+                  mat-raised-button
+                  (click)="openHistoryDialog(this.initiative_data.id)"
+                >
+                History of change
+                </button>
+              </div>
+
+              <div class="risk-report-button-box">
+                <button
                   *ngIf="!this.isCenter"
                   class="risk-report-button-box__btn btn--white"
                   mat-raised-button
@@ -967,6 +977,15 @@
             <div class="risk-report-btn-box">
               <div class="risk-report-button-box">
                 <button
+                  class="risk-report-button-box__btn btn--white"
+                  mat-raised-button
+                  (click)="openHistoryDialog(this.initiative_data.id)"
+                >
+                History of change
+                </button>
+              </div>
+              <div class="risk-report-button-box">
+                <button
                   *ngIf="!this.isCenter"
                   class="risk-report-button-box__btn btn--white"
                   mat-raised-button
@@ -985,7 +1004,7 @@
                     initiative_data.official_code
                   }}/team-members"
                 >
-                  Team members
+                  Team Members
                 </button>
               </div>
 
@@ -1281,13 +1300,14 @@
                               ][item.id][per.id]
                             "
                             (change)="
-                              changeEnable(
+                              changeEnable( 
                                 partner.code,
                                 wp.ost_wp.wp_official_code,
                                 item.id,
+                                item?.ipsr?.id ? item?.ipsr.title : item.title,
                                 per.id,
                                 $event
-                              )
+                              ) 
                             "
                           ></mat-checkbox>
                         </td>
@@ -1328,6 +1348,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code,
                                   item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
                                   'percent'
                                 )
                               "
@@ -1360,6 +1381,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code,
                                   item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
                                   'percent'
                                 )
                               "
@@ -1470,7 +1492,8 @@
                                     toggleNoValues(
                                       partner.code,
                                       wp.ost_wp.wp_official_code,
-                                      item.id
+                                      item.id,
+                                      item?.ipsr?.id ? item?.ipsr.title : item.title
                                     )
                                   "
                                   matTooltip="No budget assigned"
@@ -1517,6 +1540,7 @@
                                 partner.code,
                                 wp.ost_wp.wp_official_code,
                                 item.id,
+                                item?.ipsr?.id ? item?.ipsr.title : item.title,
                                 'budget'
                               )
                             "
@@ -1552,6 +1576,7 @@
                                 partner.code,
                                 wp.ost_wp.wp_official_code,
                                 item.id,
+                                item?.ipsr?.id ? item?.ipsr.title : item.title,
                                 'budget'
                               )
                             "
