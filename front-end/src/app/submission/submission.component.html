@@ -655,7 +655,7 @@
                                 ? item?.ipsr.title + " (" + item.value + ")"
                                 : item.title
                             }}
-                            <ng-container *ngIf="item?.ipsr?.id">
+                            <!-- <ng-container *ngIf="item?.ipsr?.id">
                               <mat-icon
                                 class="ipsr-icon"
                                 *ngIf="item?.description"
@@ -663,7 +663,7 @@
                                 matTooltipPosition="above"
                                 >help</mat-icon
                               >
-                            </ng-container>
+                            </ng-container> -->
 
                             <ng-container
                               *ngIf="item?.category == 'Cross Cutting'"
@@ -770,7 +770,17 @@
 
                       <!-- /////////// -->
 
-                      <ng-container *ngIf="item.category == 'IPSR'">
+                      <!-- <ng-container *ngIf="item?.ipsr?.id">
+                        <mat-icon
+                          class="ipsr-icon"
+                          *ngIf="item?.description"
+                          [matTooltip]="item?.description"
+                          matTooltipPosition="above"
+                          >help</mat-icon
+                        >
+                      </ng-container> -->
+
+                      <ng-container *ngIf="item?.ipsr?.id">
                         <tr *ngIf="item.isExpand">
                           <td colspan="12">
                             <table class="table table-sm">
@@ -788,9 +798,7 @@
                               <tbody>
                                 <tr
                                   style="background: none"
-                                  *ngIf="
-                                    !item?.initiativeMelia?.meliaType?.name
-                                  "
+                                  *ngIf="item?.description"
                                 >
                                   <td
                                     style="
@@ -802,7 +810,7 @@
                                       color: #0f212f;
                                     "
                                   >
-                                    {{ item?.ipsr.description }}
+                                    {{ item?.description }}
                                   </td>
                                 </tr>
                               </tbody>
@@ -1153,7 +1161,7 @@
                               : item.title
                           }}
                         </ng-container>
-                        <ng-container *ngIf="item?.ipsr?.id">
+                        <!-- <ng-container *ngIf="item?.ipsr?.id">
                           <mat-icon
                             class="ipsr-icon"
                             *ngIf="item?.description"
@@ -1161,7 +1169,7 @@
                             matTooltipPosition="above"
                             >help</mat-icon
                           >
-                        </ng-container>
+                        </ng-container> -->
 
                         <ng-container *ngIf="item?.category == 'Cross Cutting'">
                           <!-- <mat-icon
@@ -1206,6 +1214,45 @@
                               </svg>
                             </i>
                           </button>
+                        </ng-container>
+
+                        <ng-container *ngIf="item?.ipsr?.id">
+                          <tr *ngIf="item.isExpand">
+                            <td colspan="12">
+                              <table class="table table-sm">
+                                <thead>
+                                  <th
+                                    style="
+                                      background: none;
+                                      text-align: left;
+                                      color: #0f212f;
+                                    "
+                                  >
+                                    Description:
+                                  </th>
+                                </thead>
+                                <tbody>
+                                  <tr
+                                    style="background: none"
+                                    *ngIf="item?.description"
+                                  >
+                                    <td
+                                      style="
+                                        background: none;
+                                        border: none;
+                                        text-align: left;
+                                        background-color: none;
+                                        font-size: 1.3rem;
+                                        color: #0f212f;
+                                      "
+                                    >
+                                      {{ item?.description }}
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
                         </ng-container>
                       </td>
 
