@@ -1115,12 +1115,30 @@
               partnersData[partner.code][wp.ost_wp.wp_official_code]
             "
           >
+          <div class="plural-head">
             <mat-card-title class="card-title-table"
-              >{{ wp.title }}
-              <app-popover
-                [id]="isFirst ? '17' : isLast ? '18' : '3'"
-              ></app-popover>
-            </mat-card-title>
+            >{{ wp.title }}
+            <app-popover
+              [id]="isFirst ? '17' : isLast ? '18' : '3'"
+            ></app-popover>
+          </mat-card-title>
+          <div class="plural-head-2">
+            <mat-checkbox
+            class="show-d-14"
+            [disabled]="
+              partnersStatus[partner.code] ||
+              initStatus == 'Pending' ||
+              initStatus == 'Approved'
+            "
+            (change)="
+              checkAll(
+                partner.code,
+                wp.ost_wp.wp_official_code,
+                $event
+              )
+            "
+          >Check All</mat-checkbox>
+          
             <mat-slide-toggle
               [(ngModel)]="
                 toggleValues[partner.code][wp.ost_wp.wp_official_code]
@@ -1131,7 +1149,8 @@
               class="show-d-1"
               >Show decimals</mat-slide-toggle
             >
-
+          </div>
+          </div>
             <mat-card-content>
               <div class="table-box-2 mat-elevation-z8">
                 <table

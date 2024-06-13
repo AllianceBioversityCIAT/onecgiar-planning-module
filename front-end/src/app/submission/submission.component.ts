@@ -393,6 +393,62 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       );
       this.getInitStatus(this.initiative_data);
   }
+
+  async checkAll(
+    partner_code: any,
+    wp_id: any,
+    event: any
+  ) {
+    const itemsIds = Object.keys(this.perValues[partner_code][wp_id]);
+
+    for(let item_id of itemsIds) {
+      if (!!this.noValuesAssigned[partner_code][wp_id][item_id]) {
+        this.noValuesAssigned[partner_code][wp_id][item_id] = 0;
+      }
+      for(let period of this.period) {
+        this.changes(partner_code, wp_id, item_id, period.id, event.checked);
+      }
+
+
+      if (
+        !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
+          true
+        )
+      ) {
+        this.values[partner_code][wp_id][item_id] = 0;
+        this.displayValues[partner_code][wp_id][item_id] = 0;
+        this.changeCalc(partner_code, wp_id, item_id, '' ,"percent");
+      }
+    }
+
+
+    const result = await this.submissionService.saveAllResultValues(
+      this.params.id,
+      {
+        partner_code,
+        wp_id,
+        title: event.checked ? 'Checked all periods' : 'Unchecked all periods',
+        value: event.checked,
+        phase_id: this.phase.id,
+        itemsIds: itemsIds
+      }
+    );
+
+    if (result)
+    this.socket.emit("setAllDataValues", {
+      id: this.params.id,
+      partner_code,
+      wp_id,
+      itemsIds,
+      period : this.period,
+      value: event.checked,
+    });
+    this.initiative_data = await this.submissionService.getInitiative(
+      this.params.id
+    );
+
+    this.getInitStatus(this.initiative_data);
+  }
   wpsTotalSum = 0;
   sammaryCalc() {
     let totalsum: any = {};
@@ -992,6 +1048,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       const { partner_code, wp_id, item_id, per_id, value } = data;
       this.changes(partner_code, wp_id, item_id, per_id, value);
     });
+    this.socket.on("setAllDataValues-" + this.params.id, (data: any) => { 
+      const { partner_code, wp_id, itemsIds, period, value } = data;
+      itemsIds.forEach((item_id: any) => {
+        period.forEach((period: any) => {
+          this.changes(partner_code, wp_id, item_id, period.id, value);
+        })
+      })
+    }); 
     this.socket.on("setDataValue-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, value, no_budget } = data;
       this.values[partner_code][wp_id][item_id] = value;

@@ -237,6 +237,15 @@ export class SubmissionService {
         .pipe(map((d: any) => d))
     ).catch((e) => false);
   }
+
+  async saveAllResultValues(id: number, data: any) {
+    return firstValueFrom(
+      this.http
+        .post(environment.api_url+'/submission/save_all_result_values/' + id, data)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async saveResultValue(id: number, data: any) {
     return firstValueFrom(
       this.http

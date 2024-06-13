@@ -101,6 +101,13 @@ export class SubmissionController {
   async save_result_values(@Param('id') id, @Body() data, @Request() req) {
     return this.submissionService.saveResultData(id, data, req.user);
   }
+
+  @Post('save_all_result_values/:id')
+  @ApiBody({ type: save_result_values_req })
+  @ApiBearerAuth()
+  async save_all_result_values(@Param('id') id, @Body() data, @Request() req) {
+    return this.submissionService.saveAllResultData(id, data, req.user);
+  }
   @Post('save_result_value/:id')
   @ApiBody({ type: save_result_values_req })
   @ApiBearerAuth()

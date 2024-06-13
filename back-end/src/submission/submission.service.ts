@@ -543,7 +543,81 @@ export class SubmissionService {
     });
     return { message: 'Data saved' };
   }
-  async saveResultDataValue(id, data: any, user) { 
+  async saveAllResultData(id, data: any, user) {
+    const initiativeId = id;
+    const { partner_code, wp_id,title , itemsIds, value, phase_id } = data;
+
+    const initiativeObject = await this.initiativeRepository.findOneBy({
+      id: initiativeId,
+    });
+    let workPackageObject = await this.workPackageRepository.findOneBy({
+      wp_official_code: wp_id,
+    });
+    let organizationObject = await this.organizationRepository.findOneBy({
+      code: partner_code,
+    });
+
+    for(let item_id of itemsIds) {
+      let oldResult = await this.resultRepository.findOneBy({
+        initiative_id: id,
+        result_uuid: item_id,
+        organization: organizationObject,
+        workPackage: workPackageObject,
+        submission: IsNull(),
+        phase_id: phase_id
+      });
+  
+      let resultData = {
+        result_uuid: item_id,
+        phase_id: phase_id,
+        value: 0,
+      };
+
+      if (organizationObject != null) {
+        let resultObject;
+        if (!oldResult) {
+          let newResult = this.resultRepository.create(resultData);
+          newResult.organization = organizationObject;
+          newResult.workPackage = workPackageObject;
+          newResult.initiative = initiativeObject;
+          resultObject = await this.resultRepository.save(newResult);
+        } else resultObject = oldResult;
+  
+        let allPeriodObject = await this.periodRepository.find();
+
+        for(let periodObject of allPeriodObject) {
+          let newResultPeriodValue: any;
+  
+          newResultPeriodValue = await this.resultValuesRepository.findOneBy({
+            result: resultObject,
+            period: periodObject,
+          });
+          if (!newResultPeriodValue)
+            newResultPeriodValue = this.resultValuesRepository.create();
+    
+          newResultPeriodValue.value = value;
+          newResultPeriodValue.period = periodObject;
+          newResultPeriodValue.result = resultObject;
+          await this.resultValuesRepository.save(newResultPeriodValue);
+        }
+      }
+    }
+
+    const history = this.historyRepository.create();
+    history.resource_property = title;
+    history.user_id = user.id;
+    history.initiative_id = id;
+    history.organization_id = partner_code;
+    history.wp_id = workPackageObject.wp_id;
+    await this.historyRepository.save(history);
+
+    await this.initiativeRepository.update(initiativeId, {
+      last_update_at: new Date(),
+    });
+    return { message: 'Data saved' };
+
+  }
+  async saveResultDataValue(id, data: any,user) {
     const initiativeId = id;
 
     const {
