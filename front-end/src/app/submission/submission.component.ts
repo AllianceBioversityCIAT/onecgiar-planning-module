@@ -1522,6 +1522,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     let valid = true;
     let wpChecked = false;
     let message = "";
+    let hasBudget = false;
     if (!this.partnersData[partner_code][wp_id]) {
       return {
         valid: valid,
@@ -1533,6 +1534,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         let perChecked = Object.values(
           this.perValues[partner_code][wp_id][item.id]
         ).reduce((a: any, b: any) => a || b);
+        if (perChecked && !this.noValuesAssigned[partner_code][wp_id][item.id]) {
+          hasBudget = true;
+        }
         if (
           perChecked &&
           !+this.values[partner_code][wp_id][item.id] &&
@@ -1558,6 +1562,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       message = "There is a work package with a budget not disaggregated";
     } else if (
       wpChecked &&
+      hasBudget &&
       Math.round(this.totals[partner_code][wp_id]) != 100
     ) {
       valid = false;
