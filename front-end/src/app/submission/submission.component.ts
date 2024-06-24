@@ -397,7 +397,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   async checkAll(
     partner_code: any,
     wp_id: any,
-    event: any
+    value: boolean
   ) {
     const itemsIds = Object.keys(this.perValues[partner_code][wp_id]);
 
@@ -406,7 +406,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.noValuesAssigned[partner_code][wp_id][item_id] = 0;
       }
       for(let period of this.period) {
-        this.changes(partner_code, wp_id, item_id, period.id, event.checked);
+        this.changes(partner_code, wp_id, item_id, period.id, value);
       }
 
 
@@ -427,8 +427,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       {
         partner_code,
         wp_id,
-        title: event.checked ? 'Checked all periods' : 'Unchecked all periods',
-        value: event.checked,
+        title: value ? 'Checked all periods' : 'Unchecked all periods',
+        value: value,
         phase_id: this.phase.id,
         itemsIds: itemsIds
       }
@@ -441,7 +441,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       wp_id,
       itemsIds,
       period : this.period,
-      value: event.checked,
+      value: value,
     });
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
@@ -939,7 +939,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       }
     })
 
-    console.log('allData =>', this.allData)
+    // console.log('allData =>', this.allData)
   }
   savedValues: any = null;
   isCenter: boolean = false;
@@ -1017,9 +1017,20 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       ) {
         this.partners = partners;
         this.isCenter = false;
+        this.partners.forEach((x: any) => 
+          x['canEdit'] = true
+        )
       } else {
         if (roles[0].organizations.length) {
-          this.partners = roles[0].organizations;
+          roles[0].organizations.forEach((d: any) => {
+            partners.forEach((x: any) => {
+              if(d.code == x.code)
+                x['canEdit'] = true;
+              else
+                x['canEdit'] = false;
+            })
+          })
+          this.partners = partners;
         } else {
           this.toastrService.error(
             "You are not assigned to this initiative, so please contact the leader to  give you access",

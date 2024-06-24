@@ -61,7 +61,7 @@
             </button>
           </form>
         </div> -->
-        <div class="risk-report-button-box">
+        <div class="risk-report-button-box" *ngIf="canEdit()">
           <button
             class="risk-report-button-box__btn btn--white"
             mat-raised-button
@@ -141,7 +141,7 @@
           <ng-container matColumnDef="Actions" stickyEnd>
             <th mat-header-cell *matHeaderCellDef>Actions</th>
             <td mat-cell *matCellDef="let element">
-              <div class="m">
+              <div class="m" *ngIf="canEdit()">
                 <button
                   matTooltip="Edit"
                   class="team-members-icon-table"
@@ -182,6 +182,10 @@
                       /></svg
                   ></mat-icon>
                 </button>
+              </div>
+
+              <div class="m" *ngIf="!canEdit()">
+                N/A
               </div>
             </td>
           </ng-container>

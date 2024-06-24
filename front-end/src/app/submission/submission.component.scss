@@ -970,7 +970,7 @@ mat-tab-group {
       top: 9.4rem;
       left: -0.2rem;
     }
-    .show-d-14 {
+    .btns {
       align-self: self-end;
       color: transparent;
       letter-spacing: 0.2rem;
@@ -982,6 +982,37 @@ mat-tab-group {
       position: relative;
       top: 10.4rem;
       left: -0.2rem;
+      .check-btn {
+        color: #ffffff !important;
+        text-align: center;
+        font-family: "Poppins", sans-serif !important;
+        font-size: 1.4rem;
+        font-style: normal;
+        font-weight: 500;
+        background-color: #5569dd !important;
+        line-height: normal;
+        border: none;
+        padding: 8px;
+        border-radius: 9%;
+        margin-left: 5px;
+        cursor: pointer;
+      }
+
+      .check-btn-clear {
+        color: #ffffff !important;
+        text-align: center;
+        font-family: "Poppins", sans-serif !important;
+        font-size: 1.4rem;
+        font-style: normal;
+        font-weight: 500;
+        background-color: #db425c !important;
+        line-height: normal;
+        border: none;
+        padding: 8px;
+        border-radius: 9%;
+        margin-left: 5px;
+        cursor: pointer;
+      }
     }
   }
 }

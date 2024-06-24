@@ -52,7 +52,7 @@
       [selectedIndex]="selectedTabIndex"
       (selectedTabChange)="tabChanged($event)"
     >
-      <mat-tab *ngIf="isCenter == false" label="Summary">
+      <mat-tab  label="Summary">
         <!-- step-2 -->
 
         <mat-card *ngIf="!loading">
@@ -168,7 +168,6 @@
 
               <div class="risk-report-button-box">
                 <button
-                  *ngIf="!this.isCenter"
                   class="risk-report-button-box__btn btn--white"
                   mat-raised-button
                   routerLink="/initiative/{{ initiative_data.id }}/{{
@@ -408,7 +407,7 @@
                   <button
                     class="risk-report-button-box__btn--4 btn--white-2"
                     mat-raised-button
-                    *ngIf="wp.id == 'IPSR'"
+                    *ngIf="wp.id == 'IPSR' && initUser.role != 'Contributor'"
                     type="button"
                     (click)="setIPSR(wp.ost_wp.wp_official_code)"
                     [disabled]="
@@ -454,7 +453,7 @@
                   <button
                     class="risk-report-button-box__btn--4 btn--white-2"
                     mat-raised-button
-                    *ngIf="wp.id == 'CROSS'"
+                    *ngIf="wp.id == 'CROSS' && initUser.role != 'Contributor'"
                     type="button"
                     (click)="addCross()"
                     [disabled]="
@@ -539,6 +538,7 @@
                             *ngIf="item.category == 'Cross Cutting'"
                           >
                             <button
+                            *ngIf="initUser.role != 'Contributor'"
                               mat-icon-button
                               [matMenuTriggerFor]="menu"
                               [disabled]="
@@ -977,6 +977,7 @@
             <div class="risk-report-btn-box">
               <div class="risk-report-button-box">
                 <button
+                  *ngIf="!this.isCenter"
                   class="risk-report-button-box__btn btn--white"
                   mat-raised-button
                   (click)="openHistoryDialog(this.initiative_data.id)"
@@ -1035,7 +1036,7 @@
               <!-- btn-4 -->
               <div class="risk-report-button-box" style="height: 37px">
                 <app-center-status
-                  *ngIf="initStatus != 'Approved'"
+                  *ngIf="(initStatus != 'Approved') && partner.canEdit"
                   (change)="partnerStatusChange($event, partner.code)"
                   [status]="!checkComplete(partner.code)"
                   [initiative_id]="initiative_data.id"
@@ -1123,22 +1124,43 @@
             ></app-popover>
           </mat-card-title>
           <div class="plural-head-2">
-            <mat-checkbox
-            class="show-d-14"
-            [disabled]="
-              partnersStatus[partner.code] ||
-              initStatus == 'Pending' ||
-              initStatus == 'Approved'
-            "
-            (change)="
-              checkAll(
-                partner.code,
-                wp.ost_wp.wp_official_code,
-                $event
-              )
-            "
-          >Check All</mat-checkbox>
-          
+            <div class="btns">
+              <button class="check-btn" 
+                *ngIf="partner?.canEdit" 
+                [disabled]="
+                  partnersStatus[partner.code] ||
+                  initStatus == 'Pending' ||
+                  initStatus == 'Approved'
+                "
+                (click)="
+                checkAll(
+                  partner.code,
+                  wp.ost_wp.wp_official_code,
+                  true
+                )
+              "
+            >
+              Check all
+            </button>
+            <button class="check-btn-clear" 
+                *ngIf="partner?.canEdit"
+                [disabled]="
+                  partnersStatus[partner.code] ||
+                  initStatus == 'Pending' ||
+                  initStatus == 'Approved'
+                "
+                (click)="
+                checkAll(
+                  partner.code,
+                  wp.ost_wp.wp_official_code,
+                  false
+                )
+              "
+            >
+            Clear all
+            </button>
+            </div>
+
             <mat-slide-toggle
               [(ngModel)]="
                 toggleValues[partner.code][wp.ost_wp.wp_official_code]
@@ -1311,7 +1333,8 @@
                             [disabled]="
                               partnersStatus[partner.code] ||
                               initStatus == 'Pending' ||
-                              initStatus == 'Approved'
+                              initStatus == 'Approved' ||
+                              !partner?.canEdit
                             "
                             [(ngModel)]="
                               perValues[partner.code][
@@ -1360,7 +1383,8 @@
                                 ][item.id] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
-                                initStatus == 'Approved'
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit
                               "
                               (keyup)="
                                 changeCalc(
@@ -1393,7 +1417,8 @@
                                 ][item.id] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
-                                initStatus == 'Approved'
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit
                               "
                               (keyup)="
                                 changeCalc(
@@ -1500,7 +1525,8 @@
                                   [disabled]="
                                     partnersStatus[partner.code] ||
                                     initStatus == 'Pending' ||
-                                    initStatus == 'Approved'
+                                    initStatus == 'Approved' ||
+                                    !partner?.canEdit
                                   "
                                   [(ngModel)]="
                                     noValuesAssigned[partner.code][
@@ -1552,7 +1578,8 @@
                               ][item.id] ||
                               partnersStatus[partner.code] ||
                               initStatus == 'Pending' ||
-                              initStatus == 'Approved'
+                              initStatus == 'Approved' ||
+                              !partner?.canEdit
                             "
                             (keyup)="
                               changeCalc(
@@ -1588,7 +1615,8 @@
                               ][item.id] ||
                               partnersStatus[partner.code] ||
                               initStatus == 'Pending' ||
-                              initStatus == 'Approved'
+                              initStatus == 'Approved' ||
+                              !partner?.canEdit
                             "
                             (keyup)="
                               changeCalc(
@@ -1724,7 +1752,8 @@
                             [disabled]="
                               partnersStatus[partner.code] ||
                               initStatus == 'Pending' ||
-                              initStatus == 'Approved'
+                              initStatus == 'Approved' ||
+                              !partner?.canEdit
                             "
                             matInput
                             [(ngModel)]="
