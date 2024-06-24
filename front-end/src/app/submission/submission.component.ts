@@ -120,7 +120,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       return this.totals[code][id];
   }
   timeCalc: any;
-  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title :string, type: string) { 
+  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string) {
     if (this.timeCalc) clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
       let percentValue;
@@ -128,7 +128,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       let isActualValues = this.toggleValues[partner_code][wp_id];
 
       if (type == "percent") {
-        if(isActualValues) {
+        if (isActualValues) {
           percentValue = Number(this.values[partner_code][wp_id][item_id]);
         } else {
           percentValue = Number(this.displayValues[partner_code][wp_id][item_id]);
@@ -388,10 +388,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         per_id,
         value: event.checked,
       });
-      this.initiative_data = await this.submissionService.getInitiative(
-        this.params.id
-      );
-      this.getInitStatus(this.initiative_data);
+    this.initiative_data = await this.submissionService.getInitiative(
+      this.params.id
+    );
+    this.getInitStatus(this.initiative_data);
   }
 
   async checkAll(
@@ -401,11 +401,11 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   ) {
     const itemsIds = Object.keys(this.perValues[partner_code][wp_id]);
 
-    for(let item_id of itemsIds) {
+    for (let item_id of itemsIds) {
       if (!!this.noValuesAssigned[partner_code][wp_id][item_id]) {
         this.noValuesAssigned[partner_code][wp_id][item_id] = 0;
       }
-      for(let period of this.period) {
+      for (let period of this.period) {
         this.changes(partner_code, wp_id, item_id, period.id, value);
       }
 
@@ -417,7 +417,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       ) {
         this.values[partner_code][wp_id][item_id] = 0;
         this.displayValues[partner_code][wp_id][item_id] = 0;
-        this.changeCalc(partner_code, wp_id, item_id, '' ,"percent");
+        this.changeCalc(partner_code, wp_id, item_id, '', "percent");
       }
     }
 
@@ -435,14 +435,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     );
 
     if (result)
-    this.socket.emit("setAllDataValues", {
-      id: this.params.id,
-      partner_code,
-      wp_id,
-      itemsIds,
-      period : this.period,
-      value: value,
-    });
+      this.socket.emit("setAllDataValues", {
+        id: this.params.id,
+        partner_code,
+        wp_id,
+        itemsIds,
+        period: this.period,
+        value: value,
+      });
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -537,7 +537,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.sammaryTotal[wp_id] += totalWp[wp_id][item_id];
         this.sammaryTotalConsolidated[wp_id] = this.summaryBudgetsAllTotal
           ? (this.summaryBudgetsTotal[wp_id] / this.summaryBudgetsAllTotal) *
-            100
+          100
           : 0;
       });
     });
@@ -663,9 +663,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       },
       (error) => {
         this.dialog
-        .open(CustomMessageComponent, {
-          disableClose: true,
-        })
+          .open(CustomMessageComponent, {
+            disableClose: true,
+          })
         this.results = [
           ...cross_data,
           // ...melia_data,
@@ -700,7 +700,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     //     });
     //   })
     //   .flat(1);
-   
+
     // melia_data.map((d: any) => {
     //   d["category"] = "MELIA";
     //   return d;
@@ -866,23 +866,23 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           partner.code
         ]?.IPSR?.filter((d: any) => d.value != null && d.value != "");
 
-        let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+      let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
 
-        this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+      this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
 
-        newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+      newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
 
-        this.wps.forEach((d : any) => {
-          if(d.category == "WP") {
-            let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
-              .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
-            
-            let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-              .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
-    
-            this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
-          }
-        })
+      this.wps.forEach((d: any) => {
+        if (d.category == "WP") {
+          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+        }
+      })
       this.loading = false;
     }
 
@@ -927,13 +927,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
 
     //sort WP titles
-    this.wps.forEach((d : any) => {
-      if(d.category == "WP") {
+    this.wps.forEach((d: any) => {
+      if (d.category == "WP") {
         let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
-        .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
-        
+          .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
         let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-        .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+          .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
 
         this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
       }
@@ -1010,26 +1010,21 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     if (roles.length) {
       this.isCenter = true;
       if (
-        roles[0].role == ROLES.LEAD || 
+        roles[0].role == ROLES.LEAD ||
         roles[0].role == ROLES.COORDINATOR ||
         roles[0].role == ROLES.CoLeader ||
         this.user.role == "admin"
       ) {
         this.partners = partners;
         this.isCenter = false;
-        this.partners.forEach((x: any) => 
+        this.partners.forEach((x: any) =>
           x['canEdit'] = true
         )
       } else {
         if (roles[0].organizations.length) {
-          roles[0].organizations.forEach((d: any) => {
-            partners.forEach((x: any) => {
-              if(d.code == x.code)
-                x['canEdit'] = true;
-              else
-                x['canEdit'] = false;
-            })
-          })
+          const ids = new Set<number>()
+          roles[0].organizations.forEach((o: any) => ids.add(o.code))
+          partners.forEach((p: any) => p['canEdit'] = ids.has(p.code))
           this.partners = partners;
         } else {
           this.toastrService.error(
@@ -1059,14 +1054,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       const { partner_code, wp_id, item_id, per_id, value } = data;
       this.changes(partner_code, wp_id, item_id, per_id, value);
     });
-    this.socket.on("setAllDataValues-" + this.params.id, (data: any) => { 
+    this.socket.on("setAllDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, itemsIds, period, value } = data;
       itemsIds.forEach((item_id: any) => {
         period.forEach((period: any) => {
           this.changes(partner_code, wp_id, item_id, period.id, value);
         })
       })
-    }); 
+    });
     this.socket.on("setDataValue-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, value, no_budget } = data;
       this.values[partner_code][wp_id][item_id] = value;
@@ -1120,14 +1115,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         if (dialogResult == true) {
           await this.submissionService.cancelSubmission(
             this.initiative_data.latest_submission.id,
-            { status: this.initiative_data.latest_submission.status,initiative_id: this.initiative_data.id }
+            { status: this.initiative_data.latest_submission.status, initiative_id: this.initiative_data.id }
           ).then(
             async () => {
               this.initiative_data = await this.submissionService.getInitiative(
                 this.params.id
               );
               this.socket.emit('submissionStatus', {
-                initStatus : "Draft",
+                initStatus: "Draft",
                 initiative_data: this.initiative_data
               });
               await this.InitData();
@@ -1150,7 +1145,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   getInitStatus(init: any) {
     this.initStatus =
       init.last_submitted_at != null &&
-      init.last_update_at == init.last_submitted_at
+        init.last_update_at == init.last_submitted_at
         ? init?.latest_submission
           ? init?.latest_submission?.status
           : "Draft"
@@ -1158,7 +1153,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.socket.disconnect(); 
+    this.socket.disconnect();
     this.dialog.closeAll();
   }
 
@@ -1440,22 +1435,22 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             }).then(
               async (data) => {
                 this.initiative_data = await this.submissionService.getInitiative(
-                    this.params.id
-                  );
-                  this.socket.emit('submissionStatus', {
-                    initStatus : "Pending",
-                    initiative_data: this.initiative_data
-                  });
+                  this.params.id
+                );
+                this.socket.emit('submissionStatus', {
+                  initStatus: "Pending",
+                  initiative_data: this.initiative_data
+                });
 
-                  this.toastrService.success("Data Submitted successfully");
-                  this.router.navigate([
-                    "initiative",
-                    this.initiative_data.id,
-                    this.initiative_data.official_code,
-                    "submited-versions",
-                  ]);
+                this.toastrService.success("Data Submitted successfully");
+                this.router.navigate([
+                  "initiative",
+                  this.initiative_data.id,
+                  this.initiative_data.official_code,
+                  "submited-versions",
+                ]);
               }, (error) => {
-                  this.toster.error('Connection Error', undefined, { disableTimeOut: true });
+                this.toster.error('Connection Error', undefined, { disableTimeOut: true });
               }
             );
             this.loading = false;
@@ -1591,13 +1586,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
   openHistoryDialog(initiative_id: number) {
     this.dialog
-    .open(HistoryOfChangeComponent, {
-      width: '600px',
-      maxWidth: '700px',
-      maxHeight: '500px',
-      data: {
-        initiative_id: initiative_id
-      },
-    })
+      .open(HistoryOfChangeComponent, {
+        width: '600px',
+        maxWidth: '700px',
+        maxHeight: '500px',
+        data: {
+          initiative_id: initiative_id
+        },
+      })
   }
 }
