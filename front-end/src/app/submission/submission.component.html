@@ -542,7 +542,7 @@
                             *ngIf="item.category == 'Cross Cutting'"
                           >
                             <button
-                              *ngIf="initUser.role != 'Contributor'"
+                            *ngIf="initUser?.role != 'Contributor'"
                               mat-icon-button
                               [matMenuTriggerFor]="menu"
                               [disabled]="
