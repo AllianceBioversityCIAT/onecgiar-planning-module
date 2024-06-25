@@ -372,9 +372,9 @@
                   'show-d-2': wp.id == 'CROSS',
                   'show-d-3': wp.id == 'IPSR',
                   'show-d-4':
-                    wp.id == 'IPSR' && initUser.role === 'Contributor',
+                    wp.id == 'IPSR' &&initUser && initUser?.role === 'Contributor',
                   'show-d-5':
-                    wp.id == 'CROSS' && initUser.role === 'Contributor'
+                    wp.id == 'CROSS' && initUser && initUser?.role === 'Contributor'
                 }"
                 >Show decimals</mat-slide-toggle
               >
