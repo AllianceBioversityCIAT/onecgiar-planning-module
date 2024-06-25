@@ -93,6 +93,7 @@ import { HighchartsChartModule } from "highcharts-angular";
 import { HistoryOfChangeComponent } from './submission/history-of-change/history-of-change.component';
 import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
 import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-under-maintenance/edit-under-maintenance.component";
+import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask'
 
 
 @NgModule({
@@ -192,6 +193,7 @@ import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-
     ChatModule,
     HighchartsChartModule,
     TimeagoModule.forRoot(),
+    NgxMaskDirective, NgxMaskPipe
   ],
   providers: [
     AppSocket,
@@ -210,6 +212,7 @@ import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-
     //   useValue: "tinymce/tinymce.min.js",
     // },
     SortPipe,
+    provideNgxMask()
   ],
   bootstrap: [AppComponent],
 })

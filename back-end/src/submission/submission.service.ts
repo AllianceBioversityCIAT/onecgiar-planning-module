@@ -722,9 +722,19 @@ export class SubmissionService {
   getDifference(a,b) {
     return Object.fromEntries(Object.entries(b).filter(([key, val]) => key in a && a[key] !== val));
   }
-  async saveWpBudget(initiativeId: number, data: any, user) { 
 
-    
+  formatWithThousandsSeparator(num) {
+    let numAsString = num?.toString();
+    let characters = numAsString?.split("").reverse();
+    let parts = [];
+    for (let i = 0; i < characters?.length; i += 3) {
+      let part = characters.slice(i, i + 3).reverse().join("");
+      parts.unshift(part);
+    }
+    return  parts.join(",");
+  }
+
+  async saveWpBudget(initiativeId: number, data: any, user) {  
     const { partner_code, wp_id, budget, phaseId } = data;
     let workPackageObject = await this.workPackageRepository.findOneBy({
       wp_official_code: wp_id,
@@ -906,9 +916,7 @@ export class SubmissionService {
             : '';
       });
       obj['Percentage'] = this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] + '%'; 
-      obj['Budgets'] = this.roundNumber(
-        this.summaryBudgetsTotal[wp.ost_wp.wp_official_code],
-      );
+      obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]));
       ConsolidatedData.push(obj);
     });
     let obj: any = {};
@@ -921,7 +929,7 @@ export class SubmissionService {
         : '';
     });
     (obj['Percentage'] = this.roundNumber(this.wpsTotalSum) + '%'),
-      (obj['Budgets'] = this.roundNumber(this.summaryBudgetsAllTotal)),
+      (obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsAllTotal))),
       ConsolidatedData.push(obj);
 
     lockupArray = ConsolidatedData.map((d: any) => {
@@ -961,10 +969,10 @@ export class SubmissionService {
           ? this.sammary[wp.ost_wp.wp_official_code][d.id]
           : this.roundNumber(this.sammary[wp.ost_wp.wp_official_code][d.id]) +
             '%';
-        obj['Budget_USD'] = this.toggleSummaryValues[wp.ost_wp.wp_official_code]
-          ? this.summaryBudgets[wp.ost_wp.wp_official_code][d.id]
-          : this.roundNumber(
-              this.summaryBudgets[wp.ost_wp.wp_official_code][d.id],
+        obj['Budget_USD'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleSummaryValues[wp.ost_wp.wp_official_code]))
+          ? this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgets[wp.ost_wp.wp_official_code][d.id]))
+          : this.formatWithThousandsSeparator(
+            this.roundNumber(this.summaryBudgets[wp.ost_wp.wp_official_code][d.id]),
             );
         return obj;
       });
@@ -985,10 +993,10 @@ export class SubmissionService {
         ? this.sammaryTotal[wp.ost_wp.wp_official_code]
         : this.roundNumber(this.sammaryTotal[wp.ost_wp.wp_official_code]) + '%';
 
-      obj['Budget_USD'] = this.toggleSummaryValues[wp.ost_wp.wp_official_code]
-        ? this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-        : this.roundNumber(
-            this.summaryBudgetsTotal[wp.ost_wp.wp_official_code],
+      obj['Budget_USD'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleSummaryValues[wp.ost_wp.wp_official_code]))
+        ? this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]))
+        : this.formatWithThousandsSeparator(
+          this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]),
           );
       data.push(obj);
 
@@ -1004,6 +1012,7 @@ export class SubmissionService {
 
     if(organization) 
       partners = partners.filter((d:any) => d.code == organization.code);
+    partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()))   
     partners.forEach((partner: any) => {
       const partnersWp = [];
       wps.forEach((wp: any) => {
@@ -1033,15 +1042,15 @@ export class SubmissionService {
                   d.id
                 ] + '%';
 
-            obj['Budget'] = this.toggleValues[partner.code][
+            obj['Budget'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleValues[partner.code][
               wp.ost_wp.wp_official_code
-            ]
-              ? this.budgetValues[partner.code][wp.ost_wp.wp_official_code][
+            ]))
+              ? this.formatWithThousandsSeparator(this.roundNumber(this.budgetValues[partner.code][wp.ost_wp.wp_official_code][
                   d.id
-                ]
-              : this.displayBudgetValues[partner.code][
+                ]))
+              : this.formatWithThousandsSeparator(this.roundNumber(this.displayBudgetValues[partner.code][
                   wp.ost_wp.wp_official_code
-                ][d.id];
+                ][d.id]));
 
             return obj;
           },
@@ -1068,7 +1077,7 @@ export class SubmissionService {
             ) + '%';
 
         obj['Budget'] =
-          this.wp_budgets[partner.code][wp.ost_wp.wp_official_code];
+        this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner.code][wp.ost_wp.wp_official_code]));
 
         data?.push(obj);
         partnersWp.push(data);

@@ -1035,7 +1035,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         }
       }
     } else {
-      if (this.user.role == "admin") this.partners = partners;
+      if (this.user.role == "admin") {
+        partners.forEach((x: any) =>
+        x['canEdit'] = true
+        )
+        this.partners = partners;
+      }
+
       else {
         this.router.navigate(["denied"]);
         return;

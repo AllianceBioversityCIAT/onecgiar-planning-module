@@ -333,7 +333,7 @@
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                        )
+                        ) | number 
                       }}
                     </td>
                   </tr>
@@ -365,7 +365,7 @@
                   >
                     {{ wpsTotalSum | number : "1.2-2" }}%
                   </td>
-                  <td>{{ roundNumber(summaryBudgetsAllTotal) }}</td>
+                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number  }}</td>
                 </tr>
               </table>
             </div>
@@ -454,7 +454,7 @@
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
                                   ]
-                                )
+                                ) | number 
                           }}
                         </td>
                       </tr>
@@ -507,7 +507,7 @@
                             ? summaryBudgetsTotal[wp.ost_wp.wp_official_code]
                             : roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              )
+                              ) | number 
                         }}
                       </td>
                     </tr>
@@ -625,7 +625,7 @@
                                 ][item.id]
                               : displayBudgetValues[partner.code][
                                   wp.ost_wp.wp_official_code
-                                ][item.id]
+                                ][item.id] | number 
                           }}
                         </td>
                       </tr>
@@ -661,7 +661,7 @@
                       </td>
                       <td>
                         {{
-                          wp_budgets[partner.code][wp.ost_wp.wp_official_code]
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code] | number 
                         }}
                       </td>
                     </tr>

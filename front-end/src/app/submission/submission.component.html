@@ -328,7 +328,7 @@
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                        )
+                        ) | number 
                       }}
                     </td>
                   </tr>
@@ -346,7 +346,7 @@
                     </td>
                   </ng-container>
                   <td>{{ wpsTotalSum | number : "1.2-2" }}%</td>
-                  <td>{{ roundNumber(summaryBudgetsAllTotal) }}</td>
+                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number }}</td>
                 </tr>
               </table>
             </div>
@@ -729,7 +729,7 @@
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
                                   ]
-                                )
+                                ) | number 
                           }}
                         </td>
                       </tr>
@@ -867,7 +867,7 @@
                             ? summaryBudgetsTotal[wp.ost_wp.wp_official_code]
                             : roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              )
+                              ) | number 
                         }}
                       </td>
                     </tr>
@@ -1565,6 +1565,8 @@
                           "
                         >
                           <input
+                          mask="separator.2"
+                          thousandSeparator=","
                             *ngIf="
                               toggleValues[partner.code][
                                 wp.ost_wp.wp_official_code
@@ -1602,6 +1604,8 @@
                             matInput
                           />
                           <input
+                          mask="separator.2"
+                          thousandSeparator=","
                             *ngIf="
                               !toggleValues[partner.code][
                                 wp.ost_wp.wp_official_code
@@ -1752,6 +1756,8 @@
                         >
                           <!-- <mat-label>Total Budget</mat-label> -->
                           <input
+                          mask="separator.2"
+                          thousandSeparator=","
                             placeholder="Total Budget"
                             [disabled]="
                               partnersStatus[partner.code] ||
