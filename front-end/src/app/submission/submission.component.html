@@ -407,7 +407,7 @@
                   <button
                     class="risk-report-button-box__btn--4 btn--white-2"
                     mat-raised-button
-                    *ngIf="wp.id == 'IPSR' && initUser.role != 'Contributor'"
+                    *ngIf="wp.id == 'IPSR' && initUser?.role != 'Contributor'"
                     type="button"
                     (click)="setIPSR(wp.ost_wp.wp_official_code)"
                     [disabled]="
@@ -453,7 +453,7 @@
                   <button
                     class="risk-report-button-box__btn--4 btn--white-2"
                     mat-raised-button
-                    *ngIf="wp.id == 'CROSS' && initUser.role != 'Contributor'"
+                    *ngIf="wp.id == 'CROSS' && initUser?.role != 'Contributor'"
                     type="button"
                     (click)="addCross()"
                     [disabled]="
