@@ -52,7 +52,7 @@
       [selectedIndex]="selectedTabIndex"
       (selectedTabChange)="tabChanged($event)"
     >
-      <mat-tab  label="Summary">
+      <mat-tab label="Summary">
         <!-- step-2 -->
 
         <mat-card *ngIf="!loading">
@@ -138,7 +138,7 @@
                   mat-raised-button
                   (click)="openHistoryDialog(this.initiative_data.id)"
                 >
-                History of change
+                  History of change
                 </button>
               </div>
 
@@ -370,7 +370,11 @@
                 [ngClass]="{
                   'show-d': wp.id != 'CROSS' && wp.id != 'IPSR',
                   'show-d-2': wp.id == 'CROSS',
-                  'show-d-3': wp.id == 'IPSR'
+                  'show-d-3': wp.id == 'IPSR',
+                  'show-d-4':
+                    wp.id == 'IPSR' && initUser.role === 'Contributor',
+                  'show-d-5':
+                    wp.id == 'CROSS' && initUser.role === 'Contributor'
                 }"
                 >Show decimals</mat-slide-toggle
               >
@@ -538,7 +542,7 @@
                             *ngIf="item.category == 'Cross Cutting'"
                           >
                             <button
-                            *ngIf="initUser.role != 'Contributor'"
+                              *ngIf="initUser.role != 'Contributor'"
                               mat-icon-button
                               [matMenuTriggerFor]="menu"
                               [disabled]="
@@ -982,7 +986,7 @@
                   mat-raised-button
                   (click)="openHistoryDialog(this.initiative_data.id)"
                 >
-                History of change
+                  History of change
                 </button>
               </div>
               <div class="risk-report-button-box">
@@ -1036,7 +1040,7 @@
               <!-- btn-4 -->
               <div class="risk-report-button-box" style="height: 37px">
                 <app-center-status
-                  *ngIf="(initStatus != 'Approved') && partner.canEdit"
+                  *ngIf="initStatus != 'Approved' && partner.canEdit"
                   (change)="partnerStatusChange($event, partner.code)"
                   [status]="!checkComplete(partner.code)"
                   [initiative_id]="initiative_data.id"
@@ -1116,63 +1120,57 @@
               partnersData[partner.code][wp.ost_wp.wp_official_code]
             "
           >
-          <div class="plural-head">
-            <mat-card-title class="card-title-table"
-            >{{ wp.title }}
-            <app-popover
-              [id]="isFirst ? '17' : isLast ? '18' : '3'"
-            ></app-popover>
-          </mat-card-title>
-          <div class="plural-head-2">
-            <div class="btns">
-              <button class="check-btn" 
-                *ngIf="partner?.canEdit" 
-                [disabled]="
-                  partnersStatus[partner.code] ||
-                  initStatus == 'Pending' ||
-                  initStatus == 'Approved'
-                "
-                (click)="
-                checkAll(
-                  partner.code,
-                  wp.ost_wp.wp_official_code,
-                  true
-                )
-              "
-            >
-              Check all
-            </button>
-            <button class="check-btn-clear" 
-                *ngIf="partner?.canEdit"
-                [disabled]="
-                  partnersStatus[partner.code] ||
-                  initStatus == 'Pending' ||
-                  initStatus == 'Approved'
-                "
-                (click)="
-                checkAll(
-                  partner.code,
-                  wp.ost_wp.wp_official_code,
-                  false
-                )
-              "
-            >
-            Clear all
-            </button>
-            </div>
+            <div class="plural-head">
+              <mat-card-title class="card-title-table"
+                >{{ wp.title }}
+                <app-popover
+                  [id]="isFirst ? '17' : isLast ? '18' : '3'"
+                ></app-popover>
+              </mat-card-title>
+              <div class="plural-head-2">
+                <div class="btns">
+                  <button
+                    class="check-btn"
+                    *ngIf="partner?.canEdit"
+                    [disabled]="
+                      partnersStatus[partner.code] ||
+                      initStatus == 'Pending' ||
+                      initStatus == 'Approved'
+                    "
+                    (click)="
+                      checkAll(partner.code, wp.ost_wp.wp_official_code, true)
+                    "
+                  >
+                    Check all
+                  </button>
+                  <button
+                    class="check-btn-clear"
+                    *ngIf="partner?.canEdit"
+                    [disabled]="
+                      partnersStatus[partner.code] ||
+                      initStatus == 'Pending' ||
+                      initStatus == 'Approved'
+                    "
+                    (click)="
+                      checkAll(partner.code, wp.ost_wp.wp_official_code, false)
+                    "
+                  >
+                    Clear all
+                  </button>
+                </div>
 
-            <mat-slide-toggle
-              [(ngModel)]="
-                toggleValues[partner.code][wp.ost_wp.wp_official_code]
-              "
-              (toggleChange)="
-                toggleActualValues(partner.code, wp.ost_wp.wp_official_code)
-              "
-              class="show-d-1"
-              >Show decimals</mat-slide-toggle
-            >
-          </div>
-          </div>
+                <mat-slide-toggle
+                  [(ngModel)]="
+                    toggleValues[partner.code][wp.ost_wp.wp_official_code]
+                  "
+                  (toggleChange)="
+                    toggleActualValues(partner.code, wp.ost_wp.wp_official_code)
+                  "
+                  class="show-d-1"
+                  >Show decimals</mat-slide-toggle
+                >
+              </div>
+            </div>
             <mat-card-content>
               <div class="table-box-2 mat-elevation-z8">
                 <table
@@ -1342,14 +1340,14 @@
                               ][item.id][per.id]
                             "
                             (change)="
-                              changeEnable( 
+                              changeEnable(
                                 partner.code,
                                 wp.ost_wp.wp_official_code,
                                 item.id,
                                 item?.ipsr?.id ? item?.ipsr.title : item.title,
                                 per.id,
                                 $event
-                              ) 
+                              )
                             "
                           ></mat-checkbox>
                         </td>
@@ -1391,7 +1389,9 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code,
                                   item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  item?.ipsr?.id
+                                    ? item?.ipsr.title
+                                    : item.title,
                                   'percent'
                                 )
                               "
@@ -1425,7 +1425,9 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code,
                                   item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  item?.ipsr?.id
+                                    ? item?.ipsr.title
+                                    : item.title,
                                   'percent'
                                 )
                               "
@@ -1538,7 +1540,9 @@
                                       partner.code,
                                       wp.ost_wp.wp_official_code,
                                       item.id,
-                                      item?.ipsr?.id ? item?.ipsr.title : item.title
+                                      item?.ipsr?.id
+                                        ? item?.ipsr.title
+                                        : item.title
                                     )
                                   "
                                   matTooltip="No budget assigned"

@@ -942,7 +942,7 @@ mat-tab-group {
     font-family: "Poppins", sans-serif !important;
     white-space: normal !important;
     max-width: 89rem;
-    margin: 3rem 0 -6rem 0;
+    margin: -1rem 0 -6rem 0;
     padding: 0 1.4rem;
     color: #0f212f;
     /* text-align: center; */
@@ -1057,6 +1057,36 @@ mat-tab-group {
   position: relative;
   top: 8.9rem;
   left: -11rem;
+}
+
+.show-d-4 {
+  align-self: self-end;
+  color: transparent;
+  letter-spacing: 0.2rem;
+  transition: all 0.2s;
+  margin: -3rem 1.5rem 6rem 0;
+  color: transparent;
+  letter-spacing: 0.2rem;
+  transition: all 0.2s;
+  position: relative;
+  top: 6.9rem;
+  left: 0;
+  // left: -11rem;
+}
+
+.show-d-5 {
+  align-self: self-end;
+  color: transparent;
+  letter-spacing: 0.2rem;
+  transition: all 0.2s;
+  margin: -3rem 1.5rem 6rem 0;
+  color: transparent;
+  letter-spacing: 0.2rem;
+  transition: all 0.2s;
+  position: relative;
+  top: 6.9rem;
+  left: 0;
+  // left: -11rem;
 }
 mat-slide-toggle {
   // align-self: self-end;
