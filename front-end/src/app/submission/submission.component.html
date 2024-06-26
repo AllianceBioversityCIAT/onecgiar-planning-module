@@ -794,7 +794,7 @@
                         >
                       </ng-container> -->
 
-                      <ng-container *ngIf="item?.ipsr?.id">
+                      <ng-container *ngIf="item?.ipsr?.id && item?.description">
                         <tr *ngIf="item.isExpand">
                           <td colspan="12">
                             <table class="table table-sm">
@@ -1692,7 +1692,7 @@
                       </tr>
                     </ng-container>
 
-                    <ng-container *ngIf="item?.ipsr?.id">
+                    <ng-container *ngIf="item?.ipsr?.id && item?.description">
                       <tr *ngIf="item.isExpand">
                         <td colspan="12">
                           <table class="table table-sm">
