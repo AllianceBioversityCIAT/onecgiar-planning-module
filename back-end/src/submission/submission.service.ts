@@ -1538,6 +1538,12 @@ export class SubmissionService {
           });
         });
       }
+
+        if (this.partnersData[partner.code]?.IPSR)
+          this.partnersData[partner.code].IPSR = this.partnersData[
+            partner.code
+          ]?.IPSR?.filter((d: any) => d.value != null && d.value != "");
+          
         let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
 
         this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
@@ -1583,6 +1589,11 @@ export class SubmissionService {
 
     newCROSS.forEach((d: any) => this.allData["CROSS"].unshift(d))
 
+    
+    const newIPSR = this.allData["IPSR"]
+      .filter((d: any) => d.value != "")
+      .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+    this.allData["IPSR"] = newIPSR;
 
     //sort WP titles
     this.wps.forEach((d : any) => { 

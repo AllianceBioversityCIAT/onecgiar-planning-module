@@ -379,6 +379,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.displayValues[partner_code][wp_id][item_id] = 0;
       this.changeCalc(partner_code, wp_id, item_id, title, "percent");
     }
+     else {
+      this.values[partner_code][wp_id][item_id] = null;
+      this.displayValues[partner_code][wp_id][item_id] = null;
+    }
     if (result)
       this.socket.emit("setDataValues", {
         id: this.params.id,

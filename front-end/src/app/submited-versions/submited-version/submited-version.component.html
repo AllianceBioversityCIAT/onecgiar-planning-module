@@ -121,7 +121,7 @@
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                        )
+                        ) | number 
                       }}
                     </td>
                   </tr>
@@ -139,7 +139,7 @@
                     </td>
                   </ng-container>
                   <td>{{ wpsTotalSum | number : "1.2-2" }}%</td>
-                  <td>{{ roundNumber(summaryBudgetsAllTotal) }}</td>
+                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number }}</td>
                 </tr>
               </table>
             </div>
@@ -222,14 +222,14 @@
                         <td>
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
-                              ? summaryBudgets[wp.ost_wp.wp_official_code][
+                              ? (summaryBudgets[wp.ost_wp.wp_official_code][
                                   item.id
-                                ]
+                                ] | number) 
                               : roundNumber(
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
                                   ]
-                                )
+                                ) | number 
                           }}
                         </td>
                       </tr>
@@ -267,10 +267,10 @@
                       <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
-                            ? summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                            ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code] | number) 
                             : roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              )
+                              ) | number 
                         }}
                       </td>
                     </tr>
@@ -378,12 +378,12 @@
                       <td>
                         {{
                           toggleValues[partner.code][wp.ost_wp.wp_official_code]
-                            ? budgetValues[partner.code][
+                            ? (budgetValues[partner.code][
                                 wp.ost_wp.wp_official_code
-                              ][item.id]
+                              ][item.id] | number )
                             : displayBudgetValues[partner.code][
                                 wp.ost_wp.wp_official_code
-                              ][item.id]
+                              ][item.id] | number 
                         }}
                       </td>
                     </tr>
@@ -419,7 +419,7 @@
                       }}%
                     </td>
                     <td>
-                      {{ wp_budgets[partner.code][wp.ost_wp.wp_official_code] }}
+                      {{ wp_budgets[partner.code][wp.ost_wp.wp_official_code] | number  }}
                     </td>
                   </tr>
                 </table>

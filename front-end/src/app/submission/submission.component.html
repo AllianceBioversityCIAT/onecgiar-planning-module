@@ -722,9 +722,9 @@
                         <td (click)="item.isExpand = !item.isExpand">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
-                              ? summaryBudgets[wp.ost_wp.wp_official_code][
+                              ? (summaryBudgets[wp.ost_wp.wp_official_code][
                                   item.id
-                                ]
+                                ] | number )
                               : roundNumber(
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
@@ -864,7 +864,7 @@
                       <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
-                            ? summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                            ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code] | number) 
                             : roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
                               ) | number 

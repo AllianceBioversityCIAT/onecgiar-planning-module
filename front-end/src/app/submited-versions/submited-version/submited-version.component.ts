@@ -498,6 +498,30 @@ export class SubmitedVersionComponent implements OnInit {
           });
         });
       }
+
+      if (this.partnersData[partner.code]?.IPSR)
+        this.partnersData[partner.code].IPSR = this.partnersData[
+          partner.code
+        ]?.IPSR?.filter((d: any) => d.value != null && d.value != "");
+
+      let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+
+      this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+
+      newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+
+      this.wps.forEach((d: any) => {
+        if (d.category == "WP") {
+          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+        }
+      })
+
       this.loading = false;
     }
 
@@ -515,6 +539,35 @@ export class SubmitedVersionComponent implements OnInit {
 
     this.setvalues(this.savedValues.values, this.savedValues.perValues);
 
+
+  const newIPSR = this.allData["IPSR"]
+    .filter((d: any) => d.value != "")
+    .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+  this.allData["IPSR"] = newIPSR;
+
+
+  //sort (Cross Cutting)
+  const newCROSS = this.allData["CROSS"].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+
+  this.allData["CROSS"] = this.allData["CROSS"].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+
+  newCROSS.forEach((d: any) => this.allData["CROSS"].unshift(d))
+
+
+  //sort WP titles
+  this.wps.forEach((d: any) => {
+    if (d.category == "WP") {
+      let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+        .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+      let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+        .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+
+      this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+    }
+  })
+
+
     this.titl2.setTitle("Submitted versions");
     this.meta.updateTag({ name: "description", content: "Submitted versions" });
   }
@@ -528,7 +581,7 @@ export class SubmitedVersionComponent implements OnInit {
     this.params5 = this.activatedRoute?.parent?.snapshot.parent?.params;
 
     this.submission_data = await this.submissionService.getSubmissionsById(
-      this.params.id
+      +this.params.id
     );
     console.log(this.submission_data)
     this.initiative_data = this.submission_data.initiative;
