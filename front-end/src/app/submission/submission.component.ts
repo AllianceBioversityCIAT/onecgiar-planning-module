@@ -121,8 +121,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
   timeCalc: any;
   async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string) {
-    if (this.timeCalc) clearTimeout(this.timeCalc);
-    this.timeCalc = setTimeout(async () => {
+    // if (this.timeCalc) clearTimeout(this.timeCalc);
+    setTimeout(async () => {
       let percentValue;
       let budgetValue;
       let isActualValues = this.toggleValues[partner_code][wp_id];
