@@ -374,7 +374,11 @@ export class SubmitedVersionComponent implements OnInit {
       // ...indicators_data,
     ];
     this.wps = this.results
-      .filter((d: any) => d.category == "WP" && !d.group)
+      .filter((d: any) => {
+        if (d.category == "WP")
+          d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
+        return d.category == "WP" && !d.group;
+      })
       .sort((a: any, b: any) => a.title.localeCompare(b.title));
     this.wps.unshift({
       id: "CROSS",
