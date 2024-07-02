@@ -11,7 +11,7 @@
                     <span class="name">{{history.user.full_name}}</span>
                 </div>
                 <div class="date-section">
-                    <span class="date">{{history.createdAt | date : 'medium'	}}</span>
+                    <span class="date">{{history.createdAt | date : 'medium' }}</span>
                 </div>
                 <div class="section-name">
                     <ng-container *ngIf="!history.organization">
@@ -21,7 +21,7 @@
                         <div class="section">
                             <span>{{history.resource_property}}</span>
                         </div>
-                            <div class="section-values" [ngStyle]="{
+                        <div class="section-values" [ngStyle]="{
                                 backgroundColor: 
                                 history.new_value && history.old_value ? '#FFF3ED'
                                 : history.new_value ? '#E5F2E5' 
@@ -31,18 +31,19 @@
                                 : history.new_value ? '#008000 solid 5px' 
                                 : '#FF0007 solid 5px'
                             }">
-                                <div>
-                                    <span *ngIf="history.new_value" class="new-value">{{history.new_value}}</span>
-                                </div>
-                                <div>
-                                    <span *ngIf="history.old_value" class="old-value">{{history.old_value}}</span>
-                                </div>
+                            <div>
+                                <span *ngIf="history.new_value" class="new-value">{{history.new_value}}</span>
                             </div>
-    
+                            <div>
+                                <span *ngIf="history.old_value" class="old-value">{{history.old_value}}</span>
+                            </div>
+                        </div>
+
                     </ng-container>
                     <ng-container *ngIf="history.organization">
                         <div class="section">
-                            <span>{{history.organization?.acronym}}</span><span *ngIf="history.work_package">/{{history.work_package?.acronym}}</span>
+                            <span>{{history.organization?.acronym}}</span><span
+                                *ngIf="history.work_package">/{{history.work_package?.acronym}}</span>
                         </div>
                         <div class="section" *ngIf="history.item_name">
                             <span>{{ history.item_name }}</span>
@@ -50,10 +51,26 @@
                         <div class="section" *ngIf="history.period">
                             Period : <span>{{history.period.year}}</span>-<span>{{history.period.quarter}}</span>
                         </div>
-                        <div class="section">
+                        <div class="section"
+                            *ngIf="history?.resource_property != 'Checked period' && history?.resource_property != 'unchecked period' && history?.resource_property != 'Checked result as no budget assigned' && history?.resource_property != 'unchecked result as no budget assigned'">
                             <span>{{ history.resource_property }}</span>
                         </div>
-                        <div class="section-values" [ngStyle]="{
+
+                        <ng-container
+                            *ngIf="history?.resource_property == 'Checked period' || history?.resource_property == 'unchecked period' || history?.resource_property == 'Checked result as no budget assigned' || history?.resource_property == 'unchecked result as no budget assigned'">
+                            <div class="section-values" [ngStyle]="{
+                                backgroundColor: history.resource_property == 'Checked period' || history.resource_property == 'Checked result as no budget assigned' ? 'rgb(229, 242, 229)' : '#FFE5E6',
+                                'border-left': history.resource_property == 'Checked period' || history.resource_property == 'Checked result as no budget assigned' ? 'rgb(0, 128, 0) solid 5px' : 'rgb(241 0 9) solid 5px',
+                                'padding': '0 8px'
+                                }">
+                                <span>{{ history.resource_property }}</span>
+                            </div>
+
+                        </ng-container>
+
+                        <div class="section-values"
+                            *ngIf="history?.resource_property != 'Checked period' && history?.resource_property != 'unchecked period' && history?.resource_property != 'Checked result as no budget assigned' && history?.resource_property != 'unchecked result as no budget assigned'"
+                            [ngStyle]="{
                             backgroundColor: 
                             history.new_value && history.old_value ? '#FFF3ED'
                             : history.new_value ? '#E5F2E5' 
