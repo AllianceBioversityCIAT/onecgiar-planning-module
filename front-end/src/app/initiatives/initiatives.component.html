@@ -158,7 +158,7 @@
                   class="color-icons-table-action"
                   matTooltip="Manage Initiative Team"
                   matTooltipPosition="above"
-                  *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles)"
+                  *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles) || isContributor(row.roles)"
                   routerLink="initiative/{{ row['id'] }}/{{
                     row['official_code']
                   }}/team-members"
