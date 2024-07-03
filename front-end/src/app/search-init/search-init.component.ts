@@ -16,12 +16,14 @@ export class SearchInitComponent {
   roles = [ROLES.COORDINATOR, ROLES.LEAD,  ROLES.CoLeader, ROLES.CONTRIBUTOR]; 
 
   sort = [
-    { name: "Initiative ID (lowest first)", value: "id,ASC" },
-    { name: "Initiative ID (highest first)", value: "id,DESC" },
+    { name: "Official code (lowest first)", value: "official_code,ASC" },
+    { name: "Official code (highest first)", value: "official_code,DESC" },
     { name: "Initiative Name (A to Z)", value: "name,ASC" },
     { name: "Initiative Name (Z to A)", value: "name,DESC" },
     { name: "Updated on (Oldest)", value: "last_update_at,ASC" },
     { name: "Updated on (Newest)", value: "last_update_at,DESC" },
+    { name: "Initiative ID (lowest first)", value: "id,ASC" },
+    { name: "Initiative ID (highest first)", value: "id,DESC" },
   ];
 
   status = [

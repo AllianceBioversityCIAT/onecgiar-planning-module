@@ -52,7 +52,7 @@ export class InitiativesService {
       const sorts = query.sort.split(',');
       obj['init.' + sorts[0]] = sorts[1];
       return obj;
-    } else return { 'init.id': 'ASC' };
+    } else return { 'init.official_code': 'ASC' };
   }
   constructor(
     private readonly httpService: HttpService,
