@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
@@ -31,6 +32,9 @@ import { IpsrValue } from 'src/entities/ipsr-value.entity';
 // import { InitiativeMelia } from 'src/entities/initiative-melia.entity';
 import { EmailService } from 'src/email/email.service';
 import { History } from 'src/entities/history.entity';
+import { catchError, firstValueFrom, map } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -67,7 +71,8 @@ export class SubmissionService {
     private ipsrValueRepository: Repository<IpsrValue>,
     // @InjectRepository(InitiativeMelia)
     // private initiativeMeliaRepository: Repository<InitiativeMelia>,
-    private emailService: EmailService
+    private emailService: EmailService,
+    private readonly httpService: HttpService,
   ) {}
   sort(query) {
     if (query?.sort) {
@@ -220,7 +225,7 @@ export class SubmissionService {
     });
     return { ...sub_data, consolidated: this.dataToPers(sub_data.results) };
   }
-  async createNew(user_id, initiative_id, phase_id, json) {
+  async createNew(user_id, initiative_id, phase_id, json, tocSubmissionData) {
     try {
       const submissionData = {
         toc_data: json,
@@ -234,6 +239,10 @@ export class SubmissionService {
       newSubmission.user = userObject;
       newSubmission.phase = phaseObject;
       newSubmission.initiative = initiativeObject;
+      newSubmission.toc_original_id = tocSubmissionData.original_id;
+      newSubmission.toc_version_id = tocSubmissionData.version_id;
+      newSubmission.toc_version = tocSubmissionData.version;
+      newSubmission.toc_phase_id = tocSubmissionData.phase;
       const submissionObject = await this.submissionRepository.save(
         newSubmission,
         { reload: true },
@@ -2403,4 +2412,58 @@ export class SubmissionService {
       }
     );
   }
+
+  async getTocSubmissionData(id: number) {
+    return await firstValueFrom(
+      this.httpService
+        .get(process.env.TOC_API + '/toc/' + id)
+        .pipe(
+          map((d: any) => ({
+            original_id: d.data.original_id,
+            version_id: d.data.version_id,
+            version: d.data.version,
+            phase: d.data.phase,
+            initiative_id: id
+          })),
+          catchError((error: AxiosError) => {
+            throw new InternalServerErrorException();
+          }),
+        ),
+    );
+  }
+
+
+  async getdata() {
+    const emptyArray = [];
+    const initiatives = await this.initiativeRepository.find({
+      select : ['id']
+    });
+
+    for(let init of initiatives) {
+      let data = await this.getTocSubmissionData(init.id);
+      emptyArray.push(data);
+    }
+
+    const allSubmissions = await this.submissionRepository.find({
+      relations: ['phase']
+    });
+
+
+    for(let submission of allSubmissions) {
+      for(let tocData of emptyArray) {
+        if(submission.initiative_id == tocData.initiative_id && submission.phase.tocPhase == tocData.phase) {
+          await this.submissionRepository.update(submission.id, {
+            toc_original_id: tocData.original_id,
+            toc_version_id: tocData.version_id,
+            toc_version: tocData.version,
+            toc_phase_id: tocData.phase
+          });
+        }
+      }
+    }
+
+
+    return { message: 'Data Saved' };
+  }
+
 }

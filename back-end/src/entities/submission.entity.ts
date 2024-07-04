@@ -70,6 +70,19 @@ export class Submission {
   @OneToMany(() => IpsrValue, (ipsrValue) => ipsrValue.submission)
   ipsrValues: IpsrValue[];
 
+
+  @Column({ nullable: true })
+  toc_original_id: string;
+
+  @Column({ nullable: true })
+  toc_version_id: string;
+
+  @Column({ nullable: true })
+  toc_version: number;
+
+  @Column({ nullable: true })
+  toc_phase_id: string;
+
   // @OneToMany(
   //   () => InitiativeMelia,
   //   (initiativeMelia) => initiativeMelia.submission,

@@ -87,12 +87,28 @@ export class SubmissionController {
     @Body('phase_id') phase_id: number,
   ) {
     const json = await this.getTocs(id);
+    const tocSubmissionData = await this.submissionService.getTocSubmissionData(id);
     return this.submissionService.createNew(
       req.user.id,
       id,
       phase_id,
       JSON.stringify(json),
+      tocSubmissionData
     );
+  }
+
+  @Get('toc_submission_data/:id')
+  @ApiBearerAuth()
+  async getTocSubmissionData(
+    @Param('id') id,
+  ) {
+    return this.submissionService.getTocSubmissionData(id)
+  }
+
+  @Get('get_data')
+  @ApiBearerAuth()
+  async getData() {
+    return this.submissionService.getdata();
   }
 
   @Post('save_result_values/:id')

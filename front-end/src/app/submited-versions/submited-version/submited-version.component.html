@@ -60,6 +60,11 @@
               {{ initiative_data.name }}</mat-card-subtitle
             >
           </div>
+          <div *ngIf="this.submission_data?.toc_version">
+            <mat-card-subtitle class="card-title-3 m-b-t"
+              >Toc version ID: {{this.submission_data?.toc_version}}</mat-card-subtitle
+            >
+          </div>
         </form>
       </div>
       <!-- <mat-card-title class="card-title"

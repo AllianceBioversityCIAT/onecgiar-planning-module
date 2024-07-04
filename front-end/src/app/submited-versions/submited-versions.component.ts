@@ -39,6 +39,7 @@ export class SubmitedVersionsComponent implements AfterViewInit {
     "created_at",
     "status",
     "status_reason",
+    "toc_version_id",
     "actions",
   ];
   dataSource: MatTableDataSource<any>;

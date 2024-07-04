@@ -92,6 +92,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   partnersStatus: any = {};
   centerHasError: any = {};
   itemHasError: any = {};
+  tocSubmissionData: any;
   check(values: any, code: string, id: number, item_id: string) {
     if (values[code] && values[code][id] && values[code][id][item_id]) {
       return true;
@@ -988,6 +989,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.user = this.AuthService.getLoggedInUser();
     this.params = this.activatedRoute?.snapshot.params;
     this.phase = await this.phasesService.getActivePhase();
+    this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.params.id)
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );

@@ -68,6 +68,12 @@ export class SubmissionService {
     );
   }
 
+  async getTocSubmissionData(id: any) {
+    return firstValueFrom(
+      this.http.get(environment.api_url+'/submission/toc_submission_data/' + id).pipe(map((d: any) => d))
+    );
+  }
+
   async getSubmissionsByInitiativeId(id: number, filters: any = null, page: any = null, limit: any = null, withFilters: boolean) {
     if(withFilters == false) {
       return firstValueFrom(

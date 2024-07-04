@@ -94,6 +94,11 @@
             ></td>
           </ng-container>
 
+          <ng-container matColumnDef="toc_version_id">
+            <th mat-header-cell *matHeaderCellDef>Toc version ID</th>
+            <td mat-cell *matCellDef="let row">{{ row.toc_version ? row.toc_version : 'N/A' }}</td>
+          </ng-container>
+
           <!-- actions -->
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
