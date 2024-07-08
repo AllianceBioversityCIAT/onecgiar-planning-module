@@ -1451,9 +1451,9 @@
                               ) &&
                               item.category != 'EOI' &&
                               item.category != 'OUTCOME' &&
-                              values[partner.code][wp.ost_wp.wp_official_code][
+                              !values[partner.code][wp.ost_wp.wp_official_code][
                                 item.id
-                              ] == null
+                              ]
                             "
                             class="cc"
                             [matTooltip]="
@@ -1464,9 +1464,9 @@
                               ) &&
                               item.category != 'EOI' &&
                               item.category != 'OUTCOME' &&
-                              values[partner.code][wp.ost_wp.wp_official_code][
+                              !values[partner.code][wp.ost_wp.wp_official_code][
                                 item.id
-                              ] == null
+                              ]
                                 ? 'You can mark this result as no budget assigned click to more info'
                                 : ''
                             "
@@ -1508,9 +1508,9 @@
                               ) &&
                               item.category != 'EOI' &&
                               item.category != 'OUTCOME' &&
-                              values[partner.code][wp.ost_wp.wp_official_code][
+                              !values[partner.code][wp.ost_wp.wp_official_code][
                                 item.id
-                              ] == null
+                              ]
                             "
                           >
                             <div class="popover__head">

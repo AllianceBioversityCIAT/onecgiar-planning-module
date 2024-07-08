@@ -380,7 +380,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.displayValues[partner_code][wp_id][item_id] = 0;
       this.changeCalc(partner_code, wp_id, item_id, title, "percent");
     }
-     else if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (!this.values[partner_code][wp_id][item_id] && !this.displayValues[partner_code][wp_id][item_id])){
+    if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (this.values[partner_code][wp_id][item_id] == 0 && this.displayValues[partner_code][wp_id][item_id] == 0)){
       this.values[partner_code][wp_id][item_id] = null;
       this.displayValues[partner_code][wp_id][item_id] = null;
     }
@@ -1065,10 +1065,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
       this.changes(partner_code, wp_id, item_id, per_id, value);
-      if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (!this.values[partner_code][wp_id][item_id] || !this.displayValues[partner_code][wp_id][item_id])){
-        this.values[partner_code][wp_id][item_id] = null;
-        this.displayValues[partner_code][wp_id][item_id] = null;
-      }
     });
     this.socket.on("setAllDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, itemsIds, period, value } = data;
