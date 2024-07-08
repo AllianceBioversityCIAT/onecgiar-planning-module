@@ -40,7 +40,7 @@ export class Initiative {
 
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   type_id: number;
 
   @ApiProperty()
