@@ -95,7 +95,8 @@ export class InitiativesService {
       }
     });
   }
-
+  
+  @Cron(CronExpression.EVERY_WEEK)
   async importWorkPackages() {
     const workPackagesData = await firstValueFrom(
       this.httpService
