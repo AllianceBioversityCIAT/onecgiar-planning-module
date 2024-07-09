@@ -355,8 +355,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     per_id: number,
     event: any
   ) {
-    if (!!this.noValuesAssigned[partner_code][wp_id][item_id]) {
-      this.noValuesAssigned[partner_code][wp_id][item_id] = 0;
+    if (
+      !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
+        true
+      )
+    ) {
+      if (!!this.noValuesAssigned[partner_code][wp_id][item_id]) {
+        this.noValuesAssigned[partner_code][wp_id][item_id] = 0;
+      }
     }
     this.changes(partner_code, wp_id, item_id, per_id, event.checked);
     const result = await this.submissionService.saveResultValues(
