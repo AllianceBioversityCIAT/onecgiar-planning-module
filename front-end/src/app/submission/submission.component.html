@@ -40,14 +40,20 @@
       </ul>
     </nav>
 
-    <mat-card *ngIf="loading">
+    <mat-card *ngIf="loading && !tocIncompleteData">
       <div class="risk-report-title-box">
         <h1 class="risk-report-title-box__title">Loading Items</h1>
       </div>
     </mat-card>
 
+    <mat-card *ngIf="tocIncompleteData">
+      <div class="risk-report-title-box">
+        <h1 class="risk-report-title-box__title">The Theory of Change (ToC) data is incomplete.</h1>
+      </div>
+    </mat-card>
+
     <mat-tab-group
-      *ngIf="!loading && this.partners?.length"
+      *ngIf="!loading && this.partners?.length  && !tocIncompleteData"
       class="btn--animated"
       [selectedIndex]="selectedTabIndex"
       (selectedTabChange)="tabChanged($event)"
@@ -55,7 +61,7 @@
       <mat-tab label="Summary">
         <!-- step-2 -->
 
-        <mat-card *ngIf="!loading">
+        <mat-card *ngIf="!loading  && !tocIncompleteData">
           <!-- <div *ngIf="leaders.length != 0" class="container-mat-tab-2">
             <div class="text-box">
               <p class="leaders-text">Leaders</p>
@@ -899,7 +905,7 @@
           >
         </ng-template>
 
-        <mat-card *ngIf="!loading">
+        <mat-card *ngIf="!loading  && !tocIncompleteData">
           <!-- <mat-card-title class="card-title"
             >One CGIAR Initiatives Plan of Results and Budget Template ({{
               this.phase.name

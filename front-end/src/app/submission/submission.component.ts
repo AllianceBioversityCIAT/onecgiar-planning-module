@@ -606,7 +606,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   initiative_data: any = {};
   ipsr_value_data: any;
   phase: any;
-
+  tocIncompleteData: boolean = false;
   async InitData() {
     this.loading = true;
     this.wpsTotalSum = 0;
@@ -885,13 +885,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
       this.wps.forEach((d: any) => {
         if (d.category == "WP") {
-          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code]?.filter((d: any) => d.category == "OUTPUT")
             .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code]?.filter((d: any) => d.category != "OUTPUT")
             .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData?.concat(outcomeData);
         }
       })
       this.loading = false;
@@ -903,6 +903,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         null,
         wp.ost_wp.wp_official_code
       );
+      if(wp.ost_wp.wp_official_code != 'IPSR' && this.allData[wp.ost_wp.wp_official_code].length == 0)
+        this.tocIncompleteData = true
     }
     this.savedValues = await this.submissionService.getSavedData(
       this.params.id,
@@ -949,8 +951,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
       }
     })
-
-    // console.log('allData =>', this.allData)
   }
   savedValues: any = null;
   isCenter: boolean = false;
