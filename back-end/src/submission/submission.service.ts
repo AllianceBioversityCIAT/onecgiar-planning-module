@@ -2398,6 +2398,9 @@ export class SubmissionService {
         id: id
       }
     });
+    await this.initiativeRepository.update(data.initiative_id, {
+      last_update_at: new Date(),
+    })
 
     submission.status = SubmissionStatus.DRAFT;
     await this.submissionRepository.save(submission).then(
