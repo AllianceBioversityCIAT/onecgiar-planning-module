@@ -15,29 +15,24 @@ export class EmailController {
       }
     @Get('')
     async getEmailLogs(@Query() query: any) {
-        let status: any = 'All';
-        if (query?.status == 'true') {
-          status = true;
-        } else if (query?.status == 'false') {
-          status = false;
-        }
         const take = query.limit || 10;
         const skip = (Number(query.page || 1) - 1) * take;
-        let result = await this.emailService.repo.createQueryBuilder('email');
-        if (status != 'All') {
-          result.where('status = :status', { status: status });
+        const result = await this.emailService.repo.createQueryBuilder('email')
+        if(query.status) {
+          result.where('email.status = :status', { status: Boolean(query.status == 'true' ? true : false) })
+        } else if(!query.status) {
+          result.where('email.id IS NOT NULL')
         }
-        result
-          .andWhere(
-            new Brackets((qb) => {
-              qb.where('email LIKE :email', {email: `%${query?.search || ''}%`,})
-              .orWhere('name LIKE :name', { name: `%${query?.search || ''}%` })
-              .orWhere('subject LIKE :subject', { subject: `%${query?.search || ''}%` })
-            })
-          )
-          .orderBy(this.sort(query))
-          .skip(skip || 0)
-          .take(take || 10);
+        result.andWhere(
+          new Brackets((qb) => {
+            qb.andWhere('email LIKE :email', {email: `%${query?.search || ''}%`,})
+            .orWhere('name LIKE :name', { name: `%${query?.search || ''}%` })
+            .orWhere('subject LIKE :subject', { subject: `%${query?.search || ''}%` })
+          }),
+        )
+        .orderBy(this.sort(query))
+        .skip(skip || 0)
+        .take(take || 10);
     
         const finalResult = await result.getManyAndCount();
         return {

@@ -56,10 +56,16 @@ export class EmailsComponent {
     { name: "Name (Z to A)", value: "name,DESC" },
   ];
 
+  status = [
+    { name: "All", value: "" },
+    { name: "Sent", value: "true" },
+    { name: "Not Sent", value: "false" },
+  ];
+
   async ngOnInit() {
     this.filterForm = this.fb.group({
       search: [null],
-      status: [null],
+      status: [this.status[0]],
       sort: [null],
     });
     await this.initTable();

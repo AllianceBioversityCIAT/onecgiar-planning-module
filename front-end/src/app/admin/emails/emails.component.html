@@ -64,9 +64,9 @@
               [placeholder]="'All'"
               id="select-where"
             >
-              <mat-option>All</mat-option>
-              <mat-option value="sent">Sent</mat-option>
-              <mat-option value="Not_Sent">Not Sent</mat-option>
+            <mat-option *ngFor="let item of status" [value]="item.value">
+              {{ item.name }}
+            </mat-option>
             </mat-select>
           </div>
         </div>
