@@ -200,6 +200,9 @@ export class InitiativesService {
               } else if (query.status == 'Draft') {
                 qb.andWhere('init.last_submitted_at is null');
                 qb.orWhere('init.last_update_at != init.last_submitted_at');
+                qb.orWhere('latest_submission.status = :status', {
+                  status: 'Draft',
+                });
               }
             }
           }),
