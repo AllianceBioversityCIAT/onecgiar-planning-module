@@ -544,12 +544,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.sammaryTotal[wp_id] = 0;
       this.sammaryTotalConsolidated[wp_id] = 0;
       Object.keys(this.sammary[wp_id]).forEach((item_id) => {
-        if (totalWp[wp_id][item_id])
-          this.sammaryTotal[wp_id] += totalWp[wp_id][item_id];
-        this.sammaryTotalConsolidated[wp_id] = this.summaryBudgetsAllTotal
-          ? (this.summaryBudgetsTotal[wp_id] / this.summaryBudgetsAllTotal) *
-          100
-          : 0;
+        if (totalWp[wp_id])
+          if (totalWp[wp_id][item_id])
+            this.sammaryTotal[wp_id] += totalWp[wp_id][item_id];
+          this.sammaryTotalConsolidated[wp_id] = this.summaryBudgetsAllTotal
+            ? (this.summaryBudgetsTotal[wp_id] / this.summaryBudgetsAllTotal) *
+            100
+            : 0;
       });
     });
     this.wpsTotalSum = 0;
@@ -877,11 +878,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           partner.code
         ]?.IPSR?.filter((d: any) => d.value != null && d.value != "");
 
-      let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+      let newCrossCenters = this.partnersData[partner.code]?.CROSS?.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
 
-      this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+      if(this.partnersData[partner.code]?.CROSS)
+        this.partnersData[partner.code].CROSS = this.partnersData[partner.code]?.CROSS?.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
 
-      newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+      newCrossCenters?.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
 
       this.wps.forEach((d: any) => {
         if (d.category == "WP") {
