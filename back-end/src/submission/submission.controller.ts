@@ -198,7 +198,7 @@ export class SubmissionController {
         .get(process.env.TOC_API + '/toc/' + id)
         .pipe(
           map((dd: any) =>
-          dd.data.data.filter(
+          dd.data?.data?.filter(
               (d) =>
                 ((d.category == 'WP' && !d.group) ||
                   d.category == 'OUTPUT' ||

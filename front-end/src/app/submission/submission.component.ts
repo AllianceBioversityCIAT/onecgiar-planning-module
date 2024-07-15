@@ -664,14 +664,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     await this.submissionService.getToc(this.params.id).then(
       (data) => {
-        this.results = data;
-        this.results = [
-          ...cross_data,
-          // ...melia_data,
-          ...this.ipsr_value_data,
-          ...this.results,
-          // ...indicators_data,
-        ];
+        if(!data)
+          this.tocIncompleteData = true
+        else
+          this.results = data;
+          this.results = [
+            ...cross_data,
+            // ...melia_data,
+            ...this.ipsr_value_data,
+            ...this?.results,
+            // ...indicators_data,
+          ];
       },
       (error) => {
         this.dialog
@@ -721,7 +724,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.wps = this.results
       .filter((d: any) => {
         if (d.category == "WP")
-          d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
+          if(!d.ost_wp?.acronym || !d.ost_wp?.name)
+            this.tocIncompleteData = true;
+          else
+            d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
         return d.category == "WP" && !d.group;
       })
       .sort((a: any, b: any) => a.title.localeCompare(b.title));
@@ -887,13 +893,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
       this.wps.forEach((d: any) => {
         if (d.category == "WP") {
-          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code]?.filter((d: any) => d.category == "OUTPUT")
+          if(this.partnersData[partner.code]){
+            let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code]?.filter((d: any) => d.category == "OUTPUT")
             .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code]?.filter((d: any) => d.category != "OUTPUT")
-            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+            let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code]?.filter((d: any) => d.category != "OUTPUT")
+              .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData?.concat(outcomeData);
+            this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData?.concat(outcomeData);
+          }
         }
       })
       this.loading = false;
