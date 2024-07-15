@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { Socket, SocketIoConfig } from "ngx-socket-io";
 import { from, Observable } from "rxjs";
 import { ChatMessage } from "../chat/chat.component";
-import { environment } from "../../../../environments/environment";
+import { environment } from "src/environments/environment";
 
 export interface FilterResult<T> {
   data: T[];
@@ -30,7 +30,7 @@ export class ChatSocket {
   socket: Socket;
   config = (token: string): SocketIoConfig => {
     return {
-      url: environment.socket_url + '/chat',
+      url: environment.socket_url + 'chat',
       options: {
         path: environment.socket_path,
         reconnectionDelay: 200,
