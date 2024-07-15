@@ -277,6 +277,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   perValues: any = {};
+  haveTrue: any = {};
   perValuesSammary: any = {};
   perAllValues: any = {};
   sammaryTotal: any = {};
@@ -390,6 +391,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.values[partner_code][wp_id][item_id] = null;
       this.displayValues[partner_code][wp_id][item_id] = null;
     }
+    
     if (result)
       this.socket.emit("setDataValues", {
         id: this.params.id,
@@ -429,6 +431,18 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.values[partner_code][wp_id][item_id] = 0;
         this.displayValues[partner_code][wp_id][item_id] = 0;
         this.changeCalc(partner_code, wp_id, item_id, '', "percent");
+      } else if(!Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
+        false
+      )) {
+        this.values[partner_code][wp_id][item_id] = null;
+        this.displayValues[partner_code][wp_id][item_id] = null;
+      }
+      if(value == true) {
+        this.values[partner_code][wp_id][item_id] = null;
+        this.displayValues[partner_code][wp_id][item_id] = null;
+      } else {
+        this.values[partner_code][wp_id][item_id] = 0;
+        this.displayValues[partner_code][wp_id][item_id] = 0;
       }
     }
 
@@ -612,6 +626,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.wpsTotalSum = 0;
     this.perValues = {};
+    this.haveTrue = {};
     this.perValuesSammary = {};
     this.perAllValues = {};
     this.sammaryTotal = {};
@@ -843,13 +858,22 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             this.summaryBudgets[wp.ost_wp.wp_official_code][item.id] = 0;
 
           if (!this.perValues[partner.code]) this.perValues[partner.code] = {};
+          if (!this.haveTrue[partner.code]) this.haveTrue[partner.code] = {};
           if (!this.perValues[partner.code][wp.ost_wp.wp_official_code])
             this.perValues[partner.code][wp.ost_wp.wp_official_code] = {};
+          if (!this.haveTrue[partner.code][wp.ost_wp.wp_official_code])
+            this.haveTrue[partner.code][wp.ost_wp.wp_official_code] = {};
           if (
             !this.perValues[partner.code][wp.ost_wp.wp_official_code][item.id]
           )
             this.perValues[partner.code][wp.ost_wp.wp_official_code][item.id] =
               {};
+
+          if (
+            !this.haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id]
+          )
+            this.haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] =
+              false;
 
           this.period.forEach((element) => {
             this.perValues[partner.code][wp.ost_wp.wp_official_code][item.id][
@@ -1080,6 +1104,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
+      if(value) {
+        this.values[partner_code][wp_id][item_id] = null;
+        this.displayValues[partner_code][wp_id][item_id] = null;
+      } else {
+        this.values[partner_code][wp_id][item_id] = 0;
+        this.displayValues[partner_code][wp_id][item_id] = 0;
+      }
       this.changes(partner_code, wp_id, item_id, per_id, value);
     });
     this.socket.on("setAllDataValues-" + this.params.id, (data: any) => {
@@ -1230,6 +1261,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
                   this.perValues[code][wp_id][item_id][per_id] =
                     perValuesToSet[code][wp_id][item_id][per_id];
                 // Sum(percentage from each output from each center for each WP) / Sum(total percentage for each WP for each center)
+                if(Object.values(this.perValues[code][wp_id][item_id]).includes(true)) 
+                  this.haveTrue[code][wp_id][item_id] = true
               }
             );
           });

@@ -1402,11 +1402,23 @@
                                   'percent'
                                 )
                               "
-                              [(ngModel)]="
+                              [ngModel]="
+                                haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !values[partner.code][
+                                wp.ost_wp.wp_official_code
+                              ][item.id] ? null :
                                 values[partner.code][
                                   wp.ost_wp.wp_official_code
                                 ][item.id]
                               "
+
+                              (ngModelChange)="haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !values[partner.code][
+                              wp.ost_wp.wp_official_code
+                            ][item.id] ?  values[partner.code][
+                            wp.ost_wp.wp_official_code
+                          ][item.id] = $event :
+                            values[partner.code][
+                                wp.ost_wp.wp_official_code
+                              ][item.id] = $event"
                               matInput
                             />
                             <input
@@ -1438,11 +1450,22 @@
                                   'percent'
                                 )
                               "
-                              [(ngModel)]="
-                                displayValues[partner.code][
-                                  wp.ost_wp.wp_official_code
-                                ][item.id]
-                              "
+                              [ngModel]="
+                              haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !displayValues[partner.code][
+                              wp.ost_wp.wp_official_code
+                            ][item.id] ? null :
+                              displayValues[partner.code][
+                                wp.ost_wp.wp_official_code
+                              ][item.id]
+                            "
+                            (ngModelChange)="haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !displayValues[partner.code][
+                            wp.ost_wp.wp_official_code
+                          ][item.id] ? displayValues[partner.code][
+                          wp.ost_wp.wp_official_code
+                        ][item.id] = $event :
+                            displayValues[partner.code][
+                              wp.ost_wp.wp_official_code
+                            ][item.id] = $event"
                               matInput
                             />
                             <mat-icon matSuffix>%</mat-icon>
