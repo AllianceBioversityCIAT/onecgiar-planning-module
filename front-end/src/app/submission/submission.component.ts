@@ -391,7 +391,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.values[partner_code][wp_id][item_id] = null;
       this.displayValues[partner_code][wp_id][item_id] = null;
     }
-    
+
     if (result)
       this.socket.emit("setDataValues", {
         id: this.params.id,
@@ -405,6 +405,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id
     );
     this.getInitStatus(this.initiative_data);
+    this.validateCenter(partner_code, false);
   }
 
   async checkAll(
@@ -1608,7 +1609,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.errors[partner_code][wp_id] = null;
     if (
       this.totals[partner_code][wp_id] == 0 &&
-      this.wp_budgets[partner_code][wp_id]
+      (this.wp_budgets[partner_code][wp_id] != 0 && this.wp_budgets[partner_code][wp_id] != null)
     ) {
       valid = false;
       this.errors[partner_code][wp_id] =
