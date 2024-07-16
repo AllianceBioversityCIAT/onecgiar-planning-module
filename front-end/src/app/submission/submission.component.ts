@@ -416,8 +416,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     const itemsIds = Object.keys(this.perValues[partner_code][wp_id]);
 
     for (let item_id of itemsIds) {
-      if (!!this.noValuesAssigned[partner_code][wp_id][item_id]) {
-        this.noValuesAssigned[partner_code][wp_id][item_id] = 0;
+      if (
+        !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
+          true
+        )
+      ) {
+        if (!!this.noValuesAssigned[partner_code][wp_id][item_id]) {
+          this.noValuesAssigned[partner_code][wp_id][item_id] = 0;
+        }
       }
       for (let period of this.period) {
         this.changes(partner_code, wp_id, item_id, period.id, value);
@@ -431,16 +437,21 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       ) {
         this.values[partner_code][wp_id][item_id] = 0;
         this.displayValues[partner_code][wp_id][item_id] = 0;
+        this.noValuesAssigned[partner_code][wp_id][item_id] = false;
         this.changeCalc(partner_code, wp_id, item_id, '', "percent");
       } else if(!Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
         false
       )) {
-        this.values[partner_code][wp_id][item_id] = null;
-        this.displayValues[partner_code][wp_id][item_id] = null;
+        if(!this.values[partner_code][wp_id][item_id] && !this.displayValues[partner_code][wp_id][item_id]) {
+          this.values[partner_code][wp_id][item_id] = null;
+          this.displayValues[partner_code][wp_id][item_id] = null;
+        }
       }
       if(value == true) {
-        this.values[partner_code][wp_id][item_id] = null;
-        this.displayValues[partner_code][wp_id][item_id] = null;
+        if(!this.values[partner_code][wp_id][item_id] && !this.displayValues[partner_code][wp_id][item_id]) {
+          this.values[partner_code][wp_id][item_id] = null;
+          this.displayValues[partner_code][wp_id][item_id] = null;
+        }
       } else {
         this.values[partner_code][wp_id][item_id] = 0;
         this.displayValues[partner_code][wp_id][item_id] = 0;
