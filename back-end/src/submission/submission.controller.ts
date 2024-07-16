@@ -105,6 +105,7 @@ export class SubmissionController {
     return this.submissionService.getTocSubmissionData(id)
   }
 
+  //to get version id for all submitted version
   @Get('get_data')
   @ApiBearerAuth()
   async getData() {

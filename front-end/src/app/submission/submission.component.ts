@@ -706,9 +706,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         ];
       }
     );
-    this.initiative_data = await this.submissionService.getInitiative(
-      this.params.id
-    );
+  
 
     this.wp_budgets = await this.submissionService.getWpBudgets(
       this.params.id,
@@ -1019,7 +1017,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   handelConnect = () => {
     this.connectDialogState = false;
     this.dialog.closeAll();
-    this.InitData();
   }
 
 
