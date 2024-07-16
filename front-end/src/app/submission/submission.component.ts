@@ -707,6 +707,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       }
     );
   
+    this.initiative_data = await this.submissionService.getInitiative(
+      this.params.id
+    );
 
     this.wp_budgets = await this.submissionService.getWpBudgets(
       this.params.id,
