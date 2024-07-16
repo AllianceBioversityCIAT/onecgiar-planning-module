@@ -5,9 +5,10 @@ import { IpsrValue } from 'src/entities/ipsr-value.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IpsrModule } from 'src/ipsr/ipsr.module';
 import { History } from 'src/entities/history.entity';
+import { Initiative } from 'src/entities/initiative.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([IpsrValue, History]),IpsrModule],
+  imports: [TypeOrmModule.forFeature([IpsrValue, History, Initiative]),IpsrModule],
   controllers: [IpsrValueController],
   providers: [IpsrValueService],
   exports: [IpsrValueService]

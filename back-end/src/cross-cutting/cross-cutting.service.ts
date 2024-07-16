@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CrossCutting } from 'src/entities/cross-cutting.entity';
 import { History } from 'src/entities/history.entity';
+import { Initiative } from 'src/entities/initiative.entity';
 import { IsNull, Repository } from 'typeorm';
 
 @Injectable()
@@ -12,6 +13,8 @@ export class CrossCuttingService {
     private CrossCuttingRepository: Repository<CrossCutting>,
     @InjectRepository(History)
     private HistoryRepository: Repository<History>,
+    @InjectRepository(Initiative)
+    private initiativeRepository: Repository<Initiative>,
   ) {}
 
   findAll() {
@@ -42,6 +45,9 @@ export class CrossCuttingService {
             history.user_id = user.id;
             history.initiative_id = data.initiative_id;
             await this.HistoryRepository.save(history);
+            await this.initiativeRepository.update(data.initiative_id, {
+              latest_history_id: history.id
+            });
           } else if(key == 'description' && value) {
             history.resource_property = `Add new Cross-Cutting description for (${data.title})`;
             history.item_name = 'Cross-Cutting';
@@ -50,6 +56,9 @@ export class CrossCuttingService {
             history.user_id = user.id;
             history.initiative_id = data.initiative_id;
             await this.HistoryRepository.save(history);
+            await this.initiativeRepository.update(data.initiative_id, {
+              latest_history_id: history.id
+            });
           }
         });
       }, 
@@ -107,6 +116,9 @@ export class CrossCuttingService {
           history.user_id = user.id;
           history.initiative_id = data.initiative_id;
           await this.HistoryRepository.save(history);
+          await this.initiativeRepository.update(data.initiative_id, {
+            latest_history_id: history.id
+          });
         }); 
       },
       (error) => {
@@ -135,7 +147,10 @@ export class CrossCuttingService {
         history.new_value = null;
         history.user_id = user.id;
         history.initiative_id = cross.initiative_id;
-        return await this.HistoryRepository.save(history);
+        await this.HistoryRepository.save(history);
+        await this.initiativeRepository.update(cross.initiative_id, {
+          latest_history_id: history.id
+        });
       }, 
       (error) => {
         console.log(error);

@@ -216,12 +216,6 @@ export class TrackPORBsComponent {
     this.getInitiatives();
   }
 
-  getLastUpdatedBy(history: any[]) {
-    let userName = history.reduce((prevValue, currValue) => {
-      return (prevValue.id > currValue.id ? prevValue.user.full_name : currValue.user.full_name);
-    }, '-');
-    return userName
-  }
 
   async exportData() {
     await this.initiativesService.exportInitiativesForTrackPORBs();

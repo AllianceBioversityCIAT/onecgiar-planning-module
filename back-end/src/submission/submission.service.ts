@@ -140,6 +140,9 @@ export class SubmissionService {
         history.initiative_id = data.initiative_id;
         history.organization_id = organization_code;
         await this.historyRepository.save(history);
+        await this.initiativeRepository.update(initiative_id, {
+          latest_history_id: history.id
+        });
       }, (error) => {
         console.error(error)
       }
@@ -374,6 +377,9 @@ export class SubmissionService {
         history.user_id = user_id;
         history.initiative_id = initiative_id;
         await this.historyRepository.save(history);
+        await this.initiativeRepository.update(initiative_id, {
+          latest_history_id: history.id
+        });
       return data
     } catch (error) {
       throw new BadRequestException('Connection Error')
@@ -541,6 +547,9 @@ export class SubmissionService {
           history.wp_id = workPackageObject.wp_id;
           history.period = data.period;
           await this.historyRepository.save(history);
+          await this.initiativeRepository.update(id, {
+            latest_history_id: history.id
+          });
         }, 
         (error) =>{
           console.error(error);
@@ -622,6 +631,7 @@ export class SubmissionService {
 
     await this.initiativeRepository.update(initiativeId, {
       last_update_at: new Date(),
+      latest_history_id: history.id
     });
     return { message: 'Data saved' };
 
@@ -711,6 +721,9 @@ export class SubmissionService {
       history.wp_id = workPackageObject.wp_id;
       
       await this.historyRepository.save(history);
+      await this.initiativeRepository.update(initiativeId, {
+        latest_history_id: history.id
+      });
     });
 
 
@@ -795,6 +808,9 @@ export class SubmissionService {
           history.organization_id = partner_code;
           history.wp_id = workPackageObject.wp_id;
           await this.historyRepository.save(history);
+          await this.initiativeRepository.update(initiativeId, {
+            latest_history_id: history.id
+          });
         }, 
         (error) => {
           console.log(error)
@@ -828,6 +844,9 @@ export class SubmissionService {
           history.organization_id = partner_code;
           history.wp_id = workPackageObject.wp_id;
           await this.historyRepository.save(history);
+          await this.initiativeRepository.update(initiativeId, {
+            latest_history_id: history.id
+          });
         }, 
         (error) => {
           console.log(error)
@@ -2407,6 +2426,9 @@ export class SubmissionService {
         history.user_id = user.id;
         history.initiative_id = data.initiative_id;
         await this.historyRepository.save(history);
+        await this.initiativeRepository.update(data.initiative_id, {
+          latest_history_id: history.id
+        });
       }, (error) => {
         console.log(error)
       }

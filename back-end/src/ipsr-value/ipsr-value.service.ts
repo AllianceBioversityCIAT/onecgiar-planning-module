@@ -4,6 +4,7 @@ import { IpsrValue } from 'src/entities/ipsr-value.entity';
 import { IpsrService } from 'src/ipsr/ipsr.service';
 import { IsNull, Not, Repository } from 'typeorm';
 import { History } from 'src/entities/history.entity';
+import { Initiative } from 'src/entities/initiative.entity';
 
 @Injectable()
 export class IpsrValueService {
@@ -13,6 +14,8 @@ export class IpsrValueService {
     private ipsrService: IpsrService,
     @InjectRepository(History)
     private HistoryRepository: Repository<History>,
+    @InjectRepository(Initiative)
+    private initiativeRepository: Repository<Initiative>,
   ) {}
 
   findByInitiativeID(id) {
@@ -142,6 +145,9 @@ export class IpsrValueService {
             history.user_id = user.id;
             history.initiative_id = data.initiative_id;
             await this.HistoryRepository.save(history);
+            await this.initiativeRepository.update(data.initiative_id, {
+              latest_history_id: history.id
+            });
           });
         }
       }
@@ -168,6 +174,9 @@ export class IpsrValueService {
           history.user_id = user.id;
           history.initiative_id = data.initiative_id;
           await this.HistoryRepository.save(history);
+          await this.initiativeRepository.update(data.initiative_id, {
+            latest_history_id: history.id
+          });
         }
         else if(key == 'description' && ipsr_value.description != null) {
           history.resource_property = `Add new IPSR description for (${ipsr_value.ipsr.title})`;
@@ -177,6 +186,9 @@ export class IpsrValueService {
           history.user_id = user.id;
           history.initiative_id = data.initiative_id;
           await this.HistoryRepository.save(history);
+          await this.initiativeRepository.update(data.initiative_id, {
+            latest_history_id: history.id
+          });
         }
       });
     }

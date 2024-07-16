@@ -211,6 +211,9 @@ export class InitiativesService {
         .leftJoinAndSelect('init.roles', 'roles')
         .leftJoinAndSelect('init.latest_submission', 'latest_submission')
         .leftJoinAndSelect('init.center_status', 'center_status')
+        .leftJoinAndSelect('init.latest_history', 'latest_history')
+        .leftJoinAndSelect('latest_history.user', 'user')
+
         .take(take)
         .skip(skip)
         .getManyAndCount();

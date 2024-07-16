@@ -114,6 +114,15 @@ export class Initiative {
   latest_submission: Submission;
 
 
+  @ApiProperty()
+  @Column({ nullable: true, default: null })
+  latest_history_id: number;
+
+  @ApiProperty()
+  @ManyToOne(() => History)
+  @JoinColumn({ name: 'latest_history_id' })
+  latest_history: History;
+
   @OneToMany(() => History, (history) => history.initiative)
   history: History[];
 

@@ -126,7 +126,7 @@
       <ng-container matColumnDef="updated by">
         <th mat-header-cell *matHeaderCellDef>Updated by</th>
         <td mat-cell *matCellDef="let element">
-          {{ getLastUpdatedBy(element.history) }}
+          {{ element?.latest_history?.user?.full_name || 'N/A' }}
         </td>
       </ng-container>
 
