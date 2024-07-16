@@ -1104,14 +1104,19 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
-      if(value) {
-        this.values[partner_code][wp_id][item_id] = null;
-        this.displayValues[partner_code][wp_id][item_id] = null;
-      } else {
+      this.changes(partner_code, wp_id, item_id, per_id, value);
+      if (
+        !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
+          true
+        )
+      ) {
         this.values[partner_code][wp_id][item_id] = 0;
         this.displayValues[partner_code][wp_id][item_id] = 0;
       }
-      this.changes(partner_code, wp_id, item_id, per_id, value);
+      if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (this.values[partner_code][wp_id][item_id] == 0 && this.displayValues[partner_code][wp_id][item_id] == 0)){
+        this.values[partner_code][wp_id][item_id] = null;
+        this.displayValues[partner_code][wp_id][item_id] = null;
+      }
     });
     this.socket.on("setAllDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, itemsIds, period, value } = data;
