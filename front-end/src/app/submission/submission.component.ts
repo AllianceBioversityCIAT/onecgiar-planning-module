@@ -1399,9 +1399,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe(async (dialogResult) => {
         if (dialogResult == true) {
-          let result = await this.submissionService.deleteCross(id);
-          if (result) await this.InitData();
-          this.toastrService.success("Deleted successfully");
+          await this.submissionService.deleteCross(id).then(
+            async () => {
+              await this.InitData();
+              this.toastrService.success("Deleted successfully");
+
+            }, (error) => {
+              this.toster.error('Connection Error', undefined, { disableTimeOut: true });
+            }
+          );
         }
       });
   }
