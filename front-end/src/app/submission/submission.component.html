@@ -1399,13 +1399,16 @@
                                   item?.ipsr?.id
                                     ? item?.ipsr.title
                                     : item.title,
-                                  'percent'
+                                  'percent',
+                                  false
                                 )
                               "
                               [ngModel]="
                                 haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !values[partner.code][
                                 wp.ost_wp.wp_official_code
-                              ][item.id] ? null :
+                              ][item.id] && !noValuesAssigned[partner.code][
+                              wp.ost_wp.wp_official_code
+                            ][item.id] ? null :
                                 values[partner.code][
                                   wp.ost_wp.wp_official_code
                                 ][item.id]
@@ -1413,7 +1416,9 @@
 
                               (ngModelChange)="haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !values[partner.code][
                               wp.ost_wp.wp_official_code
-                            ][item.id] ?  values[partner.code][
+                            ][item.id] && !noValuesAssigned[partner.code][
+                            wp.ost_wp.wp_official_code
+                          ][item.id] ?  values[partner.code][
                             wp.ost_wp.wp_official_code
                           ][item.id] = $event :
                             values[partner.code][
@@ -1447,20 +1452,25 @@
                                   item?.ipsr?.id
                                     ? item?.ipsr.title
                                     : item.title,
-                                  'percent'
+                                  'percent',
+                                  false
                                 )
                               "
                               [ngModel]="
                               haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !displayValues[partner.code][
                               wp.ost_wp.wp_official_code
-                            ][item.id] ? null :
+                            ][item.id] && !noValuesAssigned[partner.code][
+                            wp.ost_wp.wp_official_code
+                          ][item.id] ? null :
                               displayValues[partner.code][
                                 wp.ost_wp.wp_official_code
                               ][item.id]
                             "
                             (ngModelChange)="haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !displayValues[partner.code][
                             wp.ost_wp.wp_official_code
-                          ][item.id] ? displayValues[partner.code][
+                          ][item.id] && !noValuesAssigned[partner.code][
+                          wp.ost_wp.wp_official_code
+                        ][item.id] ? displayValues[partner.code][
                           wp.ost_wp.wp_official_code
                         ][item.id] = $event :
                             displayValues[partner.code][
@@ -1623,7 +1633,8 @@
                                 wp.ost_wp.wp_official_code,
                                 item.id,
                                 item?.ipsr?.id ? item?.ipsr.title : item.title,
-                                'budget'
+                                'budget',
+                                false
                               )
                             "
                             [(ngModel)]="
@@ -1662,7 +1673,8 @@
                                 wp.ost_wp.wp_official_code,
                                 item.id,
                                 item?.ipsr?.id ? item?.ipsr.title : item.title,
-                                'budget'
+                                'budget',
+                                false
                               )
                             "
                             [(ngModel)]="

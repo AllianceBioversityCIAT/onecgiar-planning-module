@@ -121,7 +121,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       return this.totals[code][id];
   }
   timeCalc: any;
-  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string) {
+  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean) {
     // if (this.timeCalc) clearTimeout(this.timeCalc);
     setTimeout(async () => {
       let percentValue;
@@ -153,6 +153,18 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.budgetValues[partner_code][wp_id][item_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] =
         Math.round(budgetValue);
+      
+      if(percentValue == 0 && !fromCheck)
+        this.haveTrue[partner_code][wp_id][item_id] = true;
+
+      if(fromCheck && !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
+        true
+      )) {
+        this.values[partner_code][wp_id][item_id] = 0;
+        this.displayValues[partner_code][wp_id][item_id] =0
+        this.haveTrue[partner_code][wp_id][item_id] = false;
+
+      }
 
       const result = await this.submissionService.saveResultValue(
         this.params.id,
@@ -240,7 +252,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   async toggleNoValues(partner_code: any, wp_official_code: any, item_id: any, item_name: string) {
     this.values[partner_code][wp_official_code][item_id] = 0;
     this.displayValues[partner_code][wp_official_code][item_id] = 0;
-    this.changeCalc(partner_code, wp_official_code, item_id, item_name, "percent");
+    this.changeCalc(partner_code, wp_official_code, item_id, item_name, "percent", true);
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -385,7 +397,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     ) {
       this.values[partner_code][wp_id][item_id] = 0;
       this.displayValues[partner_code][wp_id][item_id] = 0;
-      this.changeCalc(partner_code, wp_id, item_id, title, "percent");
+      this.changeCalc(partner_code, wp_id, item_id, title, "percent", true);
     }
     if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (this.values[partner_code][wp_id][item_id] == 0 && this.displayValues[partner_code][wp_id][item_id] == 0)){
       this.values[partner_code][wp_id][item_id] = null;
@@ -438,7 +450,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.values[partner_code][wp_id][item_id] = 0;
         this.displayValues[partner_code][wp_id][item_id] = 0;
         this.noValuesAssigned[partner_code][wp_id][item_id] = false;
-        this.changeCalc(partner_code, wp_id, item_id, '', "percent");
+        this.changeCalc(partner_code, wp_id, item_id, '', "percent", true);
       } else if(!Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
         false
       )) {
