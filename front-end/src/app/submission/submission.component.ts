@@ -190,6 +190,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         });
       this.sammaryCalc();
       this.validateCenter(partner_code, false);
+      this.refreshValues(partner_code, wp_id);
     }, 1000);
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
@@ -417,6 +418,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id
     );
     this.getInitStatus(this.initiative_data);
+    this.refreshValues(partner_code, wp_id);
     this.validateCenter(partner_code, false);
   }
 
@@ -1149,6 +1151,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.changes(partner_code, wp_id, item_id, period.id, value);
         })
       })
+      this.sammaryCalc();
     });
     this.socket.on("setDataValue-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, value, no_budget } = data;
@@ -1162,7 +1165,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.displayBudgetValues[partner_code][wp_id][item_id] =
         Math.round(budgetValue);
       this.noValuesAssigned[partner_code][wp_id][item_id] = no_budget;
-      if (!this.isCenter) this.sammaryCalc();
+      this.sammaryCalc();
     });
     this.socket.on("setDataBudget-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, budget } = data;
