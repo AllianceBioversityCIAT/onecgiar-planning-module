@@ -633,10 +633,54 @@ export class SubmissionService {
       last_update_at: new Date(),
       latest_history_id: history.id
     });
+    if(!value)
+      await this.clearAllResultValues(id, data);
     return { message: 'Data saved' };
-
   }
-  async saveResultDataValue(id, data: any,user) {
+  async clearAllResultValues(id: number, data: any) {
+    const initiativeId = id;
+
+    const {
+      partner_code,
+      wp_id,
+      itemsIds,
+      phase_id
+    } = data;
+
+    let organizationObject = await this.organizationRepository.findOneBy({
+      code: partner_code,
+    });
+    let workPackageObject = await this.workPackageRepository.findOneBy({
+      wp_official_code: wp_id,
+    });
+
+
+    for(let item_id of itemsIds) {
+      let oldResult = await this.resultRepository.findOneBy({
+        initiative_id: id,
+        result_uuid: item_id,
+        organization: organizationObject,
+        workPackage: workPackageObject,
+        submission: IsNull(),
+        phase_id
+      });
+
+
+      if (oldResult) {
+        oldResult.value = 0;
+        oldResult.budget = '0';
+        oldResult.no_budget = false;
+        oldResult.phase_id = phase_id
+        await this.resultRepository.save(oldResult);
+      } else throw new NotFoundException();
+    }
+
+    await this.initiativeRepository.update(initiativeId, {
+      last_update_at: new Date(),
+    });
+    return { message: 'Data saved' };
+  }
+  async saveResultDataValue(id, data: any,user) { 
     const initiativeId = id;
 
     const {

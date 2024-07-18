@@ -24,6 +24,10 @@ export class EventsGateway implements OnModuleInit {
   changePer(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     this.server.emit('setDataValue-' + data.id, data);
   }
+  @SubscribeMessage('setDataValueForAll')
+  setDataValueForAll(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    this.server.emit('setDataValueForAll-' + data.id, data);
+  }
   @SubscribeMessage('statusOfCenter')
   changeStatus(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     this.server.emit('statusOfCenter', data);
