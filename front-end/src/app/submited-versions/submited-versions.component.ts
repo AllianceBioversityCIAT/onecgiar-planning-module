@@ -5,6 +5,8 @@ import {
   ViewChild,
   EventEmitter,
   Output,
+  OnInit,
+  OnDestroy,
 } from "@angular/core";
 import { MatPaginator, PageEvent } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
@@ -22,6 +24,7 @@ import { LoaderService } from "src/app/services/loader.service";
 import { PhasesService } from "src/app/services/phases.service";
 import { ChatComponent } from "../share/chat/chat/chat.component";
 import { InitiativesService } from "../services/initiatives.service";
+import { ChatSocket } from "../share/chat/module/chat-socket";
 
 /**
  * @title Data table with sorting, pagination, and filtering.
@@ -31,7 +34,7 @@ import { InitiativesService } from "../services/initiatives.service";
   templateUrl: "./submited-versions.component.html",
   styleUrls: ["./submited-versions.component.scss"],
 })
-export class SubmitedVersionsComponent implements AfterViewInit {
+export class SubmitedVersionsComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = [
     "id",
     "phase",
@@ -64,7 +67,9 @@ export class SubmitedVersionsComponent implements AfterViewInit {
     private meta: Meta,
     public loader: LoaderService,
     private phasesService: PhasesService,
-    private initiativesService: InitiativesService
+    private initiativesService: InitiativesService,
+    private socket: ChatSocket,
+
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -85,7 +90,8 @@ export class SubmitedVersionsComponent implements AfterViewInit {
   pageSize: number = 10;
   pageIndex: number = 1;
   nameK = "download";
-  async ngAfterViewInit() {
+  async ngOnInit() {
+    this.socket.initSocket();
     this.params = this.activatedRoute?.snapshot.params;
     await this.initData();
 
@@ -95,6 +101,10 @@ export class SubmitedVersionsComponent implements AfterViewInit {
       (await this.initiativesService
         .isAllowedToAccessChat(this.params.id)
         .toPromise()) ?? false;
+  }
+
+  ngOnDestroy(): void {
+    this.socket.socket.disconnect()
   }
   async initData(filters = null) {
     this.initiativeId = this.params.id;
