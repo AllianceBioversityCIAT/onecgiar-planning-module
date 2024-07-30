@@ -276,10 +276,12 @@ export class InitiativesController {
   deleteRoles(
     @Param('initiative_id') initiative_id: number,
     @Param('initiative_roles_id') initiative_roles_id: number,
+    @Request() req,
   ) {
     return this.initiativesService.deleteRole(
       initiative_id,
       initiative_roles_id,
+      req.user,
     );
   }
 

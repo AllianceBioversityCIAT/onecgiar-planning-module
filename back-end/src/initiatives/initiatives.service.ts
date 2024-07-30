@@ -477,13 +477,20 @@ export class InitiativesService {
     })
   } 
 
-  async deleteRole(initiative_id, id) {
+  async deleteRole(initiative_id, id, user) { 
+
+    
     const roles = await this.iniRolesRepository.findOne({
       where: { initiative_id, id },
     });
-    if (roles) return await this.iniRolesRepository.remove(roles);
+
+    let errorMsg = null;
+    if(roles.role == 'Leader' && user.role != 'admin')
+      errorMsg = 'Only admin can delete leader';
+
+    if (roles && !errorMsg) return await this.iniRolesRepository.remove(roles);
     else throw new NotFoundException();
-  }
+  } 
 
   async setRole(initiative_id, role: InitiativeRoles, user) {
     let errorMsg = null;

@@ -69,8 +69,13 @@ export class TeamMembersComponent {
     this.my_roles = this.InitiativeUsers.filter(
       (d: any) => d?.user?.id == this?.user_info?.id
     ).map((d: any) => d.role);
-    // if (this.canEdit())
-    this.displayedColumns.push("Actions");
+
+    if(this.canEdit())
+      this.displayedColumns.push("Actions");
+
+    if(this.my_roles.length == 0 && this.user_info.role !='admin')
+      this.router.navigate(['/denied'], { skipLocationChange: true });
+
 
     this.title.setTitle("Manage initiative team");
     this.meta.updateTag({
