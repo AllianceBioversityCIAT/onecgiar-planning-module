@@ -1739,6 +1739,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         width: '600px',
         maxWidth: '700px',
         maxHeight: '500px',
+        height: '500px',
         data: {
           initiative_id: initiative_id
         },

@@ -51,8 +51,8 @@ export class SubmissionController {
   @Patch('status/:id')
   @ApiBearerAuth()
   @ApiBody({ type: updateStatus })
-  updateStatus(@Param('id') id, @Body() data) {
-    return this.submissionService.updateStatusBySubmittionID(id, data);
+  updateStatus(@Param('id') id, @Body() data, @Request() req) {
+    return this.submissionService.updateStatusBySubmittionID(id, data, req.user);
   }
   @Patch('center/status')
   @ApiBearerAuth()

@@ -15,7 +15,7 @@
                 </div>
                 <div class="section-name">
                     <ng-container *ngIf="!history.organization">
-                        <div class="section">
+                        <div class="section"  *ngIf="history.item_name != 'Approved' && history.item_name != 'Rejected'">
                             <span>Summary</span><span *ngIf="history.item_name">/{{history.item_name}}</span>
                         </div>
                         <div class="section">
@@ -92,8 +92,7 @@
             </div>
         </ng-container>
     </ng-container>
-
-    <div *ngIf="!histories?.length">
+    <div *ngIf="emptyRecords && !load.getLoading()">
         <div class="empty-history">There is no history for this initiative.</div>
     </div>
 </div>

@@ -20,7 +20,11 @@ export class LoadingInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<unknown>> {
     this.totalRequests++;
     setTimeout(() => {
-      this.loaderService.setLoading(this.totalRequests != 0);
+      const url = request.url.split('/').slice(-1)[0];
+        if(url != 'history')
+          this.loaderService.setLoading(this.totalRequests != 0);
+        else
+          this.loaderService.setLoading(this.totalRequests != 0, 'Loading');
     }, 0);
 
     return next.handle(request).pipe(

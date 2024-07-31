@@ -150,7 +150,7 @@ export class SubmissionService {
 
     return { message: 'Data Saved' };
   }
-  async updateStatusBySubmittionID(id, data) {
+  async updateStatusBySubmittionID(id, data, user) {
     return await this.submissionRepository.update(id, data).then(
       async () => {
         const submission = await this.submissionRepository.findOne({
@@ -172,6 +172,15 @@ export class SubmissionService {
               this.emailService.sendEmailTobyVarabel(role.user, 6, submission.initiative, role.role, data.status_reason, null, null, null, null)
             }
           }
+          const history = this.historyRepository.create();
+          history.resource_property = data.status == 'Approved' ? `Approved for version Id: ${id}` : `Rejected for version Id: ${id}`;
+          history.item_name = data.status;
+          history.user_id = user.id;
+          history.initiative_id = submission.initiative_id;
+          await this.historyRepository.save(history);
+          await this.initiativeRepository.update(submission.initiative_id, {
+            latest_history_id: history.id
+          });
         return true
       }, (error) => {
         console.error(error)
