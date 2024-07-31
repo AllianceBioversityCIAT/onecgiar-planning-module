@@ -28,7 +28,10 @@ export class InitiativeRoles {
   @Column({ nullable: true })
   user_id: number;
 
-  @ManyToOne(() => User, (user) => user.user_init_roles)
+  @ManyToOne(() => User, (user) => user.user_init_roles, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
