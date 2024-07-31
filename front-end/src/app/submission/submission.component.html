@@ -48,12 +48,14 @@
 
     <mat-card *ngIf="tocIncompleteData">
       <div class="risk-report-title-box">
-        <h1 class="risk-report-title-box__title">The Theory of Change (ToC) data is incomplete.</h1>
+        <h1 class="risk-report-title-box__title">
+          The Theory of Change (ToC) data is incomplete.
+        </h1>
       </div>
     </mat-card>
 
     <mat-tab-group
-      *ngIf="!loading && this.partners?.length  && !tocIncompleteData"
+      *ngIf="!loading && this.partners?.length && !tocIncompleteData"
       class="btn--animated"
       [selectedIndex]="selectedTabIndex"
       (selectedTabChange)="tabChanged($event)"
@@ -61,7 +63,7 @@
       <mat-tab label="Summary">
         <!-- step-2 -->
 
-        <mat-card *ngIf="!loading  && !tocIncompleteData">
+        <mat-card *ngIf="!loading && !tocIncompleteData">
           <!-- <div *ngIf="leaders.length != 0" class="container-mat-tab-2">
             <div class="text-box">
               <p class="leaders-text">Leaders</p>
@@ -254,7 +256,9 @@
               </div>
 
               <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
-              <div class="card-title-3 m-b-t">Toc version ID: {{ this.tocSubmissionData.version }}</div>
+              <div class="card-title-3 m-b-t">
+                Toc version ID: {{ this.tocSubmissionData.version }}
+              </div>
               <div class="init-status">
                 <span> PORB is</span>
                 <span class="text-s-c-linear">
@@ -334,7 +338,7 @@
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                        ) | number 
+                        ) | number
                       }}
                     </td>
                   </tr>
@@ -378,9 +382,13 @@
                   'show-d-2': wp.id == 'CROSS',
                   'show-d-3': wp.id == 'IPSR',
                   'show-d-4':
-                    wp.id == 'IPSR' &&initUser && initUser?.role === 'Contributor',
+                    wp.id == 'IPSR' &&
+                    initUser &&
+                    initUser?.role === 'Contributor',
                   'show-d-5':
-                    wp.id == 'CROSS' && initUser && initUser?.role === 'Contributor'
+                    wp.id == 'CROSS' &&
+                    initUser &&
+                    initUser?.role === 'Contributor'
                 }"
                 >Show decimals</mat-slide-toggle
               >
@@ -548,7 +556,7 @@
                             *ngIf="item.category == 'Cross Cutting'"
                           >
                             <button
-                            *ngIf="initUser?.role != 'Contributor'"
+                              *ngIf="initUser?.role != 'Contributor'"
                               mat-icon-button
                               [matMenuTriggerFor]="menu"
                               [disabled]="
@@ -730,19 +738,19 @@
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? (summaryBudgets[wp.ost_wp.wp_official_code][
                                   item.id
-                                ] | number )
-                              : roundNumber(
+                                ] | number)
+                              : (roundNumber(
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
                                   ]
-                                ) | number 
+                                ) | number)
                           }}
                         </td>
                       </tr>
 
                       <ng-container *ngIf="item.category == 'Cross Cutting'">
                         <tr *ngIf="item.isExpand">
-                          <td colspan="12">
+                          <td colspan="12" style="padding: 0.5rem">
                             <table class="table table-sm">
                               <thead>
                                 <th
@@ -770,6 +778,7 @@
                                       background-color: none;
                                       font-size: 1.3rem;
                                       color: #0f212f;
+                                      padding: 0.7rem;
                                     "
                                   >
                                     {{
@@ -802,7 +811,7 @@
 
                       <ng-container *ngIf="item?.ipsr?.id && item?.description">
                         <tr *ngIf="item.isExpand">
-                          <td colspan="12">
+                          <td colspan="12" style="padding: 0.5rem">
                             <table class="table table-sm">
                               <thead>
                                 <th
@@ -828,6 +837,7 @@
                                       background-color: none;
                                       font-size: 1.3rem;
                                       color: #0f212f;
+                                      padding: 0.7rem;
                                     "
                                   >
                                     {{ item?.description }}
@@ -870,10 +880,11 @@
                       <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
-                            ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code] | number) 
-                            : roundNumber(
+                            ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                              | number)
+                            : (roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              ) | number 
+                              ) | number)
                         }}
                       </td>
                     </tr>
@@ -905,7 +916,7 @@
           >
         </ng-template>
 
-        <mat-card *ngIf="!loading  && !tocIncompleteData">
+        <mat-card *ngIf="!loading && !tocIncompleteData">
           <!-- <mat-card-title class="card-title"
             >One CGIAR Initiatives Plan of Results and Budget Template ({{
               this.phase.name
@@ -1073,7 +1084,9 @@
               </div>
 
               <div class="card-title-3">{{ this.phase.name }}</div>
-              <div class="card-title-3 m-b-t">Toc version ID: {{ this.tocSubmissionData.version }}</div>
+              <div class="card-title-3 m-b-t">
+                Toc version ID: {{ this.tocSubmissionData.version }}
+              </div>
               <div class="init-status">
                 <span> PORB is</span>
                 <span class="text-s-c-linear">
@@ -1404,26 +1417,37 @@
                                 )
                               "
                               [ngModel]="
-                                haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !values[partner.code][
-                                wp.ost_wp.wp_official_code
-                              ][item.id] && !noValuesAssigned[partner.code][
-                              wp.ost_wp.wp_official_code
-                            ][item.id] ? null :
-                                values[partner.code][
+                                haveTrue[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] &&
+                                !values[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] &&
+                                !noValuesAssigned[partner.code][
                                   wp.ost_wp.wp_official_code
                                 ][item.id]
+                                  ? null
+                                  : values[partner.code][
+                                      wp.ost_wp.wp_official_code
+                                    ][item.id]
                               "
-
-                              (ngModelChange)="haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !values[partner.code][
-                              wp.ost_wp.wp_official_code
-                            ][item.id] && !noValuesAssigned[partner.code][
-                            wp.ost_wp.wp_official_code
-                          ][item.id] ?  values[partner.code][
-                            wp.ost_wp.wp_official_code
-                          ][item.id] = $event :
-                            values[partner.code][
-                                wp.ost_wp.wp_official_code
-                              ][item.id] = $event"
+                              (ngModelChange)="
+                                haveTrue[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] &&
+                                !values[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] &&
+                                !noValuesAssigned[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id]
+                                  ? (values[partner.code][
+                                      wp.ost_wp.wp_official_code
+                                    ][item.id] = $event)
+                                  : (values[partner.code][
+                                      wp.ost_wp.wp_official_code
+                                    ][item.id] = $event)
+                              "
                               matInput
                             />
                             <input
@@ -1457,25 +1481,37 @@
                                 )
                               "
                               [ngModel]="
-                              haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !displayValues[partner.code][
-                              wp.ost_wp.wp_official_code
-                            ][item.id] && !noValuesAssigned[partner.code][
-                            wp.ost_wp.wp_official_code
-                          ][item.id] ? null :
-                              displayValues[partner.code][
-                                wp.ost_wp.wp_official_code
-                              ][item.id]
-                            "
-                            (ngModelChange)="haveTrue[partner.code][wp.ost_wp.wp_official_code][item.id] && !displayValues[partner.code][
-                            wp.ost_wp.wp_official_code
-                          ][item.id] && !noValuesAssigned[partner.code][
-                          wp.ost_wp.wp_official_code
-                        ][item.id] ? displayValues[partner.code][
-                          wp.ost_wp.wp_official_code
-                        ][item.id] = $event :
-                            displayValues[partner.code][
-                              wp.ost_wp.wp_official_code
-                            ][item.id] = $event"
+                                haveTrue[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] &&
+                                !displayValues[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] &&
+                                !noValuesAssigned[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id]
+                                  ? null
+                                  : displayValues[partner.code][
+                                      wp.ost_wp.wp_official_code
+                                    ][item.id]
+                              "
+                              (ngModelChange)="
+                                haveTrue[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] &&
+                                !displayValues[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] &&
+                                !noValuesAssigned[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id]
+                                  ? (displayValues[partner.code][
+                                      wp.ost_wp.wp_official_code
+                                    ][item.id] = $event)
+                                  : (displayValues[partner.code][
+                                      wp.ost_wp.wp_official_code
+                                    ][item.id] = $event)
+                              "
                               matInput
                             />
                             <mat-icon matSuffix>%</mat-icon>
@@ -1605,8 +1641,8 @@
                           "
                         >
                           <input
-                          mask="separator.2"
-                          thousandSeparator=","
+                            mask="separator.2"
+                            thousandSeparator=","
                             *ngIf="
                               toggleValues[partner.code][
                                 wp.ost_wp.wp_official_code
@@ -1645,8 +1681,8 @@
                             matInput
                           />
                           <input
-                          mask="separator.2"
-                          thousandSeparator=","
+                            mask="separator.2"
+                            thousandSeparator=","
                             *ngIf="
                               !toggleValues[partner.code][
                                 wp.ost_wp.wp_official_code
@@ -1690,7 +1726,7 @@
 
                     <ng-container *ngIf="item.category == 'Cross Cutting'">
                       <tr *ngIf="item.isExpand">
-                        <td colspan="12">
+                        <td colspan="12" style="padding: 0.5rem">
                           <table class="table table-sm">
                             <thead>
                               <th
@@ -1716,6 +1752,7 @@
                                     background-color: none;
                                     font-size: 1.3rem;
                                     color: #0f212f;
+                                    padding: 0.7rem;
                                   "
                                 >
                                   {{
@@ -1736,7 +1773,7 @@
 
                     <ng-container *ngIf="item?.ipsr?.id && item?.description">
                       <tr *ngIf="item.isExpand">
-                        <td colspan="12">
+                        <td colspan="12" style="padding: 0.5rem">
                           <table class="table table-sm">
                             <thead>
                               <th
@@ -1762,6 +1799,7 @@
                                     background-color: none;
                                     font-size: 1.3rem;
                                     color: #0f212f;
+                                    padding: 0.7rem;
                                   "
                                 >
                                   {{ item?.description }}
@@ -1798,8 +1836,8 @@
                         >
                           <!-- <mat-label>Total Budget</mat-label> -->
                           <input
-                          mask="separator.2"
-                          thousandSeparator=","
+                            mask="separator.2"
+                            thousandSeparator=","
                             placeholder="Total Budget"
                             [disabled]="
                               partnersStatus[partner.code] ||
