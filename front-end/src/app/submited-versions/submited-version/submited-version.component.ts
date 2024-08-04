@@ -125,6 +125,7 @@ export class SubmitedVersionComponent implements OnInit {
 
   perValues: any = {};
   perValuesSammary: any = {};
+  perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
   sammaryTotal: any = {};
   sammaryTotalConsolidated: any = {};
@@ -292,6 +293,14 @@ export class SubmitedVersionComponent implements OnInit {
       });
     });
 
+    this.partners.forEach((partner: any) => {
+      this.wps.forEach((wp: any) => {
+        this.period.forEach((per) => {
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][per.id] = false;
+        });
+      });
+    });
+
     //from here
     Object.keys(this.perValues).forEach((partner_code) => {
       Object.keys(this.perValues[partner_code]).forEach((wp_id) => {
@@ -302,8 +311,10 @@ export class SubmitedVersionComponent implements OnInit {
                 this.perAllValues[wp_id][item_id][per_id] =
                   this.perValues[partner_code][wp_id][item_id][per_id];
 
-              if (this.perValues[partner_code][wp_id][item_id][per_id] == true)
+              if (this.perValues[partner_code][wp_id][item_id][per_id] == true){
                 this.perValuesSammary[wp_id][per_id] = true;
+                this.perValuesSammaryForPartner[partner_code][wp_id][per_id] = true;  
+              }
             }
           );
         });
@@ -321,6 +332,8 @@ export class SubmitedVersionComponent implements OnInit {
     this.wpsTotalSum = 0;
     this.perValues = {};
     this.perValuesSammary = {};
+    this.perValuesSammaryForPartner = {};
+
     this.perAllValues = {};
     this.sammaryTotal = {};
     this.sammaryTotalConsolidated = {};
@@ -436,10 +449,18 @@ export class SubmitedVersionComponent implements OnInit {
         if (!this.perValuesSammary[wp.ost_wp.wp_official_code])
           this.perValuesSammary[wp.ost_wp.wp_official_code] = {};
         this.period.forEach((element) => {
-          // console.log('wp.ost_wp.wp_official_code ==> ', wp.ost_wp.wp_official_code)
-          // console.log('per.id ==> ', element.id)
           if (!this.perValuesSammary[wp.ost_wp.wp_official_code][element.id])
             this.perValuesSammary[wp.ost_wp.wp_official_code][element.id] =
+              false;
+        });
+
+        if (!this.perValuesSammaryForPartner[partner.code])
+          this.perValuesSammaryForPartner[partner.code] = {};
+        if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code])
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code] = {};
+        this.period.forEach((element) => {
+          if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id] =
               false;
         });
         result.forEach((item: any) => {
@@ -641,6 +662,22 @@ export class SubmitedVersionComponent implements OnInit {
       )
       .reduce((a: any, b: any) => a || b);
   }
+
+  finalPeriodValForPartner(partner_code: number,period_id: any) {
+    return this.wps.map((wp: any) => 
+      this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
+    ).reduce((a: any, b: any) => a || b)
+  }
+
+
+  getTotalBudgetForEachPartner(budgets: string) {
+    return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+  }
+
+  getTotalPercentageForEachPartner(percent: number) {
+    return  Object.values(percent).reduce((a: any, b: any) => Number(a) + Number(b), 0) / this.wps.length
+  }
+
 
   finalItemPeriodVal(wp_id: any, period_id: any) {
     let periods = this.allData[wp_id].map(

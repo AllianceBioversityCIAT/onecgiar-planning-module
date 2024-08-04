@@ -1023,6 +1023,52 @@ export class SubmissionService {
     };
   }
 
+
+
+  getConsolidatedDataForPartners(wps: any[], period: any[], partner_code: number) {
+    let ConsolidatedDataForPartners = [];
+    let lockupArrayForPartners = [];
+    
+      wps.forEach((wp: any) => {
+        let obj: any = {};
+
+        obj['Results'] = wp.title;
+        obj['Type'] = '';
+        obj['wp_official_code'] = wp.ost_wp.wp_official_code;
+
+        period.forEach((per: any) => {
+          obj[per.year + '-' + per.quarter] =
+            this.perValuesSammaryForPartner[partner_code][obj.wp_official_code][per.id] == true
+              ? 'X'
+              : '';
+        });
+        obj['Percentage'] = this.totals[partner_code][wp.ost_wp.wp_official_code] + '%'; 
+        obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner_code][
+          wp.ost_wp.wp_official_code]));
+          ConsolidatedDataForPartners.push(obj);
+    });
+    let obj: any = {};
+    obj['Results'] = 'Total';
+    obj['Type'] = '';
+      period.forEach((per: any) => {
+        obj[per.year + '-' + per.quarter] = this.finalPeriodValForPartner(partner_code, per.id)
+          ? 'X'
+          : '';
+      });
+      (obj['Percentage'] = this.roundNumber(this.getTotalPercentageForEachPartner(this.totals[partner_code])) + '%'),
+        (obj['Budgets'] = this.getTotalBudgetForEachPartner(this.wp_budgets[partner_code])),
+        ConsolidatedDataForPartners.push(obj)
+      
+
+        lockupArrayForPartners = ConsolidatedDataForPartners.map((d: any) => {
+        return d.Results;
+      });
+    return {
+      ConsolidatedDataForPartners: ConsolidatedDataForPartners,
+      lockupArrayForPartners: lockupArrayForPartners,
+    };
+  }
+
   getAllData(wps: any[], period: any[]) {
     let data;
     let newArray = [];
@@ -1192,6 +1238,7 @@ export class SubmissionService {
 
   perValues: any = {};
   perValuesSammary: any = {};
+  perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
   sammaryTotal: any = {};
   sammaryTotalConsolidated: any = {}; 
@@ -1374,6 +1421,7 @@ export class SubmissionService {
   async generateExcel(submissionId: any, initId:any, tocData: any, organization: any) {
     this.perValues = {};
     this.perValuesSammary = {};
+    this.perValuesSammaryForPartner = {};
     this.perAllValues = {};
     this.sammaryTotal = {};
     this.sammaryTotalConsolidated = {};
@@ -1554,6 +1602,17 @@ export class SubmissionService {
               false;
         });
 
+
+        if (!this.perValuesSammaryForPartner[partner.code])
+          this.perValuesSammaryForPartner[partner.code] = {};
+        if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code])
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code] = {};
+        this.period.forEach((element) => {
+          if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id] =
+              false;
+        });
+
         result.forEach((item: any) => {
           this.check(
             this.values,
@@ -1706,7 +1765,7 @@ export class SubmissionService {
 
     const merges = [];
     const file_name = 'All-planning-.xlsx';
-    //ConsolidatedData.unshift({"Consolidated":""})
+
     var wb = XLSX.utils.book_new();
 
     ConsolidatedData.forEach((object) => {
@@ -1934,10 +1993,104 @@ export class SubmissionService {
       for (let partner of partners) {
       let mergesPartners = [];
       let ArrayOfArrays;
+      let Header;
       if(initId)
-        ArrayOfArrays = this.getHeader(null, partner.acronym, this.initiative_data);
+        Header = this.getHeader(null, partner.acronym, this.initiative_data);
       else 
-        ArrayOfArrays = this.getHeader(submission, partner.acronym, null);
+        Header = this.getHeader(submission, partner.acronym, null);
+
+        let { ConsolidatedDataForPartners } = this.getConsolidatedDataForPartners(
+          this.wps,
+          this.period,
+          partner.code
+        );
+        ConsolidatedDataForPartners.forEach((object) => {
+          delete object['wp_official_code'];
+        });
+
+
+        ArrayOfArrays = [
+          ...Header,
+          ...ConsolidatedDataForPartners.map((d_, total_index) => [
+            {
+              v: `Total Center`,
+              s: {
+                fill: { fgColor: { rgb: '454962' } },
+                font: { color: { rgb: 'ffffff' } },
+                alignment: {
+                  horizontal: 'center',
+                  vertical: 'center',
+                  wrapText: true,
+                },
+              },
+            },
+            ...Object.values(d_).map((d, index) => {
+              if (index == 0 && total_index != ConsolidatedDataForPartners.length - 1)
+                return {
+                  v: d,
+                  s: {
+                    alignment: {
+                      horizontal: 'center',
+                      vertical: 'top',
+                      wrapText: true,
+                    },
+                  },
+                };
+              else if (total_index == ConsolidatedDataForPartners.length - 1)
+                return {
+                  v: d,
+                  s: {
+                    fill: { fgColor: { rgb: '454962' } },
+                    font: { color: { rgb: 'ffffff' } },
+                    alignment: {
+                      horizontal: 'center',
+                      vertical: 'center',
+                    },
+                  },
+                };
+              else if (index == Object.values(d_).length - 1)
+                return {
+                  v: d,
+                  s: {
+                    fill: { fgColor: { rgb: '454962' } },
+                    font: { color: { rgb: 'ffffff' } },
+                    alignment: {
+                      horizontal: 'center',
+                      vertical: 'center',
+                    },
+                  },
+                };
+              else
+                return {
+                  v: d,
+                  s: {
+                    alignment: {
+                      horizontal: 'center',
+                      vertical: 'center',
+                    },
+                  },
+                };
+            }),
+          ]),
+        ];
+
+
+
+
+        mergesPartners.push({
+          s: { c: 0, r: 6 },
+          e: { c: 0, r: 6 + ConsolidatedDataForPartners.length - 1 },
+        });
+        mergesPartners.push({
+          s: { c: 1, r: 6 + ConsolidatedDataForPartners.length - 1 },
+          e: { c: 2, r: 6 + ConsolidatedDataForPartners.length - 1 },
+        });
+
+
+
+
+
+
 
       let rowStart = ArrayOfArrays.length;
       for (let i = 0; i < lockupArray.length - 1; i++) {
@@ -2210,6 +2363,14 @@ export class SubmissionService {
       });
     });
 
+    this.partners.forEach((partner: any) => {
+      this.wps.forEach((wp: any) => {
+        this.period.forEach((per) => {
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][per.id] = false;
+        });
+      });
+    });
+
     //from here
     Object.keys(this.perValues).forEach((partner_code) => {
       Object.keys(this.perValues[partner_code]).forEach((wp_id) => {
@@ -2220,8 +2381,10 @@ export class SubmissionService {
                 this.perAllValues[wp_id][item_id][per_id] =
                   this.perValues[partner_code][wp_id][item_id][per_id];
 
-              if (this.perValues[partner_code][wp_id][item_id][per_id] == true)
-                this.perValuesSammary[wp_id][per_id] = true;
+                  if (this.perValues[partner_code][wp_id][item_id][per_id] == true){
+                    this.perValuesSammary[wp_id][per_id] = true;
+                    this.perValuesSammaryForPartner[partner_code][wp_id][per_id] = true;  
+                  }
             },
           );
         });
@@ -2373,6 +2536,22 @@ export class SubmissionService {
       )
       .reduce((a: any, b: any) => a || b);
   }
+
+  finalPeriodValForPartner(partner_code: number,period_id: any) {
+    return this.wps.map((wp: any) => 
+      this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
+    ).reduce((a: any, b: any) => a || b)
+  }
+
+
+  getTotalBudgetForEachPartner(budgets: string) {
+    return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+  }
+
+  getTotalPercentageForEachPartner(percent: number) {
+    return  Object.values(percent).reduce((a: any, b: any) => Number(a) + Number(b), 0) / this.wps.length
+  }
+
   roundNumber(value: number) {
     return Math.round(value);
   }

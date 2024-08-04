@@ -201,6 +201,7 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
 
   perValues: any = {};
   perValuesSammary: any = {};
+  perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
   sammaryTotal: any = {};
   sammaryTotalConsolidated: any = {}; 
@@ -340,6 +341,14 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       });
     });
 
+    this.partners.forEach((partner: any) => {
+      this.wps.forEach((wp: any) => {
+        this.period.forEach((per) => {
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][per.id] = false;
+        });
+      });
+    });
+
     Object.keys(this.perValues).forEach((partner_code) => {
       Object.keys(this.perValues[partner_code]).forEach((wp_id) => {
         Object.keys(this.perValues[partner_code][wp_id]).forEach((item_id) => {
@@ -349,8 +358,10 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
                 this.perAllValues[wp_id][item_id][per_id] =
                   this.perValues[partner_code][wp_id][item_id][per_id];
 
-              if (this.perValues[partner_code][wp_id][item_id][per_id] == true)
-                this.perValuesSammary[wp_id][per_id] = true;
+                  if (this.perValues[partner_code][wp_id][item_id][per_id] == true){
+                    this.perValuesSammary[wp_id][per_id] = true;
+                    this.perValuesSammaryForPartner[partner_code][wp_id][per_id] = true;  
+                  }
             }
           );
         });
@@ -369,6 +380,7 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
     this.wpsTotalSum = 0;
     this.perValues = {};
     this.perValuesSammary = {};
+    this.perValuesSammaryForPartner = {};
     this.perAllValues = {};
     this.sammaryTotal = {};
     this.sammaryTotalConsolidated = {};
@@ -425,8 +437,12 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       // ...indicators_data,
     ];
     this.wps = this.results
-      .filter((d: any) => d.category == "WP" && !d.group)
-      .sort((a: any, b: any) => a.title.localeCompare(b.title));
+    .filter((d: any) => {
+      if (d.category == "WP")
+          d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
+      return d.category == "WP" && !d.group;
+    })
+    .sort((a: any, b: any) => a.title.localeCompare(b.title));
     this.wps.unshift({
       id: "CROSS",
       title: "Cross Cutting",
@@ -484,6 +500,16 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
         this.period.forEach((element) => {
           if (!this.perValuesSammary[wp.ost_wp.wp_official_code][element.id])
             this.perValuesSammary[wp.ost_wp.wp_official_code][element.id] =
+              false;
+        });
+
+        if (!this.perValuesSammaryForPartner[partner.code])
+          this.perValuesSammaryForPartner[partner.code] = {};
+        if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code])
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code] = {};
+        this.period.forEach((element) => {
+          if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id] =
               false;
         });
         result.forEach((item: any) => {
@@ -671,6 +697,24 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       )
       .reduce((a: any, b: any) => a || b);
   }
+
+
+
+  finalPeriodValForPartner(partner_code: number,period_id: any) {
+    return this.wps.map((wp: any) => 
+      this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
+    ).reduce((a: any, b: any) => a || b)
+  }
+
+
+  getTotalBudgetForEachPartner(budgets: string) {
+    return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+  }
+
+  getTotalPercentageForEachPartner(percent: number) {
+    return  Object.values(percent).reduce((a: any, b: any) => Number(a) + Number(b), 0) / this.wps.length
+  }
+
 
   finalItemPeriodVal(wp_id: any, period_id: any) {
     let periods = this.allData[wp_id].map(

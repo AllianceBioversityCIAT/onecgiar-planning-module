@@ -237,18 +237,6 @@
   >
     <div class="container-mat-tab">
       <mat-card>
-        <!-- <mat-card-title class="card-title"
-          ><span class="card-title"
-            >One CGIAR Initiatives Plan of Results and Budget Template</span
-          ></mat-card-title
-        >
-        <mat-card-subtitle class="card-title"
-          ><span class="card-title"
-            >{{ initiative_data.official_code }}‐{{
-              initiative_data.name
-            }}</span
-          >
-        </mat-card-subtitle> -->
 
         <div class="risk-report-title-box">
           <h1 class="risk-report-title-box__title">
@@ -532,6 +520,82 @@
             {{ partner?.acronym }}</mat-card-subtitle
           >
 
+
+        <mat-card>
+          <mat-card-title class="card-title-table">
+            Consolidated
+          </mat-card-title>
+
+          <mat-card-content>
+            <div class="table-box mat-elevation-z8">
+              <table>
+                <tr>
+                  <th>Results</th>
+                  <ng-container *ngFor="let item of period">
+                    <th>{{ item.year }} - {{ item.quarter }}</th>
+                  </ng-container>
+
+                  <th>Budget Percentage</th>
+                  <th>Budget (USD)</th>
+                </tr>
+                <ng-container *ngFor="let wp of wps">
+                  <tr>
+                    <td class="wp-title">{{ wp.title }}</td>
+                    <ng-container *ngFor="let item of period">
+                      <td>
+                        <span
+                          class="icon-sub-table-2"
+                          color="primary"
+                          *ngIf="
+                          perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][
+                              item.id
+                            ] == true
+                          "
+                          >X</span
+                        >
+                      </td>
+                    </ng-container>
+                    <td>
+                      {{
+                          roundNumber(
+                              totals[partner.code][wp.ost_wp.wp_official_code] || 0
+                            ) | number : "1.2-2" 
+                    
+                    }}%
+                    </td>
+                    <td>
+                      {{
+                        roundNumber(wp_budgets[partner.code][
+                        wp.ost_wp.wp_official_code]) | number
+                      }}
+                    </td>
+                  </tr>
+                </ng-container>
+                <tr class="total">
+                  <td><div class="subtotal">Total</div></td>
+                  <ng-container *ngFor="let item of period">
+                    <td>
+                      <span
+                        class="icon-sub-table-2"
+                        color="primary"
+                        *ngIf="finalPeriodValForPartner(partner.code , item.id)"
+                        >X</span
+                      >
+                    </td>
+                  </ng-container>
+                  <td>
+                    {{ roundNumber(getTotalPercentageForEachPartner(totals[partner.code])) }}%
+                  </td>
+                  <td>
+                    {{getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+
           <ng-container *ngFor="let wp of wps">
             <mat-card
               *ngIf="
@@ -656,7 +720,7 @@
                         </td>
                       </ng-container>
                       <td>
-                        {{
+                        {{ 
                           toggleValues[partner.code][wp.ost_wp.wp_official_code]
                             ? totals[partner.code][wp.ost_wp.wp_official_code]
                             : roundNumber(
@@ -665,7 +729,7 @@
                         }}%
                       </td>
                       <td>
-                        {{
+                        {{ 
                           wp_budgets[partner.code][wp.ost_wp.wp_official_code] | number 
                         }}
                       </td>
