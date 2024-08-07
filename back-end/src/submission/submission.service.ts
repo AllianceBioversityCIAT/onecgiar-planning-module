@@ -1801,10 +1801,6 @@ export class SubmissionService {
       e: { c: 2 + this.period.length + 2, r: 4 },
     });
 
-    // const ws = XLSX.utils.aoa_to_sheet(header);
-    // ws['!merges'] = merges;
-
-    // XLSX.utils.book_append_sheet(wb, ws, 'Summary');
 
     if(!organization){
     let ArrayOfArrays = [
@@ -1964,6 +1960,105 @@ export class SubmissionService {
     }
 
     const ws = XLSX.utils.aoa_to_sheet(ArrayOfArrays);
+
+
+      const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+      const rowCount = range.e.r;
+      const columnCount = range.e.c;
+
+
+
+      let budget_for_Total_Initiative;
+      for (let row = 0; row <= rowCount; row++) {
+        for (let col = 0; col <= columnCount; col++) {
+          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          //get Total Initiative budget (cellRef)
+          if(col == columnCount && row == this.wps.length + 1 + 5) {
+            budget_for_Total_Initiative = cellRef
+          }
+        }
+      }
+
+     
+      let budget_for_each_wp;
+      for (let row = 0; row <= rowCount; row++) {
+        for (let col = 0; col <= columnCount; col++) {
+          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          //calculate Budgets for (Summary)
+          if(col == columnCount && row > 5) {
+            ws[cellRef] = { 
+              t: 'n',
+              f: '=' + partners.map(d => `'${d.acronym}'!${cellRef}+ `).join().replaceAll(',', '').slice(0, -2),
+              z: "#,##0",
+              s: {
+                fill: { fgColor: { rgb: '454962' } },
+                font: { color: { rgb: 'ffffff' } },
+                alignment: {
+                  horizontal: 'center',
+                  vertical: 'center',
+                },
+              },
+            }  
+          } 
+
+
+          //get  budget cellRef for each wp in Total Initiative && calculate percentage for Total Initiative (Summary)
+          if((col == columnCount || col == columnCount -1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
+            if(col == columnCount) {
+              budget_for_each_wp = cellRef;
+              cellRef = XLSX.utils.encode_cell({ r: row, c: col -1});
+              ws[cellRef] = { 
+                t: 'n',
+                f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
+                z: "0.00%;[Red]-0.00%",
+                s: {
+                  fill: { fgColor: { rgb: '454962' } },
+                  font: { color: { rgb: 'ffffff' } },
+                  alignment: {
+                    horizontal: 'center',
+                    vertical: 'center',
+                  },
+                },
+              } 
+            } 
+          }
+        }
+      }
+
+
+
+
+      let wpBudgets;
+      let startRow = this.wps.length + 1 + 5;
+      for(let wp of this.wps) {
+        for (let row = 0; row <= rowCount; row++) {
+          for (let col = 0; col <= columnCount; col++) {
+            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+
+            if((col == columnCount || col == columnCount -1) && (row > startRow && row <= this.allData[wp.ost_wp.wp_official_code].length + 1 + startRow)) {
+              if(col == columnCount) {
+                const wpTotalBudgets  = this.getWpTotalBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws)
+                wpBudgets = cellRef;
+                cellRef = XLSX.utils.encode_cell({ r: row, c: col -1});
+                ws[cellRef] = { 
+                  t: 'n',
+                  f: `=${wpBudgets}/${wpTotalBudgets}/100*100`,
+                  z: "0%",
+                  s: {
+                    fill: { fgColor: { rgb: '454962' } },
+                    font: { color: { rgb: 'ffffff' } },
+                    alignment: {
+                      horizontal: 'center',
+                      vertical: 'center',
+                    },
+                  },
+                } 
+              } 
+            }
+          }
+        }
+        startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
+      }
 
     ws['!merges'] = merges;
     ws['!cols'] = [{ wpx: 120 }, { wpx: 320 }, { wpx: 80 }];
@@ -2720,4 +2815,21 @@ export class SubmissionService {
     return { message: 'Data Saved' };
   }
 
+
+  //summary page
+  getWpTotalBudgets(data:any[], stCol:any, ws) {
+    let WpTotalBudgets;
+    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const rowCount = range.e.r;
+    const columnCount = range.e.c;
+    for (let row = 0; row <= rowCount; row++) {
+      for (let col = 0; col <= columnCount; col++) {
+        let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          if(col == columnCount && row == data.length + 1 + stCol) {
+            WpTotalBudgets = cellRef
+            return WpTotalBudgets
+          }
+      }
+    }
+  }
 }
