@@ -2232,7 +2232,7 @@ export class SubmissionService {
                     },
                   },
                 };
-              else if (index == Object.values(d_).length - 1)
+              else if (index == Object.values(d_).length - 1 || index == Object.values(d_).length - 2)
                 return {
                   v: d,
                   s: {
@@ -2321,60 +2321,108 @@ export class SubmissionService {
       let arrayOfCellRefWpBudgets
       const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
       const rowCount = range.e.r;
-      const columnCount = range.e.c;
+      const col = range.e.c;
       let startRow = this.wps.length + 2 + 5;
+      let _row = 6;
       for (let wp of this.wps) {
-        console.log(partner.acronym, startRow, rowCount, arrayOfCellRefWpBudgets)
-        
+        //calculate total budget for each center (total center)
         arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
-        for (let row = 0; row <= rowCount; row++) {
-          for (let col = 0; col <= columnCount; col++) {
-            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-            console.log(row, col, row > 5, row <=  this.wps.length + 1 + 5)
-            if ((col == columnCount) && (row > 5 && row <=  this.wps.length + 1 + 5)) {
-              if (col == columnCount) { // (budget)
-                // budget_for_each_wp = cellRef;
-
-                cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-
-                ws[cellRef] = {
-                  t: 'n',
-                  f: '=' + arrayOfCellRefWpBudgets,
-                  // f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
-                  // z: "0.00%;[Red]-0.00%",
-                  // s: {
-                  //   fill: { fgColor: { rgb: '454962' } },
-                  //   font: { color: { rgb: 'ffffff' } },
-                  //   alignment: {
-                  //     horizontal: 'center',
-                  //     vertical: 'center',
-                  //   },
-                  // },
-                }
-              }
-              // else if(col == columnCount -1) { // (percentage)
-              //   // budget_for_each_wp = cellRef;
-              //   cellRef = XLSX.utils.encode_cell({ r: row, c: col + 1});
-              //   ws[cellRef] = { 
-              //     t: 'n',
-              //     // f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
-              //     z: "0.00%;[Red]-0.00%",
-              //     s: {
-              //       fill: { fgColor: { rgb: '454962' } },
-              //       font: { color: { rgb: 'ffffff' } },
-              //       alignment: {
-              //         horizontal: 'center',
-              //         vertical: 'center',
-              //       },
-              //     },
-              //   } 
-              // }
-            }
-          }
+        const cellRef = XLSX.utils.encode_cell({ r: _row++, c: col });
+        ws[cellRef] = {
+          t: 'n',
+          f: '=' + arrayOfCellRefWpBudgets,
+          z: "#,##0",
+          s: {
+            fill: { fgColor: { rgb: '454962' } },
+            font: { color: { rgb: 'ffffff' } },
+            alignment: {
+              horizontal: 'center',
+              vertical: 'center',
+            },
+          },
         }
         startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
-
       }
+
+
+      let wpBudgetsTotalCenter = [];
+      let wpBudgetTotalCenter;
+      let totalCenter;
+
+
+      for (let row = 0; row <= rowCount; row++) {
+          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          //get Total center budget (cellRef)
+          if (row == this.wps.length + 1 + 5) {
+            totalCenter = cellRef
+          }
+      }
+
+
+
+
+
+
+
+        for (let row = 0; row <= rowCount; row++) {
+            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+
+            if (row > 5 && row <= this.wps.length + 5) {
+              wpBudgetsTotalCenter.push(cellRef);
+            }
+
+            //calculate total center budget(total center)
+            if(row == this.wps.length + 1 + 5) {
+              // totalCenter = cellRef;
+              ws[cellRef] = {
+                t: 'n',
+                f: '=' + wpBudgetsTotalCenter.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2),
+                z: "#,##0",
+                s: {
+                  fill: { fgColor: { rgb: '454962' } },
+                  font: { color: { rgb: 'ffffff' } },
+                  alignment: {
+                    horizontal: 'center',
+                    vertical: 'center',
+                  },
+                },
+              }
+            }
+
+            if (row > 5 && row <= this.wps.length + 1 + 5) {
+              wpBudgetTotalCenter = cellRef
+            }
+
+
+
+
+            //calculate percentage partner
+            if ((col- 1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
+                wpBudgetTotalCenter = cellRef;
+                cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+                ws[cellRef] = {
+                  t: 'n',
+                  f: `=${wpBudgetTotalCenter}/${totalCenter}/100*100`,
+                  z: "0.00%;[Red]-0.00%",
+                  s: {
+                    fill: { fgColor: { rgb: '454962' } },
+                    font: { color: { rgb: 'ffffff' } },
+                    alignment: {
+                      horizontal: 'center',
+                      vertical: 'center',
+                    },
+                  },
+                }
+            }
+
+
+
+
+
+
+
+     
+            }
 
 
 
@@ -2922,23 +2970,15 @@ export class SubmissionService {
 
 
 
-  getCellRefBudgets(data: any[], stCol: any, ws) {
+  getCellRefBudgets(data: any[], startRaw: any, ws) {
     let arrayBudgets = [];
     const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
-    const rowCount = range.e.r;
-    const columnCount = range.e.c;
-
-    for (let row = 0; row <= rowCount; row++) {
-      for (let col = 0; col <= columnCount; col++) {
-        let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-        if (col == columnCount && (row > stCol && row <= data.length + stCol)) {
-          // console.log(cellRef)
-          arrayBudgets.push(cellRef)
-          // return arrayBudgets
-        }
-      }
+    const col = range.e.c;
+    for (let row = startRaw; row < startRaw + data.length; row++) {
+      let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      arrayBudgets.push(cellRef)
     }
-    return arrayBudgets.map(d => `!${d}+ `).join().replaceAll(',', '').slice(0, -2)
-    // console.log(arrayBudgets)
+
+    return arrayBudgets.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2)
   }
 }
