@@ -73,7 +73,7 @@ export class SubmissionService {
     // private initiativeMeliaRepository: Repository<InitiativeMelia>,
     private emailService: EmailService,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
   sort(query) {
     if (query?.sort) {
       let obj = {};
@@ -100,24 +100,25 @@ export class SubmissionService {
     center_status.status = status;
     await this.centerStatusRepo.save(center_status).then(
       async (data) => {
-        if(data.status) {
-          const init = await this.initiativeRepository.findOne({where : {
-            id : initiative_id
-          },
-          relations: ['roles', 'roles.user', 'roles.organizations']
+        if (data.status) {
+          const init = await this.initiativeRepository.findOne({
+            where: {
+              id: initiative_id
+            },
+            relations: ['roles', 'roles.user', 'roles.organizations']
           });
 
           const usersRole = [];
           init.roles.filter(d => {
-            if(d.role == 'Leader' || d.role == 'Coordinator') {
+            if (d.role == 'Leader' || d.role == 'Coordinator') {
               usersRole.push(d);
-            } else if(d.role == 'Contributor'){
+            } else if (d.role == 'Contributor') {
               d.organizations.filter(x => {
-                if(x.code == data.organization_code) {
+                if (x.code == data.organization_code) {
                   usersRole.push(d)
                 }
               });
-              
+
             }
           });
           const users = usersRole.map(d => d.user);
@@ -125,8 +126,8 @@ export class SubmissionService {
           // when user is in team member
           const userRoleDoAction = init.roles.filter(d => d.user_id == reqUser.id);
 
-          for(let user of users) {
-            if(userRoleDoAction.length) {
+          for (let user of users) {
+            if (userRoleDoAction.length) {
               this.emailService.sendEmailTobyVarabel(user, 7, init, null, null, organization, userRoleDoAction, null, null)
             } else {
               // when admin mark as complete
@@ -154,33 +155,33 @@ export class SubmissionService {
     return await this.submissionRepository.update(id, data).then(
       async () => {
         const submission = await this.submissionRepository.findOne({
-          where : {
+          where: {
             id: id,
             initiative: {
               roles: {
-                role: In(['Leader' , 'Coordinator']) 
+                role: In(['Leader', 'Coordinator'])
               }
             }
           },
-          relations : ['initiative', 'initiative.roles', 'initiative.roles.user']
+          relations: ['initiative', 'initiative.roles', 'initiative.roles.user']
         });
-        if(submission)
-          for(let role of submission.initiative?.roles) {
-            if(data.status == 'Approved') {
+        if (submission)
+          for (let role of submission.initiative?.roles) {
+            if (data.status == 'Approved') {
               this.emailService.sendEmailTobyVarabel(role.user, 5, submission.initiative, role.role, data.status_reason, null, null, null, null)
-            } else if(data.status == 'Rejected') {
+            } else if (data.status == 'Rejected') {
               this.emailService.sendEmailTobyVarabel(role.user, 6, submission.initiative, role.role, data.status_reason, null, null, null, null)
             }
           }
-          const history = this.historyRepository.create();
-          history.resource_property = data.status == 'Approved' ? `Approved for version Id: ${id}` : `Rejected for version Id: ${id}`;
-          history.item_name = data.status;
-          history.user_id = user.id;
-          history.initiative_id = submission.initiative_id;
-          await this.historyRepository.save(history);
-          await this.initiativeRepository.update(submission.initiative_id, {
-            latest_history_id: history.id
-          });
+        const history = this.historyRepository.create();
+        history.resource_property = data.status == 'Approved' ? `Approved for version Id: ${id}` : `Rejected for version Id: ${id}`;
+        history.item_name = data.status;
+        history.user_id = user.id;
+        history.initiative_id = submission.initiative_id;
+        await this.historyRepository.save(history);
+        await this.initiativeRepository.update(submission.initiative_id, {
+          latest_history_id: history.id
+        });
         return true
       }, (error) => {
         console.error(error)
@@ -354,41 +355,45 @@ export class SubmissionService {
         where: { id: submissionObject.id },
         relations: ['user', 'phase'],
       });
-      if(data) {
-        const admins = await this.userRepository.find({where : {
-          role: userRole.ADMIN
-        }});
-        const init = await this.initiativeRepository.findOne({where : {
-          id : initiative_id,
-          roles: {
-            role : In(['Leader' , 'Coordinator'])
+      if (data) {
+        const admins = await this.userRepository.find({
+          where: {
+            role: userRole.ADMIN
           }
-        },
-        relations: ['roles', 'roles.user']
+        });
+        const init = await this.initiativeRepository.findOne({
+          where: {
+            id: initiative_id,
+            roles: {
+              role: In(['Leader', 'Coordinator'])
+            }
+          },
+          relations: ['roles', 'roles.user']
         })
         //if (Leader && Coordinator) not exist
-        const initAdmin = await this.initiativeRepository.findOne({where : {
-          id : initiative_id,
-        },
+        const initAdmin = await this.initiativeRepository.findOne({
+          where: {
+            id: initiative_id,
+          },
         })
         // users (Leader && Coordinator)
         const users = init?.roles.map(d => d.user);
-        for(let admin of admins) {
+        for (let admin of admins) {
           this.emailService.sendEmailTobyVarabel(admin, 3, initAdmin, null, null, null, null, null, null)
         }
-        if(users)
-          for(let user of users) {
+        if (users)
+          for (let user of users) {
             this.emailService.sendEmailTobyVarabel(user, 4, init, null, null, null, null, null, null)
           }
       }
-        const history = this.historyRepository.create();
-        history.resource_property = 'Submit';
-        history.user_id = user_id;
-        history.initiative_id = initiative_id;
-        await this.historyRepository.save(history);
-        await this.initiativeRepository.update(initiative_id, {
-          latest_history_id: history.id
-        });
+      const history = this.historyRepository.create();
+      history.resource_property = 'Submit';
+      history.user_id = user_id;
+      history.initiative_id = initiative_id;
+      await this.historyRepository.save(history);
+      await this.initiativeRepository.update(initiative_id, {
+        latest_history_id: history.id
+      });
       return data
     } catch (error) {
       throw new BadRequestException('Connection Error')
@@ -403,16 +408,16 @@ export class SubmissionService {
           data.perValues[result?.organization_code] = {};
         if (
           !data.perValues[result?.organization_code][
-            result?.workPackage?.wp_official_code
+          result?.workPackage?.wp_official_code
           ]
         )
           data.perValues[result?.organization_code][
             result?.workPackage?.wp_official_code
           ] = {};
-  
+
         if (
           !data.perValues[result?.organization_code][
-            result?.workPackage?.wp_official_code
+          result?.workPackage?.wp_official_code
           ][result?.result_uuid]
         )
           data.perValues[result?.organization_code][
@@ -421,7 +426,7 @@ export class SubmissionService {
         result?.values.forEach((d) => {
           if (
             data.perValues[result?.organization_code][
-              result?.workPackage?.wp_official_code
+            result?.workPackage?.wp_official_code
             ][result?.result_uuid][d?.period?.id]
           )
             data.perValues[result?.organization_code][
@@ -431,32 +436,32 @@ export class SubmissionService {
             result?.workPackage?.wp_official_code
           ][result?.result_uuid][d.period?.id] = d.value;
         });
-  
+
         if (!data.values[result?.organization_code])
           data.values[result?.organization_code] = {};
         if (
           !data.values[result?.organization_code][
-            result?.workPackage?.wp_official_code
+          result?.workPackage?.wp_official_code
           ]
         )
           data.values[result?.organization_code][
             result?.workPackage?.wp_official_code
           ] = {};
-  
+
         if (
           !data.values[result?.organization_code][
-            result?.workPackage?.wp_official_code
+          result?.workPackage?.wp_official_code
           ][result?.result_uuid]
         )
           data.values[result?.organization_code][
             result?.workPackage?.wp_official_code
           ][result?.result_uuid] = result?.value;
-  
+
         if (!data.no_budget[result?.organization_code])
           data.no_budget[result?.organization_code] = {};
         if (
           !data.no_budget[result?.organization_code][
-            result?.workPackage?.wp_official_code
+          result?.workPackage?.wp_official_code
           ]
         )
           data.no_budget[result?.organization_code][
@@ -464,7 +469,7 @@ export class SubmissionService {
           ] = {};
         if (
           !data.no_budget[result?.organization_code][
-            result?.workPackage?.wp_official_code
+          result?.workPackage?.wp_official_code
           ][result?.result_uuid]
         )
           data.no_budget[result?.organization_code][
@@ -479,7 +484,7 @@ export class SubmissionService {
   async getSaved(id, phaseId) {
     try {
       const saved_data = await this.resultRepository.find({
-        where: { initiative_id: id, submission_id: IsNull() , phase_id: phaseId},
+        where: { initiative_id: id, submission_id: IsNull(), phase_id: phaseId },
         relations: ['values', 'workPackage', 'values.period'],
       });
       return this.dataToPers(saved_data);
@@ -559,8 +564,8 @@ export class SubmissionService {
           await this.initiativeRepository.update(id, {
             latest_history_id: history.id
           });
-        }, 
-        (error) =>{
+        },
+        (error) => {
           console.error(error);
         }
       );
@@ -572,7 +577,7 @@ export class SubmissionService {
   }
   async saveAllResultData(id, data: any, user) {
     const initiativeId = id;
-    const { partner_code, wp_id,title , itemsIds, value, phase_id } = data;
+    const { partner_code, wp_id, title, itemsIds, value, phase_id } = data;
 
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
@@ -584,7 +589,7 @@ export class SubmissionService {
       code: partner_code,
     });
 
-    for(let item_id of itemsIds) {
+    for (let item_id of itemsIds) {
       let oldResult = await this.resultRepository.findOneBy({
         initiative_id: id,
         result_uuid: item_id,
@@ -593,7 +598,7 @@ export class SubmissionService {
         submission: IsNull(),
         phase_id: phase_id
       });
-  
+
       let resultData = {
         result_uuid: item_id,
         phase_id: phase_id,
@@ -609,19 +614,19 @@ export class SubmissionService {
           newResult.initiative = initiativeObject;
           resultObject = await this.resultRepository.save(newResult);
         } else resultObject = oldResult;
-  
+
         let allPeriodObject = await this.periodRepository.find();
 
-        for(let periodObject of allPeriodObject) {
+        for (let periodObject of allPeriodObject) {
           let newResultPeriodValue: any;
-  
+
           newResultPeriodValue = await this.resultValuesRepository.findOneBy({
             result: resultObject,
             period: periodObject,
           });
           if (!newResultPeriodValue)
             newResultPeriodValue = this.resultValuesRepository.create();
-    
+
           newResultPeriodValue.value = value;
           newResultPeriodValue.period = periodObject;
           newResultPeriodValue.result = resultObject;
@@ -642,7 +647,7 @@ export class SubmissionService {
       last_update_at: new Date(),
       latest_history_id: history.id
     });
-    if(!value)
+    if (!value)
       await this.clearAllResultValues(id, data);
     return { message: 'Data saved' };
   }
@@ -664,7 +669,7 @@ export class SubmissionService {
     });
 
 
-    for(let item_id of itemsIds) {
+    for (let item_id of itemsIds) {
       let oldResult = await this.resultRepository.findOneBy({
         initiative_id: id,
         result_uuid: item_id,
@@ -689,7 +694,7 @@ export class SubmissionService {
     });
     return { message: 'Data saved' };
   }
-  async saveResultDataValue(id, data: any,user) { 
+  async saveResultDataValue(id, data: any, user) {
     const initiativeId = id;
 
     const {
@@ -720,11 +725,11 @@ export class SubmissionService {
     });
 
     const newValues = {
-      value : percent_value,
-      budget : budget_value.toString(),
-      no_budget : no_budget,
+      value: percent_value,
+      budget: budget_value.toString(),
+      no_budget: no_budget,
     }
-    
+
 
     const objDifference = this.getDifference(oldResult, newValues);
 
@@ -732,16 +737,16 @@ export class SubmissionService {
       const value = objDifference[key];
       const history = this.historyRepository.create();
 
-      if(key == 'no_budget') {
+      if (key == 'no_budget') {
         history.resource_property = value ? 'Checked result as no budget assigned' : 'unchecked result as no budget assigned';
         history.old_value = value == true ? 'False' : 'True';
         history.new_value = value == true ? 'True' : 'False';
-      } else if(key == 'value') {
-        if(oldResult.value == 0 && newValues.value != 0) {
+      } else if (key == 'value') {
+        if (oldResult.value == 0 && newValues.value != 0) {
           history.resource_property = 'Add percentage';
           history.old_value = null;
           history.new_value = newValues.value.toString() + '%';
-        } else if(oldResult.value != 0 && newValues.value != 0) {
+        } else if (oldResult.value != 0 && newValues.value != 0) {
           history.resource_property = 'Edit percentage';
           history.old_value = oldResult.value.toString() + '%';
           history.new_value = newValues.value.toString() + '%';
@@ -750,13 +755,13 @@ export class SubmissionService {
           history.old_value = oldResult.value.toString() + '%';
           history.new_value = null;
         }
-        
-      } else if(key == 'budget') {
-        if(oldResult.budget == '0' && newValues.budget != '0') {
+
+      } else if (key == 'budget') {
+        if (oldResult.budget == '0' && newValues.budget != '0') {
           history.resource_property = 'Add budget';
           history.old_value = null;
           history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
-        } else if(oldResult.budget != '0' && newValues.budget != '0') {
+        } else if (oldResult.budget != '0' && newValues.budget != '0') {
           history.resource_property = 'Edit budget';
           history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
           history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
@@ -772,7 +777,7 @@ export class SubmissionService {
       history.initiative_id = id;
       history.organization_id = partner_code;
       history.wp_id = workPackageObject.wp_id;
-      
+
       await this.historyRepository.save(history);
       await this.initiativeRepository.update(initiativeId, {
         latest_history_id: history.id
@@ -792,9 +797,9 @@ export class SubmissionService {
       last_update_at: new Date(),
     });
     return { message: 'Data saved' };
-  } 
+  }
 
-  getDifference(a,b) {
+  getDifference(a, b) {
     return Object.fromEntries(Object.entries(b).filter(([key, val]) => key in a && a[key] !== val));
   }
 
@@ -806,10 +811,10 @@ export class SubmissionService {
       let part = characters.slice(i, i + 3).reverse().join("");
       parts.unshift(part);
     }
-    return  parts.join(",");
+    return parts.join(",");
   }
 
-  async saveWpBudget(initiativeId: number, data: any, user) {  
+  async saveWpBudget(initiativeId: number, data: any, user) {
     const { partner_code, wp_id, budget, phaseId } = data;
     let workPackageObject = await this.workPackageRepository.findOneBy({
       wp_official_code: wp_id,
@@ -839,11 +844,11 @@ export class SubmissionService {
         async (data) => {
           const history = this.historyRepository.create();
 
-          if(oldData.budget == '' && data.budget != '') {
+          if (oldData.budget == '' && data.budget != '') {
             history.resource_property = 'Add total budget';
             history.old_value = null;
             history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
-          } else if(oldData.budget != '' && data.budget != '') {
+          } else if (oldData.budget != '' && data.budget != '') {
             history.resource_property = 'Edit total budget';
             history.old_value = oldData.budget == '' ? '0' : Number(oldData.budget).toString();
             history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
@@ -864,7 +869,7 @@ export class SubmissionService {
           await this.initiativeRepository.update(initiativeId, {
             latest_history_id: history.id
           });
-        }, 
+        },
         (error) => {
           console.log(error)
         }
@@ -884,9 +889,9 @@ export class SubmissionService {
         async (data: any) => {
           const history = this.historyRepository.create();
 
-          if(oldData.budget == undefined && data.budget != '') {
+          if (oldData.budget == undefined && data.budget != '') {
             history.resource_property = 'Add total budget';
-          } 
+          }
           history.old_value = null;
           history.new_value = data.budget == '' ? '0' : Number(data.budget).toString();
 
@@ -900,7 +905,7 @@ export class SubmissionService {
           await this.initiativeRepository.update(initiativeId, {
             latest_history_id: history.id
           });
-        }, 
+        },
         (error) => {
           console.log(error)
         }
@@ -911,11 +916,11 @@ export class SubmissionService {
       last_update_at: new Date(),
     });
     return { message: 'Data saved' };
-  } 
+  }
 
   async getWpsBudgets(initiative_id: number, phaseId: any) {
     const wpBudgets = await this.wpBudgetRepository.find({
-      where: { initiative_id, submission_id: IsNull(), phase: {id: phaseId} },
+      where: { initiative_id, submission_id: IsNull(), phase: { id: phaseId } },
       relations: ['workPackage'],
     });
 
@@ -933,7 +938,7 @@ export class SubmissionService {
 
   async getSubmissionBudgets(submission_id: number, phaseId: any) {
     const wpBudgets = await this.wpBudgetRepository.find({
-      where: { submission_id , phase_id: phaseId },
+      where: { submission_id, phase_id: phaseId },
       relations: ['workPackage'],
     });
 
@@ -996,7 +1001,7 @@ export class SubmissionService {
             ? 'X'
             : '';
       });
-      obj['Percentage'] = this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] + '%'; 
+      obj['Percentage'] = this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] + '%';
       obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]));
       ConsolidatedData.push(obj);
     });
@@ -1028,41 +1033,41 @@ export class SubmissionService {
   getConsolidatedDataForPartners(wps: any[], period: any[], partner_code: number) {
     let ConsolidatedDataForPartners = [];
     let lockupArrayForPartners = [];
-    
-      wps.forEach((wp: any) => {
-        let obj: any = {};
 
-        obj['Results'] = wp.title;
-        obj['Type'] = '';
-        obj['wp_official_code'] = wp.ost_wp.wp_official_code;
+    wps.forEach((wp: any) => {
+      let obj: any = {};
 
-        period.forEach((per: any) => {
-          obj[per.year + '-' + per.quarter] =
-            this.perValuesSammaryForPartner[partner_code][obj.wp_official_code][per.id] == true
-              ? 'X'
-              : '';
-        });
-        obj['Percentage'] = this.totals[partner_code][wp.ost_wp.wp_official_code] + '%'; 
-        obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner_code][
-          wp.ost_wp.wp_official_code]));
-          ConsolidatedDataForPartners.push(obj);
+      obj['Results'] = wp.title;
+      obj['Type'] = '';
+      obj['wp_official_code'] = wp.ost_wp.wp_official_code;
+
+      period.forEach((per: any) => {
+        obj[per.year + '-' + per.quarter] =
+          this.perValuesSammaryForPartner[partner_code][obj.wp_official_code][per.id] == true
+            ? 'X'
+            : '';
+      });
+      obj['Percentage'] = this.totals[partner_code][wp.ost_wp.wp_official_code] + '%';
+      obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner_code][
+        wp.ost_wp.wp_official_code]));
+      ConsolidatedDataForPartners.push(obj);
     });
     let obj: any = {};
     obj['Results'] = 'Total';
     obj['Type'] = '';
-      period.forEach((per: any) => {
-        obj[per.year + '-' + per.quarter] = this.finalPeriodValForPartner(partner_code, per.id)
-          ? 'X'
-          : '';
-      });
-      (obj['Percentage'] = this.roundNumber(this.getTotalPercentageForEachPartner(this.totals[partner_code])) + '%'),
-        (obj['Budgets'] = this.getTotalBudgetForEachPartner(this.wp_budgets[partner_code])),
-        ConsolidatedDataForPartners.push(obj)
-      
+    period.forEach((per: any) => {
+      obj[per.year + '-' + per.quarter] = this.finalPeriodValForPartner(partner_code, per.id)
+        ? 'X'
+        : '';
+    });
+    (obj['Percentage'] = this.roundNumber(this.getTotalPercentageForEachPartner(this.totals[partner_code])) + '%'),
+      (obj['Budgets'] = this.getTotalBudgetForEachPartner(this.wp_budgets[partner_code])),
+      ConsolidatedDataForPartners.push(obj)
 
-        lockupArrayForPartners = ConsolidatedDataForPartners.map((d: any) => {
-        return d.Results;
-      });
+
+    lockupArrayForPartners = ConsolidatedDataForPartners.map((d: any) => {
+      return d.Results;
+    });
     return {
       ConsolidatedDataForPartners: ConsolidatedDataForPartners,
       lockupArrayForPartners: lockupArrayForPartners,
@@ -1080,13 +1085,13 @@ export class SubmissionService {
         obj['WP_Results'] = d.initiativeMelia?.meliaType?.name
           ? d.initiativeMelia?.meliaType?.name
           : d?.ipsr?.id
-          ? d?.ipsr.title + ' (' + d.value + ')'
-          : d.title;
+            ? d?.ipsr.title + ' (' + d.value + ')'
+            : d.title;
         obj['Type'] = d.category;
         period.forEach((per: any) => {
           obj[per.year + '-' + per.quarter] =
             this.perAllValues[wp.ost_wp.wp_official_code][obj.id][per.id] ==
-            true
+              true
               ? 'X'
               : '';
         });
@@ -1095,12 +1100,12 @@ export class SubmissionService {
         ]
           ? this.sammary[wp.ost_wp.wp_official_code][d.id]
           : this.roundNumber(this.sammary[wp.ost_wp.wp_official_code][d.id]) +
-            '%';
+          '%';
         obj['Budget_USD'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleSummaryValues[wp.ost_wp.wp_official_code]))
           ? this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgets[wp.ost_wp.wp_official_code][d.id]))
           : this.formatWithThousandsSeparator(
             this.roundNumber(this.summaryBudgets[wp.ost_wp.wp_official_code][d.id]),
-            );
+          );
         return obj;
       });
       let obj: any = {};
@@ -1124,7 +1129,7 @@ export class SubmissionService {
         ? this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]))
         : this.formatWithThousandsSeparator(
           this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]),
-          );
+        );
       data.push(obj);
 
       newArray.push(data);
@@ -1137,9 +1142,9 @@ export class SubmissionService {
     let newArray = [];
 
 
-    if(organization) 
-      partners = partners.filter((d:any) => d.code == organization.code);
-    partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()))   
+    if (organization)
+      partners = partners.filter((d: any) => d.code == organization.code);
+    partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()))
     partners.forEach((partner: any) => {
       const partnersWp = [];
       wps.forEach((wp: any) => {
@@ -1150,8 +1155,8 @@ export class SubmissionService {
             obj['WP_Results'] = d?.initiativeMelia?.meliaType?.name
               ? d?.initiativeMelia?.meliaType?.name
               : d?.ipsr?.id
-              ? d?.ipsr.title + ' (' + d.value + ')'
-              : d.title;
+                ? d?.ipsr.title + ' (' + d.value + ')'
+                : d.title;
             obj['Type'] = d.category;
             period.forEach((per: any) => {
               obj[per?.year + '-' + per?.quarter] =
@@ -1166,18 +1171,18 @@ export class SubmissionService {
             ]
               ? this.values[partner.code][wp.ost_wp.wp_official_code][d.id]
               : this.displayValues[partner.code][wp.ost_wp.wp_official_code][
-                  d.id
-                ] + '%';
+              d.id
+              ] + '%';
 
             obj['Budget'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleValues[partner.code][
               wp.ost_wp.wp_official_code
             ]))
               ? this.formatWithThousandsSeparator(this.roundNumber(this.budgetValues[partner.code][wp.ost_wp.wp_official_code][
-                  d.id
-                ]))
+                d.id
+              ]))
               : this.formatWithThousandsSeparator(this.roundNumber(this.displayBudgetValues[partner.code][
-                  wp.ost_wp.wp_official_code
-                ][d.id]));
+                wp.ost_wp.wp_official_code
+              ][d.id]));
 
             return obj;
           },
@@ -1200,11 +1205,11 @@ export class SubmissionService {
         ]
           ? this.totals[partner.code][wp.ost_wp.wp_official_code]
           : this.roundNumber(
-              this.totals[partner.code][wp.ost_wp.wp_official_code],
-            ) + '%';
+            this.totals[partner.code][wp.ost_wp.wp_official_code],
+          ) + '%';
 
         obj['Budget'] =
-        this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner.code][wp.ost_wp.wp_official_code]));
+          this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner.code][wp.ost_wp.wp_official_code]));
 
         data?.push(obj);
         partnersWp.push(data);
@@ -1241,7 +1246,7 @@ export class SubmissionService {
   perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
   sammaryTotal: any = {};
-  sammaryTotalConsolidated: any = {}; 
+  sammaryTotalConsolidated: any = {};
   results: any;
   loading = false;
   params: any;
@@ -1270,9 +1275,9 @@ export class SubmissionService {
           v: submission != null ?
             submission?.initiative.official_code +
             ' - ' +
-            submission?.initiative.name : 
+            submission?.initiative.name :
             initiative?.official_code + ' - ' + initiative?.name
-            ,
+          ,
           s: {
             fill: { fgColor: { rgb: '04030f' } },
             font: { color: { rgb: 'ffffff' } },
@@ -1416,9 +1421,9 @@ export class SubmissionService {
   }
   savedValues: any = null;
   noValuesAssigned: any = {};
-  submission_data:any;
-  InitiativeId:any;
-  async generateExcel(submissionId: any, initId:any, tocData: any, organization: any) {
+  submission_data: any;
+  InitiativeId: any;
+  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any) {
     this.perValues = {};
     this.perValuesSammary = {};
     this.perValuesSammaryForPartner = {};
@@ -1450,29 +1455,29 @@ export class SubmissionService {
 
     this.InitiativeId = initId;
     let submission: any = null;
-    if(submissionId != null){
+    if (submissionId != null) {
       submission = await this.findSubmissionsById(submissionId);
       this.submission_data = submission;
       this.results = submission.toc_data;
       this.period = submission.phase.periods;
       this.wp_budgets = await this.getSubmissionBudgets(submissionId, submission.phase.id);
 
-       cross_data = await this.CrossCuttingService.findBySubmissionID(
+      cross_data = await this.CrossCuttingService.findBySubmissionID(
         submissionId
       );
       ipsr_value_data = await this.IpsrValueService.findBySubmissionId(
         submissionId
       );
-       partners = await this.PhasesService.fetchAssignedOrganizations(
+      partners = await this.PhasesService.fetchAssignedOrganizations(
         submission?.phase?.id,
         submission?.initiative?.id,
       );
     }
     else {
-      
+
       this.phase = await this.PhasesService.findActivePhase();
       this.savedValues = await this.getSaved(initId, this.phase.id)
-       partners = await this.PhasesService.fetchAssignedOrganizations(this.phase.id,initId);
+      partners = await this.PhasesService.fetchAssignedOrganizations(this.phase.id, initId);
       if (partners.length < 1) {
         partners = await this.organizationRepository.find();
       }
@@ -1485,13 +1490,13 @@ export class SubmissionService {
 
       this.results = await tocData;
 
- 
 
-       ipsr_value_data = await this.IpsrValueService.findByInitiativeID(initId);
-  
-       cross_data = await this.CrossCuttingService.findByInitiativeID(initId)
 
-      this.wp_budgets = await this.getWpsBudgets(initId,this.phase.id);
+      ipsr_value_data = await this.IpsrValueService.findByInitiativeID(initId);
+
+      cross_data = await this.CrossCuttingService.findByInitiativeID(initId)
+
+      this.wp_budgets = await this.getWpsBudgets(initId, this.phase.id);
 
     }
 
@@ -1520,11 +1525,11 @@ export class SubmissionService {
     ];
 
     this.wps = this.results
-    .filter((d: any) => {
-      if (d.category == "WP")
-        d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
-      return d.category == "WP" && !d.group;
-    }).sort((a: any, b: any) => a.title.localeCompare(b.title));
+      .filter((d: any) => {
+        if (d.category == "WP")
+          d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
+        return d.category == "WP" && !d.group;
+      }).sort((a: any, b: any) => a.title.localeCompare(b.title));
 
     this.wps.unshift({
       id: 'CROSS',
@@ -1552,7 +1557,7 @@ export class SubmissionService {
 
       if (!this.displayBudgetValues[partner.code])
         this.displayBudgetValues[partner.code] = {};
-        if (!this.noValuesAssigned[partner.code])
+      if (!this.noValuesAssigned[partner.code])
         this.noValuesAssigned[partner.code] = {};
       for (let wp of this.wps) {
         if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
@@ -1562,7 +1567,7 @@ export class SubmissionService {
         if (!this.toggleValues[partner.code])
           this.toggleValues[partner.code] = {};
 
-          if (!this.noValuesAssigned[partner.code][wp.ost_wp.wp_official_code])
+        if (!this.noValuesAssigned[partner.code][wp.ost_wp.wp_official_code])
           this.noValuesAssigned[partner.code][wp.ost_wp.wp_official_code] = {};
 
         if (!this.toggleValues[partner.code][wp.ost_wp.wp_official_code])
@@ -1679,28 +1684,28 @@ export class SubmissionService {
         });
       }
 
-        if (this.partnersData[partner.code]?.IPSR)
-          this.partnersData[partner.code].IPSR = this.partnersData[
-            partner.code
-          ]?.IPSR?.filter((d: any) => d.value != null && d.value != "");
-          
-        let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+      if (this.partnersData[partner.code]?.IPSR)
+        this.partnersData[partner.code].IPSR = this.partnersData[
+          partner.code
+        ]?.IPSR?.filter((d: any) => d.value != null && d.value != "");
 
-        this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+      let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
 
-        newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+      this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
 
-        this.wps.forEach((d : any) => { 
-          if(d.category == "WP") {
-            let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
-              .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
-            
-            let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-              .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
-    
-            this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
-          }
-        }) 
+      newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+
+      this.wps.forEach((d: any) => {
+        if (d.category == "WP") {
+          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+        }
+      })
     }
 
     for (let wp of this.wps) {
@@ -1710,7 +1715,7 @@ export class SubmissionService {
         wp.ost_wp.wp_official_code,
       );
     }
-    if(submissionId != null) {
+    if (submissionId != null) {
       this.setvalues(
         submission.consolidated.values,
         submission.consolidated.perValues,
@@ -1722,33 +1727,33 @@ export class SubmissionService {
         this.savedValues.no_budget
       );
     }
-   //sort (Cross Cutting)
+    //sort (Cross Cutting)
     const newCROSS = this.allData["CROSS"].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
 
     this.allData["CROSS"] = this.allData["CROSS"].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
 
     newCROSS.forEach((d: any) => this.allData["CROSS"].unshift(d))
 
-    
+
     const newIPSR = this.allData["IPSR"]
       .filter((d: any) => d.value != "")
       .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
     this.allData["IPSR"] = newIPSR;
 
     //sort WP titles
-    this.wps.forEach((d : any) => { 
-      if(d.category == "WP") {
+    this.wps.forEach((d: any) => {
+      if (d.category == "WP") {
         let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
-        .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
-        
+          .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
         let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-        .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+          .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
 
         this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
       }
-    }) 
+    })
 
- 
+
 
     const { ConsolidatedData } = this.getConsolidatedData(
       this.wps,
@@ -1758,7 +1763,7 @@ export class SubmissionService {
 
     const allData = this.getAllData(this.wps, this.period);
     let partnersData;
-    if(!organization)
+    if (!organization)
       partnersData = this.getPartnersData(this.wps, this.period, partners, null);
     else
       partnersData = this.getPartnersData(this.wps, this.period, partners, organization);
@@ -1802,91 +1807,12 @@ export class SubmissionService {
     });
 
 
-    if(!organization){
-    let ArrayOfArrays = [
-      ...this.getHeader(submission, 'CONSOLIDATED',this.initiative_data),
-      ...ConsolidatedData.map((d_, total_index) => [
-        {
-          v: 'Total Initiative',
-          s: {
-            fill: { fgColor: { rgb: '454962' } },
-            font: { color: { rgb: 'ffffff' } },
-            alignment: {
-              horizontal: 'center',
-              vertical: 'center',
-              wrapText: true,
-            },
-          },
-        },
-        ...Object.values(d_).map((d, index) => {
-          if (index == 0 && total_index != ConsolidatedData.length - 1)
-            return {
-              v: d,
-              s: {
-                alignment: {
-                  horizontal: 'center',
-                  vertical: 'top',
-                  wrapText: true,
-                },
-              },
-            };
-          else if (total_index == ConsolidatedData.length - 1)
-            return {
-              v: d,
-              s: {
-                fill: { fgColor: { rgb: '454962' } },
-                font: { color: { rgb: 'ffffff' } },
-                alignment: {
-                  horizontal: 'center',
-                  vertical: 'center',
-                },
-              },
-            };
-          else if (index == Object.values(d_).length - 1)
-            return {
-              v: d,
-              s: {
-                fill: { fgColor: { rgb: '454962' } },
-                font: { color: { rgb: 'ffffff' } },
-                alignment: {
-                  horizontal: 'center',
-                  vertical: 'center',
-                },
-              },
-            };
-          else
-            return {
-              v: d,
-              s: {
-                alignment: {
-                  horizontal: 'center',
-                  vertical: 'center',
-                },
-              },
-            };
-        }),
-      ]),
-    ];
-
-    merges.push({
-      s: { c: 0, r: 6 },
-      e: { c: 0, r: 6 + ConsolidatedData.length - 1 },
-    });
-    merges.push({
-      s: { c: 1, r: 6 + ConsolidatedData.length - 1 },
-      e: { c: 2, r: 6 + ConsolidatedData.length - 1 },
-    });
-    for (let data of allData) {
-      data.forEach((object) => {
-        delete object['id'];
-      });
-    }
-    let rowStart = ArrayOfArrays.length;
-    for (let i = 0; i < lockupArray.length - 1; i++) {
-      ArrayOfArrays.push(
-        ...allData[i].map((d_, total_index) => [
+    if (!organization) {
+      let ArrayOfArrays = [
+        ...this.getHeader(submission, 'CONSOLIDATED', this.initiative_data),
+        ...ConsolidatedData.map((d_, total_index) => [
           {
-            v: lockupArray[i],
+            v: 'Total Initiative',
             s: {
               fill: { fgColor: { rgb: '454962' } },
               font: { color: { rgb: 'ffffff' } },
@@ -1898,9 +1824,9 @@ export class SubmissionService {
             },
           },
           ...Object.values(d_).map((d, index) => {
-            if (index == 0 && total_index != allData[i].length - 1)
+            if (index == 0 && total_index != ConsolidatedData.length - 1)
               return {
-                v: String(d),
+                v: d,
                 s: {
                   alignment: {
                     horizontal: 'center',
@@ -1909,7 +1835,7 @@ export class SubmissionService {
                   },
                 },
               };
-            else if (total_index == allData[i].length - 1)
+            else if (total_index == ConsolidatedData.length - 1)
               return {
                 v: d,
                 s: {
@@ -1935,7 +1861,7 @@ export class SubmissionService {
               };
             else
               return {
-                v: String(d),
+                v: d,
                 s: {
                   alignment: {
                     horizontal: 'center',
@@ -1943,172 +1869,29 @@ export class SubmissionService {
                   },
                 },
               };
-            return d;
           }),
         ]),
-      );
+      ];
 
       merges.push({
-        s: { c: 0, r: rowStart },
-        e: { c: 0, r: ArrayOfArrays.length - 1 },
+        s: { c: 0, r: 6 },
+        e: { c: 0, r: 6 + ConsolidatedData.length - 1 },
       });
       merges.push({
-        s: { c: 1, r: ArrayOfArrays.length - 1 },
-        e: { c: 2, r: ArrayOfArrays.length - 1 },
+        s: { c: 1, r: 6 + ConsolidatedData.length - 1 },
+        e: { c: 2, r: 6 + ConsolidatedData.length - 1 },
       });
-      rowStart = ArrayOfArrays.length;
-    }
-
-    const ws = XLSX.utils.aoa_to_sheet(ArrayOfArrays);
-
-
-      const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
-      const rowCount = range.e.r;
-      const columnCount = range.e.c;
-
-
-
-      let budget_for_Total_Initiative;
-      for (let row = 0; row <= rowCount; row++) {
-        for (let col = 0; col <= columnCount; col++) {
-          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          //get Total Initiative budget (cellRef)
-          if(col == columnCount && row == this.wps.length + 1 + 5) {
-            budget_for_Total_Initiative = cellRef
-          }
-        }
-      }
-
-     
-      let budget_for_each_wp;
-      for (let row = 0; row <= rowCount; row++) {
-        for (let col = 0; col <= columnCount; col++) {
-          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          //calculate Budgets for (Summary)
-          if(col == columnCount && row > 5) {
-            ws[cellRef] = { 
-              t: 'n',
-              f: '=' + partners.map(d => `'${d.acronym}'!${cellRef}+ `).join().replaceAll(',', '').slice(0, -2),
-              z: "#,##0",
-              s: {
-                fill: { fgColor: { rgb: '454962' } },
-                font: { color: { rgb: 'ffffff' } },
-                alignment: {
-                  horizontal: 'center',
-                  vertical: 'center',
-                },
-              },
-            }  
-          } 
-
-
-          //get  budget cellRef for each wp in Total Initiative && calculate percentage for Total Initiative (Summary)
-          if((col == columnCount || col == columnCount -1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
-            if(col == columnCount) {
-              budget_for_each_wp = cellRef;
-              cellRef = XLSX.utils.encode_cell({ r: row, c: col -1});
-              ws[cellRef] = { 
-                t: 'n',
-                f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
-                z: "0.00%;[Red]-0.00%",
-                s: {
-                  fill: { fgColor: { rgb: '454962' } },
-                  font: { color: { rgb: 'ffffff' } },
-                  alignment: {
-                    horizontal: 'center',
-                    vertical: 'center',
-                  },
-                },
-              } 
-            } 
-          }
-        }
-      }
-
-
-
-
-      let wpBudgets;
-      let startRow = this.wps.length + 1 + 5;
-      for(let wp of this.wps) {
-        for (let row = 0; row <= rowCount; row++) {
-          for (let col = 0; col <= columnCount; col++) {
-            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-
-            if((col == columnCount || col == columnCount -1) && (row > startRow && row <= this.allData[wp.ost_wp.wp_official_code].length + 1 + startRow)) {
-              if(col == columnCount) {
-                const wpTotalBudgets  = this.getWpTotalBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws)
-                wpBudgets = cellRef;
-                cellRef = XLSX.utils.encode_cell({ r: row, c: col -1});
-                ws[cellRef] = { 
-                  t: 'n',
-                  f: `=${wpBudgets}/${wpTotalBudgets}/100*100`,
-                  z: "0%",
-                  s: {
-                    fill: { fgColor: { rgb: '454962' } },
-                    font: { color: { rgb: 'ffffff' } },
-                    alignment: {
-                      horizontal: 'center',
-                      vertical: 'center',
-                    },
-                  },
-                } 
-              } 
-            }
-          }
-        }
-        startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
-      }
-
-    ws['!merges'] = merges;
-    ws['!cols'] = [{ wpx: 120 }, { wpx: 320 }, { wpx: 80 }];
-    ws['!rows'] = [];
-    ws['!rows'] = [{ hpt: 20 }, { hpt: 20 },{ hpt: 20 },{ hpt: 20 },{ hpt: 20 },{ hpt: 20 }];
-     
-    for(let i = 6 ; i < ArrayOfArrays.length; i++) {
-      ws['!rows'].push({
-        hpt: 75
-      })
-    }
-
-    XLSX.utils.book_append_sheet(wb, ws, 'Summary');
-  }
-    let indexPartner = 0;
-
-    for (let partner of partnersData) {
-      partner.forEach((par) => {
-        par?.forEach((object) => {
+      for (let data of allData) {
+        data.forEach((object) => {
           delete object['id'];
         });
-      });
-    }
-    if(organization) 
-      partners = partners.filter((d:any) => d.code == organization.code);
-      partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()))
-      for (let partner of partners) {
-      let mergesPartners = [];
-      let ArrayOfArrays;
-      let Header;
-      if(initId)
-        Header = this.getHeader(null, partner.acronym, this.initiative_data);
-      else 
-        Header = this.getHeader(submission, partner.acronym, null);
-
-        let { ConsolidatedDataForPartners } = this.getConsolidatedDataForPartners(
-          this.wps,
-          this.period,
-          partner.code
-        );
-        ConsolidatedDataForPartners.forEach((object) => {
-          delete object['wp_official_code'];
-        });
-
-
-        ArrayOfArrays = [
-          ...Header,
-          ...ConsolidatedDataForPartners.map((d_, total_index) => [
+      }
+      let rowStart = ArrayOfArrays.length;
+      for (let i = 0; i < lockupArray.length - 1; i++) {
+        ArrayOfArrays.push(
+          ...allData[i].map((d_, total_index) => [
             {
-              v: `Total Center`,
+              v: lockupArray[i],
               s: {
                 fill: { fgColor: { rgb: '454962' } },
                 font: { color: { rgb: 'ffffff' } },
@@ -2120,9 +1903,9 @@ export class SubmissionService {
               },
             },
             ...Object.values(d_).map((d, index) => {
-              if (index == 0 && total_index != ConsolidatedDataForPartners.length - 1)
+              if (index == 0 && total_index != allData[i].length - 1)
                 return {
-                  v: d,
+                  v: String(d),
                   s: {
                     alignment: {
                       horizontal: 'center',
@@ -2131,7 +1914,7 @@ export class SubmissionService {
                     },
                   },
                 };
-              else if (total_index == ConsolidatedDataForPartners.length - 1)
+              else if (total_index == allData[i].length - 1)
                 return {
                   v: d,
                   s: {
@@ -2157,7 +1940,7 @@ export class SubmissionService {
                 };
               else
                 return {
-                  v: d,
+                  v: String(d),
                   s: {
                     alignment: {
                       horizontal: 'center',
@@ -2165,21 +1948,243 @@ export class SubmissionService {
                     },
                   },
                 };
+              return d;
             }),
           ]),
-        ];
+        );
 
-
-
-
-        mergesPartners.push({
-          s: { c: 0, r: 6 },
-          e: { c: 0, r: 6 + ConsolidatedDataForPartners.length - 1 },
+        merges.push({
+          s: { c: 0, r: rowStart },
+          e: { c: 0, r: ArrayOfArrays.length - 1 },
         });
-        mergesPartners.push({
-          s: { c: 1, r: 6 + ConsolidatedDataForPartners.length - 1 },
-          e: { c: 2, r: 6 + ConsolidatedDataForPartners.length - 1 },
+        merges.push({
+          s: { c: 1, r: ArrayOfArrays.length - 1 },
+          e: { c: 2, r: ArrayOfArrays.length - 1 },
         });
+        rowStart = ArrayOfArrays.length;
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(ArrayOfArrays);
+
+
+      const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+      const rowCount = range.e.r;
+      const columnCount = range.e.c;
+
+
+
+      let budget_for_Total_Initiative;
+      for (let row = 0; row <= rowCount; row++) {
+        for (let col = 0; col <= columnCount; col++) {
+          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          //get Total Initiative budget (cellRef)
+          if (col == columnCount && row == this.wps.length + 1 + 5) {
+            budget_for_Total_Initiative = cellRef
+          }
+        }
+      }
+
+
+      let budget_for_each_wp;
+      for (let row = 0; row <= rowCount; row++) {
+        for (let col = 0; col <= columnCount; col++) {
+          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          //calculate Budgets for (Summary)
+          if (col == columnCount && row > 5) {
+            ws[cellRef] = {
+              t: 'n',
+              f: '=' + partners.map(d => `'${d.acronym}'!${cellRef}+ `).join().replaceAll(',', '').slice(0, -2),
+              z: "#,##0",
+              s: {
+                fill: { fgColor: { rgb: '454962' } },
+                font: { color: { rgb: 'ffffff' } },
+                alignment: {
+                  horizontal: 'center',
+                  vertical: 'center',
+                },
+              },
+            }
+          }
+
+
+          //get  budget cellRef for each wp in Total Initiative && calculate percentage for Total Initiative (Summary)
+          if ((col == columnCount || col == columnCount - 1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
+            if (col == columnCount) {
+              budget_for_each_wp = cellRef;
+              cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+              ws[cellRef] = {
+                t: 'n',
+                f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
+                z: "0.00%;[Red]-0.00%",
+                s: {
+                  fill: { fgColor: { rgb: '454962' } },
+                  font: { color: { rgb: 'ffffff' } },
+                  alignment: {
+                    horizontal: 'center',
+                    vertical: 'center',
+                  },
+                },
+              }
+            }
+          }
+        }
+      }
+
+
+
+
+      let wpBudgets;
+      let startRow = this.wps.length + 1 + 5;
+      for (let wp of this.wps) {
+        for (let row = 0; row <= rowCount; row++) {
+          for (let col = 0; col <= columnCount; col++) {
+            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+
+            if ((col == columnCount || col == columnCount - 1) && (row > startRow && row <= this.allData[wp.ost_wp.wp_official_code].length + 1 + startRow)) {
+              if (col == columnCount) {
+                const wpTotalBudgets = this.getWpTotalBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws)
+                wpBudgets = cellRef;
+                cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+                ws[cellRef] = {
+                  t: 'n',
+                  f: `=${wpBudgets}/${wpTotalBudgets}/100*100`,
+                  z: "0%",
+                  s: {
+                    fill: { fgColor: { rgb: '454962' } },
+                    font: { color: { rgb: 'ffffff' } },
+                    alignment: {
+                      horizontal: 'center',
+                      vertical: 'center',
+                    },
+                  },
+                }
+              }
+            }
+          }
+        }
+        startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
+      }
+
+      ws['!merges'] = merges;
+      ws['!cols'] = [{ wpx: 120 }, { wpx: 320 }, { wpx: 80 }];
+      ws['!rows'] = [];
+      ws['!rows'] = [{ hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }];
+
+      for (let i = 6; i < ArrayOfArrays.length; i++) {
+        ws['!rows'].push({
+          hpt: 75
+        })
+      }
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Summary');
+    }
+    let indexPartner = 0;
+
+    for (let partner of partnersData) {
+      partner.forEach((par) => {
+        par?.forEach((object) => {
+          delete object['id'];
+        });
+      });
+    }
+    if (organization)
+      partners = partners.filter((d: any) => d.code == organization.code);
+    partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()))
+    for (let partner of partners) {
+      let mergesPartners = [];
+      let ArrayOfArrays;
+      let Header;
+      if (initId)
+        Header = this.getHeader(null, partner.acronym, this.initiative_data);
+      else
+        Header = this.getHeader(submission, partner.acronym, null);
+
+      let { ConsolidatedDataForPartners } = this.getConsolidatedDataForPartners(
+        this.wps,
+        this.period,
+        partner.code
+      );
+      ConsolidatedDataForPartners.forEach((object) => {
+        delete object['wp_official_code'];
+      });
+
+
+      ArrayOfArrays = [
+        ...Header,
+        ...ConsolidatedDataForPartners.map((d_, total_index) => [
+          {
+            v: `Total Center`,
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+                wrapText: true,
+              },
+            },
+          },
+          ...Object.values(d_).map((d, index) => {
+            if (index == 0 && total_index != ConsolidatedDataForPartners.length - 1)
+              return {
+                v: d,
+                s: {
+                  alignment: {
+                    horizontal: 'center',
+                    vertical: 'top',
+                    wrapText: true,
+                  },
+                },
+              };
+            else if (total_index == ConsolidatedDataForPartners.length - 1)
+              return {
+                v: d,
+                s: {
+                  fill: { fgColor: { rgb: '454962' } },
+                  font: { color: { rgb: 'ffffff' } },
+                  alignment: {
+                    horizontal: 'center',
+                    vertical: 'center',
+                  },
+                },
+              };
+            else if (index == Object.values(d_).length - 1)
+              return {
+                v: d,
+                s: {
+                  fill: { fgColor: { rgb: '454962' } },
+                  font: { color: { rgb: 'ffffff' } },
+                  alignment: {
+                    horizontal: 'center',
+                    vertical: 'center',
+                  },
+                },
+              };
+            else
+              return {
+                v: d,
+                s: {
+                  alignment: {
+                    horizontal: 'center',
+                    vertical: 'center',
+                  },
+                },
+              };
+          }),
+        ]),
+      ];
+
+
+
+
+      mergesPartners.push({
+        s: { c: 0, r: 6 },
+        e: { c: 0, r: 6 + ConsolidatedDataForPartners.length - 1 },
+      });
+      mergesPartners.push({
+        s: { c: 1, r: 6 + ConsolidatedDataForPartners.length - 1 },
+        e: { c: 2, r: 6 + ConsolidatedDataForPartners.length - 1 },
+      });
 
 
 
@@ -2190,7 +2195,7 @@ export class SubmissionService {
       let rowStart = ArrayOfArrays.length;
       for (let i = 0; i < lockupArray.length - 1; i++) {
         ArrayOfArrays?.push(
-          ...partnersData[indexPartner][i]?.map((d_,total_index) => [
+          ...partnersData[indexPartner][i]?.map((d_, total_index) => [
             {
               v: String(lockupArray[i]),
               s: {
@@ -2204,7 +2209,7 @@ export class SubmissionService {
               },
             },
             ...Object.values(d_).map((d, index) => {
-              if (index == 0 && total_index !=partnersData[indexPartner][i].length - 1)
+              if (index == 0 && total_index != partnersData[indexPartner][i].length - 1)
                 return {
                   v: String(d),
                   s: {
@@ -2215,7 +2220,7 @@ export class SubmissionService {
                     },
                   },
                 };
-                if ( total_index == partnersData[indexPartner][i].length - 1)
+              if (total_index == partnersData[indexPartner][i].length - 1)
                 return {
                   v: String(d),
                   s: {
@@ -2227,7 +2232,7 @@ export class SubmissionService {
                     },
                   },
                 };
-                else if (index == Object.values(d_).length - 1)
+              else if (index == Object.values(d_).length - 1)
                 return {
                   v: d,
                   s: {
@@ -2300,13 +2305,95 @@ export class SubmissionService {
       ws['!merges'] = mergesPartners;
       ws['!cols'] = [{ wpx: 120 }, { wpx: 320 }, { wpx: 80 }];
       ws['!rows'] = [];
-      ws['!rows'] = [{ hpt: 20 }, { hpt: 20 },{ hpt: 20 },{ hpt: 20 },{ hpt: 20 },{ hpt: 20 }];
-       
-      for(let i = 6 ; i < ArrayOfArrays.length; i++) {
+      ws['!rows'] = [{ hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }];
+
+      for (let i = 6; i < ArrayOfArrays.length; i++) {
         ws['!rows'].push({
           hpt: 75
         })
       }
+
+
+
+
+
+
+      let arrayOfCellRefWpBudgets
+      const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+      const rowCount = range.e.r;
+      const columnCount = range.e.c;
+      let startRow = this.wps.length + 2 + 5;
+      for (let wp of this.wps) {
+        console.log(partner.acronym, startRow, rowCount, arrayOfCellRefWpBudgets)
+        
+        arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
+        for (let row = 0; row <= rowCount; row++) {
+          for (let col = 0; col <= columnCount; col++) {
+            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+            console.log(row, col, row > 5, row <=  this.wps.length + 1 + 5)
+            if ((col == columnCount) && (row > 5 && row <=  this.wps.length + 1 + 5)) {
+              if (col == columnCount) { // (budget)
+                // budget_for_each_wp = cellRef;
+
+                cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+
+                ws[cellRef] = {
+                  t: 'n',
+                  f: '=' + arrayOfCellRefWpBudgets,
+                  // f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
+                  // z: "0.00%;[Red]-0.00%",
+                  // s: {
+                  //   fill: { fgColor: { rgb: '454962' } },
+                  //   font: { color: { rgb: 'ffffff' } },
+                  //   alignment: {
+                  //     horizontal: 'center',
+                  //     vertical: 'center',
+                  //   },
+                  // },
+                }
+              }
+              // else if(col == columnCount -1) { // (percentage)
+              //   // budget_for_each_wp = cellRef;
+              //   cellRef = XLSX.utils.encode_cell({ r: row, c: col + 1});
+              //   ws[cellRef] = { 
+              //     t: 'n',
+              //     // f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
+              //     z: "0.00%;[Red]-0.00%",
+              //     s: {
+              //       fill: { fgColor: { rgb: '454962' } },
+              //       font: { color: { rgb: 'ffffff' } },
+              //       alignment: {
+              //         horizontal: 'center',
+              //         vertical: 'center',
+              //       },
+              //     },
+              //   } 
+              // }
+            }
+          }
+        }
+        startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
+
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       XLSX.utils.book_append_sheet(wb, ws, partner.acronym);
 
       indexPartner++;
@@ -2324,7 +2411,7 @@ export class SubmissionService {
     setTimeout(async () => {
       try {
         unlink(join(process.cwd(), 'generated_files', file_name), null);
-      } catch (e) {}
+      } catch (e) { }
     }, 9000);
     return new StreamableFile(file, {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -2476,10 +2563,10 @@ export class SubmissionService {
                 this.perAllValues[wp_id][item_id][per_id] =
                   this.perValues[partner_code][wp_id][item_id][per_id];
 
-                  if (this.perValues[partner_code][wp_id][item_id][per_id] == true){
-                    this.perValuesSammary[wp_id][per_id] = true;
-                    this.perValuesSammaryForPartner[partner_code][wp_id][per_id] = true;  
-                  }
+              if (this.perValues[partner_code][wp_id][item_id][per_id] == true) {
+                this.perValuesSammary[wp_id][per_id] = true;
+                this.perValuesSammaryForPartner[partner_code][wp_id][per_id] = true;
+              }
             },
           );
         });
@@ -2511,7 +2598,7 @@ export class SubmissionService {
     }
   }
   checkEOI(category: any) {
-    if(this.InitiativeId == null)
+    if (this.InitiativeId == null)
       return this.submission_data.phase?.show_eoi ? category == "EOI" : false;
     else
       return this.phase?.show_eoi ? category == "EOI" : false;
@@ -2632,19 +2719,19 @@ export class SubmissionService {
       .reduce((a: any, b: any) => a || b);
   }
 
-  finalPeriodValForPartner(partner_code: number,period_id: any) {
-    return this.wps.map((wp: any) => 
+  finalPeriodValForPartner(partner_code: number, period_id: any) {
+    return this.wps.map((wp: any) =>
       this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
     ).reduce((a: any, b: any) => a || b)
   }
 
 
   getTotalBudgetForEachPartner(budgets: string) {
-    return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+    return Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
   }
 
   getTotalPercentageForEachPartner(percent: number) {
-    return  Object.values(percent).reduce((a: any, b: any) => Number(a) + Number(b), 0) / this.wps.length
+    return Object.values(percent).reduce((a: any, b: any) => Number(a) + Number(b), 0) / this.wps.length
   }
 
   roundNumber(value: number) {
@@ -2785,10 +2872,10 @@ export class SubmissionService {
   async getdata() {
     const emptyArray = [];
     const initiatives = await this.initiativeRepository.find({
-      select : ['id']
+      select: ['id']
     });
 
-    for(let init of initiatives) {
+    for (let init of initiatives) {
       let data = await this.getTocSubmissionData(init.id);
       emptyArray.push(data);
     }
@@ -2798,9 +2885,9 @@ export class SubmissionService {
     });
 
 
-    for(let submission of allSubmissions) {
-      for(let tocData of emptyArray) {
-        if(submission.initiative_id == tocData.initiative_id && submission.phase.tocPhase == tocData.phase) {
+    for (let submission of allSubmissions) {
+      for (let tocData of emptyArray) {
+        if (submission.initiative_id == tocData.initiative_id && submission.phase.tocPhase == tocData.phase) {
           await this.submissionRepository.update(submission.id, {
             toc_original_id: tocData.original_id,
             toc_version_id: tocData.version_id,
@@ -2817,7 +2904,7 @@ export class SubmissionService {
 
 
   //summary page
-  getWpTotalBudgets(data:any[], stCol:any, ws) {
+  getWpTotalBudgets(data: any[], stCol: any, ws) {
     let WpTotalBudgets;
     const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
     const rowCount = range.e.r;
@@ -2825,11 +2912,33 @@ export class SubmissionService {
     for (let row = 0; row <= rowCount; row++) {
       for (let col = 0; col <= columnCount; col++) {
         let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          if(col == columnCount && row == data.length + 1 + stCol) {
-            WpTotalBudgets = cellRef
-            return WpTotalBudgets
-          }
+        if (col == columnCount && row == data.length + 1 + stCol) {
+          WpTotalBudgets = cellRef
+          return WpTotalBudgets
+        }
       }
     }
+  }
+
+
+
+  getCellRefBudgets(data: any[], stCol: any, ws) {
+    let arrayBudgets = [];
+    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const rowCount = range.e.r;
+    const columnCount = range.e.c;
+
+    for (let row = 0; row <= rowCount; row++) {
+      for (let col = 0; col <= columnCount; col++) {
+        let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        if (col == columnCount && (row > stCol && row <= data.length + stCol)) {
+          // console.log(cellRef)
+          arrayBudgets.push(cellRef)
+          // return arrayBudgets
+        }
+      }
+    }
+    return arrayBudgets.map(d => `!${d}+ `).join().replaceAll(',', '').slice(0, -2)
+    // console.log(arrayBudgets)
   }
 }
