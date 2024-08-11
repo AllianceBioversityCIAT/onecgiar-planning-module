@@ -674,9 +674,16 @@ export class SubmitedVersionComponent implements OnInit {
     return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
   }
 
-  getTotalPercentageForEachPartner(percent: number) {
-    return  Object.values(percent).reduce((a: any, b: any) => Number(a) + Number(b), 0) / this.wps.length
+  getTotalPercentageForEachPartner(budgets: any) {
+    const totalBudgets: any = Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b))
+    return totalBudgets / totalBudgets * 100 
   }
+
+  getPercentageForeachPartnerWp(total:any, wpTotal: number) {
+    const totalBudgets: any = Object.values(total).reduce((a: any, b: any) => Number(a) + Number(b))
+    return (wpTotal / totalBudgets * 100); 
+  }
+  
 
 
   finalItemPeriodVal(wp_id: any, period_id: any) {

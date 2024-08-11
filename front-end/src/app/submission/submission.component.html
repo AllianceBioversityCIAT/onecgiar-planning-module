@@ -1010,13 +1010,10 @@
                       </td>
                     </ng-container>
                     <td>
-                      {{
-                          roundNumber(
-                              totals[partner.code][wp.ost_wp.wp_official_code] || 0
-                            ) | number : "1.2-2" 
-                    
-                    }}%
-                    </td>
+                    {{ getPercentageForeachPartnerWp(wp_budgets[partner.code],
+                       wp_budgets[partner.code][
+                      wp.ost_wp.wp_official_code]) || 0 | number : "1.2-2"}}%
+                    </td> 
                     <td>
                       {{
                         roundNumber(wp_budgets[partner.code][
@@ -1038,7 +1035,7 @@
                     </td>
                   </ng-container>
                   <td>
-                    {{ roundNumber(getTotalPercentageForEachPartner(totals[partner.code])) }}%
+                    {{ getTotalPercentageForEachPartner(wp_budgets[partner.code]) || 0 | number : "1.2-2"}}%
                   </td>
                   <td>
                     {{getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
