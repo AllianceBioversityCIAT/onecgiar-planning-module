@@ -1060,8 +1060,8 @@ export class SubmissionService {
         ? 'X'
         : '';
     });
-    (obj['Percentage'] = this.roundNumber(this.getTotalPercentageForEachPartner(this.totals[partner_code])) + '%'),
-      (obj['Budgets'] = this.getTotalBudgetForEachPartner(this.wp_budgets[partner_code])),
+    (obj['Percentage'] = this.roundNumber(this.totals[partner_code]) + '%'),
+      (obj['Budgets'] = this.wp_budgets[partner_code]),
       ConsolidatedDataForPartners.push(obj)
 
 
@@ -2324,6 +2324,7 @@ export class SubmissionService {
       const col = range.e.c;
       let startRow = this.wps.length + 2 + 5;
       let _row = 6;
+      let startRowForPartner = this.wps.length + 2 + 5;
       for (let wp of this.wps) {
         //calculate total budget for each center (total center)
         arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
@@ -2342,6 +2343,44 @@ export class SubmissionService {
           },
         }
         startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
+
+        
+
+        //calculate percentage  for each wp (partner)
+        for (let row = startRowForPartner; row <= rowCount; row++) {
+          const cellRefPercentageForPartner = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+          const cellRefBudgetForPartner = XLSX.utils.encode_cell({ r: row, c: col });
+          const wpTotalBudgets = this.getWpTotalBudgetsForPartner(this.allData[wp.ost_wp.wp_official_code], startRowForPartner, ws)
+          const sumFormula = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRowForPartner, ws);
+          ws[cellRefPercentageForPartner] = {
+            t: 'n',
+            f: `=${cellRefBudgetForPartner}/${wpTotalBudgets}/100*100`,
+            z: "0%",
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
+            },
+          }
+
+          ws[wpTotalBudgets] = {
+            t: 'n',
+            f: '=' + sumFormula,
+            z: "#,##0",
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
+            },
+          }
+        }
+        startRowForPartner += this.allData[wp.ost_wp.wp_official_code].length + 1;
       }
 
 
@@ -2364,7 +2403,7 @@ export class SubmissionService {
 
 
 
-        for (let row = 0; row <= rowCount; row++) {
+          for (let row = 0; row <= rowCount; row++) {
             let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
 
             if (row > 5 && row <= this.wps.length + 5) {
@@ -2396,49 +2435,25 @@ export class SubmissionService {
 
 
 
-            //calculate percentage partner
-            if ((col- 1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
-                wpBudgetTotalCenter = cellRef;
-                cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
-                ws[cellRef] = {
-                  t: 'n',
-                  f: `=${wpBudgetTotalCenter}/${totalCenter}/100*100`,
-                  z: "0.00%;[Red]-0.00%",
-                  s: {
-                    fill: { fgColor: { rgb: '454962' } },
-                    font: { color: { rgb: 'ffffff' } },
-                    alignment: {
-                      horizontal: 'center',
-                      vertical: 'center',
+              //calculate percentage partner
+              if ((col- 1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
+                  wpBudgetTotalCenter = cellRef;
+                  cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+                  ws[cellRef] = {
+                    t: 'n',
+                    f: `=${wpBudgetTotalCenter}/${totalCenter}/100*100`,
+                    z: "0.00%;[Red]-0.00%",
+                    s: {
+                      fill: { fgColor: { rgb: '454962' } },
+                      font: { color: { rgb: 'ffffff' } },
+                      alignment: {
+                        horizontal: 'center',
+                        vertical: 'center',
+                      },
                     },
-                  },
-                }
-            }
-
-
-
-
-
-
-
-     
-            }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                  }
+              }
+          }
 
 
 
@@ -2774,14 +2789,6 @@ export class SubmissionService {
   }
 
 
-  getTotalBudgetForEachPartner(budgets: string) {
-    return Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
-  }
-
-  getTotalPercentageForEachPartner(percent: number) {
-    return Object.values(percent).reduce((a: any, b: any) => Number(a) + Number(b), 0) / this.wps.length
-  }
-
   roundNumber(value: number) {
     return Math.round(value);
   }
@@ -2968,6 +2975,20 @@ export class SubmissionService {
     }
   }
 
+
+  getWpTotalBudgetsForPartner(data: any[], stCol: any, ws) {
+    let WpTotalBudgets;
+    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const rowCount = range.e.r;
+    const columnCount = range.e.c;
+    for (let row = 0; row <= rowCount; row++) {
+        let cellRef = XLSX.utils.encode_cell({ r: row, c: columnCount });
+        if (row == data.length + stCol) {
+          WpTotalBudgets = cellRef
+          return WpTotalBudgets
+        }
+    }
+  }
 
 
   getCellRefBudgets(data: any[], startRaw: any, ws) {
