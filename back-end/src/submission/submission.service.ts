@@ -1753,7 +1753,10 @@ export class SubmissionService {
       }
     })
 
-
+    if(!this.allData["IPSR"].length) {
+      delete this.allData["IPSR"]
+      this.wps = this.wps.filter(d => d.id != 'IPSR')
+    }
 
     const { ConsolidatedData } = this.getConsolidatedData(
       this.wps,
