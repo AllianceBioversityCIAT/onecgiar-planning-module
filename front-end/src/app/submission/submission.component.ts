@@ -446,6 +446,27 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     wp_id: any,
     value: boolean
   ) {
+    if(!value) {
+      this.dialog
+      .open(DeleteConfirmDialogComponent, {
+        data: {
+          title: "Cancel submission",
+          custom_message_1: `Are you sure to clear all data ?`,
+          custom_message_2: `All the data you added will be removed.`,
+        },
+      })
+      .afterClosed()
+      .subscribe(dialogResult => {
+        if (dialogResult == true) {
+          this.doCheck(partner_code, wp_id, value);
+        }
+      });
+    } else {
+      this.doCheck(partner_code, wp_id, value);
+    }
+  }
+
+  async doCheck(partner_code: any, wp_id: any, value: boolean) {
     const itemsIds = Object.keys(this.perValues[partner_code][wp_id]);
     for (let item_id of itemsIds) {
       if (
