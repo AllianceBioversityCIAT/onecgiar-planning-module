@@ -2068,6 +2068,74 @@ export class SubmissionService {
         startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
       }
 
+
+      
+
+
+      /*generate formula for checks period in (summary)*/
+      let startPeriodColumn = 3;
+      let endPeriodColumn = startPeriodColumn + this.period.length;
+      let startPeriodRows = 6;
+        for (let row = startPeriodRows; row <= rowCount; row++) {
+          for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+
+            let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
+
+              ws[cellRef] = {
+                t: 'n',
+                f: `=IF(OR(${formula}),"X","")`,
+                s: {
+                  alignment: {
+                    horizontal: 'center',
+                    vertical: 'center',
+                  },
+                },
+              }           
+          }        
+        }
+
+
+
+
+
+      let lastRows = [this.wps.length + 6]
+      for(let wp of this.wps) {
+        lastRows.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
+      }
+
+
+
+      let newValueslastRows = lastRows.map((curr, i, array) => {
+        return array[i] += array[i-1] ? array[i-1] : 0
+      })
+
+
+      for (let lastRowForeachWp of newValueslastRows){
+        for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+
+          let cellRef = XLSX.utils.encode_cell({ r: lastRowForeachWp, c: col });
+  
+          let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
+  
+          ws[cellRef] = {
+            t: 'n',
+            f: `=IF(OR(${formula}),"X","")`,
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
+            },
+          }
+          
+  
+        }
+      }
+      /*generate formula for checks period in (summary)*/
+
       ws['!merges'] = merges;
       ws['!cols'] = [{ wpx: 120 }, { wpx: 320 }, { wpx: 80 }];
       ws['!rows'] = [];
