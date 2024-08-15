@@ -1753,7 +1753,7 @@ export class SubmissionService {
       }
     })
 
-    if(!this.allData["IPSR"].length) {
+    if (!this.allData["IPSR"].length) {
       delete this.allData["IPSR"]
       this.wps = this.wps.filter(d => d.id != 'IPSR')
     }
@@ -2069,55 +2069,55 @@ export class SubmissionService {
       }
 
 
-      
+
 
 
       /*generate formula for checks period in (summary)*/
       let startPeriodColumn = 3;
       let endPeriodColumn = startPeriodColumn + this.period.length;
       let startPeriodRows = 6;
-        for (let row = startPeriodRows; row <= rowCount; row++) {
-          for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      for (let row = startPeriodRows; row <= rowCount; row++) {
+        for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
 
-            let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
+          let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
 
-              ws[cellRef] = {
-                t: 'n',
-                f: `=IF(OR(${formula}),"X","")`,
-                s: {
-                  alignment: {
-                    horizontal: 'center',
-                    vertical: 'center',
-                  },
-                },
-              }           
-          }        
+          ws[cellRef] = {
+            t: 'n',
+            f: `=IF(OR(${formula}),"X","")`,
+            s: {
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
+            },
+          }
         }
+      }
 
 
 
 
 
       let lastRows = [this.wps.length + 6]
-      for(let wp of this.wps) {
+      for (let wp of this.wps) {
         lastRows.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
       }
 
 
 
       let newValueslastRows = lastRows.map((curr, i, array) => {
-        return array[i] += array[i-1] ? array[i-1] : 0
+        return array[i] += array[i - 1] ? array[i - 1] : 0
       })
 
 
-      for (let lastRowForeachWp of newValueslastRows){
+      for (let lastRowForeachWp of newValueslastRows) {
         for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
 
           let cellRef = XLSX.utils.encode_cell({ r: lastRowForeachWp, c: col });
-  
+
           let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
-  
+
           ws[cellRef] = {
             t: 'n',
             f: `=IF(OR(${formula}),"X","")`,
@@ -2130,8 +2130,8 @@ export class SubmissionService {
               },
             },
           }
-          
-  
+
+
         }
       }
       /*generate formula for checks period in (summary)*/
@@ -2415,7 +2415,7 @@ export class SubmissionService {
         }
         startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
 
-        
+
 
         //calculate percentage  for each wp (partner)
         for (let row = startRowForPartner; row <= rowCount; row++) {
@@ -2461,11 +2461,11 @@ export class SubmissionService {
 
 
       for (let row = 0; row <= rowCount; row++) {
-          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          //get Total center budget (cellRef)
-          if (row == this.wps.length + 1 + 5) {
-            totalCenter = cellRef
-          }
+        let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        //get Total center budget (cellRef)
+        if (row == this.wps.length + 1 + 5) {
+          totalCenter = cellRef
+        }
       }
 
 
@@ -2474,57 +2474,111 @@ export class SubmissionService {
 
 
 
-          for (let row = 0; row <= rowCount; row++) {
-            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      for (let row = 0; row <= rowCount; row++) {
+        let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
 
-            if (row > 5 && row <= this.wps.length + 5) {
-              wpBudgetsTotalCenter.push(cellRef);
-            }
+        if (row > 5 && row <= this.wps.length + 5) {
+          wpBudgetsTotalCenter.push(cellRef);
+        }
 
-            //calculate total center budget(total center)
-            if(row == this.wps.length + 1 + 5) {
-              // totalCenter = cellRef;
-              ws[cellRef] = {
-                t: 'n',
-                f: '=' + wpBudgetsTotalCenter.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2),
-                z: "#,##0",
-                s: {
-                  fill: { fgColor: { rgb: '454962' } },
-                  font: { color: { rgb: 'ffffff' } },
-                  alignment: {
-                    horizontal: 'center',
-                    vertical: 'center',
-                  },
-                },
-              }
-            }
-
-            if (row > 5 && row <= this.wps.length + 1 + 5) {
-              wpBudgetTotalCenter = cellRef
-            }
-
-
-
-
-              //calculate percentage partner
-              if ((col- 1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
-                  wpBudgetTotalCenter = cellRef;
-                  cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
-                  ws[cellRef] = {
-                    t: 'n',
-                    f: `=${wpBudgetTotalCenter}/${totalCenter}/100*100`,
-                    z: "0.00%;[Red]-0.00%",
-                    s: {
-                      fill: { fgColor: { rgb: '454962' } },
-                      font: { color: { rgb: 'ffffff' } },
-                      alignment: {
-                        horizontal: 'center',
-                        vertical: 'center',
-                      },
-                    },
-                  }
-              }
+        //calculate total center budget(total center)
+        if (row == this.wps.length + 1 + 5) {
+          // totalCenter = cellRef;
+          ws[cellRef] = {
+            t: 'n',
+            f: '=' + wpBudgetsTotalCenter.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2),
+            z: "#,##0",
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
+            },
           }
+        }
+
+        if (row > 5 && row <= this.wps.length + 1 + 5) {
+          wpBudgetTotalCenter = cellRef
+        }
+
+
+
+
+        //calculate percentage partner
+        if ((col - 1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
+          wpBudgetTotalCenter = cellRef;
+          cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+          ws[cellRef] = {
+            t: 'n',
+            f: `=${wpBudgetTotalCenter}/${totalCenter}/100*100`,
+            z: "0.00%;[Red]-0.00%",
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
+            },
+          }
+        }
+      }
+
+
+
+
+      let lastRowsPartners = [this.wps.length + 6]
+      for (let wp of this.wps) {
+        lastRowsPartners.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
+      }
+
+
+
+      let newValuesLastRowsPartners = lastRowsPartners.map((curr, i, array) => {
+        return array[i] += array[i - 1] ? array[i - 1] : 0
+      })
+
+
+      // console.log(newValueslastRowsPartners)
+
+      /*generate formula for checks period in (partners)*/
+      let startPeriodColumn = 3;
+      let endPeriodColumn = startPeriodColumn + this.period.length;
+      let startPeriodRows = 5 + this.wps.length + 2;
+      newValuesLastRowsPartners.shift(); // remove row total center 
+      for (let wp of this.wps) {
+
+        for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+          for (let rows of newValuesLastRowsPartners) {
+
+
+            const formula = this.getXFormula(startPeriodRows, col, rows);
+            let cellRef = XLSX.utils.encode_cell({ r: rows, c: col });
+            // console.log(formula)
+            // let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
+
+
+
+
+            ws[cellRef] = {
+              t: 'n',
+              f: `=` + formula,
+              s: {
+                alignment: {
+                  horizontal: 'center',
+                  vertical: 'center',
+                },
+              },
+            }
+          }
+        }
+        startPeriodRows += this.allData[wp.ost_wp.wp_official_code].length + 1;
+      }
+
+
+      /*generate formula for checks period in (partners)*/
 
 
 
@@ -3053,11 +3107,11 @@ export class SubmissionService {
     const rowCount = range.e.r;
     const columnCount = range.e.c;
     for (let row = 0; row <= rowCount; row++) {
-        let cellRef = XLSX.utils.encode_cell({ r: row, c: columnCount });
-        if (row == data.length + stCol) {
-          WpTotalBudgets = cellRef
-          return WpTotalBudgets
-        }
+      let cellRef = XLSX.utils.encode_cell({ r: row, c: columnCount });
+      if (row == data.length + stCol) {
+        WpTotalBudgets = cellRef
+        return WpTotalBudgets
+      }
     }
   }
 
@@ -3072,5 +3126,24 @@ export class SubmissionService {
     }
 
     return arrayBudgets.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2)
+  }
+
+
+  getXFormula(startPeriodRows, cola, rows) {
+    let cellRefArray = [];
+
+
+    // console.log('startPeriodRows', startPeriodRows)
+    // console.log('rows', rows)
+
+
+    for (let row = startPeriodRows; row < rows; row++) {
+
+      let cellRef = XLSX.utils.encode_cell({ r: row, c: cola });
+      cellRefArray.push(cellRef)
+
+    }
+    console.log(cola, cellRefArray)
+    return cellRefArray.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2)
   }
 }
