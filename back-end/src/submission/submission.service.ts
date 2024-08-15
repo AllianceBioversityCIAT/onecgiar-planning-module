@@ -2529,42 +2529,74 @@ export class SubmissionService {
 
 
 
-      let lastRowsPartners = [this.wps.length + 6]
-      for (let wp of this.wps) {
-        lastRowsPartners.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
-      }
-
-
-
-      let newValuesLastRowsPartners = lastRowsPartners.map((curr, i, array) => {
-        return array[i] += array[i - 1] ? array[i - 1] : 0
-      })
-
-
-      // console.log(newValueslastRowsPartners)
+  
 
       /*generate formula for checks period in (partners)*/
       let startPeriodColumn = 3;
       let endPeriodColumn = startPeriodColumn + this.period.length;
       let startPeriodRows = 5 + this.wps.length + 2;
-      newValuesLastRowsPartners.shift(); // remove row total center 
       for (let wp of this.wps) {
-
         for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-          for (let rows of newValuesLastRowsPartners) {
+          let arr: string[] = [];
+          for (let row = startPeriodRows; row < startPeriodRows + this.allData[wp.ost_wp.wp_official_code].length; row++) {
+            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+            arr.push(cellRef);
+          }
+          let ci = arr[arr.length - 1].split('');
+          ci.shift();
+          const i = +ci.join('');
+          let cellRef = XLSX.utils.encode_cell({
+            c: col,
+            r: i
+          });
+
+          let formula = arr.map(d => `${d}="X"`).join();
+          ws[cellRef] = {
+            t: 'n',
+            f: `=IF(OR(${formula}),"X","")`,
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
+            },
+          }
+        }
+        startPeriodRows += this.allData[wp.ost_wp.wp_official_code].length + 1;
+      }
 
 
-            const formula = this.getXFormula(startPeriodRows, col, rows);
-            let cellRef = XLSX.utils.encode_cell({ r: rows, c: col });
-            // console.log(formula)
-            // let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
 
 
+
+
+
+      let lastRowsPartners = [this.wps.length + 6]
+      for (let wp of this.wps) {
+        lastRowsPartners.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
+      }
+  
+  
+      let newValuesLastRowsPartners = lastRowsPartners.map((curr, i, array) => {
+        return array[i] += array[i - 1] ? array[i - 1] : 0
+      })
+      newValuesLastRowsPartners.shift(); // remove row total center 
+  
+  
+
+
+        let i = 0;
+        for (let row = 6; row < this.wps.length + 6; row++) {
+          for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+            let cellRefrows = XLSX.utils.encode_cell({ r: newValuesLastRowsPartners[i], c: col });
 
 
             ws[cellRef] = {
               t: 'n',
-              f: `=` + formula,
+              f: `=IF(OR(${cellRefrows}="X"),"X","")`,
               s: {
                 alignment: {
                   horizontal: 'center',
@@ -2573,9 +2605,50 @@ export class SubmissionService {
               },
             }
           }
+          i++;
         }
-        startPeriodRows += this.allData[wp.ost_wp.wp_official_code].length + 1;
+
+
+
+
+
+
+
+
+
+      for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+        let arr: string[] = [];
+        for (let row = 6; row < this.wps.length + 6; row++) {
+          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          arr.push(cellRef);
+        }
+
+        let ci = arr[arr.length - 1].split('');
+        ci.shift();
+
+        const i = +ci.join('');
+        let cellRef = XLSX.utils.encode_cell({
+          c: col,
+          r: i
+        });
+        let formula = arr.map(d => `${d}="X"`).join();
+          ws[cellRef] = {
+            t: 'n',
+            f: `=IF(OR(${formula}),"X","")`,
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
+            },
+          }
       }
+
+        
+
+
 
 
       /*generate formula for checks period in (partners)*/
@@ -3128,22 +3201,4 @@ export class SubmissionService {
     return arrayBudgets.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2)
   }
 
-
-  getXFormula(startPeriodRows, cola, rows) {
-    let cellRefArray = [];
-
-
-    // console.log('startPeriodRows', startPeriodRows)
-    // console.log('rows', rows)
-
-
-    for (let row = startPeriodRows; row < rows; row++) {
-
-      let cellRef = XLSX.utils.encode_cell({ r: row, c: cola });
-      cellRefArray.push(cellRef)
-
-    }
-    console.log(cola, cellRefArray)
-    return cellRefArray.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2)
-  }
 }
