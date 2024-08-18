@@ -46,6 +46,7 @@ export class InitiativesController {
     private readonly httpService: HttpService) {}
 
   @Get('import')
+  @ApiBearerAuth()
   @ApiCreatedResponse({
     description: '',
     type: [importInitiatives],

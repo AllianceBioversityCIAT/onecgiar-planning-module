@@ -1,7 +1,16 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { EmailService } from './email.service';
 import { Brackets } from 'typeorm';
-
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Email } from 'src/entities/email.entity';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+@UseGuards(JwtAuthGuard)
+@ApiTags('email')
 @Controller('email')
 export class EmailController {
     constructor(private emailService: EmailService) {}
@@ -13,6 +22,11 @@ export class EmailController {
           return obj;
         } else return { id: 'DESC' };
       }
+    @ApiBearerAuth()
+    @ApiCreatedResponse({
+      description: '',
+      type: [Email],
+    })
     @Get('')
     async getEmailLogs(@Query() query: any) {
         const take = query.limit || 10;

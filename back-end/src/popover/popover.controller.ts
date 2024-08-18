@@ -6,12 +6,15 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { PopoverService } from './popover.service';
 import { CreatePopoverDto } from './dto/create-popover.dto';
 import { UpdatePopoverDto } from './dto/update-popover.dto';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { Popover } from 'src/entities/popover.entity';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+@UseGuards(JwtAuthGuard)
 @ApiTags('popover')
 @Controller('popover')
 export class PopoverController {
