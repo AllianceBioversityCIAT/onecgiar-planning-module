@@ -576,7 +576,7 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       if (this.partnersData[partner.code]?.IPSR)
         this.partnersData[partner.code].IPSR = this.partnersData[
           partner.code
-        ]?.IPSR?.filter((d: any) => d.value != null && d.value != "");
+        ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
         
       let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
 
