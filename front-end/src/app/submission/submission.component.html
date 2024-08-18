@@ -334,7 +334,7 @@
                           | number : "1.2-2"
                       }}%
                     </td>
-                    <td> 
+                    <td>
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code]
@@ -393,32 +393,34 @@
                 >Show decimals</mat-slide-toggle
               >
               <div class="wp-actions flex-box">
-
                 <!-- admin -->
                 <div class="risk-report-button-box">
                   <button
-                  class="risk-report-button-box__btn--4 btn--white-2"
-                  mat-raised-button
-                  *ngIf="wp.id == 'IPSR' && user.role == 'admin'"
-                  type="button"
-                  (click)="setIPSR(wp.ost_wp.wp_official_code)"
-                  [disabled]="
-                    initStatus == 'Pending' || initStatus == 'Approved'
-                  "
-                  [ngClass]="{
-                    disabled:
+                    class="risk-report-button-box__btn--4 btn--white-2"
+                    mat-raised-button
+                    *ngIf="wp.id == 'IPSR' && user.role == 'admin'"
+                    type="button"
+                    (click)="setIPSR(wp.ost_wp.wp_official_code)"
+                    [disabled]="
                       initStatus == 'Pending' || initStatus == 'Approved'
-                  }"
-                >
-                  <mat-icon class="create-risk">settings</mat-icon> IPSR
-                </button>
-                <!-- admin -->
-
+                    "
+                    [ngClass]="{
+                      disabled:
+                        initStatus == 'Pending' || initStatus == 'Approved'
+                    }"
+                  >
+                    <mat-icon class="create-risk">settings</mat-icon> IPSR
+                  </button>
+                  <!-- admin -->
 
                   <button
                     class="risk-report-button-box__btn--4 btn--white-2"
                     mat-raised-button
-                    *ngIf="wp.id == 'IPSR' && initUser?.role != 'Contributor' && user.role == 'user'"
+                    *ngIf="
+                      wp.id == 'IPSR' &&
+                      initUser?.role != 'Contributor' &&
+                      user.role == 'user'
+                    "
                     type="button"
                     (click)="setIPSR(wp.ost_wp.wp_official_code)"
                     [disabled]="
@@ -439,7 +441,11 @@
                   <button
                     class="risk-report-button-box__btn--4 btn--white-2"
                     mat-raised-button
-                    *ngIf="wp.id == 'CROSS' && initUser?.role != 'Contributor' && user.role == 'user'"
+                    *ngIf="
+                      wp.id == 'CROSS' &&
+                      initUser?.role != 'Contributor' &&
+                      user.role == 'user'
+                    "
                     type="button"
                     (click)="addCross()"
                     [disabled]="
@@ -466,7 +472,6 @@
                     </mat-icon>
                     Cross-Cutting
                   </button>
-
 
                   <!-- admin -->
                   <button
@@ -521,117 +526,120 @@
                     >
                       <tr>
                         <td *ngIf="!(wp.id == 'IPSR')">
-                         
                           <ng-container
                             *ngIf="item.category == 'Cross Cutting'"
                           >
-                          <button
-                          *ngIf="initUser?.role != 'Contributor' && user.role == 'user'"
-                          mat-icon-button
-                          [matMenuTriggerFor]="menu"
-                          [disabled]="
-                            initStatus == 'Pending' ||
-                            initStatus == 'Approved'
-                          "
-                          [ngClass]="{
-                            disabled:
-                              initStatus == 'Pending' ||
-                              initStatus == 'Approved'
-                          }"
-                        >
-                          <mat-icon class="icon-sub-table-2"
-                            >more_vert</mat-icon
-                          >
-                        </button>
-
-
-                            <button
-                              *ngIf="user.role == 'admin'"
-                              mat-icon-button
-                              [matMenuTriggerFor]="menu"
-                              [disabled]="
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved'
-                              "
-                              [ngClass]="{
-                                disabled:
+                            <div class="box">
+                              <button
+                                *ngIf="
+                                  initUser?.role != 'Contributor' &&
+                                  user.role == 'user'
+                                "
+                                mat-icon-button
+                                [matMenuTriggerFor]="menu"
+                                [disabled]="
                                   initStatus == 'Pending' ||
                                   initStatus == 'Approved'
-                              }"
-                            >
-                              <mat-icon class="icon-sub-table-2"
-                                >more_vert</mat-icon
+                                "
+                                [ngClass]="{
+                                  disabled:
+                                    initStatus == 'Pending' ||
+                                    initStatus == 'Approved'
+                                }"
                               >
-                            </button>
+                                <mat-icon class="icon-sub-table-2"
+                                  >more_vert</mat-icon
+                                >
+                              </button>
 
-                            <button
-                              style="
-                                background: none;
-                                border: none;
-                                position: relative;
-                                top: -0.4rem;
-                              "
-                              (click)="item.isExpand = !item.isExpand"
-                              *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                            >
-                              <i
-                                *ngIf="!item.isExpand"
-                                class="bi-chevron-right"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                              <i *ngIf="item.isExpand" class="bi-chevron-up">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                            </button>
-                            <mat-menu #menu="matMenu">
                               <button
-                                (click)="editCross(item.id)"
-                                mat-menu-item
+                                *ngIf="user.role == 'admin'"
+                                mat-icon-button
+                                [matMenuTriggerFor]="menu"
+                                [disabled]="
+                                  initStatus == 'Pending' ||
+                                  initStatus == 'Approved'
+                                "
+                                [ngClass]="{
+                                  disabled:
+                                    initStatus == 'Pending' ||
+                                    initStatus == 'Approved'
+                                }"
                               >
                                 <mat-icon class="icon-sub-table-2"
-                                  >edit</mat-icon
+                                  >more_vert</mat-icon
                                 >
-                                Edit
                               </button>
+
                               <button
-                                (click)="deleteCross(item.id)"
-                                mat-menu-item
+                                style="
+                                  background: none;
+                                  border: none;
+                                  position: relative;
+                                  top: -0.4rem;
+                                "
+                                (click)="item.isExpand = !item.isExpand"
+                                *ngIf="!item?.initiativeMelia?.meliaType?.name"
                               >
-                                <mat-icon class="icon-sub-table-2"
-                                  >delete</mat-icon
+                                <i
+                                  *ngIf="!item.isExpand"
+                                  class="bi-chevron-right"
                                 >
-                                Delete
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="10"
+                                    viewBox="0 0 16 10"
+                                    fill="none"
+                                  >
+                                    <path
+                                      d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
+                                      fill="#0f212f"
+                                    />
+                                  </svg>
+                                </i>
+                                <i *ngIf="item.isExpand" class="bi-chevron-up">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="10"
+                                    viewBox="0 0 16 10"
+                                    fill="none"
+                                  >
+                                    <path
+                                      d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
+                                      fill="#0f212f"
+                                    />
+                                  </svg>
+                                </i>
                               </button>
-                              <!-- <button mat-menu-item (click)="viewData(item)">
+                              <mat-menu #menu="matMenu">
+                                <button
+                                  (click)="editCross(item.id)"
+                                  mat-menu-item
+                                >
+                                  <mat-icon class="icon-sub-table-2"
+                                    >edit</mat-icon
+                                  >
+                                  Edit
+                                </button>
+                                <button
+                                  (click)="deleteCross(item.id)"
+                                  mat-menu-item
+                                >
+                                  <mat-icon class="icon-sub-table-2"
+                                    >delete</mat-icon
+                                  >
+                                  Delete
+                                </button>
+                                <!-- <button mat-menu-item (click)="viewData(item)">
                                 <mat-icon class="icon-sub-table-2"
                                   >visibility</mat-icon
                                 >
                                 View Data
                               </button> -->
-                            </mat-menu>
+                              </mat-menu>
+                            </div>
                           </ng-container>
                           <ng-container
                             *ngIf="
@@ -642,6 +650,7 @@
                             <figure
                               matTooltip="For any changes use ToC tool"
                               matTooltipPosition="below"
+                              class="toc-img-center"
                             >
                               <img
                                 class="toc-img-size"
@@ -656,10 +665,7 @@
                           </button> -->
                           </ng-container>
                         </td>
-                        <td
-                          class="wp-title"
-                          (click)="item.isExpand = !item.isExpand"
-                        >
+                        <td class="wp-title box-center">
                           <ng-container
                             *ngIf="item?.initiativeMelia?.meliaType.name"
                           >
@@ -694,6 +700,58 @@
                                 >help</mat-icon
                               > -->
                             </ng-container>
+                          </ng-container>
+
+                          <ng-container *ngIf="item?.ipsr?.id">
+                            <!-- <mat-icon
+                              class="ipsr-icon"
+                              *ngIf="item?.description"
+                              [matTooltip]="item?.description"
+                              matTooltipPosition="above"
+                              >help</mat-icon
+                            > -->
+
+                            <button
+                              style="
+                                background: none;
+                                border: none;
+                                float: right;
+                              "
+                              (click)="item.isExpand = !item.isExpand"
+                              *ngIf="item?.description"
+                            >
+                              <i
+                                *ngIf="!item.isExpand"
+                                class="bi-chevron-right"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="10"
+                                  viewBox="0 0 16 10"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
+                                    fill="#0f212f"
+                                  />
+                                </svg>
+                              </i>
+                              <i *ngIf="item.isExpand" class="bi-chevron-up">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="10"
+                                  viewBox="0 0 16 10"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
+                                    fill="#0f212f"
+                                  />
+                                </svg>
+                              </i>
+                            </button>
                           </ng-container>
                         </td>
                         <td (click)="item.isExpand = !item.isExpand">
@@ -737,6 +795,8 @@
                           }}
                         </td>
                       </tr>
+
+                      <!-- /////wwee/////// -->
 
                       <ng-container *ngIf="item.category == 'Cross Cutting'">
                         <tr *ngIf="item.isExpand">
@@ -839,6 +899,7 @@
                         </tr>
                       </ng-container>
                     </ng-container>
+
                     <tr class="total">
                       <td [attr.colspan]="wp.id == 'IPSR' ? 2 : 3">
                         <div class="subtotal">Subtotal</div>
@@ -907,14 +968,12 @@
         </ng-template>
 
         <mat-card *ngIf="!loading && !tocIncompleteData">
-
           <div class="risk-report-box">
             <div class="risk-report-title-box">
               <h1 class="risk-report-title-box__title">
                 One CGIAR Initiatives Plan of Results and Budget Template
               </h1>
             </div>
-
 
             <div class="risk-report-btn-box">
               <div class="risk-report-button-box">
@@ -965,7 +1024,6 @@
                 </button>
               </div>
 
-            
               <!-- btn-4 -->
               <div class="risk-report-button-box" style="height: 37px">
                 <app-center-status
@@ -1045,8 +1103,6 @@
 
         <!-- //////////////// -->
 
-
-
         <mat-card>
           <mat-card-title class="card-title-table">
             Consolidated
@@ -1074,23 +1130,27 @@
                           class="icon-sub-table-2"
                           color="primary"
                           *ngIf="
-                          perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][
-                              item.id
-                            ] == true
+                            perValuesSammaryForPartner[partner.code][
+                              wp.ost_wp.wp_official_code
+                            ][item.id] == true
                           "
                           >close</mat-icon
                         >
                       </td>
                     </ng-container>
                     <td>
-                    {{ getPercentageForeachPartnerWp(wp_budgets[partner.code],
-                       wp_budgets[partner.code][
-                      wp.ost_wp.wp_official_code]) || 0 | number : "1.2-2"}}%
-                    </td> 
+                      {{
+                        getPercentageForeachPartnerWp(
+                          wp_budgets[partner.code],
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code]
+                        ) || 0 | number : "1.2-2"
+                      }}%
+                    </td>
                     <td>
                       {{
-                        roundNumber(wp_budgets[partner.code][
-                        wp.ost_wp.wp_official_code]) | number
+                        roundNumber(
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code]
+                        ) | number
                       }}
                     </td>
                   </tr>
@@ -1102,24 +1162,26 @@
                       <mat-icon
                         class="icon-sub-table-2"
                         color="primary"
-                        *ngIf="finalPeriodValForPartner(partner.code , item.id)"
+                        *ngIf="finalPeriodValForPartner(partner.code, item.id)"
                         >close</mat-icon
                       >
                     </td>
                   </ng-container>
                   <td>
-                    {{ getTotalPercentageForEachPartner(wp_budgets[partner.code]) || 0 | number : "1.2-2"}}%
+                    {{
+                      getTotalPercentageForEachPartner(
+                        wp_budgets[partner.code]
+                      ) || 0 | number : "1.2-2"
+                    }}%
                   </td>
                   <td>
-                    {{getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
+                    {{ getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
                   </td>
                 </tr>
               </table>
             </div>
           </mat-card-content>
         </mat-card>
-
-
 
         <ng-container *ngFor="let wp of wps; first as isFirst; last as isLast">
           <mat-card
