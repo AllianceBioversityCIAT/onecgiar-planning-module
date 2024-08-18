@@ -1148,6 +1148,12 @@
                     (click)="
                       checkAll(partner.code, wp.ost_wp.wp_official_code, true)
                     "
+                    [ngClass]="{
+                      disabled:
+                        partnersStatus[partner.code] ||
+                          initStatus == 'Pending' ||
+                          initStatus == 'Approved'
+                    }"
                   >
                     Check all
                   </button>
@@ -1162,6 +1168,12 @@
                     (click)="
                       checkAll(partner.code, wp.ost_wp.wp_official_code, false)
                     "
+                    [ngClass]="{
+                      disabled:
+                        partnersStatus[partner.code] ||
+                        initStatus == 'Pending' ||
+                        initStatus == 'Approved'
+                    }"
                   >
                     Clear all
                   </button>
