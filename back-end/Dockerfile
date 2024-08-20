@@ -11,4 +11,4 @@ WORKDIR /back-end
 RUN npm i
 RUN npm run build
 
-CMD ["node", "dist/src/main"]
+CMD ["node", "dist/main"]
