@@ -1,0 +1,18 @@
+version: '3'
+services:  
+  planning_api:
+    container_name: planning_api
+    build: back-end
+    restart: always
+    volumes:
+      - ./back-end/generated_files:/back-end/generated_files
+  planning_front_end:
+    depends_on:
+      - planning_api
+    links:
+      - planning_api  
+    container_name: planning_front_end
+    build: front-end
+    restart: always
+    ports:
+      - 127.0.0.1:4240:80
