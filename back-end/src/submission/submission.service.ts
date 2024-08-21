@@ -2050,7 +2050,7 @@ export class SubmissionService {
                 cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
                 ws[cellRef] = {
                   t: 'n',
-                  f: `=${wpBudgets}/${wpTotalBudgets}/100*100`,
+                  f: `=IFERROR(${wpBudgets}/${wpTotalBudgets}/100*100, 0)`,
                   z: "0%",
                   s: {
                     fill: { fgColor: { rgb: '454962' } },
@@ -2425,7 +2425,7 @@ export class SubmissionService {
           const sumFormula = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRowForPartner, ws);
           ws[cellRefPercentageForPartner] = {
             t: 'n',
-            f: `=${cellRefBudgetForPartner}/${wpTotalBudgets}/100*100`,
+            f: `=IFERROR(${cellRefBudgetForPartner}/${wpTotalBudgets}/100*100, 0)`, 
             z: "0%",
             s: {
               fill: { fgColor: { rgb: '454962' } },
