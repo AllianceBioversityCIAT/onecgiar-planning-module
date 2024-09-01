@@ -50,15 +50,6 @@ export class TeamMembersComponent {
     this.headerService.backgroundDeleteYes = "#5569dd";
     this.headerService.backgroundDeleteClose = "#808080";
     this.headerService.backgroundDeleteLr = "#5569dd";
-    // this.headerService.background =
-    //   "linear-gradient(to right, #0F212F, #0E1E2B)";
-    // this.headerService.backgroundNavMain =
-    //   "linear-gradient(to right, #436280, #30455B)";
-    // this.headerService.backgroundUserNavButton =
-    //   "linear-gradient(to right, #436280, #30455B)";
-
-    // this.headerService.backgroundFooter =
-    //   "linear-gradient(to top right, #0f212f, #0f212f)";
   }
   user_info: any;
   my_roles: any;
@@ -69,7 +60,6 @@ export class TeamMembersComponent {
     const params: any = this.activatedRoute?.snapshot.params;
     this.initiativeId = params.id;
     this.officalCode = params.code;
-    console.log(this.officalCode);
     this.id = params.id;
     this.loadInitiativeRoles();
     this.user_info = this.userService.getLogedInUser();
@@ -79,8 +69,13 @@ export class TeamMembersComponent {
     this.my_roles = this.InitiativeUsers.filter(
       (d: any) => d?.user?.id == this?.user_info?.id
     ).map((d: any) => d.role);
-    // if (this.canEdit())
-    this.displayedColumns.push("Actions");
+
+    if(this.canEdit())
+      this.displayedColumns.push("Actions");
+
+    if(this.my_roles.length == 0 && this.user_info.role !='admin')
+      this.router.navigate(['/denied'], { skipLocationChange: true });
+
 
     this.title.setTitle("Manage initiative team");
     this.meta.updateTag({
@@ -95,7 +90,7 @@ export class TeamMembersComponent {
       this.user_info.role == "admin" ||
       this.my_roles?.includes(ROLES.LEAD) ||
       this.my_roles?.includes(ROLES.COORDINATOR) ||
-      this.my_roles?.includes(ROLES.CONTRIBUTOR)
+      this.my_roles?.includes(ROLES.CoLeader)
     );
   }
   async deleteMember(roleId: number) {
@@ -141,11 +136,9 @@ export class TeamMembersComponent {
             organizations: result.formValue.organizations,
           })
           .subscribe(
-            (data) => {
-              if (data) {
+            () => {
                 this.toastrService.success(`User role has been added`);
                 this.loadInitiativeRoles();
-              }
             },
             (error) => {
               this.toastrService.error(error.error.message);

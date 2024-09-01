@@ -36,7 +36,7 @@
         hideRequiredMarker
         appearance="outline"
       >
-        <input matInput formControlName="title" />
+        <textarea matInput formControlName="title" class="texta"></textarea>
         <mat-error
           class="error"
           *ngIf="crossForm.controls?.['title']?.errors?.['required']"
@@ -50,18 +50,16 @@
     <div class="form-dialog-content__field--grid-column">
       <div class="form-dialog-content__title-box">
         <mat-label class="form-dialog-content__title-box__title"
-          >Description<span class="star">*</span>
-          <app-popover  id="5"></app-popover>
+          >Description
+          <app-popover id="5"></app-popover>
         </mat-label>
       </div>
       <mat-form-field
         class="form-dialog-content__field"
         floatLabel="always"
-        hideRequiredMarker
         appearance="outline"
       >
         <textarea
-          required
           class="texta"
           cdkAutosizeMinRows="2"
           cdkAutosizeMaxRows="10"
@@ -69,11 +67,11 @@
           formControlName="description"
         >
         </textarea>
-        <mat-error
+        <!-- <mat-error
           class="error"
           *ngIf="crossForm.controls?.['description']?.errors?.['required']"
           >This field is mandatory</mat-error
-        >
+        > -->
       </mat-form-field>
     </div>
 
@@ -84,7 +82,7 @@
 
           <div class="risk-report-button-box">
             <button
-              class="risk-report-button-box__btn btn--animated btn--chestnut btn"
+              class="risk-report-button-box__btn btn--chestnut"
               type="submit"
               mat-raised-button
               mat-button
@@ -114,7 +112,7 @@
                   <span class="material-symbols-outlined"> edit_note </span>
                 </mat-icon>
               </ng-template>
-              {{ data.id === "add" ? "Add" : "Edit" }}
+              {{ data.id === "add" ? "Add" : "Save" }}
             </button>
           </div>
         </div>

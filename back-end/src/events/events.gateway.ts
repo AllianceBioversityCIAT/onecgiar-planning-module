@@ -24,6 +24,10 @@ export class EventsGateway implements OnModuleInit {
   changePer(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     this.server.emit('setDataValue-' + data.id, data);
   }
+  @SubscribeMessage('setDataValueForAll')
+  setDataValueForAll(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    this.server.emit('setDataValueForAll-' + data.id, data);
+  }
   @SubscribeMessage('statusOfCenter')
   changeStatus(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     this.server.emit('statusOfCenter', data);
@@ -34,13 +38,28 @@ export class EventsGateway implements OnModuleInit {
     this.server.emit('setDataValues-' + data.id, data);
   }
 
+  @SubscribeMessage('setAllDataValues')
+  setAllDataValues(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    this.server.emit('setAllDataValues-' + data.id, data);
+  }
+
   @SubscribeMessage('setDataBudget')
   setDataBudget(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     this.server.emit('setDataBudget-' + data.id, data);
   }
 
+  @SubscribeMessage('submissionStatus')
+  submissionStatus(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    this.server.emit('submissionStatus', data);
+  }
+
+  @SubscribeMessage('changeSubmissionStatus')
+  changeSubmissionStatus(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    this.server.emit('changeSubmissionStatus', data);
+  }
+
   onModuleInit() {
-    this.server.on('connect', (socket) => {
+    this.server?.on('connect', (socket) => {
       socket.on('disconnect', (data) => {
         console.log('disconnect');
       });

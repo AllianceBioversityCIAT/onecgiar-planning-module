@@ -1,3 +1,4 @@
+<!-- <app-chat></app-chat> -->
 <div class="section-risk-report-component">
   <div class="team-members-container">
     <nav class="risk-nav-main">
@@ -25,11 +26,7 @@
           <a routerLink="''" class="risk-nav-link">></a>
         </li>
         <li>
-          <a
-            routerLink="./"
-            class="risk-nav-link"
-            >Submitted versions</a
-          >
+          <a routerLink="./" class="risk-nav-link">Submitted versions</a>
         </li>
       </ul>
     </nav>
@@ -90,13 +87,22 @@
           <!-- status_reason -->
           <ng-container matColumnDef="status_reason">
             <th mat-header-cell *matHeaderCellDef>Status Reason</th>
-            <td mat-cell *matCellDef="let row">{{ row.status_reason }}</td>
+            <td
+              mat-cell
+              *matCellDef="let row"
+              [innerHTML]="row.status_reason"
+            ></td>
+          </ng-container>
+
+          <ng-container matColumnDef="toc_version_id">
+            <th mat-header-cell *matHeaderCellDef>Toc version ID</th>
+            <td mat-cell *matCellDef="let row">{{ row.toc_version ? row.toc_version : 'N/A' }}</td>
           </ng-container>
 
           <!-- actions -->
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let row">
+            <td mat-cell *matCellDef="let row; first as isFirst">
               <div class="m">
                 <button
                   class="team-members-icon-table"
@@ -117,12 +123,13 @@
                       /></svg
                   ></mat-icon>
                 </button>
+
                 <button
                   class="team-members-icon-table"
-                  *ngIf="row.status == 'Pending' && user.role == 'admin'"
+                  *ngIf="(row.status == 'Pending' && user.role == 'admin') || (row.status == 'Approved' && user.role == 'admin' && isFirst)"
                   matTooltip="Change Status"
                   matTooltipPosition="above"
-                  (click)="changeStatus(row.id)"
+                  (click)="changeStatus(row)"
                 >
                   <mat-icon class="user-management-table__icon"
                     ><svg
@@ -137,6 +144,7 @@
                       /></svg
                   ></mat-icon>
                 </button>
+
                 <button
                   *ngIf="row.status == 'Approved'"
                   class="team-members-icon-table"
@@ -150,20 +158,39 @@
                     >picture_as_pdf</mat-icon
                   >
                 </button>
+
                 <button
-                *ngIf="row.status == 'Approved'"
-                class="team-members-icon-table"
-                matTooltip="Download"
-                matTooltipPosition="above"
-                (click)="generateExcel(row.id)"
-              >
+                  *ngIf="row.status == 'Approved'"
+                  class="team-members-icon-table"
+                  matTooltip="Download"
+                  matTooltipPosition="above"
+                  (click)="generateExcel(row.id)"
+                >
+                  <mat-icon
+                    class="user-management-table__icon"
+                    style="color: #403f3f"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="25"
+                      height="25"
+                      viewBox="0 0 512 512"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M453.547 273.449H372.12v-40.714h81.427v40.714zm0 23.264H372.12v40.714h81.427v-40.714zm0-191.934H372.12v40.713h81.427V104.78zm0 63.978H372.12v40.713h81.427v-40.713zm0 191.934H372.12v40.714h81.427V360.69zm56.242 80.264c-2.326 12.098-16.867 12.388-26.58 12.796H302.326v52.345h-36.119L0 459.566V52.492L267.778 5.904h34.548v46.355h174.66c9.83.407 20.648-.291 29.197 5.583c5.991 8.608 5.41 19.543 5.817 29.43l-.233 302.791c-.29 16.925 1.57 34.2-1.978 50.892zm-296.51-91.256c-16.052-32.57-32.395-64.909-48.39-97.48c15.82-31.698 31.408-63.512 46.937-95.327c-13.203.64-26.406 1.454-39.55 2.385c-9.83 23.904-21.288 47.169-28.965 71.888c-7.154-23.323-16.634-45.774-25.3-68.515c-12.796.698-25.592 1.454-38.387 2.21c13.493 29.78 27.86 59.15 40.946 89.104c-15.413 29.081-29.837 58.57-44.785 87.825c12.737.523 25.475 1.047 38.212 1.221c9.074-23.148 20.357-45.424 28.267-69.038c7.096 25.359 19.135 48.798 29.023 73.051c14.017.99 27.976 1.862 41.993 2.676zM484.26 79.882H302.326v24.897h46.53v40.713h-46.53v23.265h46.53v40.713h-46.53v23.265h46.53v40.714h-46.53v23.264h46.53v40.714h-46.53v23.264h46.53v40.714h-46.53v26.897H484.26V79.882z"
+                      />
+                    </svg>
+                  </mat-icon>
+                </button>
                 <mat-icon
+                  *ngIf="isAllowedToAccessChat"
                   class="user-management-table__icon"
                   style="color: #403f3f"
+                  (click)="openChatDialog(row.initiative_id, row.id)"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 512 512"><path fill="currentColor" d="M453.547 273.449H372.12v-40.714h81.427v40.714zm0 23.264H372.12v40.714h81.427v-40.714zm0-191.934H372.12v40.713h81.427V104.78zm0 63.978H372.12v40.713h81.427v-40.713zm0 191.934H372.12v40.714h81.427V360.69zm56.242 80.264c-2.326 12.098-16.867 12.388-26.58 12.796H302.326v52.345h-36.119L0 459.566V52.492L267.778 5.904h34.548v46.355h174.66c9.83.407 20.648-.291 29.197 5.583c5.991 8.608 5.41 19.543 5.817 29.43l-.233 302.791c-.29 16.925 1.57 34.2-1.978 50.892zm-296.51-91.256c-16.052-32.57-32.395-64.909-48.39-97.48c15.82-31.698 31.408-63.512 46.937-95.327c-13.203.64-26.406 1.454-39.55 2.385c-9.83 23.904-21.288 47.169-28.965 71.888c-7.154-23.323-16.634-45.774-25.3-68.515c-12.796.698-25.592 1.454-38.387 2.21c13.493 29.78 27.86 59.15 40.946 89.104c-15.413 29.081-29.837 58.57-44.785 87.825c12.737.523 25.475 1.047 38.212 1.221c9.074-23.148 20.357-45.424 28.267-69.038c7.096 25.359 19.135 48.798 29.023 73.051c14.017.99 27.976 1.862 41.993 2.676zM484.26 79.882H302.326v24.897h46.53v40.713h-46.53v23.265h46.53v40.713h-46.53v23.265h46.53v40.714h-46.53v23.264h46.53v40.714h-46.53v23.264h46.53v40.714h-46.53v26.897H484.26V79.882z"/></svg>
+                  chat
                 </mat-icon>
-              </button>
               </div>
             </td>
           </ng-container>
@@ -210,18 +237,6 @@
   >
     <div class="container-mat-tab">
       <mat-card>
-        <!-- <mat-card-title class="card-title"
-          ><span class="card-title"
-            >One CGIAR Initiatives Plan of Results and Budget Template</span
-          ></mat-card-title
-        >
-        <mat-card-subtitle class="card-title"
-          ><span class="card-title"
-            >{{ initiative_data.official_code }}‐{{
-              initiative_data.name
-            }}</span
-          >
-        </mat-card-subtitle> -->
 
         <div class="risk-report-title-box">
           <h1 class="risk-report-title-box__title">
@@ -273,6 +288,7 @@
                   </ng-container>
 
                   <th>Percentage %</th>
+                  <th>Budget (USD)</th>
                 </tr>
                 <ng-container *ngFor="let wp of wps">
                   <tr>
@@ -302,9 +318,16 @@
                     </ng-container>
                     <td>
                       {{
-                        sammaryTotal[wp.ost_wp.wp_official_code]
+                        sammaryTotalConsolidated[wp.ost_wp.wp_official_code]
                           | number : "1.2-2"
                       }}%
+                    </td>
+                    <td>
+                      {{
+                        roundNumber(
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                        ) | number 
+                      }}
                     </td>
                   </tr>
                 </ng-container>
@@ -335,6 +358,7 @@
                   >
                     {{ wpsTotalSum | number : "1.2-2" }}%
                   </td>
+                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number  }}</td>
                 </tr>
               </table>
             </div>
@@ -364,10 +388,14 @@
                     >
                       <tr>
                         <td class="wp-title">
-                          <ng-container *ngIf="item?.initiativeMelia?.meliaType?.name">
+                          <ng-container
+                            *ngIf="item?.initiativeMelia?.meliaType?.name"
+                          >
                             {{ item?.initiativeMelia?.meliaType.name }}
                           </ng-container>
-                          <ng-container *ngIf="!item?.initiativeMelia?.meliaType?.name">
+                          <ng-container
+                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
                             {{
                               item?.ipsr?.id
                                 ? item?.ipsr.title + " (" + item.value + ")"
@@ -419,7 +447,7 @@
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
                                   ]
-                                )
+                                ) | number 
                           }}
                         </td>
                       </tr>
@@ -472,7 +500,7 @@
                             ? summaryBudgetsTotal[wp.ost_wp.wp_official_code]
                             : roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              )
+                              ) | number 
                         }}
                       </td>
                     </tr>
@@ -484,11 +512,86 @@
         </ng-container>
 
         <!-- </mat-tab> -->
-        <ng-container *ngFor="let partner of partners">
+        <ng-container
+          *ngFor="let partner of partners | sort : 'asc' : 'acronym'"
+        >
           <mat-card-subtitle class="acronymtext m-b-t"
             >{{ partner?.name }} <span>-</span>
             {{ partner?.acronym }}</mat-card-subtitle
           >
+
+
+        <mat-card>
+          <mat-card-title class="card-title-table">
+            Consolidated
+          </mat-card-title>
+
+          <mat-card-content>
+            <div class="table-box mat-elevation-z8">
+              <table>
+                <tr>
+                  <th>Results</th>
+                  <ng-container *ngFor="let item of period">
+                    <th>{{ item.year }} - {{ item.quarter }}</th>
+                  </ng-container>
+
+                  <th>Budget Percentage</th>
+                  <th>Budget (USD)</th>
+                </tr>
+                <ng-container *ngFor="let wp of wps">
+                  <tr>
+                    <td class="wp-title">{{ wp.title }}</td>
+                    <ng-container *ngFor="let item of period">
+                      <td>
+                        <span
+                          class="icon-sub-table-2"
+                          color="primary"
+                          *ngIf="
+                          perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][
+                              item.id
+                            ] == true
+                          "
+                          >X</span
+                        >
+                      </td>
+                    </ng-container>
+                    <td>
+                      {{ getPercentageForeachPartnerWp(wp_budgets[partner.code],
+                        wp_budgets[partner.code][
+                       wp.ost_wp.wp_official_code]) || 0 | number : "1.2-2"}}%
+                    </td>
+                    <td>
+                      {{
+                        roundNumber(wp_budgets[partner.code][
+                        wp.ost_wp.wp_official_code]) | number
+                      }}
+                    </td>
+                  </tr>
+                </ng-container>
+                <tr class="total">
+                  <td><div class="subtotal">Total</div></td>
+                  <ng-container *ngFor="let item of period">
+                    <td>
+                      <span
+                        class="icon-sub-table-2"
+                        color="primary"
+                        *ngIf="finalPeriodValForPartner(partner.code , item.id)"
+                        >X</span
+                      >
+                    </td>
+                  </ng-container>
+                  <td>
+                    {{ getTotalPercentageForEachPartner(wp_budgets[partner.code]) || 0 | number : "1.2-2" }}%
+                  </td>
+                  <td>
+                    {{getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
 
           <ng-container *ngFor="let wp of wps">
             <mat-card
@@ -526,10 +629,14 @@
                     >
                       <tr>
                         <td class="wp-title">
-                          <ng-container *ngIf="item?.initiativeMelia?.meliaType?.name">
+                          <ng-container
+                            *ngIf="item?.initiativeMelia?.meliaType?.name"
+                          >
                             {{ item?.initiativeMelia?.meliaType.name }}
                           </ng-container>
-                          <ng-container *ngIf="!item?.initiativeMelia?.meliaType?.name">
+                          <ng-container
+                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
                             {{
                               item?.ipsr?.id
                                 ? item?.ipsr.title + " (" + item.value + ")"
@@ -584,18 +691,33 @@
                                 ][item.id]
                               : displayBudgetValues[partner.code][
                                   wp.ost_wp.wp_official_code
-                                ][item.id]
+                                ][item.id] | number 
                           }}
                         </td>
                       </tr>
                     </ng-container>
                     <tr class="total">
-                      <td [colSpan]="period.length + 2">
+                      <td [colSpan]="2">
                         <span class="subtotal">Subtotal</span>
                       </td>
-
+                      <ng-container *ngFor="let per of period">
+                        <td>
+                          <span
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              finalCenterItemPeriodVal(
+                                partner.code,
+                                wp.ost_wp.wp_official_code,
+                                per.id
+                              )
+                            "
+                            >X</span
+                          >
+                        </td>
+                      </ng-container>
                       <td>
-                        {{
+                        {{ 
                           toggleValues[partner.code][wp.ost_wp.wp_official_code]
                             ? totals[partner.code][wp.ost_wp.wp_official_code]
                             : roundNumber(
@@ -604,8 +726,8 @@
                         }}%
                       </td>
                       <td>
-                        {{
-                          wp_budgets[partner.code][wp.ost_wp.wp_official_code]
+                        {{ 
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code] | number 
                         }}
                       </td>
                     </tr>

@@ -20,5 +20,4 @@ export class CreatePhaseDto {
 
   show_eoi: boolean;
 
-  show_melia: boolean;
 }

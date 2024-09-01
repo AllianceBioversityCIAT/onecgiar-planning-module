@@ -274,6 +274,13 @@
 .btn,
 .btn:link,
 .btn:visited {
+  color: #ffffff !important;
+  text-align: center;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 1.4rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
   text-decoration: none;
 
   display: inline-block;

@@ -1,0 +1,26 @@
+div {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  flex-direction: column;
+  height: 494px;
+  overflow: auto;
+}
+
+div::-webkit-scrollbar {
+  width: 12px; /* width of the entire scrollbar */
+}
+
+div::-webkit-scrollbar-track {
+  background: #D1D1D1; /* color of the tracking area */
+}
+
+div::-webkit-scrollbar-thumb {
+  background-color: white; /* color of the scroll thumb */
+  border-radius: 20px; /* roundness of the scroll thumb */
+  border: 3px solid #D1D1D1; /* creates padding around scroll thumb */
+}
+
+app-chat-message:last-child {
+  padding-bottom: 2rem;
+}

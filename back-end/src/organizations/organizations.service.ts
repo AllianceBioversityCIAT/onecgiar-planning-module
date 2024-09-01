@@ -51,7 +51,7 @@ export class OrganizationsService {
         name: query?.name ? ILike(`%${query?.name}%`) : null, 
       },
       order: {
-        name: 'ASC'
+        acronym: 'ASC'
       }
     });
   }
@@ -84,7 +84,7 @@ export class OrganizationsService {
       }
     });
     if(orgUsed.length != 0) {
-      throw new BadRequestException('Organization can not be deleted, This organization is assigned for an initiative(s)')
+      throw new BadRequestException('Organization cannot be deleted, This organization is assigned for an initiative(s)')
     } else {
       return this.organizationRepository.delete({ code });
     }    
@@ -211,18 +211,5 @@ export class OrganizationsService {
         this.partnerRepository.save(newPartner);
       }
     });
-  }
-
-  getPartners() {
-    return this.partnerRepository.find({ order: { name: 'ASC' } });
-  }
-
-  searchPartners(term: string) {
-    return this.partnerRepository
-      .createQueryBuilder('partner')
-      .where('partner.acronym like :acronym', { acronym: `%${term}%` })
-      .orWhere('partner.name like :name', { name: `%${term}%` })
-      .orderBy('partner.name')
-      .getMany();
   }
 }

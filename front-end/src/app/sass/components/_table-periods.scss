@@ -135,7 +135,7 @@
     // width: 8.5rem;
     // height: 3.5rem;
     padding: 1rem;
-    text-align: center;
+    
   }
 
   th:nth-child(2) {
@@ -148,7 +148,7 @@
     width: 9rem;
     // height: 3.5rem;
     padding: 1rem;
-    text-align: center;
+    
   }
 
   th:nth-child(3) {
@@ -161,7 +161,7 @@
     // width: 26rem;
     // height: 3.5rem;
     padding: 1rem;
-    text-align: center;
+   
   }
 
   th:nth-child(4) {
@@ -189,8 +189,8 @@
   }
 
   td {
-    border: 1px solid #b9b9b9b5;
-    text-align: left;
+    border: 0.01rem solid #b9b9b936;
+    text-align: center;
     color: #04030f;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.2rem;

@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Melia } from './melia.entity';
+// import { Melia } from './melia.entity';
 
 @Entity()
 export class Partner {
@@ -15,6 +15,6 @@ export class Partner {
   @Column({ nullable: true })
   websiteLink: string;
 
-  @ManyToMany(() => Melia, (melia) => melia.partners)
-  melia: Melia[];
+  // @ManyToMany(() => Melia, (melia) => melia.partners)
+  // melia: Melia[];
 }

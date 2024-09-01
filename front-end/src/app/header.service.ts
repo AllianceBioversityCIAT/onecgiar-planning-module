@@ -18,5 +18,7 @@ export class HeaderService {
 
   backgroundDeleteClose: string = "";
 
+  logoutSvg:string ="brightness(0) saturate(100%) invert(43%) sepia(18%) saturate(3699%) hue-rotate(206deg) brightness(89%) contrast(93%)";
+
   constructor() {}
 }

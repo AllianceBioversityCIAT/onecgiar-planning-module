@@ -10,3 +10,5 @@ Gognito_client_secret=string
 Gognito_client_redirect_uri=https://localhost:4200/auth
 TOC_API=https://toc.loc.codeobia.com/api
 APP_PORT=3000
+JWT_SECRET_KEY=CREATE A COMPLEX SECRET AND KEEP IT SAFE
+JWT_EXPIRATION_TIME=1d

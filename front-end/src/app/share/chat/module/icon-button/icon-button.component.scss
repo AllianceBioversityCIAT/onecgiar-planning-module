@@ -1,0 +1,60 @@
+:host {
+  overflow: hidden;
+}
+.con {
+  width: 36px;
+  height: 36px;
+  position: relative;
+
+  mat-spinner,
+  button {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+  }
+}
+
+button {
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px;
+}
+
+.disable {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+mat-icon {
+  margin-top: -2px;
+  margin-right: -2px;
+}
+
+:host {
+  button {
+    // background-color: rgb(221 221 221 / 34%);
+    color: rgba(0, 0, 0, 0.65);
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  &.active {
+    button {
+      background-color: rgb(125, 255, 123, 0.25);
+      color: green;
+    }
+  }
+
+  &.deactivate {
+    .button {
+      background-color: rgb(255 0 0 / 10%);
+      color: #ff1b1b;
+    }
+  }
+}
+
+.mat-icon-button {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+}

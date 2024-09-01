@@ -193,7 +193,7 @@
           <span class="side-nav-icon-box__title--6">Parameters settings</span>
         </a>
       </li>
-      <li>
+      <!-- <li>
         <a
           routerLink="/admin/melia"
           routerLinkActive="side-nav__active"
@@ -215,8 +215,8 @@
           ></mat-icon>
           <span class="side-nav-icon-box__title--7">MELIA</span>
         </a>
-      </li>
-      <li>
+      </li> -->
+      <!-- <li>
         <a
           routerLink="/admin/Anticipated-year"
           routerLinkActive="side-nav__active"
@@ -251,23 +251,10 @@
                 <circle cx="30.867" cy="31.193" r="2.458" />
               </g>
             </svg>
-
-            <!-- <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <g fill="none" stroke="white" stroke-width="1.5">
-                <circle cx="12" cy="12" r="10" />
-                <circle cx="12" cy="12" r="4" />
-                <path d="m15 9l4-4M5 19l4-4m0-6L5 5m14 14l-4-4" />
-              </g></svg
-          > --></mat-icon
-          >
+          </mat-icon>
           <span class="side-nav-icon-box__title--7">Anticipated Year</span>
         </a>
-      </li>
+      </li> -->
       <li>
         <a
           routerLink="/admin/popover-management"
@@ -275,8 +262,46 @@
           [routerLinkActiveOptions]="{ exact: true }"
           class="side-nav__item side-nav__link side-nav__items"
         >
-          <mat-icon class="side-nav-icon-box__icon size-icon" style="color: white "> help </mat-icon>
+          <mat-icon
+            class="side-nav-icon-box__icon size-icon"
+            style="color: white"
+          >
+            help
+          </mat-icon>
           <span class="side-nav-icon-box__title--2">Popover management</span>
+        </a>
+      </li>
+      <li>
+        <a
+          routerLink="/admin/emails"
+          routerLinkActive="side-nav__active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="side-nav__item side-nav__link side-nav__items"
+        >
+          <mat-icon
+            class="side-nav-icon-box__icon size-icon"
+            style="color: white"
+          >
+            email
+          </mat-icon>
+          <span class="side-nav-icon-box__title--2">Emails management</span>
+        </a>
+      </li>
+
+      <li>
+        <a
+          routerLink="/admin/track-porbs"
+          routerLinkActive="side-nav__active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="side-nav__item side-nav__link side-nav__items"
+        >
+          <mat-icon
+            class="side-nav-icon-box__icon size-icon"
+            style="color: white"
+          >
+            <span class="material-symbols-outlined"> track_changes </span>
+          </mat-icon>
+          <span class="side-nav-icon-box__title--2">Track PORBs</span>
         </a>
       </li>
     </ul>

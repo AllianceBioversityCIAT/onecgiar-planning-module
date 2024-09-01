@@ -1,0 +1,16 @@
+<ng-container [formGroup]="form">
+  <div [ngClass]="direction">
+    <mat-label>{{ label || "" }}</mat-label>
+    <angular-editor
+      [formControlName]="controller"
+      [placeholder]="placeholder || ''"
+      [attr.aria-labelledby]="ariaLabelledby"
+      [config]="editorConfig"
+    ></angular-editor>
+    <mat-error [style.maxHeight.px]="(maximumNumberForShowingError || 10) * 11">
+      <span *ngFor="let error of errors | keyvalue">
+        {{ error.value.message }}
+      </span>
+    </mat-error>
+  </div>
+</ng-container>

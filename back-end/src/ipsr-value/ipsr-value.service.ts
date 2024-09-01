@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IpsrValue } from 'src/entities/ipsr-value.entity';
-import { Ipsr } from 'src/entities/ipsr.entity';
 import { IpsrService } from 'src/ipsr/ipsr.service';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
+import { History } from 'src/entities/history.entity';
+import { Initiative } from 'src/entities/initiative.entity';
 
 @Injectable()
 export class IpsrValueService {
@@ -11,11 +12,30 @@ export class IpsrValueService {
     @InjectRepository(IpsrValue)
     private ipsrValueRepository: Repository<IpsrValue>,
     private ipsrService: IpsrService,
+    @InjectRepository(History)
+    private HistoryRepository: Repository<History>,
+    @InjectRepository(Initiative)
+    private initiativeRepository: Repository<Initiative>,
   ) {}
 
   findByInitiativeID(id) {
-    return this.ipsrValueRepository.find({ where: { initiative: { id: id } },relations:['ipsr'] });
+    return this.ipsrValueRepository.find({
+      where: {
+        initiative: { id: id },
+        submission_id: IsNull(),
+        value: Not(IsNull()),
+      },
+      relations: ['ipsr'],
+    });
   }
+
+  findBySubmissionId(id) {
+    return this.ipsrValueRepository.find({
+      where: { submission_id: id, value: Not(IsNull()) },
+      relations: ['ipsr'],
+    });
+  }
+
   findAll() {
     return this.ipsrValueRepository.find();
   }
@@ -25,33 +45,156 @@ export class IpsrValueService {
       this.ipsrValueRepository.create({ ...data }),
     );
   }
-  findOne(id: number) {
+  findOne(id: string) {
     return this.ipsrValueRepository.findOneBy({ id });
   }
 
-  update(id: number, data: any) {
+  update(id: string, data: any) {
     return this.ipsrValueRepository.update({ id }, { ...data });
   }
-  remove(id: number) {
+  remove(id: string) {
     return this.ipsrValueRepository.delete({ id });
   }
 
-  async save(data: any) {
+  async save(data: any, user) {
     const { initiative_id } = data;
     const ipsrs = await this.ipsrService.findAll();
+    let newArrValues = [];
+    let oldArrValues = [];
+    let newData = [];
+
+
     for (let ipsr of ipsrs) {
       let ipsr_value: IpsrValue;
-      ipsr_value = await this.ipsrValueRepository.findOneBy({
-        initiative_id,
-        ipsr_id: ipsr.id,
+      ipsr_value = await this.ipsrValueRepository.findOne({
+        where: {
+          initiative_id: initiative_id,
+          ipsr_id: ipsr.id,
+          submission_id: IsNull(),
+        }, 
+        relations: ['ipsr']
       });
-      if (!ipsr_value) ipsr_value = this.ipsrValueRepository.create();
 
-      ipsr_value.initiative_id = initiative_id;
+      
+      if(ipsr_value) {
+        if(ipsr_value.value != data['value-' + ipsr.id] || ipsr_value.description != data['description-' + ipsr.id]) {
+          let oldObjIpsr = {
+            id: ipsr_value.id,
+            ipsr_id: ipsr_value.ipsr_id,
+            initiative_id: ipsr_value.initiative_id,
+            value: ipsr_value.value,
+            description: ipsr_value.description,
+            submission_id: ipsr_value.submission_id
+          }
+          oldArrValues.push(oldObjIpsr);
+          newArrValues.push(ipsr_value);
+        }
+      }
+      else {
+        ipsr_value = this.ipsrValueRepository.create();
+        newData.push(ipsr_value)
+      } 
+      ipsr_value.initiative_id = Number(initiative_id);
       ipsr_value.ipsr_id = ipsr.id;
       ipsr_value.value = data['value-' + ipsr.id];
-       this.ipsrValueRepository.save(ipsr_value);
+      ipsr_value.description = data['description-' + ipsr.id];
+      await this.ipsrValueRepository.save(ipsr_value);
+    }
+
+
+
+    for(let newIpsr of newArrValues) {
+      for(let oldIpsr of oldArrValues) {
+        if(oldIpsr.id == newIpsr.id) {
+          const objDifference = this.getDifference(oldIpsr, newIpsr);
+
+          Object.keys(objDifference).forEach(async key => {
+            const value = objDifference[key];
+            const history = this.HistoryRepository.create();
+            if(key == 'value') {
+              if((oldIpsr.value == '' || oldIpsr.value == null) && (newIpsr.value != '' || newIpsr.value != null)){
+                history.resource_property = `Add new IPSR value for (${newIpsr.ipsr.title})`;
+                history.old_value = null;
+                history.new_value = value.toString();
+              } else if(oldIpsr.value != null && newIpsr.value != '' && newIpsr.value != null){
+                history.resource_property = `Edit IPSR value for (${newIpsr.ipsr.title})`;
+                history.old_value = oldIpsr.value;
+                history.new_value = value.toString();
+              } else {
+                history.resource_property = `Remove IPSR value for (${newIpsr.ipsr.title})`;
+                history.old_value = oldIpsr.value;
+                history.new_value = null;
+              }
+            } else if(key == 'description') {
+              if((oldIpsr.description == '' || oldIpsr.description == null) && (newIpsr.description != '' || newIpsr.description != null)){
+                history.resource_property = `Add new IPSR description for (${newIpsr.ipsr.title})`;
+                history.old_value = null;
+                history.new_value = value.toString();
+              } else if(oldIpsr.description != null && newIpsr.description != '' && newIpsr.description != null){
+                history.resource_property = `Edit IPSR description for (${newIpsr.ipsr.title})`;
+                history.old_value = oldIpsr.description;
+                history.new_value = value.toString();
+              } else {
+                history.resource_property = `Remove IPSR description for (${newIpsr.ipsr.title})`;
+                history.old_value = oldIpsr.description;
+                history.new_value = null;
+              }
+
+            }
+            history.item_name = 'IPSR';
+            history.user_id = user.id;
+            history.initiative_id = data.initiative_id;
+            await this.HistoryRepository.save(history);
+            await this.initiativeRepository.update(data.initiative_id, {
+              latest_history_id: history.id
+            });
+          });
+        }
+      }
+    }
+
+    // if new ipsr
+    const newDataFiltered = newData.filter(d => d.value != null);
+    for(let newIpsr of newDataFiltered) {
+      let ipsr_value = await this.ipsrValueRepository.findOne({
+        where: {
+          initiative_id: initiative_id,
+          id: newIpsr.id,
+          submission_id: IsNull(),
+        }, 
+        relations: ['ipsr']
+      });
+      Object.keys(ipsr_value).forEach(async key => {
+        const history = this.HistoryRepository.create();
+        if(key == 'value') {
+          history.resource_property = `Add new IPSR value for (${ipsr_value.ipsr.title})`;
+          history.old_value = null;
+          history.new_value = ipsr_value.value.toString();
+          history.item_name = 'IPSR';
+          history.user_id = user.id;
+          history.initiative_id = data.initiative_id;
+          await this.HistoryRepository.save(history);
+          await this.initiativeRepository.update(data.initiative_id, {
+            latest_history_id: history.id
+          });
+        }
+        else if(key == 'description' && ipsr_value.description != null) {
+          history.resource_property = `Add new IPSR description for (${ipsr_value.ipsr.title})`;
+          history.old_value = null;
+          history.new_value = ipsr_value.description.toString();
+          history.item_name = 'IPSR';
+          history.user_id = user.id;
+          history.initiative_id = data.initiative_id;
+          await this.HistoryRepository.save(history);
+          await this.initiativeRepository.update(data.initiative_id, {
+            latest_history_id: history.id
+          });
+        }
+      });
     }
     return {message:'Data Saved'}
+  }
+  getDifference(a,b) {
+    return Object.fromEntries(Object.entries(b).filter(([key, val]) => key in a && a[key] !== val));
   }
 }

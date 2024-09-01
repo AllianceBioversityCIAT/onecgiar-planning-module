@@ -190,9 +190,7 @@
           >
             <mat-select formControlName="previousPhase">
               <ng-container *ngFor="let phase of phases">
-                <mat-option
-                  [value]="phase.id"
-                >
+                <mat-option [value]="phase.id">
                   {{ phase.name }}
                 </mat-option>
               </ng-container>
@@ -237,10 +235,6 @@
           <mat-checkbox formControlName="show_eoi" color="primary"
             >Show EOI</mat-checkbox
           >
-
-          <mat-checkbox formControlName="show_melia" color="primary"
-            >Enable MELIA for Cross-cutting</mat-checkbox
-          >
         </section>
 
         <div>
@@ -248,17 +242,16 @@
             <div class="form-dialog-conten__button-box" align="end">
               <!-- <button mat-button mat-dialog-close>Cancel</button> -->
               <div class="risk-report-button-box">
-                
-              <button
-              class="risk-report-button-box__btn btn--animated btn--chestnut btn"
-                type="submit"
-                mat-raised-button
-                mat-button
-                color="primary"
-                (click)="submit()"
-              >
-                {{ phaseId ? "Edit" : "Add" }}
-              </button>
+                <button
+                  class="risk-report-button-box__btn btn--chestnut"
+                  type="submit"
+                  mat-raised-button
+                  mat-button
+                  color="primary"
+                  (click)="submit()"
+                >
+                  {{ phaseId ? "Save" : "Add" }}
+                </button>
               </div>
             </div>
           </div>

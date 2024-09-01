@@ -1,6 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreatePhaseDto } from './dto/create-phase.dto';
-import { UpdatePhaseDto } from './dto/update-phase.dto';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Phase } from 'src/entities/phase.entity';
 import { ILike, In, Repository } from 'typeorm';
@@ -9,10 +7,14 @@ import { Initiative } from 'src/entities/initiative.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { InitiativeRoles } from 'src/entities/initiative-roles.entity';
 import { Period } from 'src/entities/period.entity';
+import { catchError, firstValueFrom, map } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class PhasesService {
   constructor(
+    private readonly httpService: HttpService,
     @InjectRepository(Phase) private phaseRepository: Repository<Phase>,
     @InjectRepository(PhaseInitiativeOrganization)
     private phaseInitOrgRepo: Repository<PhaseInitiativeOrganization>,
@@ -81,16 +83,35 @@ export class PhasesService {
         }
       }
     });
-    if(phase.length != 0) {
+
+    const acctivePhase = await this.phaseRepository.findOne({
+      where: { 
+        id: id
+      }
+    });
+    if(phase.length) {
+      throw new BadRequestException('This phase cannot be deleted as it’s used.');
+    }else if(acctivePhase.active){
       throw new BadRequestException('This phase cannot be deleted as it’s active.');
-    } else{
-      return this.phaseRepository.delete({ id });
     }
+    return this.phaseRepository.delete({ id });
   }
 
   async activate(id: number) {
-    await this.phaseRepository.update({}, { active: false });
-    return await this.phaseRepository.update({ id }, { active: true });
+    let phase = await this.phaseRepository.findOne({
+      where: {
+        id: id
+      },
+      relations: ['periods']
+    });
+
+    if(phase.periods.length){
+      await this.phaseRepository.update({}, { active: false });
+      return await this.phaseRepository.update({ id }, { active: true });
+    }
+    else{
+      throw new BadRequestException('You should add periods to the phase you need to activate');
+    }
   }
 
   async deactivate(id: number) {
@@ -104,14 +125,15 @@ export class PhasesService {
       phase_id,
       initiative_id,
     });
-    data.organizations.forEach(async (organization_code) => {
+    for (const organization_code of data.organizations) {
       const newPhaseInitOrg = await this.phaseInitOrgRepo.create({
         phase_id,
         initiative_id,
         organization_code,
       });
       await this.phaseInitOrgRepo.save(newPhaseInitOrg);
-    });
+    }
+
     const initiativeRoles = await this.initiativeRolesRepository.find({
       where: { initiative_id },
       relations: ['organizations'],
@@ -172,5 +194,19 @@ export class PhasesService {
       newDate.getHours(),
       newDate.getMinutes() - newDate.getTimezoneOffset(),
     ).toISOString();
+  }
+
+  async getTocPhases() {
+    const tocPhases = await firstValueFrom(
+      this.httpService
+        .get(process.env.TOC_API + '/phases')
+        .pipe(
+          map((d: any) => d.data),
+          catchError((error: AxiosError) => {
+            throw new InternalServerErrorException();
+          }),
+        ),
+    );
+    return tocPhases
   }
 }

@@ -111,8 +111,23 @@ textarea::placeholder {
 }
 
 .texta {
-  height: 13rem !important;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
+
+  height: 9rem !important;
+  /* margin-bottom: 3rem; */
+  white-space: break-spaces;
+  text-align: left;
+  color: #04030f;
+  font-size: 1.4rem;
+  font-style: normal;
+  line-height: 18.75px;
+  font-family: "Poppins", sans-serif !important;
+  /* font-weight: 500; */
+  /* margin: 16px 0 12px 0; */
+  /* display: block; */
+  /* max-width: 450px; */
+  /* min-width: 250px; */
+  white-space: normal !important;
 }
 
 .m-t {
@@ -192,8 +207,8 @@ textarea::placeholder {
   flex-shrink: 0;
   display: inline-block;
   position: relative;
-  top: -0.1rem;
-  left: 0.5rem;
+  top: 0.2rem;
+  left: 0.2rem;
 }
 
 .create-risk-2 {
@@ -202,8 +217,8 @@ textarea::placeholder {
   flex-shrink: 0;
   display: inline-block;
   position: relative;
-  top: 0.3rem;
-  left: 0.8rem;
+  top: 0.5rem;
+  left: 0.2rem;
 }
 .risk-report-title-box {
   text-align: center;
@@ -233,6 +248,13 @@ textarea::placeholder {
 .btn,
 .btn:link,
 .btn:visited {
+  color: #ffffff !important;
+  text-align: center;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 1.4rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
   text-decoration: none;
 
   display: inline-block;

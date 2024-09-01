@@ -4,6 +4,7 @@ import { Observable, firstValueFrom, map } from "rxjs";
 
 import jwt_decode from "jwt-decode";
 import { environment } from "src/environments/environment";
+import { saveAs } from "file-saver";
 @Injectable({
   providedIn: "root",
 })
@@ -22,14 +23,25 @@ export class UserService {
     else return false;
   }
 
-  async exportUsers() {
-    const data: any = await firstValueFrom(
+  async exportUsers(filters: any = null) {
+    let finalFilters: any = {};
+    if (filters)
+      Object.keys(filters).forEach((element) => {
+        if (typeof filters[element] === 'string')
+          filters[element] = filters[element].trim();
+
+        if (filters[element] != null && filters[element] != '')
+          finalFilters[element] = filters[element];
+      });
+    const data = await firstValueFrom(
       this.http
-        .get(environment.api_url+"/users/export/all", {
+        .get(environment.api_url+`/users/export/all`, {
           responseType: "blob",
+          params: finalFilters
         })
         .pipe(map((d: Blob) => d))
     );
+    saveAs(data, 'Users.xlsx')
   }
 
   async getAllUsers(filters: any = null, page: number, limit: number) {

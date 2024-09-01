@@ -41,7 +41,7 @@ export class IpsrService {
     if(ipsr.length == 0) {
       return this.ipsrRepository.delete({ id });
     } else {
-      throw new BadRequestException('The IPRS can not be deleted, This IPSR is assigned for an initiative(s)')
+      throw new BadRequestException('The IPRS cannot be deleted, This IPSR is assigned for an initiative(s)')
     }
   }
 }

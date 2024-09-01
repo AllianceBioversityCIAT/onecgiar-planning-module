@@ -91,44 +91,8 @@
               </th>
               <td mat-cell *matCellDef="let row">
                 <div class="actions">
-                  <button
-                    class="color-icons-table-action"
-                    matTooltip="Manage Initiative Team"
-                    matTooltipPosition="above"
-                    *ngIf="isLeader(row.roles) || isCoordinator(row.roles)"
-                    routerLink="initiative/{{ row['id'] }}/{{
-                      row['official_code']
-                    }}/team-members"
-                    mat-icon-button
-                  >
-                    <mat-icon>group</mat-icon>
-                  </button>
-                  <button
-                    class="color-icons-table-action"
-                    matTooltip="Manage Initiative MELIA"
-                    matTooltipPosition="above"
-                    *ngIf="isLeader(row.roles) || isCoordinator(row.roles)"
-                    routerLink="initiative/{{ row['id'] }}/{{
-                      row['official_code']
-                    }}/melia"
-                    mat-icon-button
-                  >
-                    <mat-icon>list</mat-icon>
-                  </button>
-                  
-                  <button
-                    class="color-icons-table-action"
-                    matTooltip="Manage Initiative activities"
-                    matTooltipPosition="above"
-                    *ngIf="isLeader(row.roles) || isCoordinator(row.roles)"
-                    routerLink="initiative/{{ row['id'] }}/{{
-                      row['official_code']
-                    }}/submission"
-                    mat-icon-button
-                  >
-                    <mat-icon>playlist_add</mat-icon>
-                  </button>
-                  <button
+
+                     <button
                     class="color-icons-table-action"
                     matTooltip="Submit your center activites"
                     matTooltipPosition="above"
@@ -140,27 +104,103 @@
                   >
                     <mat-icon>playlist_add_check</mat-icon>
                   </button>
+
+
+                      <!-- 1 -->
+                      <button
+                      class="color-icons-table-action"
+                      *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles)"
+                      mat-icon-button
+                      (click)="openDialog(row.id)"
+                      matTooltip="Assign Organizations"
+                      matTooltipPosition="above"
+                    >
+                      <mat-icon>dns</mat-icon>
+                    </button>
+
+
+
+     <!-- 2 -->
+     <!-- <button
+     class="color-icons-table-action"
+     matTooltip="Manage Initiative MELIA"
+     matTooltipPosition="above"
+     *ngIf="isLeader(row.roles) || isCoordinator(row.roles)"
+     routerLink="initiative/{{ row['id'] }}/{{
+       row['official_code']
+     }}/melia"
+     mat-icon-button
+   >
+     <mat-icon class="melia-icon">
+       <img  src="../../assets/shared-image/Manage-initiative-MELIA.png" alt="Manage-initiative-MELIA-icon">
+     </mat-icon>
+   </button> -->
+          
+   
+       <!-- 3 -->
+                  
+       <button
+       class="color-icons-table-action"
+       matTooltip="Complete the PORB"
+       matTooltipPosition="above"
+       *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles)"
+       routerLink="initiative/{{ row['id'] }}/{{
+         row['official_code']
+       }}/submission"
+       mat-icon-button
+     >
+       <mat-icon>playlist_add</mat-icon>
+     </button>
+   
+
+                      <!-- 4 -->
                   <button
-                    class="color-icons-table-action"
-                    matTooltip="View Submited versions"
-                    matTooltipPosition="above"
-                    routerLink="initiative/{{ row['id'] }}/{{
-                      row['official_code']
-                    }}/submited-versions"
-                    mat-icon-button
-                  >
-                    <mat-icon>view_carousel</mat-icon>
-                  </button>
+                  class="color-icons-table-action"
+                  matTooltip="Manage Initiative Team"
+                  matTooltipPosition="above"
+                  *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles) || isContributor(row.roles)"
+                  routerLink="initiative/{{ row['id'] }}/{{
+                    row['official_code']
+                  }}/team-members"
+                  mat-icon-button
+                >
+                  <mat-icon>group</mat-icon>
+                </button>
+
+                       <!-- 5 -->
                   <button
-                    class="color-icons-table-action"
-                    *ngIf="isLeader(row.roles) || isCoordinator(row.roles)"
-                    mat-icon-button
-                    (click)="openDialog(row.id)"
-                    matTooltip="Assign Organizations"
-                    matTooltipPosition="above"
-                  >
-                    <mat-icon>dns</mat-icon>
-                  </button>
+                  class="color-icons-table-action"
+                  matTooltip="View Submited versions"
+                  matTooltipPosition="above"
+                  routerLink="initiative/{{ row['id'] }}/{{
+                    row['official_code']
+                  }}/submited-versions"
+                  mat-icon-button
+                >
+                  <mat-icon>view_carousel</mat-icon>
+                </button>
+
+
+                
+
+
+                  
+
+
+               
+
+
+               
+
+
+              
+
+                  
+               
+
+             
+
+               
                 </div>
               </td>
             </ng-container>

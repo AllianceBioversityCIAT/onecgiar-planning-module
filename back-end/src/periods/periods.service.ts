@@ -19,10 +19,15 @@ export class PeriodsService {
     return this.periodRepository.save(newPeriod);
   }
 
+
+
+
   async findAll(query: any) {
     if(query.page == 0 && query.limit == 0){
       return await this.periodRepository.find({
         relations: ['phase']
+        
+
       });
     }
     else{
@@ -36,7 +41,10 @@ export class PeriodsService {
         },
         take: take,
         skip: skip,
-        relations: ['phase']
+        relations: ['phase'],
+        order: {
+          id: 'ASC'
+        }
       });
       return {
         result: finalResult,
@@ -44,6 +52,12 @@ export class PeriodsService {
       };
     }
   }
+
+
+
+
+
+
 
   findOne(id: number) {
     return this.periodRepository.findOne({
@@ -54,6 +68,10 @@ export class PeriodsService {
   findByPhaseId(phase_id){
     return this.periodRepository.find({
       where: { phase:{id:phase_id} },
+      order:{
+        year:'ASC',
+        quarter:'ASC'
+      }
     });
   }
 
@@ -83,8 +101,8 @@ export class PeriodsService {
 
     if(isActive || period1.length) {
       if(isActive) 
-        throw new BadRequestException('The period can not be deleted as it’s related to an active phase.');
-      throw new BadRequestException('The period can not be deleted as it’s related to submited phase.');
+        throw new BadRequestException('The period cannot be deleted as it’s related to an active phase.');
+      throw new BadRequestException('The period cannot be deleted as it’s related to submited phase.');
     } else {
       return this.periodRepository.delete({ id });
     }

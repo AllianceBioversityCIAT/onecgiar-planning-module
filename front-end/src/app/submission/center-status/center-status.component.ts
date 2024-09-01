@@ -19,6 +19,7 @@ export class CenterStatusComponent implements OnInit {
   @Input('phase_id') phase_id: number;
   @Input('status') status: boolean;
   @Input('organization') organization: any;
+  @Input('isDisabled') isDisabled: any;
   @Output() change = new EventEmitter<any>();
   @Output() clicked = new EventEmitter<any>();
   @Input('socket') socket: AppSocket;
@@ -75,7 +76,8 @@ export class CenterStatusComponent implements OnInit {
               this.organization_code,
               +this.initiative_id,
               this.phase_id,
-              !!this.status
+              !!this.status,
+              this.organization
             );
             if (this.status === false) {
               this.toast.success('mark as incompleted');

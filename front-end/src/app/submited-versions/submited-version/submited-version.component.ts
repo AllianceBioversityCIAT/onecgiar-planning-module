@@ -9,10 +9,6 @@ import {
 import { ActivatedRoute, Router } from "@angular/router";
 import { AuthService } from "../../services/auth.service";
 import { ToastrService } from "ngx-toastr";
-import { ROLES } from "../../components/new-team-member/new-team-member.component";
-import { CrossCuttingComponent } from "src/app/submission/cross-cutting/cross-cutting.component";
-import { MeliaComponent } from "src/app/submission/melia/melia.component";
-import { ViewDataComponent } from "src/app/submission/view-data/view-data.component";
 import { PhasesService } from "src/app/services/phases.service";
 import { HeaderService } from "src/app/header.service";
 import { Meta, Title } from "@angular/platform-browser";
@@ -50,6 +46,7 @@ export class SubmitedVersionComponent implements OnInit {
     this.headerService.backgroundDeleteYes = "#5569dd";
     this.headerService.backgroundDeleteClose = "#808080";
     this.headerService.backgroundDeleteLr = "#5569dd";
+    this.headerService.logoutSvg="brightness(0) saturate(100%) invert(43%) sepia(18%) saturate(3699%) hue-rotate(206deg) brightness(89%) contrast(93%)";
   }
   user: any;
   data: any = [];
@@ -128,9 +125,10 @@ export class SubmitedVersionComponent implements OnInit {
 
   perValues: any = {};
   perValuesSammary: any = {};
+  perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
   sammaryTotal: any = {};
-
+  sammaryTotalConsolidated: any = {};
   async changes(
     partner_code: any,
     wp_id: any,
@@ -260,17 +258,21 @@ export class SubmitedVersionComponent implements OnInit {
 
     this.sammaryTotal["CROSS"] = 0;
     this.sammaryTotal["IPSR"] = 0;
+    this.sammaryTotalConsolidated["CROSS"] = 0;
+    this.sammaryTotalConsolidated["IPSR"] = 0;
     Object.keys(this.sammary).forEach((wp_id) => {
       this.sammaryTotal[wp_id] = 0;
+      this.sammaryTotalConsolidated[wp_id] = 0;
       Object.keys(this.sammary[wp_id]).forEach((item_id) => {
         this.sammaryTotal[wp_id] += totalWp[wp_id][item_id];
+        this.sammaryTotalConsolidated[wp_id] = this.summaryBudgetsAllTotal ? this.summaryBudgetsTotal[wp_id] / this.summaryBudgetsAllTotal * 100 : 0;
       });
     });
     this.wpsTotalSum = 0;
     Object.keys(this.sammaryTotal).forEach((wp_id) => {
-      this.wpsTotalSum += this.sammaryTotal[wp_id];
+      this.wpsTotalSum += this.sammaryTotalConsolidated[wp_id];
     });
-    this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
+    // this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
   }
   allvalueChange() {
     for (let wp of this.wps) {
@@ -291,6 +293,14 @@ export class SubmitedVersionComponent implements OnInit {
       });
     });
 
+    this.partners.forEach((partner: any) => {
+      this.wps.forEach((wp: any) => {
+        this.period.forEach((per) => {
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][per.id] = false;
+        });
+      });
+    });
+
     //from here
     Object.keys(this.perValues).forEach((partner_code) => {
       Object.keys(this.perValues[partner_code]).forEach((wp_id) => {
@@ -301,8 +311,10 @@ export class SubmitedVersionComponent implements OnInit {
                 this.perAllValues[wp_id][item_id][per_id] =
                   this.perValues[partner_code][wp_id][item_id][per_id];
 
-              if (this.perValues[partner_code][wp_id][item_id][per_id] == true)
+              if (this.perValues[partner_code][wp_id][item_id][per_id] == true){
                 this.perValuesSammary[wp_id][per_id] = true;
+                this.perValuesSammaryForPartner[partner_code][wp_id][per_id] = true;  
+              }
             }
           );
         });
@@ -320,8 +332,11 @@ export class SubmitedVersionComponent implements OnInit {
     this.wpsTotalSum = 0;
     this.perValues = {};
     this.perValuesSammary = {};
+    this.perValuesSammaryForPartner = {};
+
     this.perAllValues = {};
     this.sammaryTotal = {};
+    this.sammaryTotalConsolidated = {};
     this.data = [];
     this.wps = [];
     this.partnersData = {};
@@ -338,27 +353,27 @@ export class SubmitedVersionComponent implements OnInit {
     this.totals = {};
     this.errors = {};
 
-    this.wp_budgets = await this.submissionService.getBudgets(this.params.id);
+    this.wp_budgets = await this.submissionService.getBudgets(this.params.id, this.submission_data.phase.id);
 
     this.results = this.submission_data.toc_data;
-    const melia_data = await this.submissionService.getMeliaByInitiative(
-      this.initiative_data.id
+    // const melia_data = await this.submissionService.getMeliaBySubmission(
+    //   this.params.id
+    // );
+    const cross_data = await this.submissionService.getCrossBySubmission(
+      this.params.id
     );
-    const cross_data = await this.submissionService.getCrossByInitiative(
-      this.initiative_data.id
-    );
-    this.ipsr_value_data = await this.submissionService.getIpsrByInitiative(
-      this.initiative_data.id
+    this.ipsr_value_data = await this.submissionService.getIpsrBySubmission(
+      this.params.id
     );
     cross_data.map((d: any) => {
-      d["category"] = "CROSS";
+      d["category"] = "Cross Cutting";
       d["wp_id"] = "CROSS";
       return d;
     });
-    melia_data.map((d: any) => {
-      d["category"] = "MELIA";
-      return d;
-    });
+    // melia_data.map((d: any) => {
+    //   d["category"] = "MELIA";
+    //   return d;
+    // });
     this.ipsr_value_data.map((d: any) => {
       d["category"] = "IPSR";
       d["wp_id"] = "IPSR";
@@ -366,18 +381,22 @@ export class SubmitedVersionComponent implements OnInit {
     });
     this.results = [
       ...cross_data,
-      ...melia_data,
+      // ...melia_data,
       ...this.ipsr_value_data,
       ...this.results,
       // ...indicators_data,
     ];
     this.wps = this.results
-      .filter((d: any) => d.category == "WP" && !d.group)
+      .filter((d: any) => {
+        if (d.category == "WP")
+          d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
+        return d.category == "WP" && !d.group;
+      })
       .sort((a: any, b: any) => a.title.localeCompare(b.title));
     this.wps.unshift({
       id: "CROSS",
       title: "Cross Cutting",
-      category: "CROSS",
+      category: "Cross Cutting",
       ost_wp: { wp_official_code: "CROSS" },
     });
     this.wps.push({
@@ -430,10 +449,18 @@ export class SubmitedVersionComponent implements OnInit {
         if (!this.perValuesSammary[wp.ost_wp.wp_official_code])
           this.perValuesSammary[wp.ost_wp.wp_official_code] = {};
         this.period.forEach((element) => {
-          // console.log('wp.ost_wp.wp_official_code ==> ', wp.ost_wp.wp_official_code)
-          // console.log('per.id ==> ', element.id)
           if (!this.perValuesSammary[wp.ost_wp.wp_official_code][element.id])
             this.perValuesSammary[wp.ost_wp.wp_official_code][element.id] =
+              false;
+        });
+
+        if (!this.perValuesSammaryForPartner[partner.code])
+          this.perValuesSammaryForPartner[partner.code] = {};
+        if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code])
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code] = {};
+        this.period.forEach((element) => {
+          if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id] =
               false;
         });
         result.forEach((item: any) => {
@@ -490,9 +517,36 @@ export class SubmitedVersionComponent implements OnInit {
 
             if (!this.sammaryTotal[wp.ost_wp.wp_official_code])
               this.sammaryTotal[wp.ost_wp.wp_official_code] = 0;
+
+            if (!this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code])
+              this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] = 0;
           });
         });
       }
+
+      if (this.partnersData[partner.code]?.IPSR)
+        this.partnersData[partner.code].IPSR = this.partnersData[
+          partner.code
+        ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+
+      let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+
+      this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+
+      newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+
+      this.wps.forEach((d: any) => {
+        if (d.category == "WP") {
+          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+        }
+      })
+
       this.loading = false;
     }
 
@@ -510,6 +564,35 @@ export class SubmitedVersionComponent implements OnInit {
 
     this.setvalues(this.savedValues.values, this.savedValues.perValues);
 
+
+  const newIPSR = this.allData["IPSR"]
+    .filter((d: any) => d.value != "")
+    .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+  this.allData["IPSR"] = newIPSR;
+
+
+  //sort (Cross Cutting)
+  const newCROSS = this.allData["CROSS"].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+
+  this.allData["CROSS"] = this.allData["CROSS"].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+
+  newCROSS.forEach((d: any) => this.allData["CROSS"].unshift(d))
+
+
+  //sort WP titles
+  this.wps.forEach((d: any) => {
+    if (d.category == "WP") {
+      let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+        .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+      let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+        .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+
+      this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+    }
+  })
+
+
     this.titl2.setTitle("Submitted versions");
     this.meta.updateTag({ name: "description", content: "Submitted versions" });
   }
@@ -523,7 +606,7 @@ export class SubmitedVersionComponent implements OnInit {
     this.params5 = this.activatedRoute?.parent?.snapshot.parent?.params;
 
     this.submission_data = await this.submissionService.getSubmissionsById(
-      this.params.id
+      +this.params.id
     );
     console.log(this.submission_data)
     this.initiative_data = this.submission_data.initiative;
@@ -580,9 +663,40 @@ export class SubmitedVersionComponent implements OnInit {
       .reduce((a: any, b: any) => a || b);
   }
 
+  finalPeriodValForPartner(partner_code: number,period_id: any) {
+    return this.wps.map((wp: any) => 
+      this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
+    ).reduce((a: any, b: any) => a || b)
+  }
+
+
+  getTotalBudgetForEachPartner(budgets: string) {
+    return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+  }
+
+  getTotalPercentageForEachPartner(budgets: any) {
+    const totalBudgets: any = Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b))
+    return totalBudgets / totalBudgets * 100 
+  }
+
+  getPercentageForeachPartnerWp(total:any, wpTotal: number) {
+    const totalBudgets: any = Object.values(total).reduce((a: any, b: any) => Number(a) + Number(b))
+    return (wpTotal / totalBudgets * 100); 
+  }
+  
+
+
   finalItemPeriodVal(wp_id: any, period_id: any) {
     let periods = this.allData[wp_id].map(
       (item: any) => this.perAllValues[wp_id][item.id][period_id]
+    );
+    if (periods.length) return periods.reduce((a: any, b: any) => a || b);
+    else return false;
+  }
+
+  finalCenterItemPeriodVal(partner_code: any, wp_id: any, period_id: any) {
+    let periods = this.allData[wp_id].map(
+      (item: any) => this.perValues[partner_code][wp_id][item.id][period_id]
     );
     if (periods.length) return periods.reduce((a: any, b: any) => a || b);
     else return false;
@@ -642,6 +756,9 @@ export class SubmitedVersionComponent implements OnInit {
     this.sammaryCalc();
     this.allvalueChange();
   }
+  checkEOI(category: any) {
+    return this.submission_data.phase?.show_eoi ? category == "EOI" : false;
+  }
   async getDataForWp(
     id: string,
     partner_code: any | null = null,
@@ -653,13 +770,15 @@ export class SubmitedVersionComponent implements OnInit {
           (d.category == "OUTPUT" ||
             d.category == "OUTCOME" ||
             d.category == "EOI" ||
-            d.category == "CROSS" ||
-            d.category == "IPSR" ||
+            d.category == "Cross Cutting" ||
+            d.category == "IPSR" 
+            // ||
             // d.category == 'INDICATOR' ||
-            d.category == "MELIA") &&
+            // d.category == "MELIA"
+            ) &&
           (d.group == id ||
             d.wp_id == official_code ||
-            (official_code == "CROSS" && d.category == "EOI"))
+            (official_code == "CROSS" && this.checkEOI(d.category)))
         );
       else
         return (
@@ -667,11 +786,13 @@ export class SubmitedVersionComponent implements OnInit {
             d.category == "OUTCOME" ||
             d.category == "EOI" ||
             d.category == "IPSR" ||
-            d.category == "CROSS" ||
+            d.category == "Cross Cutting" 
+            // ||
             // d.category == 'INDICATOR' ||
-            d.category == "MELIA") &&
+            // d.category == "MELIA"
+            ) &&
             (d.group == id || d.wp_id == official_code)) ||
-          (official_code == "CROSS" && d.category == "EOI")
+          (official_code == "CROSS" && this.checkEOI(d.category))
         );
     });
 

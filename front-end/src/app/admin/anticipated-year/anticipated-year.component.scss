@@ -1,6 +1,6 @@
 @import "../../sass/layout/admin-module/admin-module";
 @import "../../sass/pages/admin-module/user-management";
-@import "../../sass/components/table-melia-admin";
+@import "../../sass/components/anticipated-year-table";
 
 .search {
   flex: 0 0 40%;
@@ -651,4 +651,33 @@
 .btn--animated {
   animation: moveInBottom 0.5s ease-out 0.85s;
   animation-fill-mode: backwards;
+}
+
+
+
+:host{
+  ::ng-deep.mat-sort-header-container {
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    letter-spacing: normal;
+    outline: 0;
+    justify-content: center !important;
+}
+}
+
+
+::ng-deep.mat-primary .mat-pseudo-checkbox-checked.mat-pseudo-checkbox-full, .mat-primary .mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-full {
+  background: #5569dd !important;
+}
+
+
+::ng-deep.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-minimal::after, .mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-minimal::after {
+  color: #5569dd !important;
+}
+
+
+::ng-deep.mdc-list-item--selected .mdc-list-item__primary-text, .mdc-list-item--activated .mdc-list-item__primary-text {
+   color: var(--mdc-theme-primary, #2A2E45) !important; 
+
 }

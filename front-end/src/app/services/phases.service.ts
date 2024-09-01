@@ -51,15 +51,15 @@ export class PhasesService {
   getTocPhases() {
     return firstValueFrom(
       this.http
-        .get("https://toc.loc.codeobia.com/api/phases")
+        .get(environment.api_url+"/phases/toc-phases")
         .pipe(map((d: any) => d.data))
     ).catch((e) => false);
   }
 
-  activatePhase(id: number) {
+  activatePhase(id: number) { 
     return firstValueFrom(
       this.http.get(environment.api_url+"/phases/activate/" + id).pipe(map((d: any) => d))
-    ).catch((e) => false);
+    );
   }
 
   deactivatePhase(id: number) {

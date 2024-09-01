@@ -1,0 +1,46 @@
+<div class="con">
+  <ng-container *ngIf="appRouterLink; else elseTemplate">
+    <a
+      mat-icon-button
+      [routerLink]="appRouterLink"
+      [queryParams]="queryParams"
+      [disabled]="disabled"
+      [class]="classes"
+      [ngClass]="{ disable: (loading$ | async) || disabled }"
+      (click)="click()"
+      [type]="'button'"
+    >
+      <ng-container *ngIf="type == 'icon'; else elseTemplate">
+        <mat-icon [color]="color">{{ icon }}</mat-icon>
+      </ng-container>
+      <ng-template #elseTemplate>
+        <img [src]="src" alt="" />
+      </ng-template>
+    </a>
+  </ng-container>
+
+  <ng-template #elseTemplate>
+    <button
+      mat-icon-button
+      [disabled]="disabled"
+      [class]="classes"
+      [ngClass]="{ disable: (loading$ | async) || disabled }"
+      (click)="click()"
+      [type]="'button'"
+    >
+      <ng-container *ngIf="type == 'icon'; else elseTemplate">
+        <mat-icon [color]="color">{{ icon }}</mat-icon>
+      </ng-container>
+      <ng-template #elseTemplate>
+        <img [src]="src" alt="" />
+      </ng-template>
+    </button>
+  </ng-template>
+
+  <mat-spinner
+    [color]="color"
+    [strokeWidth]="2"
+    [diameter]="36"
+    *ngIf="loading$ | async"
+  ></mat-spinner>
+</div>

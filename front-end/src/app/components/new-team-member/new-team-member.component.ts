@@ -19,6 +19,7 @@ export enum ROLES {
   LEAD = "Leader",
   COORDINATOR = "Coordinator",
   CONTRIBUTOR = "Contributor",
+  CoLeader = "Co-leader",
 }
 
 @Component({
@@ -45,6 +46,7 @@ export class NewTeamMemberComponent implements OnInit {
 
   Roles: any[] = [
     { value: ROLES.LEAD, viewValue: ROLES.LEAD },
+    { value: ROLES.CoLeader, viewValue: ROLES.CoLeader },
     { value: ROLES.COORDINATOR, viewValue: ROLES.COORDINATOR },
     { value: ROLES.CONTRIBUTOR, viewValue: ROLES.CONTRIBUTOR },
   ];

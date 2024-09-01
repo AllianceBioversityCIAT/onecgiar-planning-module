@@ -1,0 +1,174 @@
+<!-- track-porbs-content -->
+
+<div class="track-porbs__icon-box">
+  <mat-icon class="track-porbs__icon-box__icon">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="40"
+      height="30"
+      viewBox="0 0 24 24"
+    >
+      <path
+        fill="currentColor"
+        d="M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2h1v8.275q.45.275.725.713T14 12q0 .825-.587 1.413T12 14t-1.412-.587T10 12q0-.575.275-1.025t.725-.7v-2.15q-1.3.35-2.15 1.413T8 12q0 1.65 1.175 2.825T12 16t2.825-1.175T16 12q0-.9-.363-1.662T14.65 9l1.425-1.425q.875.825 1.4 1.963T18 12q0 2.5-1.75 4.25T12 18t-4.25-1.75T6 12q0-2.25 1.425-3.912T11 6.075V4.05q-2.975.375-4.988 2.625T4 12q0 3.35 2.325 5.675T12 20t5.675-2.325T20 12q0-1.725-.675-3.225t-1.85-2.6L18.9 4.75q1.425 1.375 2.263 3.238T22 12q0 2.075-.788 3.9t-2.137 3.175t-3.175 2.138T12 22"
+      />
+    </svg>
+  </mat-icon>
+  <span class="track-porbs__icon-box__title">Track PORBs</span>
+</div>
+
+<div class="track-porbs__text-box--1">
+  <p class="track-porbs__text-box__title">
+    Welcome to the Track PORBs panel, here you can manage the track porbs table
+    within the platform.
+  </p>
+</div>
+
+<highcharts-chart
+  *ngIf="pieChart"
+  [Highcharts]="Highcharts"
+  [options]="pieChart"
+  style="width: 100%; height: 400px; display: block; margin-bottom: 3.2rem"
+>
+</highcharts-chart>
+
+<div class="track-porbs__content--1">
+  <div class="form-container">
+    <div class="search">
+      <div class="sec-1">
+        <div class="user-management__main__text-box">
+          <div>
+            <p class="user-management__main__text-box__title--1">
+              {{ this.phase?.name }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- //My role----- -->
+      <div class="sec-5"></div>
+      <!-- //Sort----- -->
+      <div class="sec-6"></div>
+      <!-- //Reset Button----- -->
+      <div class="sec-9"></div>
+
+      <div class="risk-report-button-box">
+        <div class="sec-7">
+          <div class="risk-report-button-box">
+            <button
+              class="risk-report-button-box__btn btn--chestnut"
+              mat-raised-button
+              (click)="exportData()"
+            >
+              <mat-icon class="create-risk-1">
+                <svg
+                  class="risk-management-export-box-icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="22"
+                  height="21"
+                  viewBox="0 0 22 21"
+                  fill="none"
+                >
+                  <path
+                    d="M5.65951 17.6484C5.15534 17.6484 4.72389 17.4772 4.36517 17.1348C4.00584 16.7918 3.82617 16.3797 3.82617 15.8984V13.2734H5.65951V15.8984H16.6595V13.2734H18.4928V15.8984C18.4928 16.3797 18.3135 16.7918 17.9548 17.1348C17.5954 17.4772 17.1637 17.6484 16.6595 17.6484H5.65951ZM11.1595 14.1484L6.57617 9.77344L7.8595 8.50469L10.2428 10.7797V3.64844H12.0762V10.7797L14.4595 8.50469L15.7428 9.77344L11.1595 14.1484Z"
+                    fill="white"
+                  />
+                </svg>
+              </mat-icon>
+              <span class="user-management__button-box__title"
+                >Export Excel</span
+              >
+            </button>
+          </div>
+
+          <div class="risk-report-button-box"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- table -->
+
+  <div class="table-box mat-elevation-z8">
+    <table mat-table matSort [dataSource]="dataSource">
+      <tr
+        class="table-header"
+        mat-header-row
+        *matHeaderRowDef="columnsToDisplay"
+      ></tr>
+      <tr
+        class="table-header"
+        mat-row
+        *matRowDef="let myRowData; columns: columnsToDisplay"
+      ></tr>
+
+      <!-- Row shown when there is no matching data. -->
+      <!-- <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="8">
+          No results matching({{ filters?.search }})
+        </td>
+      </tr> -->
+
+      <ng-container matColumnDef="official_code">
+        <th mat-header-cell *matHeaderCellDef>
+          <span class="h1 th-1-m">Initiative ID</span>
+        </th>
+        <td mat-cell *matCellDef="let element">{{ element.official_code }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef>
+          <span>Initiative Title</span>
+        </th>
+        <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="updated by">
+        <th mat-header-cell *matHeaderCellDef>Updated by</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element?.latest_history?.user?.full_name || 'N/A' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Current status</th>
+        <td mat-cell *matCellDef="let element">
+          {{
+            element.last_submitted_at != null &&
+            element.last_update_at == element.last_submitted_at
+              ? element?.latest_submission
+                ? element?.latest_submission?.status
+                : "Draft"
+              : "Draft"
+          }}
+        </td>
+      </ng-container>
+
+      <!-- <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>
+          <span class="h5">Actions</span>
+        </th>
+        <td mat-cell *matCellDef="let element">
+          <div class="m">
+            <mat-icon
+              class="visibility-icon"
+              matTooltipPosition="above"
+              matTooltip="View Email"
+              (click)="openEmailBodyDialog(element.email_body)"
+              >visibility</mat-icon
+            >
+          </div>
+        </td>
+      </ng-container> -->
+    </table>
+    <div class="glossary-content-container element-management-paginator-box">
+      <mat-paginator
+        [pageSizeOptions]="[10, 20, 30, 50, 100]"
+        [length]="length"
+        [pageIndex]="pageIndex - 1"
+        (page)="pagination($event)"
+        aria-label="Select page of Emails"
+      ></mat-paginator>
+    </div>
+  </div>
+</div>

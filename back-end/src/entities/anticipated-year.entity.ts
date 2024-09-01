@@ -1,23 +1,27 @@
-import { Phase } from 'src/entities/phase.entity';
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+// import { ApiProperty } from '@nestjs/swagger';
+// import { Phase } from 'src/entities/phase.entity';
+// import {
+//   Column,
+//   Entity,
+//   ManyToOne,
+//   PrimaryGeneratedColumn,
+// } from 'typeorm';
 
-@Entity()
-export class AnticipatedYear {
-  @PrimaryGeneratedColumn()
-  id: number;
+// @Entity()
+// export class AnticipatedYear {
+//   @ApiProperty()
+//   @PrimaryGeneratedColumn()
+//   id: number;
 
-  @Column()
-  month: string;
+//   @ApiProperty()
+//   @Column()
+//   month: string;
 
-  @Column()
-  year: number;
+//   @ApiProperty()
+//   @Column()
+//   year: number;
 
-  @ManyToOne(() => Phase, (phase) => phase.periods)
-  phase: Phase;
+//   @ManyToOne(() => Phase, (phase) => phase.periods)
+//   phase: Phase;
 
-}
+// }

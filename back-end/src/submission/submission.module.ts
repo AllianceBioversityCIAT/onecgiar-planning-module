@@ -16,12 +16,21 @@ import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CenterStatus } from 'src/entities/center-status.entity';
 import { WpBudget } from 'src/entities/wp-budget.entity';
-import { MeliaModule } from 'src/melia/melia.module';
 import { CrossCuttingModule } from 'src/cross-cutting/cross-cutting.module';
 import { IpsrValueModule } from 'src/ipsr-value/ipsr-value.module';
 import { PhasesModule } from 'src/phases/phases.module';
 import { InitiativesModule } from 'src/initiatives/initiatives.module';
 import { PeriodsModule } from 'src/periods/periods.module';
+// import { Melia } from 'src/entities/melia.entity';
+import { CrossCutting } from 'src/entities/cross-cutting.entity';
+import { IpsrValue } from 'src/entities/ipsr-value.entity';
+// import { InitiativeMelia } from 'src/entities/initiative-melia.entity';
+import { EmailModule } from 'src/email/email.module';
+import { Email } from 'src/entities/email.entity';
+import { Variable } from 'src/entities/variable.entity';
+import { EmailService } from 'src/email/email.service';
+import { History } from 'src/entities/history.entity';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -35,11 +44,17 @@ import { PeriodsModule } from 'src/periods/periods.module';
       Period,
       ResultPeriodValues,
       CenterStatus,
-      WpBudget
+      WpBudget,
+      // Melia,
+      CrossCutting,
+      IpsrValue,
+      // InitiativeMelia,
+      Email,
+      Variable,
+      History
     ]),
     HttpModule,
     CacheModule.register(),
-    MeliaModule,
     CrossCuttingModule,
     IpsrValueModule,
     PhasesModule,
@@ -47,6 +62,6 @@ import { PeriodsModule } from 'src/periods/periods.module';
     PeriodsModule
   ],
   controllers: [SubmissionController],
-  providers: [SubmissionService],
+  providers: [SubmissionService, EmailService],
 })
 export class SubmissionModule {}

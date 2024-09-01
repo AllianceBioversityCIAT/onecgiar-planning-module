@@ -5,6 +5,8 @@ import {
   PrimaryColumn,
 } from 'typeorm';
 import { Result } from './result.entity';
+import { History } from './history.entity';
+
 
 @Entity()
 export class WorkPackage {
@@ -40,4 +42,8 @@ export class WorkPackage {
 
   @OneToMany(() => Result, (result) => result.workPackage)
   wp_results: Result[];
+
+
+  @OneToMany(() => History, (history) => history.work_package)
+  history: History[];
 }

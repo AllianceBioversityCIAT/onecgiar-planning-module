@@ -5,13 +5,13 @@ import {
   ViewChild,
   EventEmitter,
   Output,
+  OnInit,
+  OnDestroy,
 } from "@angular/core";
 import { MatPaginator, PageEvent } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
-import { InitiativesService } from "../services/initiatives.service";
 import { AuthService } from "../services/auth.service";
-import { ROLES } from "../components/new-team-member/new-team-member.component";
 import { SubmissionService } from "../services/submission.service";
 import { ActivatedRoute } from "@angular/router";
 import { StatusComponent } from "./status/status.component";
@@ -19,10 +19,12 @@ import { MatDialog } from "@angular/material/dialog";
 import { ToastrService } from "ngx-toastr";
 import { HeaderService } from "../header.service";
 import { Meta, Title } from "@angular/platform-browser";
-import { AppSocket } from "../socket.service";
 import { jsPDF } from "jspdf";
 import { LoaderService } from "src/app/services/loader.service";
 import { PhasesService } from "src/app/services/phases.service";
+import { ChatComponent } from "../share/chat/chat/chat.component";
+import { InitiativesService } from "../services/initiatives.service";
+import { ChatSocket } from "../share/chat/module/chat-socket";
 
 /**
  * @title Data table with sorting, pagination, and filtering.
@@ -32,7 +34,7 @@ import { PhasesService } from "src/app/services/phases.service";
   templateUrl: "./submited-versions.component.html",
   styleUrls: ["./submited-versions.component.scss"],
 })
-export class SubmitedVersionsComponent implements AfterViewInit {
+export class SubmitedVersionsComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = [
     "id",
     "phase",
@@ -40,10 +42,12 @@ export class SubmitedVersionsComponent implements AfterViewInit {
     "created_at",
     "status",
     "status_reason",
+    "toc_version_id",
     "actions",
   ];
   dataSource: MatTableDataSource<any>;
   submissions: any = [];
+  isAllowedToAccessChat: boolean = false;
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
   @ViewChild("pdfcontent", { static: false }) pdfcontent: ElementRef;
@@ -62,7 +66,10 @@ export class SubmitedVersionsComponent implements AfterViewInit {
     private title: Title,
     private meta: Meta,
     public loader: LoaderService,
-    private phasesService: PhasesService
+    private phasesService: PhasesService,
+    private initiativesService: InitiativesService,
+    private socket: ChatSocket,
+
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -83,11 +90,21 @@ export class SubmitedVersionsComponent implements AfterViewInit {
   pageSize: number = 10;
   pageIndex: number = 1;
   nameK = "download";
-  async ngAfterViewInit() {
+  async ngOnInit() {
+    this.socket.initSocket();
     this.params = this.activatedRoute?.snapshot.params;
     await this.initData();
 
     this.user = this.authService.getLoggedInUser();
+
+    this.isAllowedToAccessChat =
+      (await this.initiativesService
+        .isAllowedToAccessChat(this.params.id)
+        .toPromise()) ?? false;
+  }
+
+  ngOnDestroy(): void {
+    this.socket.socket.disconnect()
   }
   async initData(filters = null) {
     this.initiativeId = this.params.id;
@@ -123,9 +140,9 @@ export class SubmitedVersionsComponent implements AfterViewInit {
     this.initData(this.allfilters);
   }
 
-  changeStatus(id: number) {
+  changeStatus(element: number) {
     const dialogRef = this.dialog.open(StatusComponent, {
-      data: { id },
+      data: element,
     });
     dialogRef.afterClosed().subscribe(async (result) => {
       if (result) {
@@ -184,9 +201,10 @@ export class SubmitedVersionsComponent implements AfterViewInit {
 
   perValues: any = {};
   perValuesSammary: any = {};
+  perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
   sammaryTotal: any = {};
-
+  sammaryTotalConsolidated: any = {}; 
   async changes(
     partner_code: any,
     wp_id: any,
@@ -230,6 +248,9 @@ export class SubmitedVersionsComponent implements AfterViewInit {
         );
       });
     });
+    this.summaryBudgetsAllTotal = Object.values(
+      this.summaryBudgetsTotal
+    ).reduce((a: any, b: any) => a + b);
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
       if (this.summaryBudgetsTotal[wp_id]) {
@@ -285,17 +306,21 @@ export class SubmitedVersionsComponent implements AfterViewInit {
 
     this.sammaryTotal["CROSS"] = 0;
     this.sammaryTotal["IPSR"] = 0;
+    this.sammaryTotalConsolidated["CROSS"] = 0;
+    this.sammaryTotalConsolidated["IPSR"] = 0;
     Object.keys(this.sammary).forEach((wp_id) => {
       this.sammaryTotal[wp_id] = 0;
+      this.sammaryTotalConsolidated[wp_id] = 0;
       Object.keys(this.sammary[wp_id]).forEach((item_id) => {
         this.sammaryTotal[wp_id] += totalWp[wp_id][item_id];
+        this.sammaryTotalConsolidated[wp_id] = this.summaryBudgetsAllTotal ? this.summaryBudgetsTotal[wp_id] / this.summaryBudgetsAllTotal * 100 : 0;
       });
     });
     this.wpsTotalSum = 0;
     Object.keys(this.sammaryTotal).forEach((wp_id) => {
-      this.wpsTotalSum += this.sammaryTotal[wp_id];
+      this.wpsTotalSum += this.sammaryTotalConsolidated[wp_id];
     });
-    this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
+    // this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
   }
   allvalueChange() {
     for (let wp of this.wps) {
@@ -316,6 +341,14 @@ export class SubmitedVersionsComponent implements AfterViewInit {
       });
     });
 
+    this.partners.forEach((partner: any) => {
+      this.wps.forEach((wp: any) => {
+        this.period.forEach((per) => {
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][per.id] = false;
+        });
+      });
+    });
+
     Object.keys(this.perValues).forEach((partner_code) => {
       Object.keys(this.perValues[partner_code]).forEach((wp_id) => {
         Object.keys(this.perValues[partner_code][wp_id]).forEach((item_id) => {
@@ -325,8 +358,10 @@ export class SubmitedVersionsComponent implements AfterViewInit {
                 this.perAllValues[wp_id][item_id][per_id] =
                   this.perValues[partner_code][wp_id][item_id][per_id];
 
-              if (this.perValues[partner_code][wp_id][item_id][per_id] == true)
-                this.perValuesSammary[wp_id][per_id] = true;
+                  if (this.perValues[partner_code][wp_id][item_id][per_id] == true){
+                    this.perValuesSammary[wp_id][per_id] = true;
+                    this.perValuesSammaryForPartner[partner_code][wp_id][per_id] = true;  
+                  }
             }
           );
         });
@@ -338,14 +373,17 @@ export class SubmitedVersionsComponent implements AfterViewInit {
   loading = false;
   initiative_data: any = {};
   ipsr_value_data: any;
+
   async pdfData(lastSubmitionId: any) {
     console.log(lastSubmitionId);
     this.loading = true;
     this.wpsTotalSum = 0;
     this.perValues = {};
     this.perValuesSammary = {};
+    this.perValuesSammaryForPartner = {};
     this.perAllValues = {};
     this.sammaryTotal = {};
+    this.sammaryTotalConsolidated = {};
     this.data = [];
     this.wps = [];
     this.partnersData = {};
@@ -363,26 +401,29 @@ export class SubmitedVersionsComponent implements AfterViewInit {
     this.totals = {};
     this.errors = {};
 
-    this.wp_budgets = await this.submissionService.getBudgets(lastSubmitionId);
+    this.wp_budgets = await this.submissionService.getBudgets(
+      lastSubmitionId,
+      this.submission_data.phase.id
+    );
     this.results = this.submission_data.toc_data;
-    const melia_data = await this.submissionService.getMeliaByInitiative(
-      this.initiative_data.id
+    // const melia_data = await this.submissionService.getMeliaBySubmission(
+    //   lastSubmitionId
+    // );
+    const cross_data = await this.submissionService.getCrossBySubmission(
+      lastSubmitionId
     );
-    const cross_data = await this.submissionService.getCrossByInitiative(
-      this.initiative_data.id
-    );
-    this.ipsr_value_data = await this.submissionService.getIpsrByInitiative(
-      this.initiative_data.id
+    this.ipsr_value_data = await this.submissionService.getIpsrBySubmission(
+      lastSubmitionId
     );
     cross_data.map((d: any) => {
-      d["category"] = "CROSS";
+      d["category"] = "Cross Cutting";
       d["wp_id"] = "CROSS";
       return d;
     });
-    melia_data.map((d: any) => {
-      d["category"] = "MELIA";
-      return d;
-    });
+    // melia_data.map((d: any) => {
+    //   d["category"] = "MELIA";
+    //   return d;
+    // });
     this.ipsr_value_data.map((d: any) => {
       d["category"] = "IPSR";
       d["wp_id"] = "IPSR";
@@ -390,18 +431,22 @@ export class SubmitedVersionsComponent implements AfterViewInit {
     });
     this.results = [
       ...cross_data,
-      ...melia_data,
+      // ...melia_data,
       ...this.ipsr_value_data,
       ...this.results,
       // ...indicators_data,
     ];
     this.wps = this.results
-      .filter((d: any) => d.category == "WP" && !d.group)
-      .sort((a: any, b: any) => a.title.localeCompare(b.title));
+    .filter((d: any) => {
+      if (d.category == "WP")
+          d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
+      return d.category == "WP" && !d.group;
+    })
+    .sort((a: any, b: any) => a.title.localeCompare(b.title));
     this.wps.unshift({
       id: "CROSS",
       title: "Cross Cutting",
-      category: "CROSS",
+      category: "Cross Cutting",
       ost_wp: { wp_official_code: "CROSS" },
     });
     this.wps.push({
@@ -455,6 +500,16 @@ export class SubmitedVersionsComponent implements AfterViewInit {
         this.period.forEach((element) => {
           if (!this.perValuesSammary[wp.ost_wp.wp_official_code][element.id])
             this.perValuesSammary[wp.ost_wp.wp_official_code][element.id] =
+              false;
+        });
+
+        if (!this.perValuesSammaryForPartner[partner.code])
+          this.perValuesSammaryForPartner[partner.code] = {};
+        if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code])
+          this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code] = {};
+        this.period.forEach((element) => {
+          if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id] =
               false;
         });
         result.forEach((item: any) => {
@@ -511,9 +566,37 @@ export class SubmitedVersionsComponent implements AfterViewInit {
 
             if (!this.sammaryTotal[wp.ost_wp.wp_official_code])
               this.sammaryTotal[wp.ost_wp.wp_official_code] = 0;
+              
+            if (!this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code])
+              this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] = 0;
           });
         });
       }
+
+      if (this.partnersData[partner.code]?.IPSR)
+        this.partnersData[partner.code].IPSR = this.partnersData[
+          partner.code
+        ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+        
+      let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+
+      this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+
+      newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+
+      this.wps.forEach((d : any) => {
+        if(d.category == "WP") {
+          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+          
+          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+  
+          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+        }
+      })
+
+
       this.loading = false;
     }
 
@@ -529,6 +612,27 @@ export class SubmitedVersionsComponent implements AfterViewInit {
 
     this.setvalues(this.savedValues.values, this.savedValues.perValues);
 
+
+    const newCROSS = this.allData["CROSS"].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+
+    this.allData["CROSS"] = this.allData["CROSS"].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+
+    newCROSS.forEach((d: any) => this.allData["CROSS"].unshift(d))
+
+
+    //sort WP titles
+    this.wps.forEach((d : any) => {
+      if(d.category == "WP") {
+        let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+        .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+        
+        let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+        .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+
+        this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+      }
+    })
+
     this.loader.setLoading(true, "Downloading");
     setTimeout(() => {
       this.exportPDF();
@@ -539,8 +643,10 @@ export class SubmitedVersionsComponent implements AfterViewInit {
   savedValues: any = null;
   submission_data: any;
 
+  summaryBudgetsAllTotal: any = 0;
   async generatePDF(lastSubmitionId: any) {
     this.toPdf = true;
+    console.log(lastSubmitionId);
 
     this.submission_data = await this.submissionService.getSubmissionsById(
       lastSubmitionId
@@ -590,6 +696,29 @@ export class SubmitedVersionsComponent implements AfterViewInit {
           this.perValuesSammary[wp.ost_wp.wp_official_code][period_id]
       )
       .reduce((a: any, b: any) => a || b);
+  }
+
+
+
+  finalPeriodValForPartner(partner_code: number,period_id: any) {
+    return this.wps.map((wp: any) => 
+      this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
+    ).reduce((a: any, b: any) => a || b)
+  }
+
+
+  getTotalBudgetForEachPartner(budgets: string) {
+    return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+  }
+
+  getTotalPercentageForEachPartner(budgets: any) {
+    const totalBudgets: any = Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b))
+    return totalBudgets / totalBudgets * 100 
+  }
+
+  getPercentageForeachPartnerWp(total:any, wpTotal: number) {
+    const totalBudgets: any = Object.values(total).reduce((a: any, b: any) => Number(a) + Number(b))
+    return (wpTotal / totalBudgets * 100); 
   }
 
   finalItemPeriodVal(wp_id: any, period_id: any) {
@@ -665,10 +794,11 @@ export class SubmitedVersionsComponent implements AfterViewInit {
           (d.category == "OUTPUT" ||
             d.category == "OUTCOME" ||
             d.category == "EOI" ||
-            d.category == "CROSS" ||
-            d.category == "IPSR" ||
-            // d.category == 'INDICATOR' ||
-            d.category == "MELIA") &&
+            d.category == "Cross Cutting" ||
+            d.category == "IPSR" 
+          //   ||d.category == 'INDICATOR' ||
+            // d.category == "MELIA"
+            ) &&
           (d.group == id ||
             d.wp_id == official_code ||
             (official_code == "CROSS" && d.category == "EOI"))
@@ -679,9 +809,11 @@ export class SubmitedVersionsComponent implements AfterViewInit {
             d.category == "OUTCOME" ||
             d.category == "EOI" ||
             d.category == "IPSR" ||
-            d.category == "CROSS" ||
+            d.category == "Cross Cutting" 
+            // ||
             // d.category == 'INDICATOR' ||
-            d.category == "MELIA") &&
+            // d.category == "MELIA"
+            ) &&
             (d.group == id || d.wp_id == official_code)) ||
           (official_code == "CROSS" && d.category == "EOI")
         );
@@ -723,8 +855,8 @@ export class SubmitedVersionsComponent implements AfterViewInit {
       });
     }, 500);
   }
-  submition:any;
-  async generateExcel(id:number) {
+  submition: any;
+  async generateExcel(id: number) {
     // const downloadLink = document.createElement('a');
     // const dataType = 'application/vnd.ms-excel';
     // const table = document.getElementById('soso');
@@ -732,10 +864,31 @@ export class SubmitedVersionsComponent implements AfterViewInit {
     // document.body.appendChild(downloadLink);
     // downloadLink.href = 'data:' + dataType + ' ' + tableHtml;
     // downloadLink.download = 'httptrace.xlsx';
-    // downloadLink.click() 
-
+    // downloadLink.click()
 
     this.submition = await this.submissionService.excel(id);
-    console.log(this.submition)
+    console.log(this.submition);
+  }
+
+  finalCenterItemPeriodVal(partner_code: any, wp_id: any, period_id: any) {
+    let periods = this.allData[wp_id].map(
+      (item: any) => this.perValues[partner_code][wp_id][item.id][period_id]
+    );
+    if (periods.length) return periods.reduce((a: any, b: any) => a || b);
+    else return false;
+  }
+
+  openChatDialog(initiative_id: number, version_id: number) {
+    const dialogRef = this.dialog.open(ChatComponent, {
+      data: {
+        initiative_id,
+        version_id,
+      },
+    });
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result) {
+        this.toastrService.success("dialof closed");
+      }
+    });
   }
 }

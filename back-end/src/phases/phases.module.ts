@@ -8,6 +8,7 @@ import { Initiative } from 'src/entities/initiative.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { InitiativeRoles } from 'src/entities/initiative-roles.entity';
 import { Period } from 'src/entities/period.entity';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { Period } from 'src/entities/period.entity';
       InitiativeRoles,
       Period
     ]),
+    HttpModule,
   ],
   controllers: [PhasesController],
   providers: [PhasesService],

@@ -1,0 +1,22 @@
+<div #scrollDiv [id]="lastId" (scroll)="onScroll($event)">
+  <app-chat-message
+    [user]="user"
+    [role]="role"
+    *ngFor="let message of chatMassages; let odd = odd; let last = last"
+    [message]="message"
+    [direction]="loggedInUser?.id == message?.user?.id ? 'right' : 'left'"
+    [id]="lastId + message.id"
+    (replyMessage)="replyMessage.emit($event)"
+    (deletedMessage)="deleteMessage.emit($event)"
+    (editMessage)="editMessage.emit($event)"
+  >
+    <app-chat-message
+      [role]="role"
+      *ngIf="message?.replied_message"
+      [message]="message?.replied_message ?? undefined"
+      [direction]="'left'"
+      [replyMode]="true"
+    >
+    </app-chat-message>
+  </app-chat-message>
+</div>

@@ -19,74 +19,13 @@
 <div class="form-dialog-conten-box-1">
   <mat-dialog-content>
     <form [formGroup]="assignOrgsForm" class="form-dialog-content">
-      <!-- //Organizations  filed----- -->
-
-
-
-
-
-
-
-
-
-
-
-
-      <div class="form-dialog-content__field--grid-column">
-        <div class="form-dialog-content__title-box">
-          <mat-label class="form-dialog-content__title-box__title"
-            >Organizations<span class="star">*</span></mat-label
-          >
-        </div>
-  
-        <ng-select
-        appendTo="body"
-          [items]="organizations"
-          bindValue="code"
-          appearance="outline"
-          bindLabel="name"
-          [multiple]="true"
-          formControlName="organizations"
-          placeholder="Organizations">
-        </ng-select>
-  
-      
-      </div>
-
-
-
-      <!-- <div class="form-dialog-content__field--grid-column">
-        <div class="form-dialog-content__title-box">
-          <mat-label class="form-dialog-content__title-box__title"
-            >Organizations<span class="star">*</span></mat-label
-          >
-        </div>
-        <mat-form-field
-          class="form-dialog-content__field"
-          floatLabel="always"
-          hideRequiredMarker
-          appearance="outline"
-        >
-          <mat-select formControlName="organizations" multiple>
-           
-
-            <mat-option
-              [value]="organization.code"
-              *ngFor="let organization of organizations"
-            >
-              {{ organization.name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div> -->
-
       <div>
         <div class="form-dialog-conten-button-box">
           <div class="form-dialog-conten__button-box" align="end">
             <!-- <button mat-button mat-dialog-close>Cancel</button> -->
             <div class="risk-report-button-box">
               <button
-                class="risk-report-button-box__btn btn--animated btn--chestnut btn"
+                class="risk-report-button-box__btn btn--chestnut"
                 type="submit"
                 mat-raised-button
                 mat-button
@@ -104,6 +43,98 @@
           </div>
         </div>
       </div>
+
+      <!-- //Organizations  filed----- -->
+
+      <div class="form-dialog-content__field--grid-column">
+        <div class="form-dialog-content__title-box">
+          <mat-label class="form-dialog-content__title-box__title"
+            >Organizations<span class="star">*</span></mat-label
+          >
+        </div>
+        <div class="kk">
+          <ng-select
+            [appendTo]="'.kk'"
+            [items]="organizations | sort : 'asc' : 'acronym'"
+            bindValue="code"
+            appearance="outline"
+            bindLabel="name"
+            [multiple]="true"
+            [closeOnSelect]="false"
+            formControlName="organizations"
+            placeholder="Organizations"
+          >
+            <ng-template ng-optgroup-tmp ng-label-tmp let-item="item">
+              <span>{{ item.acronym }}</span> -
+              <span>{{ item.name }}</span>
+            </ng-template>
+            <ng-template ng-option-tmp let-item="item" let-index="index">
+              <span>{{ item.acronym }}</span> -
+              <span>{{ item.name }}</span>
+            </ng-template>
+          </ng-select>
+        </div>
+      </div>
+
+      <!-- <mat-select
+      formControlName="organizations"
+      multiple
+      [compareWith]="compareOrganization"
+    >
+
+  
+      
+      <mat-option
+        *ngFor="let organization of organizations | orderSelectPipe"
+        [value]="organization"
+      >
+        {{ organization.name }}
+      </mat-option>
+    </mat-select> -->
+      <!-- 
+      <div class="form-dialog-content__field--grid-column">
+        <div class="form-dialog-content__title-box">
+          <mat-label class="form-dialog-content__title-box__title"
+            >Organizations<span class="star">*</span></mat-label
+          >
+        </div>
+        <mat-form-field
+          class="form-dialog-content__field"
+          floatLabel="always"
+          hideRequiredMarker
+          appearance="outline"
+        >
+          <mat-select
+            formControlName="organizations"
+            multiple
+            [(ngModel)]="selectedFood"
+            (ngModelChange)="kk()"
+          >
+            <mat-select-trigger>
+              <mat-chip-listbox>
+                <mat-chip
+                  *ngFor="
+                    let organization of assignOrgsForm.value.organizations
+                  "
+                  [removable]="true"
+                  (removed)="onToppingRemoved(organization)"
+                >
+                  <strong class="official-color">{{ k }}</strong>
+
+                  <mat-icon matChipRemove>cancel</mat-icon>
+                </mat-chip>
+              </mat-chip-listbox>
+            </mat-select-trigger>
+
+            <mat-option
+              [value]="organization.code"
+              *ngFor="let organization of organizations"
+            >
+              {{ organization.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div> -->
     </form>
   </mat-dialog-content>
 </div>

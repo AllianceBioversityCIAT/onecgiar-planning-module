@@ -129,7 +129,7 @@ export class HeaderComponent implements OnInit {
         if (dialogResult) {
           localStorage.removeItem("access_token");
           this.user_info = null;
-          this.router.navigate(["./"]);
+          this.authService.goToLogin()
         }
       });
   }

@@ -1,0 +1,17 @@
+<div>
+  <app-editor
+    [form]="form"
+    [controller]="'message'"
+    [height]="'100px'"
+  ></app-editor>
+
+  <section>
+    <button mat-icon-button (click)="clear()">
+      <mat-icon> close </mat-icon>
+    </button>
+
+    <button mat-icon-button (click)="submit()">
+      <mat-icon> send </mat-icon>
+    </button>
+  </section>
+</div>

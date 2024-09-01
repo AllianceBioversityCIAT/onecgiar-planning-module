@@ -7,10 +7,10 @@
       [attr.aria-labelledby]="ariaLabelledby"
       [config]="editorConfig"
     ></angular-editor>
-    <mat-error [style.maxHeight.px]="(maximumNumberForShowingError || 10) * 11">
+    <!-- <mat-error [style.maxHeight.px]="(maximumNumberForShowingError || 10) * 11">
       <span *ngFor="let error of errors | keyvalue">
         {{ error.value.message }}
       </span>
-    </mat-error>
+    </mat-error> -->
   </div>
 </ng-container>

@@ -12,11 +12,13 @@ import {
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/role/roles.guard';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
+import { Organization } from 'src/entities/organization.entity';
+import { getCountries, getCountriesRegions, getPartners, getPartnersreq, getRegions } from 'src/DTO/organizations.dto';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('Organizations')
@@ -26,41 +28,32 @@ export class OrganizationsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    description: '',
+    type: Organization,
+  })
+  @ApiBody({ type: Organization})
   @Post()
   create(@Body() createOrganizationDto: CreateOrganizationDto) {
     return this.organizationsService.create(createOrganizationDto);
   }
 
-  @Post('countries-regions')
-  getCountriesRegions(@Body() codes: any) {
-    return this.organizationsService.getCountriesRegions(codes);
-  }
-
+  @ApiCreatedResponse({
+    description: '',
+    type: [Organization],
+  })
+  @ApiBearerAuth()
   @Get()
   findAll(@Query() query) {
     return this.organizationsService.findAll(query);
   }
 
-  @Get('regions')
-  async getRegions() {
-    return this.organizationsService.getRegions();
-  }
-
-  @Get('countries')
-  async getCountries() {
-    return this.organizationsService.getCountries();
-  }
-
-  @Get('partners')
-  async getPartners() {
-    return this.organizationsService.getPartners();
-  }
-
-  @Get('partners/:term')
-  async searchPartners(@Param('term') term: string) {
-    return this.organizationsService.searchPartners(term);
-  }
-
+  @ApiCreatedResponse({
+    description: '',
+    type: Organization,
+  })
+  @ApiBearerAuth()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.organizationsService.findOne(+id);
@@ -68,6 +61,7 @@ export class OrganizationsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @ApiBearerAuth()
   @Get('import/regions')
   async importRegions() {
     await this.organizationsService.importRegions();
@@ -76,6 +70,7 @@ export class OrganizationsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @ApiBearerAuth()
   @Get('import/countries')
   async importCountries() {
     await this.organizationsService.importCountries();
@@ -84,6 +79,7 @@ export class OrganizationsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @ApiBearerAuth()
   @Get('import/partners')
   async importPartners() {
     await this.organizationsService.importPartners();
@@ -92,6 +88,12 @@ export class OrganizationsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @ApiCreatedResponse({
+    description: '',
+    type: Organization,
+  })
+  @ApiBody({ type: Organization})
+  @ApiBearerAuth()
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -102,6 +104,8 @@ export class OrganizationsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @ApiBody({ type: getCountriesRegions})
+  @ApiBearerAuth()
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.organizationsService.remove(+id);

@@ -140,7 +140,7 @@
           </button> -->
           <div class="risk-report-button-box">
             <button
-              class="risk-report-button-box__btn btn--animated btn--chestnut btn"
+              class="risk-report-button-box__btn btn--chestnut"
               mat-raised-button
               color="primary"
               (click)="openDialog()"
@@ -187,7 +187,7 @@
         </tr>
 
         <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef>Id</th>
+          <th mat-header-cell *matHeaderCellDef>ID</th>
           <td mat-cell *matCellDef="let phase">{{ phase.id }}</td>
         </ng-container>
 
@@ -254,12 +254,12 @@
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="show_melia">
+        <!-- <ng-container matColumnDef="show_melia">
           <th mat-header-cell *matHeaderCellDef>Show MELIA</th>
           <td mat-cell *matCellDef="let phase">
             {{ phase.show_melia ? "Yes" : "No" }}
           </td>
-        </ng-container>
+        </ng-container> -->
 
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef class="actions_column">

@@ -1,0 +1,199 @@
+<div class="title">
+  <mat-icon class="icon"> email</mat-icon>
+  <span>Emails management </span>
+</div>
+
+<div class="description">
+  <p>
+    Welcome to the Emails management panel, here you can manage the Emails and
+    their roles within the platform.
+  </p>
+</div>
+
+<div class="content">
+  <div class="text-box">
+    <div>
+      <p class="title--1">All Emails</p>
+    </div>
+
+    <div>
+      <p class="title--2">{{ length }} total</p>
+    </div>
+  </div>
+
+  <div class="element-management__container">
+    <div class="form-container">
+      <form class="search" [formGroup]="filterForm">
+        <div class="sec-1">
+          <div class="risk-management-form-field field-3">
+            <mat-label class="risk-management-form-field__label"
+              >Search
+            </mat-label>
+            <input
+              formControlName="search"
+              class="search__input"
+              matInput
+              placeholder="Search"
+              #input
+            />
+
+            <button
+              style="border: none; cursor: pointer; background-color: #ffffff12"
+              class="search__button"
+            >
+              <mat-icon class="search__icon">
+                <img
+                  class="search__icon"
+                  src="../../assets/shared-image/Vector-search.svg"
+                  alt="~/Frontend/images/icon _ search-icon"
+              /></mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- //My role----- -->
+        <div class="sec-5">
+          <div class="risk-management-form-field field-3">
+            <mat-label class="risk-management-form-field__label"
+              >Status</mat-label
+            >
+
+            <mat-select
+              formControlName="status"
+              class="risk-management-form-field-box__input-3"
+              [placeholder]="'All'"
+              id="select-where"
+            >
+            <mat-option *ngFor="let item of status" [value]="item.value">
+              {{ item.name }}
+            </mat-option>
+            </mat-select>
+          </div>
+        </div>
+        <!-- //Sort----- -->
+        <div class="sec-6">
+          <div class="risk-management-form-field field-3">
+            <mat-label class="risk-management-form-field__label"
+              >Sort</mat-label
+            >
+
+            <mat-select
+              formControlName="sort"
+              class="risk-management-form-field-box__input-3"
+              [placeholder]="'All'"
+              id="select-where"
+            >
+              <mat-option>All</mat-option>
+              <mat-option *ngFor="let item of sort" [value]="item.value">
+                {{ item.name }}
+              </mat-option>
+            </mat-select>
+          </div>
+        </div>
+        <!-- //Reset Button----- -->
+        <div class="sec-9">
+          <div class="risk-report-button-box">
+            <button
+              class="risk-report-button-box__btn btn--white"
+              mat-raised-button
+              (click)="resetForm()"
+            >
+              <mat-icon class="create-risk">
+                <span class="material-symbols-outlined"> reset_wrench </span>
+              </mat-icon>
+              Reset
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-box mat-elevation-z8">
+      <table mat-table matSort [dataSource]="dataSource">
+        <tr
+          class="table-header"
+          mat-header-row
+          *matHeaderRowDef="columnsToDisplay"
+        ></tr>
+        <tr
+          class="table-header"
+          mat-row
+          *matRowDef="let myRowData; columns: columnsToDisplay"
+        ></tr>
+
+        <!-- Row shown when there is no matching data. -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" colspan="8">
+            No results matching({{ filters?.search }})
+          </td>
+        </tr>
+
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>
+            <span class="h1 th-1-m">ID</span>
+          </th>
+          <td mat-cell *matCellDef="let element">{{ element.id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>
+            <span>Name</span>
+          </th>
+          <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>
+            <span class="h3">Email</span>
+          </th>
+          <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="subject">
+          <th mat-header-cell *matHeaderCellDef>Subject</th>
+          <td mat-cell *matCellDef="let element">{{ element.subject }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.status == true ? "Sent" : "Not Sent" }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="created At">
+          <th mat-header-cell *matHeaderCellDef>Created At</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.createdAt | date : "short" }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>
+            <span class="h5">Actions</span>
+          </th>
+          <td mat-cell *matCellDef="let element">
+            <div class="m">
+              <mat-icon
+                class="visibility-icon"
+                matTooltipPosition="above"
+                matTooltip="View Email"
+                (click)="openEmailBodyDialog(element.email_body)"
+                >visibility</mat-icon
+              >
+            </div>
+          </td>
+        </ng-container>
+      </table>
+      <div class="glossary-content-container element-management-paginator-box">
+        <mat-paginator
+          [pageSizeOptions]="[10, 20, 30, 50, 100]"
+          [length]="length"
+          [pageIndex]="pageIndex - 1"
+          (page)="pagination($event)"
+          aria-label="Select page of Emails"
+        ></mat-paginator>
+      </div>
+    </div>
+  </div>
+</div>

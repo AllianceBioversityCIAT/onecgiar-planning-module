@@ -17,10 +17,12 @@
     > -->
 
     <button
-      class="risk-report-button-box__btn--4 btn--animated btn--white-2 btn"
+      class="risk-report-button-box__btn--4 btn--white-2"
       mat-raised-button
       (click)="complete()"
       type="button"
+      [disabled]="isDisabled"
+      [ngClass]="isDisabled ? 'disabled' : 'btn'"
     >
       Mark as {{ status ? "" : "In" }}complete
     </button>
@@ -28,7 +30,7 @@
 </div>
 
 <mat-icon
-  matTooltipPosition="left"
+  matTooltipPosition="above"
   *ngIf="status === false"
   class="text-if-complete"
   matTooltip="If you need to make any change to this center, please mark it as

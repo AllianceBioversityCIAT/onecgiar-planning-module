@@ -7,15 +7,20 @@ import {
 } from 'typeorm';
 import { Result } from './result.entity';
 import { Initiative } from './initiative.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { History } from './history.entity';
 
 @Entity()
 export class Organization {
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   code: string;
 
+  @ApiProperty()
   @Column()
   name: string;
 
+  @ApiProperty()
   @Column()
   acronym: string;
 
@@ -24,4 +29,7 @@ export class Organization {
 
   @OneToMany(() => Result, (result) => result.organization)
   results: Result[];
+
+  @OneToMany(() => History, (history) => history.organization)
+  history: History[];
 }

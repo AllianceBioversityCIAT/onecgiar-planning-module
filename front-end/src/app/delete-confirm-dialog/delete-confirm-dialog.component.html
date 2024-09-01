@@ -44,16 +44,28 @@
     <div class="el-1"></div>
     <div class="el-2">
       <div class="el-2-box">
-        <div *ngIf="!data.svg">
+        <div *ngIf="!data.svg && data.title !='Cancel submission'">
           <img
             class="dialog-img-2"
             src="../../assets/shared-image/delete.png"
             alt=""
           />
         </div>
-        <div *ngIf="data.svg">
-          <img class="dialog-img" src="{{ data.svg }}" alt="" />
+
+
+        <div *ngIf="!data.svg && data.title =='Cancel submission'">
+          <mat-icon class="cancel-Submission-icon">cancel_presentation</mat-icon>
         </div>
+
+        
+        <div   *ngIf="data.svg">
+          <img [style.filter]="data.svg === '../../assets/shared-image/logout.png'? headerService.logoutSvg : '' " class="dialog-img" src="{{ data.svg }}" alt="" />
+        </div>
+
+     
+
+
+       
 
         <div class="delete-text-box" *ngIf="data?.risks?.length > 0">
           <p class="delete-text-risks">
@@ -65,7 +77,7 @@
             for the risk(s) above
           </p>
         </div>
-        <div class="delete-text-box">
+        <div class="delete-text-box" *ngIf="data.message">
           <p class="delete-text-box__text">
             <mat-dialog-content class="delete-text-box__text">
               {{ data.message }}
@@ -73,6 +85,16 @@
           </p>
         </div>
 
+        <div class="delete-text-box" *ngIf="data.custom_message_1 && data.custom_message_2">
+          <p class="delete-text-box__text">
+            <mat-dialog-content class="delete-text-box__text">
+              {{ data.custom_message_1 }}
+            </mat-dialog-content>
+            <mat-dialog-content class="delete-text-box__text">
+              {{ data.custom_message_2 }}
+            </mat-dialog-content>
+          </p>
+        </div>
         <div
           *ngIf="data.message2"
           class="delete-text-box-2"

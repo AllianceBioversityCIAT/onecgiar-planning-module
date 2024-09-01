@@ -48,6 +48,8 @@ export class AdminIpsrComponent implements OnInit {
     this.headerService.backgroundDeleteYes = "#FF5A54";
     this.headerService.backgroundDeleteClose = "#04030F";
     this.headerService.backgroundDeleteLr = "#04030F";
+    this.headerService.logoutSvg="brightness(0) saturate(100%) invert(4%) sepia(6%) saturate(6779%) hue-rotate(208deg) brightness(80%) contrast(104%)";
+
   }
 
   filterForm: FormGroup = new FormGroup({});
@@ -64,7 +66,7 @@ export class AdminIpsrComponent implements OnInit {
     this.filterForm = this.fb.group({
       title: [null],
     });
-    this.initTable();
+    this.initTable(this.filters);
     this.setForm();
   }
 
@@ -83,7 +85,7 @@ export class AdminIpsrComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result && result.submitted) this.initTable();
+      if (result && result.submitted) this.initTable(this.filters);
     });
   }
 
@@ -100,7 +102,7 @@ export class AdminIpsrComponent implements OnInit {
         if (dialogResult == true) {
           await this.ipsrService.deleteIpsr(id).then(
             (data) => {
-              this.initTable();
+              this.initTable(this.filters);
               this.toastr.success("Deleted successfully");
             },
             (error) => {

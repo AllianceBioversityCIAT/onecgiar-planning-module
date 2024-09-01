@@ -26,7 +26,7 @@ export class CrossCuttingComponent implements OnInit {
   ngOnInit() {
     this.crossForm = this.fb.group({
       title: [this.data?.title, Validators.required],
-      description: [this.data?.description, Validators.required],
+      description: [this.data?.description],
       initiative_id: [this.data?.initiative_id, Validators.required],
     });
   }

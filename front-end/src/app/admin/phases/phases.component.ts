@@ -31,7 +31,6 @@ export class PhasesComponent implements OnInit {
     "status",
     "active",
     "show_eoi",
-    "show_melia",
     "actions",
   ];
 
@@ -60,6 +59,8 @@ export class PhasesComponent implements OnInit {
     this.headerService.backgroundDeleteYes = "#FF5A54";
     this.headerService.backgroundDeleteClose = "#04030F";
     this.headerService.backgroundDeleteLr = "#04030F";
+    this.headerService.logoutSvg="brightness(0) saturate(100%) invert(4%) sepia(6%) saturate(6779%) hue-rotate(208deg) brightness(80%) contrast(104%)";
+    
   }
   showManageInit: boolean = false;
   filterForm: FormGroup = new FormGroup({});
@@ -95,7 +96,7 @@ export class PhasesComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result && result.submitted) this.initTable();
+      if (result && result.submitted) this.initTable(this.filters);
     });
   }
 
@@ -113,7 +114,7 @@ export class PhasesComponent implements OnInit {
           await this.phasesService.deletePhase(id).then(
             (data) => {
               this.Toastr.success("Deleted successfully");
-              this.initTable();
+              this.initTable(this.filters);
             },
             (error) => {
               this.Toastr.error(error.error.message);
@@ -136,9 +137,13 @@ export class PhasesComponent implements OnInit {
       .afterClosed()
       .subscribe(async (dialogResult) => {
         if (dialogResult == true) {
-          let result = await this.phasesService.activatePhase(id);
-          if (result) this.initTable();
-          this.Toastr.success("activated successfully");
+          await this.phasesService.activatePhase(id).then((res) => {
+            this.initTable(this.filters);
+            this.Toastr.success("activated successfully");
+          }, (error) => {
+            this.Toastr.error(error.error.message);
+
+          })
         }
       });
   }
@@ -156,7 +161,7 @@ export class PhasesComponent implements OnInit {
       .subscribe(async (dialogResult) => {
         if (dialogResult == true) {
           let result = await this.phasesService.deactivatePhase(id);
-          if (result) this.initTable();
+          if (result) this.initTable(this.filters);
           this.Toastr.success("deactivated successfully");
         }
       });

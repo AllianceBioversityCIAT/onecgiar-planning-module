@@ -924,8 +924,39 @@ mat-tab-group {
   font-family: "Poppins", sans-serif !important;
   white-space: normal !important;
   max-width: 89rem;
-  margin: 3rem 0 -9rem 0;
-  padding: 0 1.5rem 1rem 1.5rem;
+  margin: 3rem 0 -8rem 0;
+  padding: 0 1.5rem 0 1.5rem;
+  color: #0f212f;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 2.2rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.card-title-table-Consolidated {
+  text-align: left;
+  font-family: "Poppins", sans-serif !important;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  font-size: 2.2rem;
+  display: inline-block;
+  position: relative;
+  background-image: linear-gradient(to right, #0f212f, #0c1a25);
+  -webkit-background-clip: text;
+  color: transparent;
+  letter-spacing: 0.2rem;
+  transition: all 0.2s;
+  text-align: left;
+  font-size: 2.4rem;
+  font-style: normal;
+  line-height: 42.75px;
+  font-family: "Poppins", sans-serif !important;
+  white-space: normal !important;
+  max-width: 89rem;
+  margin: 3rem 0 -3rem 0;
+  padding: 0 1.5rem 0 1.5rem;
   color: #0f212f;
   font-family: "Poppins", sans-serif !important;
   font-size: 2.2rem;

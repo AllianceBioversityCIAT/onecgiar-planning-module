@@ -60,10 +60,24 @@
     <div class="form-dialog-content__field--grid-column">
       <div class="form-dialog-content__title-box">
         <mat-label class="form-dialog-content__title-box__title"
-          >Leave a Reason<span class="star">*</span></mat-label
+          >Leave a Reason<span
+            class="star"
+            *ngIf="statusForm.get('status')?.value === 'Rejected'"
+            >*</span
+          ></mat-label
         >
       </div>
-      <mat-form-field
+      <app-editor
+        [form]="statusForm"
+        [controller]="'status_reason'"
+        [showToolbar]="true"
+        [withoutUpload]="true"
+        [placeholder]="'Ex. It should have...'"
+      ></app-editor>
+      <mat-error class="error" *ngIf="statusForm?.errors?.['reasonsRequired']"
+        >This field is mandatory</mat-error
+      >
+      <!-- <mat-form-field
         class="form-dialog-content__field"
         floatLabel="always"
         hideRequiredMarker
@@ -71,7 +85,7 @@
       >
         <textarea
           matInput
-          required
+          [required]="statusForm.get('status')?.value === 'Rejected'"
           formControlName="status_reason"
           placeholder="Ex. It should have..."
           class="texta"
@@ -81,10 +95,10 @@
 
         <mat-error
           class="error"
-          *ngIf="statusForm.controls?.['status_reason']?.errors?.['required']"
+          *ngIf="statusForm.controls?.['status_reason']?.errors?.['required'] && statusForm.get('status')?.value === 'Rejected'"
           >This field is mandatory</mat-error
         >
-      </mat-form-field>
+      </mat-form-field> -->
     </div>
 
     <!-- //button-section------->
@@ -93,21 +107,19 @@
       <div class="form-dialog-conten-button-box">
         <div class="form-dialog-conten__button-box m-t" align="end">
           <div class="risk-report-button-box">
-          
-             
-          <button
-          class="risk-report-button-box__btn btn--animated btn--chestnut btn"
-            type="submit"
-            mat-raised-button
-            mat-button
-            color="primary"
-            (click)="submit()"
-          >
-          <mat-icon class="create-risk">
-            <span class="material-symbols-outlined"> data_saver_on </span>
-          </mat-icon>
-            SAVE
-          </button>
+            <button
+              class="risk-report-button-box__btn btn--chestnut"
+              type="submit"
+              mat-raised-button
+              mat-button
+              color="primary"
+              (click)="submit()"
+            >
+              <mat-icon class="create-risk">
+                <span class="material-symbols-outlined"> data_saver_on </span>
+              </mat-icon>
+              SAVE
+            </button>
           </div>
         </div>
       </div>

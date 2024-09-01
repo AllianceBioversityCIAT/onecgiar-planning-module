@@ -148,30 +148,28 @@
             <span class="user-management__button-box__title">Export data</span>
           </button> -->
           <div class="risk-report-button-box">
-          
-          <button
-          class="risk-report-button-box__btn btn--animated btn--chestnut btn"
-            mat-raised-button
-            color="primary"
-            (click)="openDialog()"
-          >
-           
-          <mat-icon class="create-risk-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="13"
-              height="13"
-              viewBox="0 0 13 13"
-              fill="none"
+            <button
+              class="risk-report-button-box__btn btn--chestnut"
+              mat-raised-button
+              color="primary"
+              (click)="openDialog()"
             >
-              <path
-                d="M11.5556 0H1.44444C0.642778 0 0 0.65 0 1.44444V11.5556C0 12.35 0.642778 13 1.44444 13H11.5556C12.35 13 13 12.35 13 11.5556V1.44444C13 0.65 12.35 0 11.5556 0ZM11.5556 11.5556H1.44444V1.44444H11.5556V11.5556ZM5.77778 10.1111H7.22222V7.22222H10.1111V5.77778H7.22222V2.88889H5.77778V5.77778H2.88889V7.22222H5.77778V10.1111Z"
-                fill="white"
-              />
-            </svg>
-          </mat-icon>
-            Add new
-          </button>
+              <mat-icon class="create-risk-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 13 13"
+                  fill="none"
+                >
+                  <path
+                    d="M11.5556 0H1.44444C0.642778 0 0 0.65 0 1.44444V11.5556C0 12.35 0.642778 13 1.44444 13H11.5556C12.35 13 13 12.35 13 11.5556V1.44444C13 0.65 12.35 0 11.5556 0ZM11.5556 11.5556H1.44444V1.44444H11.5556V11.5556ZM5.77778 10.1111H7.22222V7.22222H10.1111V5.77778H7.22222V2.88889H5.77778V5.77778H2.88889V7.22222H5.77778V10.1111Z"
+                    fill="white"
+                  />
+                </svg>
+              </mat-icon>
+              Add new
+            </button>
           </div>
         </div>
       </form>
@@ -199,7 +197,7 @@
 
         <ng-container matColumnDef="id">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>
-            <span class="th-1-m">Id</span>
+            <span class="th-1-m">ID</span>
           </th>
           <td mat-cell *matCellDef="let ipsr">{{ ipsr.id }}</td>
         </ng-container>

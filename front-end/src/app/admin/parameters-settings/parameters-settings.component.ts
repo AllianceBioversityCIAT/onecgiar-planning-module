@@ -4,6 +4,8 @@ import { Meta, Title } from "@angular/platform-browser";
 import { ToastrService } from "ngx-toastr";
 import { HeaderService } from "src/app/header.service";
 import { ConstantService } from "src/app/services/constant.service";
+import { EditUnderMaintenanceComponent } from "./edit-under-maintenance/edit-under-maintenance.component";
+import { UnderMaintenanceService } from "src/app/services/under-maintenance.service";
 @Component({
   selector: "app-parameters-settings",
   templateUrl: "./parameters-settings.component.html",
@@ -12,9 +14,14 @@ import { ConstantService } from "src/app/services/constant.service";
 export class ParametersSettingsComponent {
   canSubmit!: boolean;
   publishValue: any;
+  activeValue: any;
+  Messages: any;
+  value: any;
+  isActivateToggled!: boolean;
 
   constructor(
     private constantService: ConstantService,
+    private underMaintenanceService: UnderMaintenanceService,
     private dialog: MatDialog,
     private toster: ToastrService,
     private headerService: HeaderService,
@@ -29,26 +36,27 @@ export class ParametersSettingsComponent {
       "linear-gradient(to  top, #0F212F, #09151E)";
     this.headerService.backgroundFooter =
       "linear-gradient(to  top, #0F212F, #09151E)";
+    this.headerService.backgroundDeleteYes = "#FF5A54";
+    this.headerService.backgroundDeleteClose = "#04030F";
+    this.headerService.backgroundDeleteLr = "#04030F";
+    this.headerService.logoutSvg =
+      "brightness(0) saturate(100%) invert(4%) sepia(6%) saturate(6779%) hue-rotate(208deg) brightness(80%) contrast(104%)";
   }
-
-  // displayedColumns: string[] = [
-  //   'id',
-  //   'lable',
-  //   'value',
-  //   'action',
-  // ];
 
   async ngOnInit() {
     await this.getPublishStatus();
-    // await this.getContatns();
+    await this.getUnderMaintenance();
+
+    await this.getActivateStatus();
 
     this.title.setTitle("Parameter settings");
     this.meta.updateTag({ name: "description", content: "Parameter settings" });
   }
 
-  // async getContatns() {
-  //   this.constants = await this.variableService.getConstantsVariable();
-  // }
+  async getUnderMaintenance() {
+    this.Messages = await this.underMaintenanceService.getUnderMaintenance();
+    console.log(this.Messages);
+  }
 
   async getPublishStatus() {
     this.publishValue = await this.constantService.getSubmitStatus();
@@ -59,8 +67,35 @@ export class ParametersSettingsComponent {
     }
   }
 
+  editUnderMaintenance($event: any) {
+    const _popup = this.dialog.open(EditUnderMaintenanceComponent, {
+      width: "auto",
+      maxHeight: "auto",
+      data: {
+        element: $event,
+      },
+    });
+    _popup.afterClosed().subscribe(async (response) => {
+      await this.getUnderMaintenance();
+    });
+  }
+
   async toggle() {
     this.canSubmit = !this.canSubmit;
     this.constantService.updateSubmitStatus(this.canSubmit);
+  }
+
+  async getActivateStatus() {
+    this.publishValue = await this.underMaintenanceService.getStatus();
+    if (this.publishValue.status == "0") {
+      this.isActivateToggled = false;
+    } else {
+      this.isActivateToggled = true;
+    }
+  }
+
+  async onActivateChecked() {
+    this.isActivateToggled = !this.isActivateToggled;
+    this.underMaintenanceService.updateStatus(this.isActivateToggled);
   }
 }

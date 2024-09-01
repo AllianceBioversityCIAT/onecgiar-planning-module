@@ -27,7 +27,7 @@ export class EditorComponent implements OnInit {
   @Input() max?: number = Number.POSITIVE_INFINITY;
   @Input() direction: string = '';
   @Input() height: string = 'auto';
-  @Input() minHeight: string = '300px';
+  @Input() minHeight: string = '150px';
   @Input() withoutUpload: boolean = false;
   @Input() showToolbar: boolean = false;
   private _readonly = false;

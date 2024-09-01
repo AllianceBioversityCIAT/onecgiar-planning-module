@@ -32,13 +32,13 @@
         </li>
         <li>
           <a
-          [routerLink]="[
-          '/',
-          'initiative',
-          initiativeId,
-          officalCode,
-          'submited-versions'
-        ]"
+            [routerLink]="[
+              '/',
+              'initiative',
+              initiativeId,
+              officalCode,
+              'submited-versions'
+            ]"
             class="risk-nav-link"
             >Submitted versions</a
           >
@@ -58,6 +58,11 @@
             <mat-card-subtitle class="card-title-3 m-b-t"
               >{{ initiative_data.official_code }} ‐
               {{ initiative_data.name }}</mat-card-subtitle
+            >
+          </div>
+          <div *ngIf="this.submission_data?.toc_version">
+            <mat-card-subtitle class="card-title-3 m-b-t"
+              >Toc version ID: {{this.submission_data?.toc_version}}</mat-card-subtitle
             >
           </div>
         </form>
@@ -103,7 +108,6 @@
                         <mat-icon
                           class="icon-sub-table"
                           *ngIf="
-                          
                             perValuesSammary[wp.ost_wp.wp_official_code][
                               item.id
                             ] == true
@@ -114,7 +118,7 @@
                     </ng-container>
                     <td>
                       {{
-                        sammaryTotal[wp.ost_wp.wp_official_code]
+                        sammaryTotalConsolidated[wp.ost_wp.wp_official_code]
                           | number : "1.2-2"
                       }}%
                     </td>
@@ -122,7 +126,7 @@
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                        )
+                        ) | number 
                       }}
                     </td>
                   </tr>
@@ -140,7 +144,7 @@
                     </td>
                   </ng-container>
                   <td>{{ wpsTotalSum | number : "1.2-2" }}%</td>
-                  <td>{{ roundNumber(summaryBudgetsAllTotal) }}</td>
+                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number }}</td>
                 </tr>
               </table>
             </div>
@@ -181,10 +185,14 @@
                     >
                       <tr>
                         <td class="wp-title">
-                          <ng-container *ngIf="item?.initiativeMelia?.meliaType?.name">
+                          <ng-container
+                            *ngIf="item?.initiativeMelia?.meliaType?.name"
+                          >
                             {{ item?.initiativeMelia?.meliaType.name }}
                           </ng-container>
-                          <ng-container *ngIf="!item?.initiativeMelia?.meliaType?.name">
+                          <ng-container
+                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
                             {{
                               item?.ipsr?.id
                                 ? item?.ipsr.title + " (" + item.value + ")"
@@ -219,14 +227,14 @@
                         <td>
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
-                              ? summaryBudgets[wp.ost_wp.wp_official_code][
+                              ? (summaryBudgets[wp.ost_wp.wp_official_code][
                                   item.id
-                                ]
+                                ] | number) 
                               : roundNumber(
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
                                   ]
-                                )
+                                ) | number 
                           }}
                         </td>
                       </tr>
@@ -264,10 +272,10 @@
                       <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
-                            ? summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                            ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code] | number) 
                             : roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              )
+                              ) | number 
                         }}
                       </td>
                     </tr>
@@ -279,9 +287,85 @@
         </ng-container>
       </mat-tab>
       <mat-tab
-        *ngFor="let partner of partners"
+        *ngFor="let partner of partners | sort : 'asc' : 'acronym'"
         [label]="partner?.acronym ? partner?.acronym : partner?.name"
       >
+
+
+
+
+      <mat-card>
+        <mat-card-title class="card-title-table-Consolidated">
+          Consolidated
+        </mat-card-title>
+
+        <mat-card-content>
+          <div class="table-box mat-elevation-z8">
+            <table>
+              <tr>
+                <th>Results</th>
+                <ng-container *ngFor="let item of period">
+                  <th>{{ item.year }} - {{ item.quarter }}</th>
+                </ng-container>
+
+                <th>Budget Percentage</th>
+                <th>Budget (USD)</th>
+              </tr>
+              <ng-container *ngFor="let wp of wps">
+                <tr>
+                  <td class="wp-title">{{ wp.title }}</td>
+                  <ng-container *ngFor="let item of period">
+                    <td>
+                      <mat-icon
+                        class="icon-sub-table-2"
+                        color="primary"
+                        *ngIf="
+                        perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][
+                            item.id
+                          ] == true
+                        "
+                        >close</mat-icon
+                      >
+                    </td>
+                  </ng-container>
+                  <td>
+                    {{ getPercentageForeachPartnerWp(wp_budgets[partner.code],
+                      wp_budgets[partner.code][
+                     wp.ost_wp.wp_official_code]) || 0 | number : "1.2-2"}}%
+                  </td>
+                  <td>
+                    {{
+                      roundNumber(wp_budgets[partner.code][
+                      wp.ost_wp.wp_official_code]) | number
+                    }}
+                  </td>
+                </tr>
+              </ng-container>
+              <tr class="total">
+                <td><div class="subtotal">Total</div></td>
+                <ng-container *ngFor="let item of period">
+                  <td>
+                    <mat-icon
+                      class="icon-sub-table-2"
+                      color="primary"
+                      *ngIf="finalPeriodValForPartner(partner.code , item.id)"
+                      >close</mat-icon
+                    >
+                  </td>
+                </ng-container>
+                <td>
+                  {{ getTotalPercentageForEachPartner(wp_budgets[partner.code]) || 0 | number : "1.2-2"}}%
+                </td>
+                <td>
+                  {{getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
+                </td>
+              </tr>
+            </table>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+
         <ng-container *ngFor="let wp of wps">
           <mat-card
             *ngIf="
@@ -332,10 +416,14 @@
                   >
                     <tr>
                       <td class="wp-title">
-                        <ng-container *ngIf="item?.initiativeMelia?.meliaType?.name">
+                        <ng-container
+                          *ngIf="item?.initiativeMelia?.meliaType?.name"
+                        >
                           {{ item?.initiativeMelia?.meliaType.name }}
                         </ng-container>
-                        <ng-container *ngIf="!item?.initiativeMelia?.meliaType?.name">
+                        <ng-container
+                          *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                        >
                           {{
                             item?.ipsr?.id
                               ? item?.ipsr.title + " (" + item.value + ")"
@@ -371,12 +459,12 @@
                       <td>
                         {{
                           toggleValues[partner.code][wp.ost_wp.wp_official_code]
-                            ? budgetValues[partner.code][
+                            ? (budgetValues[partner.code][
                                 wp.ost_wp.wp_official_code
-                              ][item.id]
+                              ][item.id] | number )
                             : displayBudgetValues[partner.code][
                                 wp.ost_wp.wp_official_code
-                              ][item.id]
+                              ][item.id] | number 
                         }}
                       </td>
                     </tr>
@@ -392,7 +480,8 @@
                           class="icon-sub-table-2"
                           color="primary"
                           *ngIf="
-                            finalItemPeriodVal(
+                            finalCenterItemPeriodVal(
+                              partner.code,
                               wp.ost_wp.wp_official_code,
                               per.id
                             )
@@ -411,7 +500,7 @@
                       }}%
                     </td>
                     <td>
-                      {{ wp_budgets[partner.code][wp.ost_wp.wp_official_code] }}
+                      {{ wp_budgets[partner.code][wp.ost_wp.wp_official_code] | number  }}
                     </td>
                   </tr>
                 </table>

@@ -324,14 +324,14 @@ export class SubmitedVersionViewComponent {
     this.wp_budgets = await this.submissionService.getBudgets(this.params.id);
 
     this.results = this.submission_data.toc_data;
-    const melia_data = await this.submissionService.getMeliaByInitiative(
-      this.initiative_data.id
+    const melia_data = await this.submissionService.getMeliaBySubmission(
+      this.params.id
     );
-    const cross_data = await this.submissionService.getCrossByInitiative(
-      this.initiative_data.id
+    const cross_data = await this.submissionService.getCrossBySubmission(
+      this.params.id
     );
-    this.ipsr_value_data = await this.submissionService.getIpsrByInitiative(
-      this.initiative_data.id
+    this.ipsr_value_data = await this.submissionService.getIpsrBySubmission(
+      this.params.id
     );
     cross_data.map((d: any) => {
       d["category"] = "CROSS";

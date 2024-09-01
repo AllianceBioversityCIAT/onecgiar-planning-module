@@ -1,0 +1,97 @@
+            /**************************/
+/* BELOW 1344px (Smaller desktops) */
+/**************************/
+
+@media (max-width: 102.5em) {
+
+
+    .risk-report-box{
+        display: block !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 0 3.2rem !important;
+    }
+    
+    
+    
+    .risk-report-title-box {
+        /* text-align: left; */
+        padding: 4.8rem 0 1rem 0 !important;
+        display: flex !important;
+        justify-content: left !important;
+    }
+    
+    
+    
+    
+    .risk-report-btn-box {
+        display: flex !important;
+        align-items: center !important;
+        gap: 1rem !important;
+        color: #b9b9b9 !important;
+        text-decoration: none !important;
+        border-bottom: 1px solid currentColor !important;
+        padding-bottom: 15px !important;
+        transition: all 0.3s !important;
+        justify-content: end !important;
+        margin-top: 3rem !important;
+    }
+  
+  
+  
+    .form-container-4 {
+   
+    
+      .search-4 {
+        display: flex !important;
+        width: 100% !important;
+        height: -moz-fit-content !important;
+        height: fit-content !important;
+        /* flex-direction: column; */
+        margin-bottom: -4rem !important;
+        margin-top: -4rem !important;
+        /* margin-left: 33rem; */
+        justify-content: left !important;
+        align-items: baseline !important;
+        gap: 0.5rem !important;
+        padding: -0.2rem 0 5rem 0 !important;
+      }
+    }
+    
+    
+    
+   
+    
+    .form-container-3 {
+    
+      .search-3 {
+        display: flex;
+        width: 100%;
+        height: -moz-fit-content;
+        height: fit-content;
+        /* flex-direction: column; */
+        margin-bottom: -2rem;
+        display: flex;
+        width: 100%;
+        height: -moz-fit-content;
+        height: fit-content;
+        /* flex-direction: column; */
+        margin-bottom: -4rem;
+        margin-top: -4rem;
+        /* margin-left: 33rem; */
+        justify-content: left;
+        align-items: baseline;
+        gap: 0.5rem !important;
+        padding: -0.2rem 0 5rem 0;
+      }
+    }
+    
+    .m-b-t {
+         margin-bottom: 0 !important; 
+       
+    }
+    
+    
+  
+    
+    }

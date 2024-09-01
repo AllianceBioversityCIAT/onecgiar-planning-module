@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
   Entity,
@@ -6,15 +7,19 @@ import {
 
 @Entity()
 export class MeliaTypes {
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   id: number;
 
+  @ApiProperty()
   @Column({ type: 'text' })
   name: string;
 
+  @ApiProperty()
   @Column({ type: 'text' })
   description: string;
 
+  @ApiProperty()
   @Column({ nullable: true })
   availability: string;
 
@@ -22,6 +27,7 @@ export class MeliaTypes {
   // @OneToMany(() => Melia, (melia) => melia.meliaType)
   // melia: Melia;
 
+  @ApiProperty()
   @Column({ default: false })
   HideCrossCutting: boolean;
 }

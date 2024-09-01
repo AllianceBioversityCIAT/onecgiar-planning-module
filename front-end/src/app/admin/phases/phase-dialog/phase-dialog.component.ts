@@ -43,7 +43,6 @@ export class PhaseDialogComponent implements OnInit {
       previousPhase: [null, Validators.required],
       status: [null, Validators.required],
       show_eoi: [false],
-      show_melia: [false],
     });
     this.phases = await this.phasesService.getPhases();
     this.phases = this.phases.filter((d:any) => d.id != this.phaseId);

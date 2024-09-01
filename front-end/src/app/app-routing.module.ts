@@ -18,14 +18,28 @@ import { AuthGuard } from "./guards/auth.guard";
 import { AccessDeniedComponent } from "./access-denied/access-denied.component";
 import { LicenseComponent } from "./footer/license/license.component";
 import { ParametersSettingsComponent } from "./admin/parameters-settings/parameters-settings.component";
-import { MeliaAdminComponent } from "./admin/melia-admin/melia-admin.component";
-import { AnticipatedYearComponent } from "./admin/anticipated-year/anticipated-year.component";
+// import { AnticipatedYearComponent } from "./admin/anticipated-year/anticipated-year.component";
 import { PopoverManagementComponent } from "./admin/popover-management/popover-management.component";
-import { InitiativeMeliaComponent } from "./initiative-melia/initiative-melia.component";
+import { EmailsComponent } from "./admin/emails/emails.component";
+import { TrackPORBsComponent } from "./admin/track-porbs/track-porbs.component";
+import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
+import { UserGuard } from "./guards/under-maintenance.guard";
+import { UnderMaintenanceService } from "./services/under-maintenance.service";
 
 const routes: Routes = [
-  { path: "", component: InitiativesComponent },
+  {
+    path: "under",
+    component: UnderMaintenancePageComponent,
+  },
+
+  {
+    path: "",
+    component: InitiativesComponent,
+    canActivate: [UserGuard],
+  },
+
   { path: "auth", component: AuthComponent },
+
   {
     path: "admin",
     component: AdminComponent,
@@ -39,9 +53,10 @@ const routes: Routes = [
       { path: "ipsr", component: AdminIpsrComponent },
       { path: "phases/:id/initiatives", component: PhaseInitiativesComponent },
       { path: "parameters-settings", component: ParametersSettingsComponent },
-      { path: "melia", component: MeliaAdminComponent },
-      { path: "Anticipated-year", component: AnticipatedYearComponent },
+      // { path: "Anticipated-year", component: AnticipatedYearComponent },
       { path: "popover-management", component: PopoverManagementComponent },
+      { path: "emails", component: EmailsComponent },
+      { path: "track-porbs", component: TrackPORBsComponent },
     ],
   },
 
@@ -70,11 +85,6 @@ const routes: Routes = [
     component: TeamMembersComponent,
     canActivate: [AuthGuard],
   },
-  {
-    path: "initiative/:id/:code/melia",
-    component: InitiativeMeliaComponent,
-    canActivate: [AuthGuard],
-  },
   { path: "denied", component: AccessDeniedComponent },
   {
     path: "license",
@@ -82,6 +92,7 @@ const routes: Routes = [
   },
 
   {
+    canActivate: [AuthGuard],
     path: "team-members",
     component: TeamMembersComponent,
   },
@@ -95,4 +106,6 @@ const routes: Routes = [
   ],
   exports: [RouterModule],
 })
-export class AppRoutingModule {}
+export class AppRoutingModule {
+  constructor(private underMaintenanceService: UnderMaintenanceService) {}
+}

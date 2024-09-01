@@ -1,0 +1,76 @@
+<div [class]="direction">
+  <div class="image-container">
+    <img
+      [alt]="''"
+      [src]="
+        'https://mel.cgiar.org/graph/getcimage/width/30/height/30/image/-user-' +
+        message?.user?.photo
+      "
+    />
+    <!-- *ngIf="'FLOWS' | isAllowed : 'DIAGRAM_NODE_MESSAGE_READ' : role" -->
+    <button mat-icon-button [ngClass]="{ hide: replyMode }" (click)="reply()">
+      <mat-icon>reply</mat-icon>
+    </button>
+  </div>
+  <div class="content-container" [ngClass]="direction">
+    <span
+      [ngClass]="{
+        left: direction == 'left',
+        right: direction == 'right',
+        'dark-color': isReplay,
+        date: true
+      }"
+    >
+      version id : {{ message?.version_id }} |
+      {{ message?.create_date | timeago }}
+    </span>
+    <section [class]="direction">
+      <span [class]="direction">{{
+        message?.user?.first_name + " " + message?.user?.last_name | titlecase
+      }}</span>
+      <button
+        mat-icon-button
+        [ngClass]="{ hide: replyMode }"
+        [matMenuTriggerFor]="menu"
+        *ngIf="user?.id == message?.user?.id || user?.role === 'admin'"
+      >
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </section>
+    <div class="content" *ngIf="viewReplaySection">
+      <ng-content></ng-content>
+    </div>
+    <span class="h-link"></span>
+    <p
+      [ngClass]="{ 'one-line': replyMode }"
+      [innerHTML]="message?.message ?? '' | trustHTML"
+    ></p>
+  </div>
+</div>
+
+<mat-menu
+  #menu="matMenu"
+  [xPosition]="direction == 'right' ? 'after' : 'before'"
+>
+  <!-- *ngIf="
+  ('FLOWS' | isAllowed : 'DIAGRAM_NODE_MESSAGE_UPDATE' : role) ||
+  user?.id == message.creator.id
+" -->
+  <button class="menu-button" mat-menu-item (click)="editMessage.emit(message)">
+    <mat-icon>edit</mat-icon>
+    <span>Edit</span>
+  </button>
+
+  <!-- *ngIf="
+    ('FLOWS' | isAllowed : 'DIAGRAM_NODE_MESSAGE_DELETE' : role) ||
+    user?.id == message.creator.id
+  " -->
+  <button
+    class="menu-button"
+    mat-menu-item
+    (click)="deletedMessage.emit(message)"
+  >
+    <mat-icon>delete</mat-icon>
+    <span>Delete</span>
+  </button>
+</mat-menu>

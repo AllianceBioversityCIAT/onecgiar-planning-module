@@ -1,20 +1,20 @@
-import { DOCUMENT } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import jwt_decode from 'jwt-decode';
-import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
+import { DOCUMENT } from "@angular/common";
+import { HttpClient } from "@angular/common/http";
+import { Inject, Injectable } from "@angular/core";
+import { Router } from "@angular/router";
+import jwt_decode from "jwt-decode";
+import { BehaviorSubject, firstValueFrom, of } from "rxjs";
 import {
   catchError,
   delay,
   distinctUntilChanged,
   map,
   tap,
-} from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+} from "rxjs/operators";
+import { environment } from "src/environments/environment";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AuthService {
   constructor(
@@ -25,39 +25,55 @@ export class AuthService {
 
   async logintoAWS(code: any, redirect_url: any = null) {
     let { access_token, expires_in } = await firstValueFrom(
-      this.http.post(environment.api_url+'/auth/aws', { code }).pipe(
+      this.http.post(environment.api_url + "/auth/aws", { code }).pipe(
         map((d: any) => d),
         catchError((e) => {
-          this.goToLogin(redirect_url, 'AWS');
+          this.goToLogin(redirect_url, "AWS");
           return e;
         })
       )
     );
     if (access_token) {
-      localStorage.setItem('access_token', access_token);
-      localStorage.setItem('access_expires_in', expires_in);
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("access_expires_in", expires_in);
+      this.removePopoversLocalStorage("popovers_\\d+");
       if (redirect_url) this.router.navigateByUrl(redirect_url);
-      else this.router.navigateByUrl('/');
+      else this.router.navigateByUrl("/");
     }
   }
   getLoggedInUser(): any {
-    if(localStorage.getItem('access_token') as string)
-    return jwt_decode(localStorage.getItem('access_token') as string);
-    else
-    return false;
+    if (localStorage.getItem("access_token") as string)
+      return jwt_decode(localStorage.getItem("access_token") as string);
+    else return false;
   }
-  goToLogin(redirect_url: string = '', type: any = null) {
+  goToLogin(redirect_url: string = "", type: any = null) {
     this.document.location.href =
       environment.aws_cognito_link +
       `/login?client_id=${
         environment.aws_cognito_client_id
       }&response_type=code&scope=email+openid+phone+profile&redirect_uri=${
         environment.aws_cognito_client_redirect_uri
-      }${redirect_url ? '?redirect_url=' + redirect_url : ''}`;
+      }${redirect_url ? "?redirect_url=" + redirect_url : ""}`;
   }
 
   isAdmin() {
     const loggedUser = this.getLoggedInUser();
-    return loggedUser.role == 'admin';
+    return loggedUser.role == "admin";
+  }
+
+  isUser() {
+    const loggedUser = this.getLoggedInUser();
+    return loggedUser.role == "user";
+  }
+
+  removePopoversLocalStorage(pattern: string) {
+    const regex = new RegExp(pattern, "i");
+    for (const key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        if (regex.exec(key)) {
+          localStorage.removeItem(key);
+        }
+      }
+    }
   }
 }

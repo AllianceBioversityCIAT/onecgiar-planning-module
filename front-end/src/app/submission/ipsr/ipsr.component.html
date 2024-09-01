@@ -29,10 +29,21 @@
             class="form-dialog-content__title-box"
             *ngFor="let item of ipsrs"
           >
-            <mat-label class="form-dialog-content__title-box__title"
-              >{{ item.title }} - Number
+            <mat-label
+              class="form-dialog-content__title-box__title"
+              *ngIf="!item.need_in_description"
+              >{{ item.title }} - Add value
               <app-popover>
-                {{item.description}}
+                {{ item.description }}
+              </app-popover>
+            </mat-label>
+
+            <mat-label
+              class="form-dialog-content__title-box__title"
+              *ngIf="item.need_in_description"
+              >{{ item.title }} - Description and value
+              <app-popover>
+                {{ item.description }}
               </app-popover>
             </mat-label>
 
@@ -45,15 +56,44 @@
             >
               <input
                 matInput
-                type="number"
+                type="text"
+                placeholder="value"
+                (ngModelChange)="change(item)"
                 [formControlName]="'value-' + item.id"
               />
+            </mat-form-field>
+            <mat-error
+              class="error"
+              *ngIf="ipsrForm?.errors?.['value'+ item.id]"
+              >You can insert the values and range (X-Y) only.</mat-error
+            >
+
+            <ng-container *ngIf="item.need_in_description">
+              <mat-form-field
+                class="form-dialog-content__field"
+                floatLabel="always"
+                hideRequiredMarker
+                appearance="outline"
+              >
+                <textarea
+                  [required]="
+                    ipsrForm.controls['value-' + item.id].value != '' &&
+                    ipsrForm.controls['value-' + item.id].value != null
+                  "
+                  matInput
+                  type="text"
+                  [formControlName]="'description-' + item.id"
+                  placeholder="Description"
+                  (ngModelChange)="change(item)"
+                  >
+                </textarea>
+              </mat-form-field>
               <mat-error
                 class="error"
-                *ngIf="ipsrForm.controls?.['value-' + item.id]?.errors?.['required']"
+                *ngIf="ipsrForm?.errors?.['descriptionRequired'+ item.id]"
                 >This field is mandatory</mat-error
               >
-            </mat-form-field>
+            </ng-container>
           </div>
         </div>
         <div>
@@ -62,7 +102,7 @@
               <!-- <button mat-button mat-dialog-close>Cancel</button> -->
               <div class="risk-report-button-box">
                 <button
-                  class="risk-report-button-box__btn btn--animated btn--chestnut btn"
+                  class="risk-report-button-box__btn btn--chestnut"
                   type="submit"
                   mat-raised-button
                   mat-button

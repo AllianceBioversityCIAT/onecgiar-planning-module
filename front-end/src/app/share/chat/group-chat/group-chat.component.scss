@@ -1,0 +1,61 @@
+div {
+  background-color: white;
+  // max-width: 500px;
+
+  .bg {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 700px;
+    background-color: #0087ca;
+    max-width: inherit;
+
+    section {
+      max-width: inherit;
+    }
+    section:first-child {
+      img {
+        width: 80%;
+        height: 80%;
+        margin: auto;
+        object-fit: contain;
+        padding: 6rem;
+        display: block;
+      }
+      overflow: auto;
+      &::-webkit-scrollbar {
+        width: 12px; /* width of the entire scrollbar */
+      }
+
+      &::-webkit-scrollbar-track {
+        background: #0389cb; /* color of the tracking area */
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background-color: white; /* color of the scroll thumb */
+        border-radius: 20px; /* roundness of the scroll thumb */
+        border: 3px solid #0389cb; /* creates padding around scroll thumb */
+      }
+    }
+  }
+}
+
+.reply-container {
+  width: 100%;
+  display: flex;
+  padding: 2rem 2rem 0 2rem;
+  background: white;
+  border-radius: 2rem 2rem 0 0;
+  height: 134px;
+
+  // display: none;
+
+  div {
+    height: 103px;
+    background-color: #0087ca;
+    margin: 0px;
+    border-radius: 2rem;
+    position: relative;
+    width: 100%;
+    padding: 2rem;
+  }
+}

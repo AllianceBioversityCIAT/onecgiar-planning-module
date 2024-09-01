@@ -1,0 +1,42 @@
+<div>
+  <h2>Comments</h2>
+  <div class="bg">
+    <section>
+      <app-chat-box
+        [role]="'user'"
+        [user]="user"
+        [style.height]="chatMessages.length === 0 ? '0px' : 'auto'"
+        [chatMassages]="chatMessages"
+        (replyMessage)="reply($event)"
+        (deleteMessage)="deleteMessage($event)"
+        (editMessage)="editMessage($event)"
+        (loadMore)="loadMore()"
+      ></app-chat-box>
+      <img
+        *ngIf="chatMessages.length == 0"
+        src="assets/chat.svg"
+        alt="chat is empty"
+      />
+      <app-chat-spinner *ngIf="isLoading"></app-chat-spinner>
+    </section>
+
+    <!-- *ngIf="'FLOWS' | isAllowed : 'DIAGRAM_NODE_MESSAGE_CREATE' : data?.role" -->
+    <section>
+      <section class="reply-container" *ngIf="replyMessages">
+        <div>
+          <app-chat-message
+            [message]="replyMessages"
+            [direction]="'left'"
+            [replyMode]="true"
+          ></app-chat-message>
+        </div>
+      </section>
+      <section>
+        <app-chat-input
+          (addMessage)="addMessage($event)"
+          (clearReply)="clearReply()"
+        ></app-chat-input>
+      </section>
+    </section>
+  </div>
+</div>

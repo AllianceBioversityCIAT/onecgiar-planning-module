@@ -1,0 +1,26 @@
+:host {
+  background-color: white;
+  display: block;
+  // box-shadow: 0px -4px 16px -6px #18020236;
+  position: relative;
+}
+
+app-editor {
+  display: block;
+  background-color: white;
+}
+
+section {
+  display: flex;
+  justify-content: end;
+  border-top: none;
+  grid-gap: 8px;
+  gap: 8px;
+  padding: 4px;
+
+  app-icon-button {
+    display: inline-block;
+    background: #0087ca00;
+    border-radius: 50%;
+  }
+}

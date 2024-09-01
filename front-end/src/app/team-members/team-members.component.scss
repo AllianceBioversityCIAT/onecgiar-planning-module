@@ -552,8 +552,8 @@
   flex-shrink: 0;
   display: inline-block;
   position: relative;
-  top: 0.4rem;
-  left: 0.5rem;
+  top: -0.001rem;
+  left: 0.1rem;
 }
 .risk-report-title-box {
   text-align: center;
@@ -644,10 +644,6 @@
   animation-fill-mode: backwards;
 }
 
-::ng-deep.mdc-tooltip__surface {
-  background-color: #04030f !important;
-}
-
 ::ng-deep.mdc-list-item--selected .mdc-list-item__primary-text,
 .mdc-list-item--activated .mdc-list-item__primary-text {
   /* color: var(--mdc-theme-primary, #673ab7); */
@@ -669,7 +665,7 @@
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem !important;
     font-style: normal !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
     line-height: normal !important;
   }
 }

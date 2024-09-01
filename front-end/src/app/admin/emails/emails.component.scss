@@ -1,0 +1,703 @@
+@import "../../sass/layout/admin-module/admin-module";
+@import "../../sass/pages/admin-module/user-management";
+@import "../../sass/components/table-user-management";
+@import "../../sass/components/button";
+
+.search {
+  flex: 0 0 40%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 54.8rem;
+  height: 3rem;
+  margin-left: -5rem;
+  &__input {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    // background-color: var(--color-Grey-light-2);
+    border: 1px solid #808080;
+    padding: 0.7rem 2rem;
+    border-radius: 100px;
+    width: 99%;
+    transition: all 0.2s;
+    margin-right: -3.25rem;
+
+    &:focus {
+      outline: none;
+      // width: 100%;
+      border: 1px solid #b9b9b9;
+    }
+
+    &::-webkit-input-placeholder {
+      font-family: "Poppins", sans-serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      line-height: 2.1rem;
+      letter-spacing: 0em;
+      text-align: left;
+      color: #808080;
+    }
+  }
+
+  // &__input:focus + &__button {
+  // }
+
+  &__button {
+    border: none;
+
+    &:focus {
+      outline: none;
+    }
+
+    &:active {
+      transform: translateY(2px);
+    }
+  }
+
+  &__icon {
+    height: 2.8rem;
+
+    width: 2rem;
+    position: relative;
+    top: 0.2rem;
+  }
+}
+
+.form-container {
+  padding: 24px 0 0;
+  position: relative;
+  margin-top: -2rem;
+  .search {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    height: fit-content;
+    .sec-1 {
+      width: 40%;
+      position: relative;
+
+      .search__button {
+        right: 14px;
+        position: absolute;
+        .search__icon {
+          width: 2rem;
+        }
+      }
+
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 9rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+    .sec-2 {
+      width: 30%;
+      position: relative;
+
+      .search__button {
+        right: 14px;
+        position: absolute;
+        .search__icon {
+          width: 2rem;
+        }
+      }
+
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 2rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+    .sec-3 {
+      position: relative;
+      width: 17%;
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 2rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+          padding: 0.4rem 1rem;
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+
+    .sec-5 {
+      position: relative;
+      width: 17%;
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 2rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+          padding: 0.4rem 1rem;
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+
+    .sec-6 {
+      position: relative;
+      width: 17%;
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 2rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+          padding: 0.4rem 1rem;
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+
+    .sec-7 {
+      position: relative;
+      margin-top: 3rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .sec-9 {
+      width: 12%;
+      position: relative;
+      margin-top: 3rem;
+    }
+  }
+}
+
+.risk-management-form-field-box {
+  // max-width: 128.6rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+
+  height: 3.2rem;
+
+  &__input-4 {
+    font-family: inherit;
+    font-size: inherit;
+    color: #0f212f;
+
+    border-radius: 1rem;
+    border: 0.5px solid #808080;
+    background-color: #ffffff;
+
+    padding: 0.4rem 1rem;
+
+    width: 112%;
+    transition: all 0.2s;
+
+    position: relative;
+
+    &:focus {
+      outline: none;
+      // width: 100%;
+      border: 1px solid #b9b9b9;
+    }
+
+    &::-webkit-input-placeholder {
+      font-family: "Poppins", sans-serif;
+      color: #808080;
+
+      font-size: 1.2rem;
+      font-style: normal;
+      font-weight: 300;
+      line-height: normal;
+      position: absolute;
+      top: 50%;
+      left: 15%;
+      transform: translate(-71%, -43%);
+    }
+  }
+}
+
+.field-4 {
+  width: 10rem;
+  height: 3.2rem;
+}
+
+.risk-management-form-field {
+  // width: 13rem;
+  // height: 3.2rem;
+
+  position: relative;
+  &__label {
+    display: inline-block;
+    color: #808080;
+    font-family: "Poppins", sans-serif;
+    font-size: 1.4rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    margin: 0 2rem 1rem 0;
+  }
+}
+
+.reset-m-btn {
+  margin: 6rem 0 0 0;
+}
+
+.risk-management-reset-btn {
+  width: 9.1rem;
+  height: 3.2rem;
+
+  color: #ffffff !important;
+  text-align: center;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 1.4rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+
+  border-radius: 1rem;
+  background-color: #0f212f !important;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+}
+
+::ng-deep .cdk-overlay-pane {
+  margin: 1rem -1rem !important;
+  padding: 0 0.5rem !important;
+}
+
+.risk-management-export-box-icon {
+  width: 2.2rem !important;
+  height: 3.1rem !important;
+
+  // margin: -0.1rem 0.1rem;
+  position: relative;
+  top: -2%;
+  left: 2%;
+
+  &--1 {
+    width: 2.2rem !important;
+    height: 3.1rem !important;
+    position: relative;
+    top: -1%;
+    left: -5%;
+  }
+}
+
+.user-management-paginator-box {
+  display: flex;
+  justify-content: end;
+}
+
+::ng-deep .cdk-overlay-pane {
+  margin: 0.5rem 0rem !important;
+  padding: 0 0.5rem !important;
+}
+
+// ::ng-deep .mat-mdc-option.mdc-list-item {
+//   align-items: center;
+//   width: 260px !important;
+// }
+
+::ng-deep.cdk-overlay-pane {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  z-index: 1000;
+  display: inline-table !important;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 1rem 0 0 -1rem !important;
+  padding: 0 1rem !important;
+}
+
+.add_new_btn {
+  margin-bottom: 10px;
+}
+
+// ::ng-deep.mat-mdc-option:hover:not(.mdc-list-item--disabled),
+// .mat-mdc-option:focus:not(.mdc-list-item--disabled),
+// .mat-mdc-option.mat-mdc-option-active,
+// .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple):not(
+//     .mdc-list-item--disabled
+//   ) {
+//   background-image: linear-gradient(
+//     to right bottom,
+//     #9e543eaa,
+//     #7c4230db
+//   ) !important;
+
+//   color: #ffffff !important;
+// }
+
+// ::ng-deep.mat-mdc-option.mat-mdc-option-active,
+// .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple):not(
+//     .mdc-list-item--disabled
+//   ) {
+//   background-image: linear-gradient(
+//     to right bottom,
+//     #9e543eaa,
+//     #7c4230db
+//   ) !important;
+// }
+
+// ::ng-deep.mat-mdc-option.mat-mdc-option-hover,
+// .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple):not(
+//     .mdc-list-item--disabled
+//   ) {
+//   color: #ffffff !important;
+// }
+
+// ::ng-deep.mat-primary
+//   .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled)
+//   .mdc-list-item__primary-text {
+//   color: var(--mdc-theme-primary, #ffffff) !important;
+// }
+
+// ::ng-deep.mat-pseudo-checkbox {
+//   border-radius: 2px;
+//   cursor: pointer;
+//   display: inline-block;
+//   vertical-align: middle;
+//   box-sizing: border-box;
+//   position: relative;
+//   flex-shrink: 0;
+//   transition: border-color 90ms cubic-bezier(0, 0, 0.2, 0.1),
+//     background-color 90ms cubic-bezier(0, 0, 0.2, 0.1);
+//   filter: invert(96%) sepia(100%) saturate(16%) hue-rotate(269deg)
+//     brightness(104%) contrast(104%) !important;
+// }
+
+::ng-deep.mat-mdc-select-arrow {
+  width: 16px !important;
+  height: 10px !important;
+  background-color: #ffffff !important;
+  background-image: url("../../../assets/shared-image/Vector-risk-m.svg");
+  background-position: center;
+  background-size: cover;
+}
+
+.risk-report-btn-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  color: #b9b9b9;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 15px;
+  transition: all 0.3s;
+}
+
+.create-risk {
+  width: 2.1rem !important;
+  height: 2.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: -0.1rem;
+  left: 0.2rem;
+}
+
+.create-risk-1 {
+  width: 2.1rem !important;
+  height: 2.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: -0.3rem;
+  left: 0.2rem;
+}
+
+.create-risk-2 {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: 0.4rem;
+  left: 0.5rem;
+}
+.risk-report-title-box {
+  text-align: center;
+  padding: 4.8rem 0;
+  &__title {
+    color: #0f212f;
+    text-align: center;
+    font-family: "Poppins", sans-serif !important;
+    font-size: 2.2rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+  }
+}
+
+@keyframes moveInBottom {
+  0% {
+    opacity: 0;
+    transform: translateY(3rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
+  }
+}
+
+.btn,
+.btn:link,
+.btn:visited {
+  text-decoration: none;
+
+  display: inline-block;
+
+  transition: all 0.2s;
+  position: relative;
+
+  border: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+}
+.btn:hover::after {
+  transform: scaleX(1.4) scaleY(1.6);
+  opacity: 0;
+}
+
+.btn:active,
+.btn:focus {
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+}
+
+.btn--white {
+  background-color: #0f212f;
+  color: #ffffff;
+}
+.btn--white::after {
+  background-color: #0f212f;
+}
+
+.btn--chestnut {
+  background-color: #9e553e !important;
+  color: #ffffff;
+}
+.btn--chestnut::after {
+  background-color: #9e553e !important;
+}
+
+.btn--white-2 {
+  background-image: linear-gradient(to right, #436280, #30455b);
+  color: #ffffff;
+}
+.btn--white-2::after {
+  background-image: linear-gradient(to right, #436280, #30455b);
+}
+
+.btn::after {
+  content: "";
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+  border-radius: 10rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  transition: all 0.4s;
+}
+
+.btn--animated {
+  animation: moveInBottom 0.5s ease-out 0.85s;
+  animation-fill-mode: backwards;
+}
+
+::ng-deep.mat-primary
+  .mat-pseudo-checkbox-checked.mat-pseudo-checkbox-minimal::after,
+.mat-primary
+  .mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-minimal::after {
+  color: #5569dd !important;
+}
+
+::ng-deep.mat-primary .mat-pseudo-checkbox-checked.mat-pseudo-checkbox-full,
+.mat-primary .mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-full {
+  background: #5569dd !important;
+}
+
+::ng-deep.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-minimal::after,
+.mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-minimal::after {
+  color: #5569dd !important;
+}
+
+::ng-deep.mdc-list-item--selected .mdc-list-item__primary-text,
+.mdc-list-item--activated .mdc-list-item__primary-text {
+  color: var(--mdc-theme-primary, #2a2e45) !important;
+}
+
+// .risk-report-button-box-2{
+//   display: flex;
+//   align-items: center;
+//   justify-content: space-between;
+// }
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 4rem 0 0 0;
+
+  span {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 3rem;
+    letter-spacing: 0em;
+    text-align: left;
+    text-transform: capitalize;
+    color: #1e1e1e;
+  }
+
+  .icon {
+    width: 4rem;
+    height: 3rem;
+  }
+}
+
+.description {
+  margin: 4rem 0 4rem 0;
+  p {
+    font-size: 1.4rem;
+    font-weight: 400;
+    line-height: 1.8rem;
+    letter-spacing: 0em;
+    color: #000000;
+  }
+}
+
+.content {
+  height: 100%;
+  margin: 0 0 0 0;
+  border-radius: 0 1rem 1rem 1rem;
+  background-color: #ffffff;
+  position: relative;
+  padding: 2rem 2rem 2rem;
+  box-shadow: 0 0.4rem 0.4rem 0 rgba(0, 0, 0, 0.2509803922);
+
+  .text-box {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+
+    .title--1 {
+      font-family: "Poppins", sans-serif;
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 3rem;
+      letter-spacing: 0em;
+      color: #000000;
+    }
+
+    .title--2 {
+      font-family: "Poppins", sans-serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      line-height: 2.4rem;
+      letter-spacing: 0em;
+      text-align: left;
+      color: #0f212f;
+    }
+  }
+}
+.visibility-icon {
+  cursor: pointer;
+}

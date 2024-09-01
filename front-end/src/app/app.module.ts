@@ -21,7 +21,6 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatDialogModule } from "@angular/material/dialog";
 import { MatMenuModule } from "@angular/material/menu";
-import { MeliaComponent } from "./submission/melia/melia.component";
 import { ConfirmComponent } from "./confirm/confirm.component";
 import { CrossCuttingComponent } from "./submission/cross-cutting/cross-cutting.component";
 import { ViewDataComponent } from "./submission/view-data/view-data.component";
@@ -63,7 +62,7 @@ import { IpsrDialogComponent } from "./admin/ipsr/ipsr-dialog/ipsr-dialog.compon
 import { PhaseInitiativesComponent } from "./admin/phases/phase-initiatives/phase-initiatives.component";
 import { AssignOrganizationsComponent } from "./assign-organizations/assign-organizations.component";
 import { SpinnerComponent } from "./spinner/spinner.component";
-
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { LoadingInterceptor } from "./loading.interceptor";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatRadioModule } from "@angular/material/radio";
@@ -73,25 +72,35 @@ import { SearchInitComponent } from "./search-init/search-init.component";
 import { FilterVersionComponent } from "./submited-versions/filter-version/filter-version.component";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { ParametersSettingsComponent } from "./admin/parameters-settings/parameters-settings.component";
-import { MeliaAdminComponent } from "./admin/melia-admin/melia-admin.component";
-import { MeliaAdminDialogComponent } from "./admin/melia-admin/melia-admin-dialog/melia-admin-dialog.component";
-import { AnticipatedYearComponent } from "./admin/anticipated-year/anticipated-year.component";
+// import { AnticipatedYearComponent } from "./admin/anticipated-year/anticipated-year.component";
 import { AnticipatedYearDialogComponent } from "./admin/anticipated-year/anticipated-year-dialog/anticipated-year-dialog.component";
 import { OrderSelectPipePipe } from "./components/order-select-pipe.pipe";
 import { PopoverModule } from "./share/popover/popover.module";
 import { PopoverManagementComponent } from "./admin/popover-management/popover-management.component";
-import { PopoverDialogComponent } from './admin/popover-management/popover-dialog/popover-dialog.component';
+import { PopoverDialogComponent } from "./admin/popover-management/popover-dialog/popover-dialog.component";
 import { EditorModule } from "./share/editor/editor.module";
+// import { EditorModules,TINYMCE_SCRIPT_SRC } from "@tinymce/tinymce-angular";
+// import { NgxEditorModule } from "ngx-editor";
 import { TrustHTMLModule } from "./share/trust-html/trust-html.module";
-import { InitiativeMeliaComponent } from './initiative-melia/initiative-melia.component';
-import { InitiativeMeliaDialogComponent } from './initiative-melia/initiative-melia-dialog/initiative-melia-dialog.component';
+import { SortPipe } from "./share/pipes/sort.pipe";
+import { EmailsComponent } from "./admin/emails/emails.component";
+import { EmailBodyComponent } from "./admin/emails/email-body/email-body.component";
+import { ChatModule } from "./share/chat/chat.module";
+import { TimeagoModule } from "ngx-timeago";
+import { CustomMessageComponent } from "./custom-message/custom-message.component";
+import { TrackPORBsComponent } from "./admin/track-porbs/track-porbs.component";
+import { HighchartsChartModule } from "highcharts-angular";
+import { HistoryOfChangeComponent } from './submission/history-of-change/history-of-change.component';
+import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
+import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-under-maintenance/edit-under-maintenance.component";
+import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask'
+
 
 @NgModule({
   declarations: [
     AppComponent,
     InQuePipe,
     SubmissionComponent,
-    MeliaComponent,
     ConfirmComponent,
     CrossCuttingComponent,
     ViewDataComponent,
@@ -126,15 +135,19 @@ import { InitiativeMeliaDialogComponent } from './initiative-melia/initiative-me
     SearchInitComponent,
     FilterVersionComponent,
     ParametersSettingsComponent,
-    MeliaAdminComponent,
-    MeliaAdminDialogComponent,
-    AnticipatedYearComponent,
+    // AnticipatedYearComponent,
     AnticipatedYearDialogComponent,
     OrderSelectPipePipe,
     PopoverManagementComponent,
     PopoverDialogComponent,
-    InitiativeMeliaComponent,
-    InitiativeMeliaDialogComponent,
+    SortPipe,
+    EmailsComponent,
+    EmailBodyComponent,
+    CustomMessageComponent,
+    TrackPORBsComponent,
+    HistoryOfChangeComponent,
+    UnderMaintenancePageComponent,
+    EditUnderMaintenanceComponent
   ],
   imports: [
     BrowserModule,
@@ -154,6 +167,7 @@ import { InitiativeMeliaDialogComponent } from './initiative-melia/initiative-me
     MatButtonModule,
     ReactiveFormsModule,
     MatMenuModule,
+    MatProgressSpinnerModule,
     NgxJsonViewerModule,
     MatFormFieldModule,
     MatInputModule,
@@ -175,7 +189,11 @@ import { InitiativeMeliaDialogComponent } from './initiative-melia/initiative-me
     SatPopoverModule,
     PopoverModule,
     EditorModule,
-    TrustHTMLModule
+    TrustHTMLModule,
+    ChatModule,
+    HighchartsChartModule,
+    TimeagoModule.forRoot(),
+    NgxMaskDirective, NgxMaskPipe
   ],
   providers: [
     AppSocket,
@@ -189,6 +207,12 @@ import { InitiativeMeliaDialogComponent } from './initiative-melia/initiative-me
       useClass: LoadingInterceptor,
       multi: true,
     },
+    // {
+    //   provide: TINYMCE_SCRIPT_SRC,
+    //   useValue: "tinymce/tinymce.min.js",
+    // },
+    SortPipe,
+    provideNgxMask()
   ],
   bootstrap: [AppComponent],
 })

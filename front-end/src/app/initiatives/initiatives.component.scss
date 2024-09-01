@@ -1244,7 +1244,7 @@
   font-family: "Poppins", sans-serif !important;
   font-size: 1.4rem !important;
   font-style: normal !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   line-height: normal !important;
 }
 
@@ -1255,10 +1255,18 @@
   transform-origin: top center;
   display: flex !important;
   flex-direction: column !important;
-  gap: 1rem !important;
+  gap: 0rem !important;
 }
 
 ::ng-deep.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-full,
 .mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-full {
   background: #5569dd !important;
+}
+
+
+.melia-icon{
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+  filter: invert(23%) sepia(0%) saturate(49%) hue-rotate(148deg) brightness(93%) contrast(87%);
 }

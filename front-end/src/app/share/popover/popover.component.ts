@@ -25,8 +25,15 @@ export class PopoverComponent implements OnInit {
   constructor(private popoverManagementService: PopoverManagementService) {}
 
   async ngOnInit() {
-    if (this.id)
-      this.popover = await this.popoverManagementService.get(this.id);
+    if (this.id) {
+      if (localStorage.getItem(`popovers_${this.id}`)) {
+        this.popover = localStorage.getItem(`popovers_${this.id}`);
+      } else {
+        const popover = await this.popoverManagementService.get(this.id);
+        this.popover = popover?.description || this.id
+        localStorage.setItem(`popovers_${this.id}`, this.popover);
+      }
+    }
   }
 
   @HostListener("click", ["$event"])

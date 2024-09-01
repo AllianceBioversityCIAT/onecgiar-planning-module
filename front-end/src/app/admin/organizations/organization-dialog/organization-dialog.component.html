@@ -80,7 +80,7 @@
         hideRequiredMarker
         appearance="outline"
       >
-        <input matInput formControlName="code" />
+        <input matInput formControlName="code" type="number" />
         <mat-error
           class="error"
           *ngIf="organizationForm.controls?.['code']?.errors?.['required']"
@@ -95,14 +95,14 @@
           <!-- <button mat-button mat-dialog-close>Cancel</button> -->
           <div class="risk-report-button-box">
             <button
-              class="risk-report-button-box__btn btn--animated btn--chestnut btn"
+              class="risk-report-button-box__btn btn--chestnut"
               type="submit"
               mat-raised-button
               mat-button
               color="primary"
               (click)="submit()"
             >
-              {{ organizationCode != "0" ? "Edit" : "Add" }}
+              {{ organizationCode != "0" ? "Save" : "Add" }}
             </button>
           </div>
         </div>

@@ -17,7 +17,7 @@
 >
   <section>
     <div *ngIf="id">
-      <section [innerHTML]="(popover?.description || id) | trustHTML"></section>
+      <section [innerHTML]="(popover) | trustHTML"></section>
       <mat-icon (click)="isOpen = !isOpen"> close </mat-icon>
     </div>
     <div *ngIf="!id">

@@ -74,22 +74,27 @@
       </mat-form-field>
     </div>
 
+    <section class="check-box">
+      <mat-checkbox formControlName="need_in_description" color="primary"
+        >Need In Description</mat-checkbox
+      >
+    </section>
+
     <div>
       <div class="form-dialog-conten-button-box">
         <div class="form-dialog-conten__button-box m-t" align="end">
           <!-- <button mat-button mat-dialog-close>Cancel</button> -->
           <div class="risk-report-button-box">
-          
-          <button
-          class="risk-report-button-box__btn btn--animated btn--chestnut btn"
-            type="submit"
-            mat-raised-button
-            mat-button
-            color="primary"
-            (click)="submit()"
-          >
-            {{ ipsrId ? "Edit" : "Add" }}
-          </button>
+            <button
+              class="risk-report-button-box__btn btn--chestnut"
+              type="submit"
+              mat-raised-button
+              mat-button
+              color="primary"
+              (click)="submit()"
+            >
+              {{ ipsrId ? "Save" : "Add" }}
+            </button>
           </div>
         </div>
       </div>

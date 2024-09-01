@@ -22,6 +22,8 @@ export class AuthGuard {
     | Promise<boolean | UrlTree> {
     const loggedUser = this.authService.getLoggedInUser();
     if (loggedUser) return true;
-    return this.router.createUrlTree(['']);
+    else this.authService.goToLogin();
+
+    return false;
   }
 }

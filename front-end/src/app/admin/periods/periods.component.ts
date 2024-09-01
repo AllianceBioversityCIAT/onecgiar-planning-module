@@ -54,6 +54,7 @@ export class PeriodsComponent implements OnInit {
       this.headerService.backgroundDeleteYes = "#FF5A54";
       this.headerService.backgroundDeleteClose = "#04030F";
       this.headerService.backgroundDeleteLr = "#04030F";
+      this.headerService.logoutSvg="brightness(0) saturate(100%) invert(4%) sepia(6%) saturate(6779%) hue-rotate(208deg) brightness(80%) contrast(104%)";
   }
 
   async ngOnInit() {
@@ -71,7 +72,7 @@ export class PeriodsComponent implements OnInit {
     this.allPeriods.forEach((per:any) => {
       this.phases.push(per.phase)
     });
-    await this.initTable();
+    await this.initTable(this.filters);
     this.setForm();
   }
   setForm() {
@@ -107,7 +108,7 @@ export class PeriodsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result && result.submitted) this.initTable();
+      if (result && result.submitted) this.initTable(this.filters);
     });
   }
 
@@ -124,7 +125,7 @@ export class PeriodsComponent implements OnInit {
         if (dialogResult == true) {
           await this.periodsService.deletePeriod(id).then(
             (data) => {
-              this.initTable();
+              this.initTable(this.filters);
               this.toastr.success("Deleted successfully");
             },
             (error) => {

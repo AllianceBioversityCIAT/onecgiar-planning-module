@@ -13,7 +13,8 @@ export class SubmissionService {
     organization_code: string,
     initiative_id: number,
     phase_id: number,
-    status: boolean
+    status: boolean,
+    organization: any
   ) {
     return firstValueFrom(
       this.http
@@ -22,6 +23,7 @@ export class SubmissionService {
           initiative_id,
           phase_id,
           status,
+          organization
         })
         .pipe(map((d: any) => d))
     ).catch((e) => false);
@@ -30,14 +32,14 @@ export class SubmissionService {
 
   async excel(id: any) {
     const data = await firstValueFrom(
-      this.http.get('/api/submission/excel/' + id, { responseType: 'blob' }).pipe(map((d: Blob) => d))
+      this.http.get(environment.api_url+'/submission/excel/' + id, { responseType: 'blob' }).pipe(map((d: Blob) => d))
     );
     saveAs(data, 'Planning.xlsx');
   }
 
   async excelCurrent(id: any) {
     const data = await firstValueFrom(
-      this.http.get('/api/submission/excelCurrent/' + id, { responseType: 'blob' }).pipe(map((d: Blob) => d))
+      this.http.get(environment.api_url+'/submission/excelCurrent/' + id, { responseType: 'blob' }).pipe(map((d: Blob) => d))
     );
     saveAs(data, 'Planning.xlsx');
   }
@@ -48,16 +50,28 @@ export class SubmissionService {
       initId: initId
     }
     const result = await firstValueFrom(
-      this.http.post('/api/submission/excelCurrentCenter/' , data, {responseType: 'blob'}).pipe(map((d: Blob) => d))
+      this.http.post(environment.api_url+'/submission/excelCurrentCenter/' , data, {responseType: 'blob'}).pipe(map((d: Blob) => d))
     );
     saveAs(result, 'Planning.xlsx');
+  }
+
+  async cancelSubmission(id: number, data: any) {
+    return firstValueFrom(
+      this.http.patch(environment.api_url+'/submission/cancellastsubmission/' + id, data).pipe(map((d: any) => d))
+    );
   }
 
 
   async getToc(id: any) {
     return firstValueFrom(
       this.http.get(environment.api_url+'/submission/toc/' + id).pipe(map((d: any) => d))
-    ).catch((e) => false);
+    );
+  }
+
+  async getTocSubmissionData(id: any) {
+    return firstValueFrom(
+      this.http.get(environment.api_url+'/submission/toc_submission_data/' + id).pipe(map((d: any) => d))
+    );
   }
 
   async getSubmissionsByInitiativeId(id: number, filters: any = null, page: any = null, limit: any = null, withFilters: boolean) {
@@ -97,6 +111,15 @@ export class SubmissionService {
       this.http.get(environment.api_url+'/melia/initiative/' + id).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
+
+  async getMeliaBySubmission(id: any) {
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + '/melia/submission/' + id)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async getIpsrs() {
     return firstValueFrom(
       this.http.get(environment.api_url+'/ipsr').pipe(map((d: any) => d))
@@ -107,6 +130,15 @@ export class SubmissionService {
       this.http.get(environment.api_url+'/ipsr-value/initiative/' + id).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
+
+  async getIpsrBySubmission(id: any) {
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + '/ipsr-value/submission/' + id)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async getCrossByInitiative(id: any) {
     return firstValueFrom(
       this.http
@@ -114,6 +146,15 @@ export class SubmissionService {
         .pipe(map((d: any) => d))
     ).catch((e) => false);
   }
+
+  async getCrossBySubmission(id: any) {
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + '/cross-cutting/submission/' + id)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async newMelia(data: any) {
     return firstValueFrom(
       this.http.post(environment.api_url+'/melia', data).pipe(map((d: any) => d))
@@ -186,7 +227,7 @@ export class SubmissionService {
       this.http
         .post(environment.api_url+'/submission/save/' + id, data)
         .pipe(map((d: any) => d))
-    ).catch((e) => false);
+    );
   }
 
   async getSavedData(id: number, phaseId: any) {
@@ -202,6 +243,15 @@ export class SubmissionService {
         .pipe(map((d: any) => d))
     ).catch((e) => false);
   }
+
+  async saveAllResultValues(id: number, data: any) {
+    return firstValueFrom(
+      this.http
+        .post(environment.api_url+'/submission/save_all_result_values/' + id, data)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async saveResultValue(id: number, data: any) {
     return firstValueFrom(
       this.http
@@ -232,10 +282,10 @@ export class SubmissionService {
     ).catch((e) => false);
   }
 
-  async getBudgets(id: number) {
+  async getBudgets(id: number, phase_id: any) {
     return firstValueFrom(
       this.http
-        .get(environment.api_url+'/submission/submission_budgets/' + id)
+        .get(environment.api_url+'/submission/submission_budgets/' + id + '/phase_id/' + phase_id)
         .pipe(map((d: any) => d))
     ).catch((e) => false);
   }
@@ -246,35 +296,7 @@ export class SubmissionService {
     ).catch((e) => false);
   }
 
-  async getRegions() {
-    return firstValueFrom(
-      this.http.get(environment.api_url+'/organizations/regions').pipe(map((d: any) => d))
-    ).catch((e) => false);
-  }
 
-  async getCountriesRegions(codes: number[]) {
-    return firstValueFrom(
-      this.http
-        .post(environment.api_url+'/organizations/countries-regions/', codes)
-        .pipe(map((d: any) => d))
-    ).catch((e) => false);
-  }
 
-  async getCountries() {
-    return firstValueFrom(
-      this.http.get(environment.api_url+'/organizations/countries').pipe(map((d: any) => d))
-    ).catch((e) => false);
-  }
 
-  async getPartners() {
-    return firstValueFrom(
-      this.http.get(environment.api_url+'/organizations/partners').pipe(map((d: any) => d))
-    ).catch((e) => false);
-  }
-
-  searchPartners(term: string): Observable<any[]> {
-    return this.http
-      .get(environment.api_url+'/organizations/partners/' + term)
-      .pipe(map((d: any) => d));
-  }
 }

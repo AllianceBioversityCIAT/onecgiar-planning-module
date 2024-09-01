@@ -78,7 +78,7 @@
     margin: 0;
     height: fit-content;
     .sec-1 {
-      width: 40%;
+      width: 20%;
       position: relative;
 
       .search__button {
@@ -155,7 +155,7 @@
     }
     .sec-3 {
       position: relative;
-      width: 15%;
+      width: 17%;
       .risk-management-form-field {
         position: relative;
         .risk-management-form-field__label {
@@ -215,7 +215,7 @@
 
     .sec-5 {
       position: relative;
-      width: 15%;
+      width: 17%;
       .risk-management-form-field {
         position: relative;
         .risk-management-form-field__label {
@@ -245,7 +245,7 @@
 
     .sec-6 {
       position: relative;
-      width: 15%;
+      width: 17%;
       .risk-management-form-field {
         position: relative;
         .risk-management-form-field__label {
@@ -282,7 +282,7 @@
     }
 
     .sec-9 {
-      width: 15%;
+      width: 12%;
       position: relative;
       margin-top: 3rem;
     }
@@ -514,7 +514,17 @@
   display: inline-block;
   position: relative;
   top: -0.1rem;
-  left: 0.5rem;
+  left: 0.2rem;
+}
+
+.create-risk-1 {
+  width: 2.1rem !important;
+  height: 2.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: -0.3rem;
+  left: 0.2rem;
 }
 
 .create-risk-2 {
@@ -523,8 +533,8 @@
   flex-shrink: 0;
   display: inline-block;
   position: relative;
-  top: 0.4rem;
-  left: 0.5rem;
+  top: 0.02rem;
+  left: 0.2rem;
 }
 .risk-report-title-box {
   text-align: center;
@@ -622,3 +632,31 @@
   animation: moveInBottom 0.5s ease-out 0.85s;
   animation-fill-mode: backwards;
 }
+
+::ng-deep.mat-primary
+  .mat-pseudo-checkbox-checked.mat-pseudo-checkbox-minimal::after,
+.mat-primary
+  .mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-minimal::after {
+  color: #5569dd !important;
+}
+
+::ng-deep.mat-primary .mat-pseudo-checkbox-checked.mat-pseudo-checkbox-full,
+.mat-primary .mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-full {
+  background: #5569dd !important;
+}
+
+::ng-deep.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-minimal::after,
+.mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-minimal::after {
+  color: #5569dd !important;
+}
+
+::ng-deep.mdc-list-item--selected .mdc-list-item__primary-text,
+.mdc-list-item--activated .mdc-list-item__primary-text {
+  color: var(--mdc-theme-primary, #2a2e45) !important;
+}
+
+// .risk-report-button-box-2{
+//   display: flex;
+//   align-items: center;
+//   justify-content: space-between;
+// }

@@ -14,6 +14,7 @@ import { DeleteConfirmDialogComponent } from "src/app/delete-confirm-dialog/dele
 import { ToastrService } from "ngx-toastr";
 import { Meta, Title } from "@angular/platform-browser";
 import { FormBuilder, FormGroup } from "@angular/forms";
+import { SortPipe } from "src/app/share/pipes/sort.pipe";
 
 @Component({
   selector: "app-users",
@@ -23,7 +24,14 @@ import { FormBuilder, FormGroup } from "@angular/forms";
 export class UsersComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
-  columnsToDisplay: string[] = ["id", "name", "email", "role", "actions"];
+  columnsToDisplay: string[] = [
+    "id",
+    "name",
+    "email",
+    "role",
+    "Initiatives and Roles",
+    "actions",
+  ];
   dataSource: MatTableDataSource<any>;
   users: any = [];
   length!: number;
@@ -33,6 +41,7 @@ export class UsersComponent implements OnInit {
   filters: any = null;
 
   constructor(
+    private sortPipe: SortPipe,
     private usersService: UserService,
     private dialog: MatDialog,
     private headerService: HeaderService,
@@ -53,6 +62,8 @@ export class UsersComponent implements OnInit {
     this.headerService.backgroundDeleteYes = "#FF5A54";
     this.headerService.backgroundDeleteClose = "#04030F";
     this.headerService.backgroundDeleteLr = "#04030F";
+    this.headerService.logoutSvg =
+      "brightness(0) saturate(100%) invert(4%) sepia(6%) saturate(6779%) hue-rotate(208deg) brightness(80%) contrast(104%)";
   }
 
   sort = [
@@ -106,7 +117,7 @@ export class UsersComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result && result.submitted) this.initTable();
+      if (result && result.submitted) this.initTable(this.filters);
     });
   }
 
@@ -131,6 +142,35 @@ export class UsersComponent implements OnInit {
       });
   }
 
+  getInitRoles(initRoles: any[]) {
+    console.log(initRoles);
+    initRoles = initRoles.sort((a: any, b: any) =>
+      a?.initiative.official_code
+        ?.toLowerCase()
+        .localeCompare(b?.initiative.official_code?.toLowerCase())
+    );
+    console.log(initRoles);
+
+    let str =
+      "<div style ='display: flex; flex-direction: column; align-items: center;'>";
+    initRoles.forEach(
+      (d) =>
+        (str +=
+          "<div style='padding-bottom: 3px; padding-top: 3px;'><span>" +
+          d.initiative.official_code +
+          "</span> / <span>" +
+          d.role +
+          "</span> </div>")
+    );
+
+    str += "</div>";
+
+    return str;
+  }
+
+  async exportExcel() {
+    await this.usersService.exportUsers(this.filters);
+  }
   resetForm() {
     this.filterForm.reset();
     this.filterForm.markAsUntouched();

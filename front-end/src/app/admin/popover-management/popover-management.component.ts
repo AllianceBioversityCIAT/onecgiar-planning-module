@@ -38,9 +38,12 @@ export class PopoverManagementComponent implements OnInit {
     this.headerService.backgroundFooter =
       "linear-gradient(to  top, #0F212F, #09151E)";
 
+
+
     this.headerService.backgroundDeleteYes = "#FF5A54";
     this.headerService.backgroundDeleteClose = "#04030F";
     this.headerService.backgroundDeleteLr = "#04030F";
+    this.headerService.logoutSvg="brightness(0) saturate(100%) invert(4%) sepia(6%) saturate(6779%) hue-rotate(208deg) brightness(80%) contrast(104%)";
   }
 
   filterForm: FormGroup = new FormGroup({});
