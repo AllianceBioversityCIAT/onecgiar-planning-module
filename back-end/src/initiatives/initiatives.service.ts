@@ -290,7 +290,6 @@ export class InitiativesService {
           alignment: {
             horizontal: 'center',
             vertical: 'center',
-            wrapText: true,
           },
         };
 
