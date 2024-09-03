@@ -30,14 +30,13 @@ export class ChatSocket {
   socket: Socket;
   config = (token: string): SocketIoConfig => {
     return {
-      url: environment.socket_url + 'chat',
+      url: environment.socket_url + '/chat',
       options: {
         path: environment.socket_path,
         reconnectionDelay: 200,
         reconnectionDelayMax: 400,
         reconnectionAttempts: 100,
         query: {
-          route: "/chat",
           Authorization: "Bearer " + token,
         },
       },
