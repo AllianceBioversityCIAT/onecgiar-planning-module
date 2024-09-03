@@ -359,7 +359,7 @@ export class InitiativesService {
     let merges = [
       {
         s: { c: 3, r: 0 },
-        e: { c: 3, r: 0 },
+        e: { c: 3, r: 1 },
       },
     ];
 
