@@ -355,13 +355,9 @@ export class InitiativesService {
   prepareTemplate(data: any) {
     let finaldata = [this.getTemplate()];
 
-    let merges = [
-      {
-        s: { c: 3, r: 0 },
-        e: { c: 3, r: 1 },
-      },
-    ];
 
+
+    let merges = [];
     for (let index = 0; index < 4; index++) {
       merges.push({
         s: { c: index, r: 0 },
