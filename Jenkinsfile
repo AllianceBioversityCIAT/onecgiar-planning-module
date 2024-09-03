@@ -13,6 +13,12 @@ pipeline {
         '''
       }
     }  
+    stage("Clean up") {
+      steps {
+         sh 'docker system prune -a'
+      }
+    }
+    docker system prune -a 
     stage('Start container') {
       steps {
         sh 'docker compose up -d --no-color --build --wait'
