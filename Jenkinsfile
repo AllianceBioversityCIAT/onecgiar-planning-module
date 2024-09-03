@@ -3,6 +3,7 @@ pipeline {
   stages {
     stage("verify tooling") {
       steps {
+        slackSend color: "black", message: "planning build process is started"
         sh '''
           docker version
           docker info
