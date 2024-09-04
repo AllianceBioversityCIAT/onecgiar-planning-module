@@ -384,7 +384,7 @@ export class InitiativesService {
   }
   
   mapTemplate(template, element) {
-    template['Initiative ID'] = element?.id;
+    template['Initiative ID'] = element?.official_code;
     template['Initiative Title'] = element?.name;
     template['Updated by'] = element?.history;
     template['Current status'] = 
