@@ -4,6 +4,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  VirtualColumn,
 } from 'typeorm';
 import { WorkPackage } from './workPackage.entity';
 import { Organization } from './organization.entity';
@@ -53,4 +54,7 @@ export class WpBudget {
 
   @Column({ nullable: true })
   phase_id: number;
+  
+  @VirtualColumn({ query: (alias) => `NULL` })
+  total?:number;
 }

@@ -26,6 +26,10 @@ import * as XLSX from 'xlsx-js-style';
 import { join } from 'path';
 import { createReadStream, unlink } from 'fs';
 import { Result } from 'src/entities/result.entity';
+import { Submission, SubmissionStatus } from 'src/entities/submission.entity';
+import { PhasesService } from 'src/phases/phases.service';
+import { WpBudget } from 'src/entities/wp-budget.entity';
+import { Organization } from 'src/entities/organization.entity';
 
 @Injectable()
 export class InitiativesService {
@@ -68,6 +72,12 @@ export class InitiativesService {
     public userRepository: Repository<User>,
     @InjectRepository(Result)
     public resultRepository: Repository<Result>,
+    @InjectRepository(WpBudget)
+    public WpBudgetRepository: Repository<WpBudget>,
+    @InjectRepository(Submission)
+    public submissionRepository: Repository<Submission>,
+    @InjectRepository(Organization)
+    public organizationRepository: Repository<Organization>,
     private emailService: EmailService,
     private chatGroupRepositoryService: ChatMessageRepositoryService,
   ) {}
@@ -636,5 +646,30 @@ export class InitiativesService {
 
   async idUserHavePermissionToDelete(message_id: number, user: User) {
     return this.idUserHavePermissionToEdit(message_id, user);
+  }
+
+
+
+  async getInitPartnersBudget(query: any) {
+    const initiative = await this.initiativeRepository.createQueryBuilder('init')
+      .leftJoinAndSelect('init.submissions', 'submissions')
+      .where(
+        "submissions.id = (" +
+          this.submissionRepository.createQueryBuilder("submissions")
+          .select("MAX(id)")
+          .where("submissions.initiative_id = init.id")
+          .getQuery() + ")"
+      )
+      .andWhere("submissions.status = :status", { status: SubmissionStatus.APPROVED })
+      .select(['init.official_code', 'init.name', 'submissions.id', 'wp_budget.*'])
+      .addSelect("SUM(wp_budget.budget)",'wp_budget_total')
+      .leftJoinAndSelect('submissions.wp_budget', 'wp_budget')
+      .leftJoinAndSelect('wp_budget.phase', 'phase')
+      .andWhere("phase.id = :phase_id", { phase_id : query.phase_id })
+      .leftJoinAndSelect('wp_budget.organization', 'organization')
+      .groupBy('init.id , wp_budget.organization_code')
+      .getMany();
+  
+    return initiative;
   }
 }

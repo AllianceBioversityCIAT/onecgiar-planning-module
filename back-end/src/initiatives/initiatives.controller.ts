@@ -101,6 +101,11 @@ export class InitiativesController {
     return { msg: 'imported',data }
   }
 
+  @Get('getInitPartnersBudget')
+  @ApiBearerAuth()
+  getInitPartnersBudget(@Query() query: any) {
+    return this.initiativesService.getInitPartnersBudget(query);
+  }
 
   @Get('data-import')
   @ApiBearerAuth()

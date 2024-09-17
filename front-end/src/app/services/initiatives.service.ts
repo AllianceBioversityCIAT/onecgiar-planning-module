@@ -76,6 +76,23 @@ export class InitiativesService {
     ).catch((e) => false);
   }
 
+  async getBudgetsForEachPartner(filters: any = null) {
+    let finalFilters: any = {};
+    if (filters)
+      Object.keys(filters).forEach((element) => {
+        if (typeof filters[element] === 'string')
+          filters[element] = filters[element].trim();
+
+        if (filters[element] != null && filters[element] != '')
+          finalFilters[element] = filters[element];
+      });
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + `/initiatives/getInitPartnersBudget`, { params: finalFilters })
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   getInitiativeUsers(id: number) {
     return firstValueFrom(
       this.http

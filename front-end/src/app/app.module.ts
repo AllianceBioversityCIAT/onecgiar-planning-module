@@ -93,7 +93,8 @@ import { HighchartsChartModule } from "highcharts-angular";
 import { HistoryOfChangeComponent } from './submission/history-of-change/history-of-change.component';
 import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
 import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-under-maintenance/edit-under-maintenance.component";
-import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask'
+import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask';
+import { TotalInitSummaryComponent } from './admin/total-init-summary/total-init-summary.component';
 
 
 @NgModule({
@@ -147,7 +148,8 @@ import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask'
     TrackPORBsComponent,
     HistoryOfChangeComponent,
     UnderMaintenancePageComponent,
-    EditUnderMaintenanceComponent
+    EditUnderMaintenanceComponent,
+    TotalInitSummaryComponent,
   ],
   imports: [
     BrowserModule,

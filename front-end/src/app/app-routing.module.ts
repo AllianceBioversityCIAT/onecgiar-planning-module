@@ -25,6 +25,7 @@ import { TrackPORBsComponent } from "./admin/track-porbs/track-porbs.component";
 import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-maintenance-page.component";
 import { UserGuard } from "./guards/under-maintenance.guard";
 import { UnderMaintenanceService } from "./services/under-maintenance.service";
+import { TotalInitSummaryComponent } from "./admin/total-init-summary/total-init-summary.component";
 
 const routes: Routes = [
   {
@@ -57,6 +58,8 @@ const routes: Routes = [
       { path: "popover-management", component: PopoverManagementComponent },
       { path: "emails", component: EmailsComponent },
       { path: "track-porbs", component: TrackPORBsComponent },
+      { path: "budget-summary", component: TotalInitSummaryComponent },
+
     ],
   },
 
