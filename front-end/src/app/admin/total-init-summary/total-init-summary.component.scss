@@ -79,6 +79,12 @@
     width: 100%;
     margin: 0;
     height: fit-content;
+
+    .filters {
+      display: flex;
+      width: 60%;
+      justify-content: space-between;
+    }
     .sec-1 {
       width: 20%;
       position: relative;
@@ -218,7 +224,7 @@
 
     .sec-5 {
       position: relative;
-      width: 17%;
+      width: 30%;
       .risk-management-form-field {
         position: relative;
         .risk-management-form-field__label {

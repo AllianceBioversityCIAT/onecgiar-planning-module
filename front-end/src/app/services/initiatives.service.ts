@@ -68,6 +68,28 @@ export class InitiativesService {
     saveAs(data, 'Initiatives.xlsx')
   }
 
+  async exportExcel(filters: any = null) {
+    let finalFilters: any = {};
+    if(filters)
+      Object.keys(filters).forEach((element) => {
+        if (typeof filters[element] === "string")
+          filters[element] = filters[element].trim();
+
+        if (filters[element] != null && filters[element] != "")
+          finalFilters[element] = filters[element];
+      });
+    const data = await firstValueFrom(
+      this.http
+        .get(environment.api_url+`/initiatives/budgetSummary`, {
+          responseType: "blob",
+          params: finalFilters
+        })
+        .pipe(map((d: Blob) => d))
+    );
+    saveAs(data, 'Budget-Summary.xlsx')
+  }
+
+
   async getInitiativesOnly() {
     return firstValueFrom(
       this.http

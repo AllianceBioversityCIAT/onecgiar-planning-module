@@ -107,6 +107,14 @@ export class InitiativesController {
     return this.initiativesService.getInitPartnersBudget(query);
   }
 
+
+  @Get('budgetSummary')
+  @ApiBearerAuth()
+  exportBudgetSummary(@Query() query: any) {
+    console.log(query)
+    return this.initiativesService.exportBudgetSummary(query);
+  }
+
   @Get('data-import')
   @ApiBearerAuth()
   async importData() {

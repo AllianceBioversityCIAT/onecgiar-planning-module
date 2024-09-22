@@ -18,7 +18,6 @@ export class TotalInitSummaryComponent implements OnInit {
     private initiativesService: InitiativesService,
     private phaseService: PhasesService,
     private organizationService: OrganizationsService,
-
     private title: Title,
     private meta: Meta,
     private fb: FormBuilder
@@ -32,7 +31,9 @@ export class TotalInitSummaryComponent implements OnInit {
     this.headerService.backgroundFooter =
       "linear-gradient(to  top, #0F212F, #09151E)";
     this.filterForm = this.fb.group({
-      phase_id: [null]
+      phase_id: [null],
+      partners: [null],
+      initiatives: [null]
     });
   }
 
@@ -44,6 +45,7 @@ export class TotalInitSummaryComponent implements OnInit {
   newColumnsToDisplay: any = [];
   phases: any;
   organization: any;
+  initiatives: any;
 
   activePhases: any;
 
@@ -59,16 +61,19 @@ export class TotalInitSummaryComponent implements OnInit {
     this.phases = await this.phaseService.getPhases();
     this.activePhases = await this.phaseService.getActivePhase();
     this.organization = await this.organizationService.getOrganizations();
+    await this.initiativesService.getInitiatives(null , 1, 100).then(
+      (data) => {
+        this.initiatives = data.result
+      }
+    );
+
+    console.log(this.initiatives)
     this.newColumnsToDisplay = this.columnsToDisplay.concat(this.organization.map((d: any) => d.acronym))
     this.filterForm.patchValue({
       phase_id: this.activePhases.id
     })
 
     await this.initTable(this.filterForm.value);
-    // this.getTotalForEachPartner()
-
-
-
     this.setForm();
     this.title.setTitle("Budget Summary");
     this.meta.updateTag({ name: "description", content: "Budget Summary" });
@@ -86,17 +91,16 @@ export class TotalInitSummaryComponent implements OnInit {
     this.dataSource = await this.initiativesService.getBudgetsForEachPartner(
       filters
     );
-    this.getTotalForAllInit()
-
   }
 
-  getTotalForAllInit() {
-    this.totalBudgetForAllInit = this.dataSource.map((d: any) => d.submissions[0].wp_budget);
-
-    this.totalBudgetForAllInit.forEach((d: any[]) => {
-      this.total += d.map((x: any) => x.total).reduce((prev, current) =>
+  getTotalForAllInit(data: any[]) {
+    this.totalBudgetForAllInit = data?.map((d: any) => d.submissions[0].wp_budget);
+    let num = 0;
+    this.totalBudgetForAllInit?.forEach((d: any[]) => 
+      num +=  d.map((x: any) => x.total).reduce((prev, current) =>
         prev + current)
-    })
+    )
+    return num
   }
 
 
@@ -115,4 +119,7 @@ export class TotalInitSummaryComponent implements OnInit {
       prev + current)
   }
 
+  async exportExcel() {
+    await this.initiativesService.exportExcel(this.filterForm.value);
+  }
 }
