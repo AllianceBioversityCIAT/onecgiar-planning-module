@@ -47,41 +47,73 @@
       </div>
     </div>
 
-
-    <div class="risk-report-button-box">
-      <div class="sec-7">
-        <div class="risk-report-button-box">
-          <button
-            class="risk-report-button-box__btn btn--chestnut"
-            mat-raised-button
-            (click)="exportExcel()"
-          >
-            <mat-icon class="create-risk-1">
-              <svg
-                class="risk-management-export-box-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="21"
-                viewBox="0 0 22 21"
-                fill="none"
-              >
-                <path
-                  d="M5.65951 17.6484C5.15534 17.6484 4.72389 17.4772 4.36517 17.1348C4.00584 16.7918 3.82617 16.3797 3.82617 15.8984V13.2734H5.65951V15.8984H16.6595V13.2734H18.4928V15.8984C18.4928 16.3797 18.3135 16.7918 17.9548 17.1348C17.5954 17.4772 17.1637 17.6484 16.6595 17.6484H5.65951ZM11.1595 14.1484L6.57617 9.77344L7.8595 8.50469L10.2428 10.7797V3.64844H12.0762V10.7797L14.4595 8.50469L15.7428 9.77344L11.1595 14.1484Z"
-                  fill="white"
-                />
-              </svg>
-            </mat-icon>
-            <span class="user-management__button-box__title"
-              >Export Excel</span
+    <div class="btns">
+      <div class="risk-report-button-box">
+        <div class="sec-7">
+          <div class="risk-report-button-box">
+            <button
+              class="risk-report-button-box__btn btn--chestnut"
+              mat-raised-button
+              (click)="exportPdf()"
             >
-          </button>
+              <mat-icon class="create-risk-1">
+                <svg
+                  class="risk-management-export-box-icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="22"
+                  height="21"
+                  viewBox="0 0 22 21"
+                  fill="none"
+                >
+                  <path
+                    d="M5.65951 17.6484C5.15534 17.6484 4.72389 17.4772 4.36517 17.1348C4.00584 16.7918 3.82617 16.3797 3.82617 15.8984V13.2734H5.65951V15.8984H16.6595V13.2734H18.4928V15.8984C18.4928 16.3797 18.3135 16.7918 17.9548 17.1348C17.5954 17.4772 17.1637 17.6484 16.6595 17.6484H5.65951ZM11.1595 14.1484L6.57617 9.77344L7.8595 8.50469L10.2428 10.7797V3.64844H12.0762V10.7797L14.4595 8.50469L15.7428 9.77344L11.1595 14.1484Z"
+                    fill="white"
+                  />
+                </svg>
+              </mat-icon>
+              <span class="user-management__button-box__title"
+                >Export PDF</span
+              >
+            </button>
+          </div>
+        </div>
+      </div>
+  
+      <div class="risk-report-button-box">
+        <div class="sec-7">
+          <div class="risk-report-button-box">
+            <button
+              class="risk-report-button-box__btn btn--chestnut"
+              mat-raised-button
+              (click)="exportExcel()"
+            >
+              <mat-icon class="create-risk-1">
+                <svg
+                  class="risk-management-export-box-icon"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="22"
+                  height="21"
+                  viewBox="0 0 22 21"
+                  fill="none"
+                >
+                  <path
+                    d="M5.65951 17.6484C5.15534 17.6484 4.72389 17.4772 4.36517 17.1348C4.00584 16.7918 3.82617 16.3797 3.82617 15.8984V13.2734H5.65951V15.8984H16.6595V13.2734H18.4928V15.8984C18.4928 16.3797 18.3135 16.7918 17.9548 17.1348C17.5954 17.4772 17.1637 17.6484 16.6595 17.6484H5.65951ZM11.1595 14.1484L6.57617 9.77344L7.8595 8.50469L10.2428 10.7797V3.64844H12.0762V10.7797L14.4595 8.50469L15.7428 9.77344L11.1595 14.1484Z"
+                    fill="white"
+                  />
+                </svg>
+              </mat-icon>
+              <span class="user-management__button-box__title"
+                >Export Excel</span
+              >
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </form>
 
-  <div class="table-box mat-elevation-z8">
-    <table mat-table matSort [dataSource]="dataSource" id="tableId">
+  <div class="table-box mat-elevation-z8" #pdfcontent>
+    <table mat-table matSort [dataSource]="dataSource" id="tableId" >
 
 
 

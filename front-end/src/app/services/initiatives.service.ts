@@ -98,6 +98,15 @@ export class InitiativesService {
     ).catch((e) => false);
   }
 
+
+  async findAllInitiatives() {
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + `/initiatives`)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async getBudgetsForEachPartner(filters: any = null) {
     let finalFilters: any = {};
     if (filters)

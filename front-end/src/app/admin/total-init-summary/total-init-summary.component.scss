@@ -287,7 +287,7 @@
       margin-top: 3rem;
       display: flex;
       align-items: center;
-      // gap: 1rem;
+      margin-left: 8px;
     }
 
     .sec-9 {
@@ -538,4 +538,11 @@ tr.mat-footer-row {
 
 .mat-table-sticky {
   border-top: 1px solid #e0e0e0;
+}
+
+.btns {
+  display: flex;
+  width: 40%;
+  align-items: center;
+  justify-content: end;
 }

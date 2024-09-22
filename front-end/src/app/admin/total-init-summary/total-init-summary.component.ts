@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { Meta, Title } from '@angular/platform-browser';
@@ -6,6 +6,8 @@ import { HeaderService } from 'src/app/header.service';
 import { InitiativesService } from 'src/app/services/initiatives.service';
 import { OrganizationsService } from 'src/app/services/organizations.service';
 import { PhasesService } from 'src/app/services/phases.service';
+import { jsPDF } from 'jspdf';
+import { LoaderService } from 'src/app/services/loader.service';
 
 @Component({
   selector: 'app-total-init-summary',
@@ -20,7 +22,9 @@ export class TotalInitSummaryComponent implements OnInit {
     private organizationService: OrganizationsService,
     private title: Title,
     private meta: Meta,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    public loader: LoaderService,
+
   ) {
     this.headerService.background =
       "linear-gradient(to  bottom, #04030F, #020106)";
@@ -36,6 +40,7 @@ export class TotalInitSummaryComponent implements OnInit {
       initiatives: [null]
     });
   }
+  @ViewChild('pdfcontent' , { static: false }) pdfcontent: ElementRef = new ElementRef('');
 
   columnsToDisplay: string[] = [
     "id",
@@ -61,13 +66,7 @@ export class TotalInitSummaryComponent implements OnInit {
     this.phases = await this.phaseService.getPhases();
     this.activePhases = await this.phaseService.getActivePhase();
     this.organization = await this.organizationService.getOrganizations();
-    await this.initiativesService.getInitiatives(null , 1, 100).then(
-      (data) => {
-        this.initiatives = data.result
-      }
-    );
-
-    console.log(this.initiatives)
+    this.initiatives = await this.initiativesService.findAllInitiatives()
     this.newColumnsToDisplay = this.columnsToDisplay.concat(this.organization.map((d: any) => d.acronym))
     this.filterForm.patchValue({
       phase_id: this.activePhases.id
@@ -121,5 +120,28 @@ export class TotalInitSummaryComponent implements OnInit {
 
   async exportExcel() {
     await this.initiativesService.exportExcel(this.filterForm.value);
+  }
+
+  exportPdf() {
+    this.loader.setLoading(true, "Downloading");
+      let content = this.pdfcontent.nativeElement;
+      this.pdfcontent.nativeElement.width;
+      let doc = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+  
+        format: [
+          this.pdfcontent.nativeElement.scrollWidth + 50,
+          this.pdfcontent.nativeElement.scrollHeight + 100,
+        ],
+      });
+      setTimeout(() => {
+        doc.html(content, {
+          callback: (doc: any) => {
+            doc.save("Planning-Budget Summary" + ".pdf");
+            this.loader.setLoading(false);
+          },
+        });
+      }, 500);
   }
 }

@@ -159,7 +159,7 @@ export class InitiativesService {
 
   findAll() {
     return this.initiativeRepository.find({
-      order: { id: 'asc' },
+      order: { official_code: 'asc' },
     });
   }
 
