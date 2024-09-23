@@ -63,6 +63,12 @@ export class TotalInitSummaryComponent implements OnInit {
   totalBudgetForAllInit: any[];
   total: number = 0;
 
+  setActivePhase() {
+    this.filterForm.patchValue({
+      phase_id: this.activePhases.id
+    })
+  }
+
   async ngOnInit() {
     this.phases = await this.phaseService.getPhases();
     this.activePhases = await this.phaseService.getActivePhase();
@@ -70,9 +76,7 @@ export class TotalInitSummaryComponent implements OnInit {
     this.organizationFilters = await this.organizationService.getOrganizations();
     this.initiatives = await this.initiativesService.findAllInitiatives()
     this.newColumnsToDisplay = this.columnsToDisplay.concat(this.organization.map((d: any) => d.acronym))
-    this.filterForm.patchValue({
-      phase_id: this.activePhases.id
-    })
+    this.setActivePhase();
 
     await this.initTable(this.filterForm.value);
     this.setForm();
@@ -83,7 +87,7 @@ export class TotalInitSummaryComponent implements OnInit {
   setForm() {
     this.filterForm.valueChanges.subscribe(() => {
       this.filters = this.filterForm.value;
-      if(this.filters.partners.length)
+      if(this.filters.partners)
         this.organization = this.organizationFilters.filter((d: any) => 
            this.filters.partners.includes(d.code)
         )
@@ -153,5 +157,10 @@ export class TotalInitSummaryComponent implements OnInit {
           },
         });
       }, 500);
+  }
+  resetForm() {
+    this.filterForm.reset();
+    this.filterForm.markAsUntouched();
+    this.setActivePhase()
   }
 }
