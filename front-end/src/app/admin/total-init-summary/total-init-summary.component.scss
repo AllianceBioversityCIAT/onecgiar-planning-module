@@ -304,16 +304,17 @@
   margin: 1rem 0 0 0;
   line-height: inherit;
   td:nth-child(2) {
-    width: 400px;
+    width: 480px;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: inherit;
+    height: 42px;
   }
 
   td:nth-child(3) {
     font-weight: bold;
     padding: 0 43px;
+    height: 42px;
   }
 }
 

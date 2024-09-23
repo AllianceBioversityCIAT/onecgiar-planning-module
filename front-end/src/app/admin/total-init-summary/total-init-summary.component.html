@@ -41,7 +41,7 @@
           <mat-label class="risk-management-form-field__label">Center</mat-label>
   
           <mat-select formControlName="partners" class="risk-management-form-field-box__input-3" [placeholder]="'All'" multiple> 
-            <mat-option *ngFor="let partner of organization" [value]="partner.code">{{partner.acronym}}</mat-option>
+            <mat-option *ngFor="let partner of organizationFilters" [value]="partner.code">{{partner.acronym}}</mat-option>
           </mat-select>
         </div>
       </div>

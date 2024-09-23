@@ -668,7 +668,6 @@ export class InitiativesService {
 
 
   async getInitPartnersBudget(query: any) {
-    console.log(query)
     const initiative = await this.initiativeRepository.createQueryBuilder('init')
       .leftJoinAndSelect('init.submissions', 'submissions')
       .where(
@@ -705,7 +704,7 @@ export class InitiativesService {
   async exportBudgetSummary(query: any) {
     const data = await this.getInitPartnersBudget(query);
 
-    const { finaldata, merges } = await this.prepareUserTemplate(data);
+    const { finaldata, merges } = await this.prepareUserTemplate(data, query.partners);
  
     const file_name = 'Total-Summary.xlsx';
     var wb = XLSX.utils.book_new();
@@ -755,34 +754,60 @@ export class InitiativesService {
     });
   }
 
-  async getTemplateBudgetSummary() {
+  async getTemplateBudgetSummary(partnersFiltered: any[]) {
     let header = {
       'Initiative ID'	: null,
       'Initiative Title': null,
       'Initiative Total budget'	: null,
     };
 
-    const partners = await this.organizationRepository.find({
-      order: {
-        acronym: 'ASC'
-      }
-    });
+    let partners: Organization[] = [];
+
+    if(partnersFiltered)
+       partners = await this.organizationRepository.find({
+        where: {
+          code: In([partnersFiltered])
+        },
+        order: {
+          acronym: 'ASC'
+        }
+      });
+     else 
+       partners = await this.organizationRepository.find({
+        order: {
+          acronym: 'ASC'
+        }
+      });
 
     partners.forEach(d => header[d.acronym] = null)
     return header
   }
 
 
-  async mapTemplateBudgetSummary(template, element) {
+  async mapTemplateBudgetSummary(template, element, partnersFiltered: any[]) {
     template['Initiative ID'] = element?.official_code;
     template['Initiative Title'] = element?.name;
     template['Initiative Total budget'] = null;
 
-    const partners = await this.organizationRepository.find({
-      order: {
-        acronym: 'ASC'
-      }
-    });
+    let partners: Organization[] = [];
+
+    if(partnersFiltered)
+       partners = await this.organizationRepository.find({
+        where: {
+          code: In([partnersFiltered])
+        },
+        order: {
+          acronym: 'ASC'
+        }
+      });
+     else 
+       partners = await this.organizationRepository.find({
+        order: {
+          acronym: 'ASC'
+        }
+      });
+    
+
 
     for(let partner of partners) {
       element.submissions[0].wp_budget.some(d => {
@@ -796,10 +821,26 @@ export class InitiativesService {
   }
 
 
-  async prepareUserTemplate(data: any) {
-  let finaldata = [await this.getTemplateBudgetSummary()];
+  async prepareUserTemplate(data: any, partnersFiltered: any[]) {
+  let finaldata = [await this.getTemplateBudgetSummary(partnersFiltered)];
 
-  const partners = await this.organizationRepository.find();
+  let partners: Organization[] = [];
+
+    if(partnersFiltered)
+      partners = await this.organizationRepository.find({
+        where: {
+          code: In([partnersFiltered])
+        },
+        order: {
+          acronym: 'ASC'
+        }
+      });
+   else 
+     partners = await this.organizationRepository.find({
+      order: {
+        acronym: 'ASC'
+      }
+    });
     let merges = [];
 
 
@@ -811,8 +852,8 @@ export class InitiativesService {
   }
 
   for(let element of data) {
-    const template: any = await this.getTemplateBudgetSummary();
-    await this.mapTemplateBudgetSummary(template, element);
+    const template: any = await this.getTemplateBudgetSummary(partnersFiltered);
+    await this.mapTemplateBudgetSummary(template, element, partnersFiltered);
     finaldata.push(template);
   }
 

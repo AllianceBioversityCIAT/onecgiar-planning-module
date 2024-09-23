@@ -50,6 +50,7 @@ export class TotalInitSummaryComponent implements OnInit {
   newColumnsToDisplay: any = [];
   phases: any;
   organization: any;
+  organizationFilters: any;
   initiatives: any;
 
   activePhases: any;
@@ -66,6 +67,7 @@ export class TotalInitSummaryComponent implements OnInit {
     this.phases = await this.phaseService.getPhases();
     this.activePhases = await this.phaseService.getActivePhase();
     this.organization = await this.organizationService.getOrganizations();
+    this.organizationFilters = await this.organizationService.getOrganizations();
     this.initiatives = await this.initiativesService.findAllInitiatives()
     this.newColumnsToDisplay = this.columnsToDisplay.concat(this.organization.map((d: any) => d.acronym))
     this.filterForm.patchValue({
@@ -81,6 +83,14 @@ export class TotalInitSummaryComponent implements OnInit {
   setForm() {
     this.filterForm.valueChanges.subscribe(() => {
       this.filters = this.filterForm.value;
+      if(this.filters.partners.length)
+        this.organization = this.organizationFilters.filter((d: any) => 
+           this.filters.partners.includes(d.code)
+        )
+      else
+        this.organization = this.organizationFilters
+      this.newColumnsToDisplay = this.columnsToDisplay.concat(this.organization.map((d: any) => d.acronym))
+
       this.initTable(this.filters);
     });
   }
@@ -131,7 +141,7 @@ export class TotalInitSummaryComponent implements OnInit {
         unit: "px",
   
         format: [
-          this.pdfcontent.nativeElement.scrollWidth + 50,
+          this.pdfcontent.nativeElement.scrollWidth,
           this.pdfcontent.nativeElement.scrollHeight + 100,
         ],
       });
