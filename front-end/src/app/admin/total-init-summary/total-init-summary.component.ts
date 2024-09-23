@@ -87,7 +87,7 @@ export class TotalInitSummaryComponent implements OnInit {
   setForm() {
     this.filterForm.valueChanges.subscribe(() => {
       this.filters = this.filterForm.value;
-      if(this.filters.partners)
+      if(this.filters.partners?.length)
         this.organization = this.organizationFilters.filter((d: any) => 
            this.filters.partners.includes(d.code)
         )

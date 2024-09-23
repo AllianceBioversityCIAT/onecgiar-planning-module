@@ -303,21 +303,19 @@
   overflow: auto;
   margin: 1rem 0 0 0;
   line-height: inherit;
-  td:nth-child(2) {
-    width: 480px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 42px;
-  }
-
-  td:nth-child(3) {
-    font-weight: bold;
-    padding: 0 43px;
-    height: 42px;
-  }
+}
+.mat-column-total_budget {
+  font-weight: bold !important;
+  min-width: 104px !important;
+  max-width: 150px !important;
 }
 
+.mat-column-title {
+  min-width: 250px !important;
+}
+.mat-column-id {
+  min-width: 100px !important;
+}
 .user-management__main__text-box {
   display: flex;
   align-items: center;
