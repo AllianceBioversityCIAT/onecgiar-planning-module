@@ -756,9 +756,9 @@ export class InitiativesService {
 
   async getTemplateBudgetSummary(partnersFiltered: any[]) {
     let header = {
-      'Initiative ID'	: null,
-      'Initiative Title': null,
-      'Initiative Total budget'	: null,
+      'Official Code'	: null,
+      'Initiative/Platform title': null,
+      'Total budget'	: null,
     };
 
     let partners: Organization[] = [];
@@ -785,9 +785,9 @@ export class InitiativesService {
 
 
   async mapTemplateBudgetSummary(template, element, partnersFiltered: any[]) {
-    template['Initiative ID'] = element?.official_code;
-    template['Initiative Title'] = element?.name;
-    template['Initiative Total budget'] = null;
+    template['Official Code'] = element?.official_code;
+    template['Initiative/Platform title'] = element?.name;
+    template['Total budget'] = null;
 
     let partners: Organization[] = [];
 
