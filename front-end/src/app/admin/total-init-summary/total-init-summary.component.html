@@ -1,187 +1,158 @@
-<div class="track-porbs__icon-box">
-  <mat-icon class="track-porbs__icon-box__icon" style="font-size: 3rem;">
-    monetization_on
-  </mat-icon>
-  <span class="track-porbs__icon-box__title">Budget Summary</span>
-</div>
+<section class="section-risk-management-component">
+  <div class="risk-management-container">
 
-<div class="track-porbs__text-box--1">
-  <p class="track-porbs__text-box__title">
-    Welcome to the Budget Summary panel, here you can manage the Budget Summary table
-    within the platform.
-  </p>
-</div>
+    <div class="track-porbs__content--1">
+      <div class="track-porbs__icon-box">
+        <mat-icon class="track-porbs__icon-box__icon" style="font-size: 3rem;">
+          monetization_on
+        </mat-icon>
+        <span class="track-porbs__icon-box__title">Budget Summary</span>
+      </div>
 
+      <div class="track-porbs__text-box--1">
+        <p class="track-porbs__text-box__title">
+          The Budget Summary module offers an overview of the approved budget across various Initiatives/Platforms.
+        </p>
+      </div>
+      <form class="search" [formGroup]="filterForm">
+        <div class="filters">
+          <div class="sec-5">
+            <div class="risk-management-form-field field-3">
+              <mat-label class="risk-management-form-field__label">Phase</mat-label>
 
-<div class="track-porbs__content--1">
-  <form class="search" [formGroup]="filterForm">
-    <div class="filters">
-      <div class="sec-5">
-        <div class="risk-management-form-field field-3">
-          <mat-label class="risk-management-form-field__label">Phase</mat-label>
-  
-          <mat-select formControlName="phase_id" class="risk-management-form-field-box__input-3">
-            <mat-option *ngFor="let phase of phases" [value]="phase.id">{{phase.name}}</mat-option>
-          </mat-select>
-        </div>
-      </div>
-  
-      <div class="sec-5">
-        <div class="risk-management-form-field field-3">
-          <mat-label class="risk-management-form-field__label">Official Code</mat-label>
-  
-          <mat-select formControlName="initiatives" class="risk-management-form-field-box__input-3" [placeholder]="'All'" multiple>
-            <mat-option *ngFor="let init of initiatives" [value]="init.id">{{init.official_code}}</mat-option>
-          </mat-select>
-        </div>
-      </div>
-  
-      <div class="sec-5">
-        <div class="risk-management-form-field field-3">
-          <mat-label class="risk-management-form-field__label">Center</mat-label>
-  
-          <mat-select formControlName="partners" class="risk-management-form-field-box__input-3" [placeholder]="'All'" multiple> 
-            <mat-option *ngFor="let partner of organizationFilters" [value]="partner.code">{{partner.acronym}}</mat-option>
-          </mat-select>
-        </div>
-      </div>
-    </div>
+              <mat-select formControlName="phase_id" class="risk-management-form-field-box__input-3">
+                <mat-option *ngFor="let phase of phases" [value]="phase.id">{{phase.name}}</mat-option>
+              </mat-select>
+            </div>
+          </div>
 
-    <div class="btns">
-      <div class="sec-7">
-        <div class="risk-report-button-box">
-          <button
-            class="risk-report-button-box__btn btn--white"
-            mat-raised-button
-            (click)="resetForm()"
-          >
-            <mat-icon class="create-risk">
-              <span class="material-symbols-outlined"> reset_wrench </span>
-            </mat-icon>
-            Reset
-          </button>
-        </div>
-      </div>
-      <div class="risk-report-button-box">
-        <div class="sec-7">
-          <div class="risk-report-button-box">
-            <button
-              class="risk-report-button-box__btn btn--chestnut"
-              mat-raised-button
-              (click)="exportPdf()"
-            >
-              <mat-icon class="create-risk-1">
-                <svg
-                  class="risk-management-export-box-icon"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="21"
-                  viewBox="0 0 22 21"
-                  fill="none"
-                >
-                  <path
-                    d="M5.65951 17.6484C5.15534 17.6484 4.72389 17.4772 4.36517 17.1348C4.00584 16.7918 3.82617 16.3797 3.82617 15.8984V13.2734H5.65951V15.8984H16.6595V13.2734H18.4928V15.8984C18.4928 16.3797 18.3135 16.7918 17.9548 17.1348C17.5954 17.4772 17.1637 17.6484 16.6595 17.6484H5.65951ZM11.1595 14.1484L6.57617 9.77344L7.8595 8.50469L10.2428 10.7797V3.64844H12.0762V10.7797L14.4595 8.50469L15.7428 9.77344L11.1595 14.1484Z"
-                    fill="white"
-                  />
-                </svg>
-              </mat-icon>
-              <span class="user-management__button-box__title"
-                >Export PDF</span
-              >
-            </button>
+          <div class="sec-5">
+            <div class="risk-management-form-field field-3">
+              <mat-label class="risk-management-form-field__label">Official Code</mat-label>
+
+              <mat-select formControlName="initiatives" class="risk-management-form-field-box__input-3"
+                [placeholder]="'All'" multiple>
+                <mat-option *ngFor="let init of initiatives" [value]="init.id">{{init.official_code}}</mat-option>
+              </mat-select>
+            </div>
+          </div>
+
+          <div class="sec-5">
+            <div class="risk-management-form-field field-3">
+              <mat-label class="risk-management-form-field__label">Center</mat-label>
+
+              <mat-select formControlName="partners" class="risk-management-form-field-box__input-3"
+                [placeholder]="'All'" multiple>
+                <mat-option *ngFor="let partner of organizationFilters"
+                  [value]="partner.code">{{partner.acronym}}</mat-option>
+              </mat-select>
+            </div>
           </div>
         </div>
-      </div>
-  
-      <div class="risk-report-button-box">
-        <div class="sec-7">
+
+        <div class="btns">
+          <div class="sec-7">
+            <div class="risk-report-button-box">
+              <button class="risk-report-button-box__btn btn--white" mat-raised-button (click)="resetForm()">
+                <mat-icon class="create-risk">
+                  <span class="material-symbols-outlined"> reset_wrench </span>
+                </mat-icon>
+                Reset
+              </button>
+            </div>
+          </div>
           <div class="risk-report-button-box">
-            <button
-              class="risk-report-button-box__btn btn--chestnut"
-              mat-raised-button
-              (click)="exportExcel()"
-            >
-              <mat-icon class="create-risk-1">
-                <svg
-                  class="risk-management-export-box-icon"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="21"
-                  viewBox="0 0 22 21"
-                  fill="none"
-                >
-                  <path
-                    d="M5.65951 17.6484C5.15534 17.6484 4.72389 17.4772 4.36517 17.1348C4.00584 16.7918 3.82617 16.3797 3.82617 15.8984V13.2734H5.65951V15.8984H16.6595V13.2734H18.4928V15.8984C18.4928 16.3797 18.3135 16.7918 17.9548 17.1348C17.5954 17.4772 17.1637 17.6484 16.6595 17.6484H5.65951ZM11.1595 14.1484L6.57617 9.77344L7.8595 8.50469L10.2428 10.7797V3.64844H12.0762V10.7797L14.4595 8.50469L15.7428 9.77344L11.1595 14.1484Z"
-                    fill="white"
-                  />
-                </svg>
-              </mat-icon>
-              <span class="user-management__button-box__title"
-                >Export Excel</span
-              >
-            </button>
+            <div class="sec-7">
+              <div class="risk-report-button-box">
+                <button class="risk-report-button-box__btn btn--chestnut" mat-raised-button (click)="exportPdf()">
+                  <mat-icon class="create-risk-1">
+                    <svg class="risk-management-export-box-icon" xmlns="http://www.w3.org/2000/svg" width="22"
+                      height="21" viewBox="0 0 22 21" fill="none">
+                      <path
+                        d="M5.65951 17.6484C5.15534 17.6484 4.72389 17.4772 4.36517 17.1348C4.00584 16.7918 3.82617 16.3797 3.82617 15.8984V13.2734H5.65951V15.8984H16.6595V13.2734H18.4928V15.8984C18.4928 16.3797 18.3135 16.7918 17.9548 17.1348C17.5954 17.4772 17.1637 17.6484 16.6595 17.6484H5.65951ZM11.1595 14.1484L6.57617 9.77344L7.8595 8.50469L10.2428 10.7797V3.64844H12.0762V10.7797L14.4595 8.50469L15.7428 9.77344L11.1595 14.1484Z"
+                        fill="white" />
+                    </svg>
+                  </mat-icon>
+                  <span class="user-management__button-box__title">Export PDF</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="risk-report-button-box">
+            <div class="sec-7">
+              <div class="risk-report-button-box">
+                <button class="risk-report-button-box__btn btn--chestnut" mat-raised-button (click)="exportExcel()">
+                  <mat-icon class="create-risk-1">
+                    <svg class="risk-management-export-box-icon" xmlns="http://www.w3.org/2000/svg" width="22"
+                      height="21" viewBox="0 0 22 21" fill="none">
+                      <path
+                        d="M5.65951 17.6484C5.15534 17.6484 4.72389 17.4772 4.36517 17.1348C4.00584 16.7918 3.82617 16.3797 3.82617 15.8984V13.2734H5.65951V15.8984H16.6595V13.2734H18.4928V15.8984C18.4928 16.3797 18.3135 16.7918 17.9548 17.1348C17.5954 17.4772 17.1637 17.6484 16.6595 17.6484H5.65951ZM11.1595 14.1484L6.57617 9.77344L7.8595 8.50469L10.2428 10.7797V3.64844H12.0762V10.7797L14.4595 8.50469L15.7428 9.77344L11.1595 14.1484Z"
+                        fill="white" />
+                    </svg>
+                  </mat-icon>
+                  <span class="user-management__button-box__title">Export Excel</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </form>
+      </form>
 
-  <div class="table-box mat-elevation-z8" #pdfcontent>
-    <table mat-table matSort [dataSource]="dataSource" id="tableId" >
+      <div class="table-box mat-elevation-z8" #pdfcontent>
+        <table mat-table matSort [dataSource]="dataSource" id="tableId">
 
 
 
-      <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef>
-          <span class="h1 th-1-m">Official Code</span>
-        </th>
-        <td mat-cell *matCellDef="let element">{{ element.official_code }}</td>
-        <td mat-footer-cell *matFooterCellDef colspan="2" style="font-weight: bold;"> Total </td>
-      </ng-container>
-
-      <ng-container matColumnDef="title">
-        <th mat-header-cell *matHeaderCellDef>
-          <span>Initiative Title</span>
-        </th>
-        <td mat-cell *matCellDef="let element">{{ element.name }}</td>
-        <td mat-footer-cell *matFooterCellDef style="font-weight: bold; text-align: center;"> {{ getTotalForAllInit(dataSource) | number }}
-        </td>
-
-      </ng-container>
-
-      <ng-container matColumnDef="total_budget">
-        <th mat-header-cell *matHeaderCellDef>
-          <span>Initiative Total budget</span>
-        </th>
-        <td mat-cell *matCellDef="let element">
-          {{getTotalBudget(element?.submissions[0].wp_budget) | number}}
-        </td>
-        <td mat-footer-cell *matFooterCellDef style="display: none;"> </td>
-
-      </ng-container>
-
-      <ng-container *ngFor="let partner of organization" [matColumnDef]="partner.acronym">
-        <th mat-header-cell *matHeaderCellDef>{{ partner.acronym }}</th>
-        <td mat-cell *matCellDef="let element" data-val="0">
-          <ng-container *ngFor="let data of element?.submissions[0].wp_budget">
-            <ng-container *ngIf="data?.organization?.acronym == partner.acronym">
-              {{ (data.organization.acronym === partner.acronym ? data.total : '') | number }}
-            </ng-container>
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>
+              <span class="h1 th-1-m">Official Code</span>
+            </th>
+            <td mat-cell *matCellDef="let element">{{ element.official_code }}</td>
+            <td mat-footer-cell *matFooterCellDef colspan="2" style="font-weight: bold;"> Total </td>
           </ng-container>
-        </td>
-        <td mat-footer-cell *matFooterCellDef style="font-weight: bold; text-align: center;"> {{
-          getTotalForEachPartner(partner) | number}} </td>
-      </ng-container>
 
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef>
+              <span>Initiative/Platform title</span>
+            </th>
+            <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+            <td mat-footer-cell *matFooterCellDef style="display: none;"></td>
+          </ng-container>
 
+          <ng-container matColumnDef="total_budget">
+            <th mat-header-cell *matHeaderCellDef>
+              <span>Total budget</span>
+            </th>
+            <td mat-cell *matCellDef="let element">
+              {{getTotalBudget(element?.submissions[0].wp_budget) | number}}
+            </td>
+            <td mat-footer-cell *matFooterCellDef style="font-weight: bold; text-align: center;"> {{
+              getTotalForAllInit(dataSource) | number }}
+            </td>
 
+          </ng-container>
 
+          <ng-container *ngFor="let partner of organization" [matColumnDef]="partner.acronym">
+            <th mat-header-cell *matHeaderCellDef>{{ partner.acronym }}</th>
+            <td mat-cell *matCellDef="let element" data-val="0">
+              <ng-container *ngFor="let data of element?.submissions[0].wp_budget">
+                <ng-container *ngIf="data?.organization?.acronym == partner.acronym">
+                  {{ (data.organization.acronym === partner.acronym ? data.total : '') | number }}
+                </ng-container>
+              </ng-container>
+            </td>
+            <td mat-footer-cell *matFooterCellDef style="font-weight: bold; text-align: center;"> {{
+              getTotalForEachPartner(partner) | number}} </td>
+          </ng-container>
+          
+          <tr class="table-header" mat-header-row *matHeaderRowDef="newColumnsToDisplay"></tr>
+          <tr class="table-header" mat-row *matRowDef="let myRowData; columns: newColumnsToDisplay"></tr>
+          <tr mat-footer-row *matFooterRowDef="newColumnsToDisplay; sticky: true"></tr>
 
-
-      <tr class="table-header" mat-header-row *matHeaderRowDef="newColumnsToDisplay"></tr>
-      <tr class="table-header" mat-row *matRowDef="let myRowData; columns: newColumnsToDisplay"></tr>
-      <tr mat-footer-row *matFooterRowDef="newColumnsToDisplay; sticky: true"></tr>
-
-    </table>
+        </table>
+      </div>
+    </div>
   </div>
-</div>
+
+</section>

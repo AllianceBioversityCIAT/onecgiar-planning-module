@@ -39,6 +39,12 @@ const routes: Routes = [
     canActivate: [UserGuard],
   },
 
+  {
+    path: "budget-summary",
+    component: TotalInitSummaryComponent,
+    canActivate: [UserGuard],
+  },
+
   { path: "auth", component: AuthComponent },
 
   {
@@ -58,8 +64,6 @@ const routes: Routes = [
       { path: "popover-management", component: PopoverManagementComponent },
       { path: "emails", component: EmailsComponent },
       { path: "track-porbs", component: TrackPORBsComponent },
-      { path: "budget-summary", component: TotalInitSummaryComponent },
-
     ],
   },
 
