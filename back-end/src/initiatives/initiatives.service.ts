@@ -721,7 +721,7 @@ export class InitiativesService {
     XLSX.utils.book_append_sheet(wb, ws, 'Total Summary');
 
     XLSX.utils.sheet_add_aoa(ws, [
-      ["Total"]
+      ["Total, USD"]
     ], {origin: -1}, );
 
 
@@ -758,7 +758,7 @@ export class InitiativesService {
     let header = {
       'Official Code'	: null,
       'Initiative/Platform title': null,
-      'Total budget'	: null,
+      'Total budget, USD'	: null,
     };
 
     let partners: Organization[] = [];
@@ -787,7 +787,7 @@ export class InitiativesService {
   async mapTemplateBudgetSummary(template, element, partnersFiltered: any[]) {
     template['Official Code'] = element?.official_code;
     template['Initiative/Platform title'] = element?.name;
-    template['Total budget'] = null;
+    template['Total budget, USD'] = null;
 
     let partners: Organization[] = [];
 

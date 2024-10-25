@@ -13,6 +13,9 @@
         <p class="track-porbs__text-box__title">
           The Budget Summary module offers an overview of the approved budget across various Initiatives/Platforms.
         </p>
+        <p class="track-porbs__text-box__title">
+          Note: To horizontally scroll the table use a combination Shift and the scroll wheel of the mouse.
+        </p>
       </div>
       <form class="search" [formGroup]="filterForm">
         <div class="filters">
@@ -28,7 +31,7 @@
 
           <div class="sec-5">
             <div class="risk-management-form-field field-3">
-              <mat-label class="risk-management-form-field__label">Official Code</mat-label>
+              <mat-label class="risk-management-form-field__label">Initiative/Platform</mat-label>
 
               <mat-select formControlName="initiatives" class="risk-management-form-field-box__input-3"
                 [placeholder]="'All'" multiple>
@@ -109,7 +112,7 @@
               <span class="h1 th-1-m">Official Code</span>
             </th>
             <td mat-cell *matCellDef="let element">{{ element.official_code }}</td>
-            <td mat-footer-cell *matFooterCellDef colspan="2" style="font-weight: bold;"> Total </td>
+            <td mat-footer-cell *matFooterCellDef colspan="2" style="font-weight: bold;"> Total, USD </td>
           </ng-container>
 
           <ng-container matColumnDef="title">
@@ -122,7 +125,7 @@
 
           <ng-container matColumnDef="total_budget">
             <th mat-header-cell *matHeaderCellDef>
-              <span>Total budget</span>
+              <span>Total budget, USD</span>
             </th>
             <td mat-cell *matCellDef="let element">
               {{getTotalBudget(element?.submissions[0].wp_budget) | number}}
