@@ -37,7 +37,7 @@ export class TrackPORBsComponent {
   }
 
   length!: number;
-  pageSize: number = 10;
+  pageSize: number = 100;
   pageIndex: number = 1;
 
   filters: any = null;

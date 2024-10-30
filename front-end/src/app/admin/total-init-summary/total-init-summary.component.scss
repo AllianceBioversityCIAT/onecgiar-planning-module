@@ -1,0 +1,567 @@
+// @import "../../sass/pages/admin-module/user-management";
+
+@import "../../sass/layout/admin-module/admin-module";
+@import "../../sass/pages/admin-module/user-management";
+@import "../../sass/components/table-user-management";
+@import "../../sass/components/button";
+
+.track-porbs__icon-box {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 4rem 0 0 0;
+
+  &__icon {
+    width: 4rem;
+    height: 3rem;
+  }
+
+  &__icon--1 {
+    width: 4rem;
+    height: 3rem;
+  }
+
+  &__title {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.5rem;
+    letter-spacing: 0em;
+    text-align: left;
+    text-transform: capitalize;
+    color: #1e1e1e;
+  }
+}
+
+.track-porbs__text-box {
+  margin: 4rem 0 0 0;
+
+  &--1 {
+    margin: 4rem 0 4rem 0;
+  }
+  &__title {
+    font-size: 1.4rem;
+    font-weight: 400;
+    line-height: 1.8rem;
+    letter-spacing: 0em;
+    color: #000000;
+  }
+}
+
+.track-porbs__content {
+  height: 63.2rem;
+  margin: 0 0 0 0;
+  border-radius: 0 1rem 1rem 1rem;
+  background-color: #ffffff;
+  position: relative;
+  padding: 3rem;
+  box-shadow: 0 0.4rem 0.4rem 0 #00000040;
+
+  &--1 {
+    height: 100%;
+    margin: 0 0 0 0;
+    border-radius: 0 1rem 1rem 1rem;
+    background-color: #ffffff;
+    position: relative;
+    padding: 2rem 2rem 2rem;
+    box-shadow: 0 0.4rem 0.4rem 0 #00000040;
+  }
+}
+
+// .form-container {
+//   padding: 24px 0;
+//   position: relative;
+//   margin-top: -2rem;
+  .search {
+    display: flex;
+    padding: 16px 0;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    height: fit-content;
+
+    .filters {
+      display: flex;
+      width: 60%;
+      justify-content: space-between;
+    }
+    .sec-1 {
+      width: 20%;
+      position: relative;
+      align-self: flex-end;
+
+      .search__button {
+        right: 14px;
+        position: absolute;
+        .search__icon {
+          width: 2rem;
+        }
+      }
+
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 9rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+    .sec-2 {
+      width: 30%;
+      position: relative;
+
+      .search__button {
+        right: 14px;
+        position: absolute;
+        .search__icon {
+          width: 2rem;
+        }
+      }
+
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 2rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+    .sec-3 {
+      position: relative;
+      width: 17%;
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 2rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+          padding: 0.4rem 1rem;
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+
+    // .sec-4 {
+    //   position: relative;
+    //   width: 10%;
+    //   .risk-management-form-field {
+    //     position: relative;
+    //     .risk-management-form-field__label {
+    //       display: inline-block;
+    //       color: #808080;
+    //       font-family: "Poppins", sans-serif;
+    //       font-size: 1.4rem;
+    //       font-style: normal;
+    //       font-weight: 400;
+    //       line-height: normal;
+    //       margin: 0 2rem 1rem 0;
+    //     }
+    //     .risk-management-form-field-box__input-3 {
+    //       font-family: inherit;
+    //       font-size: inherit;
+    //       color: #0f212f;
+    //       border-radius: 1rem;
+    //       border: 0.5px solid #808080;
+    //       background-color: #ffffff;
+    //       padding: 0.4rem 1rem;
+    //       width: 100%;
+    //       transition: all 0.2s;
+    //       position: relative;
+    //     }
+    //   }
+    // }
+
+    .sec-5 {
+      position: relative;
+      width: 30%;
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 2rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+          padding: 0.4rem 1rem;
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+
+    .sec-6 {
+      position: relative;
+      width: 17%;
+      .risk-management-form-field {
+        position: relative;
+        .risk-management-form-field__label {
+          display: inline-block;
+          color: #808080;
+          font-family: "Poppins", sans-serif;
+          font-size: 1.4rem;
+          font-style: normal;
+          font-weight: 400;
+          line-height: normal;
+          margin: 0 2rem 1rem 0;
+        }
+        .risk-management-form-field-box__input-3 {
+          font-family: inherit;
+          font-size: inherit;
+          color: #0f212f;
+          border-radius: 1rem;
+          border: 0.5px solid #808080;
+          background-color: #ffffff;
+          padding: 0.4rem 1rem;
+          width: 100%;
+          transition: all 0.2s;
+          position: relative;
+        }
+      }
+    }
+
+    .sec-7 {
+      position: relative;
+      margin-top: 3rem;
+      display: flex;
+      align-items: center;
+      margin-left: 8px;
+    }
+
+    .sec-9 {
+      width: 12%;
+      position: relative;
+      margin-top: 3rem;
+    }
+  }
+// }
+
+.table-box {
+  width: 100%;
+  overflow: auto;
+  margin: 1rem 0 0 0;
+  line-height: inherit;
+}
+.mat-column-total_budget {
+  font-weight: bold !important;
+  min-width: 130px !important;
+  max-width: 200px !important;
+}
+
+.mat-column-title {
+  min-width: 250px !important;
+}
+.mat-column-id {
+  min-width: 100px !important;
+}
+.user-management__main__text-box {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+
+  &__title--1 {
+    font-family: "Poppins", sans-serif;
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1.5rem;
+    letter-spacing: 0em;
+    color: #000000;
+    padding: 0 1.4rem;
+  }
+
+  &__title--2 {
+    font-family: "Poppins", sans-serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    line-height: 2.4rem;
+    letter-spacing: 0em;
+    text-align: left;
+    color: #0f212f;
+  }
+}
+
+::ng-deep.mat-mdc-select-arrow {
+  width: 16px !important;
+  height: 10px !important;
+  background-color: #ffffff !important;
+  background-image: url("../../../assets/shared-image/Vector-risk-m.svg");
+  background-position: center;
+  background-size: cover;
+}
+
+.risk-report-btn-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  color: #b9b9b9;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 15px;
+  transition: all 0.3s;
+}
+
+.create-risk {
+  width: 2.1rem !important;
+  height: 2.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: -0.1rem;
+  left: 0.2rem;
+}
+
+.create-risk-1 {
+  width: 2.1rem !important;
+  height: 2.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: 0.1rem;
+
+  left: 0.2rem;
+}
+
+.create-risk-2 {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+  position: relative;
+  top: 0.02rem;
+  left: 0.2rem;
+}
+.risk-report-title-box {
+  text-align: center;
+  padding: 4.8rem 0;
+  &__title {
+    color: #0f212f;
+    text-align: center;
+    font-family: "Poppins", sans-serif !important;
+    font-size: 2.2rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+  }
+}
+
+@keyframes moveInBottom {
+  0% {
+    opacity: 0;
+    transform: translateY(3rem);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0);
+  }
+}
+
+.btn,
+.btn:link,
+.btn:visited {
+  text-decoration: none;
+
+  display: inline-block;
+
+  transition: all 0.2s;
+  position: relative;
+
+  border: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+}
+.btn:hover::after {
+  transform: scaleX(1.4) scaleY(1.6);
+  opacity: 0;
+}
+
+.btn:active,
+.btn:focus {
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+}
+
+.btn--white {
+  background-color: #0f212f;
+  color: #ffffff;
+}
+.btn--white::after {
+  background-color: #0f212f;
+}
+
+.btn--chestnut {
+  // background-color: #2a2e45a8 !important;
+  background-color: #9e553e !important;
+  color: #ffffff;
+}
+.btn--chestnut::after {
+  background-color: #9e553e !important;
+}
+
+.btn--white-2 {
+  background-image: linear-gradient(to right, #436280, #30455b);
+  color: #ffffff;
+}
+.btn--white-2::after {
+  background-image: linear-gradient(to right, #436280, #30455b);
+}
+
+.btn::after {
+  content: "";
+  display: inline-block;
+  height: 100%;
+  width: 100%;
+  border-radius: 10rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  transition: all 0.4s;
+}
+
+.btn--animated {
+  animation: moveInBottom 0.5s ease-out 0.85s;
+  animation-fill-mode: backwards;
+}
+
+::ng-deep .highcharts-tooltip > span {
+  background-color: #fafafafa;
+  border: 1px solid #0f212f !important;
+  border-radius: 5px;
+  opacity: 1;
+  z-index: 9999 !important;
+  padding: 0.8em;
+  left: 0 !important;
+  top: 0 !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+::ng-deep .highcharts-tooltip > tspan {
+  background-color: #fafafafa;
+  border: 1px solid #0f212f !important;
+  border-radius: 5px;
+  opacity: 1;
+  z-index: 9999 !important;
+  padding: 0.8em;
+  left: 0 !important;
+  top: 0 !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+
+td:empty::after {
+  content: attr(data-val);
+}
+
+.form {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    height: 5rem;
+}
+
+// #tableId td:nth-child(2) {
+//   width: 500px !important;
+// }
+tr.mat-footer-row {
+  font-weight: bold;
+}
+
+.mat-table-sticky {
+  border-top: 1px solid #e0e0e0;
+}
+
+.btns {
+  display: flex;
+  width: 40%;
+  align-items: center;
+  justify-content: end;
+}
+
+.section-risk-management-component {
+  background-image: linear-gradient(to right bottom, #fafafa, #e8e8e8);
+  min-height: calc(100vh - 210px);
+  padding: 3.2rem 0;
+}
+
+.risk-management-container {
+  width: 95%;
+  margin: 0 auto;
+  border-radius: 1rem;
+  background-color: #ffffff;
+  box-shadow: 0px 4px 4px 0px #00000040;
+
+  height: 100%;
+
+  position: relative;
+}
+
+

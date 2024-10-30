@@ -19,6 +19,9 @@ import { Submission } from 'src/entities/submission.entity';
 import { EmailModule } from 'src/email/email.module';
 import { History } from 'src/entities/history.entity';
 import { Result } from 'src/entities/result.entity';
+import { PhasesModule } from 'src/phases/phases.module';
+import { WpBudget } from 'src/entities/wp-budget.entity';
+import { Organization } from 'src/entities/organization.entity';
 
 
 
@@ -34,11 +37,14 @@ import { Result } from 'src/entities/result.entity';
       Variable,
       Email,
       History,
-      Result
+      Result,
+      WpBudget,
+      Organization
     ]),
     HttpModule,
     UsersModule,
-    EmailModule
+    EmailModule,
+    PhasesModule
   ],
   controllers: [InitiativesController],
   providers: [

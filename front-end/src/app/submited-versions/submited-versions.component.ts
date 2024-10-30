@@ -90,12 +90,13 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
   pageSize: number = 10;
   pageIndex: number = 1;
   nameK = "download";
+  InitiativeUsers: any;
   async ngOnInit() {
+    this.user = this.authService.getLoggedInUser();
     this.socket.initSocket();
     this.params = this.activatedRoute?.snapshot.params;
     await this.initData();
 
-    this.user = this.authService.getLoggedInUser();
 
     this.isAllowedToAccessChat =
       (await this.initiativesService
@@ -118,9 +119,18 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
         this.pageSize,
         true
       );
-    console.log("main Data", this.submissions);
+
+    this.InitiativeUsers = await this.initiativesService.getInitiativeUsers(
+      this.params.id
+    );
+    const InitiativeUsersIds: any[]  = this.InitiativeUsers.map((d: any) => d.user_id)
+    
+
+    if(this.user.role != 'admin' && !InitiativeUsersIds.includes(this.user.id))
+      this.submissions.result = this.submissions?.result.filter((d: any) => d.status == 'Approved');
+    
     this.dataSource = new MatTableDataSource(this.submissions?.result);
-    this.length = this.submissions?.count;
+    this.length = this.submissions?.result.length;
 
     this.title.setTitle("Submitted versions");
     this.meta.updateTag({ name: "description", content: "Submitted versions" });

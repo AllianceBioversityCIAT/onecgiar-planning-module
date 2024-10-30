@@ -26,6 +26,10 @@ import * as XLSX from 'xlsx-js-style';
 import { join } from 'path';
 import { createReadStream, unlink } from 'fs';
 import { Result } from 'src/entities/result.entity';
+import { Submission, SubmissionStatus } from 'src/entities/submission.entity';
+import { PhasesService } from 'src/phases/phases.service';
+import { WpBudget } from 'src/entities/wp-budget.entity';
+import { Organization } from 'src/entities/organization.entity';
 
 @Injectable()
 export class InitiativesService {
@@ -68,6 +72,12 @@ export class InitiativesService {
     public userRepository: Repository<User>,
     @InjectRepository(Result)
     public resultRepository: Repository<Result>,
+    @InjectRepository(WpBudget)
+    public WpBudgetRepository: Repository<WpBudget>,
+    @InjectRepository(Submission)
+    public submissionRepository: Repository<Submission>,
+    @InjectRepository(Organization)
+    public organizationRepository: Repository<Organization>,
     private emailService: EmailService,
     private chatGroupRepositoryService: ChatMessageRepositoryService,
   ) {}
@@ -149,7 +159,7 @@ export class InitiativesService {
 
   findAll() {
     return this.initiativeRepository.find({
-      order: { id: 'asc' },
+      order: { official_code: 'asc' },
     });
   }
 
@@ -284,22 +294,34 @@ export class InitiativesService {
 
     for (let row = 0; row <= rowCount; row++) {
       for (let col = 0; col <= columnCount; col++) {
-        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        if(col != 2 && row != rowCount){
+          ws[cellRef].s = {
+            alignment: {
+              horizontal: 'center',
+              vertical: 'center',
+            },
+          };
+        }
 
-        ws[cellRef].s = {
-          alignment: {
-            horizontal: 'center',
-            vertical: 'center',
-            wrapText: true,
-          },
-        };
 
+        if(row == rowCount && col == 0) {
+          ws[cellRef].s = {
+            font: {
+              bold: true,
+            },
+            alignment: {
+              horizontal: 'center',
+              vertical: 'center',
+            },
+          }
+        }
 
         if (row === 0 || row === 1) {
-           // Format headers and names
+            // Format headers and names
           ws[cellRef].s = {
             ...ws[cellRef].s,
-            fill: { fgColor: { rgb: '436280' } },
+            fill: { fgColor: { rgb: '0f212f' } },
             font: { color: { rgb: 'ffffff' } ,  bold: true },
             alignment: {
               horizontal: 'center',
@@ -307,6 +329,10 @@ export class InitiativesService {
               wrapText: true,
             },
           };
+        }
+
+        if(col >= 3 && row > 1 && row < rowCount) {
+          ws[cellRef].z = "#,##0";
         }
       }
     }
@@ -356,13 +382,9 @@ export class InitiativesService {
   prepareTemplate(data: any) {
     let finaldata = [this.getTemplate()];
 
-    let merges = [
-      {
-        s: { c: 3, r: 0 },
-        e: { c: 3, r: 0 },
-      },
-    ];
 
+
+    let merges = [];
     for (let index = 0; index < 4; index++) {
       merges.push({
         s: { c: index, r: 0 },
@@ -389,7 +411,7 @@ export class InitiativesService {
   }
   
   mapTemplate(template, element) {
-    template['Initiative ID'] = element?.id;
+    template['Initiative ID'] = element?.official_code;
     template['Initiative Title'] = element?.name;
     template['Updated by'] = element?.history;
     template['Current status'] = 
@@ -641,5 +663,285 @@ export class InitiativesService {
 
   async idUserHavePermissionToDelete(message_id: number, user: User) {
     return this.idUserHavePermissionToEdit(message_id, user);
+  }
+
+
+
+  async getInitPartnersBudget(query: any) {
+    const initiative = await this.initiativeRepository.createQueryBuilder('init')
+      .leftJoinAndSelect('init.submissions', 'submissions')
+      .where(
+        "submissions.id = (" +
+          this.submissionRepository.createQueryBuilder("submissions")
+          .select("MAX(id)")
+          .where("submissions.initiative_id = init.id")
+          .getQuery() + ")"
+      )
+      .andWhere("submissions.status = :status", { status: SubmissionStatus.APPROVED })
+      .select(['init.official_code', 'init.name', 'submissions.id', 'wp_budget.*'])
+      .addSelect("SUM(wp_budget.budget)",'wp_budget_total')
+      .leftJoinAndSelect('submissions.wp_budget', 'wp_budget')
+      .leftJoinAndSelect('wp_budget.phase', 'phase')
+      .andWhere("phase.id = :phase_id", { phase_id : query.phase_id })
+      .leftJoinAndSelect('wp_budget.organization', 'organization')
+      .andWhere(
+        new Brackets((qb) => {
+          if (query.initiatives) {
+            qb.andWhere("init.id IN (:initiatives)", { initiatives: query.initiatives  })
+          }
+          if (query.partners) {
+            qb.andWhere("organization.code IN (:partners)", { partners: query.partners  })
+          }
+        }),
+      )
+
+      .groupBy('init.id , wp_budget.organization_code')
+      .getMany();
+  
+    return initiative;
+  }
+
+  async exportBudgetSummary(query: any) {
+    const data = await this.getInitPartnersBudget(query);
+
+    const { finaldata, merges } = await this.prepareUserTemplate(data, query.partners);
+ 
+    const file_name = 'Total-Summary.xlsx';
+    var wb = XLSX.utils.book_new();
+
+    const ws = XLSX.utils.json_to_sheet(finaldata);
+
+    merges.push({
+      s: { c: 0, r: finaldata.length + 1 },
+      e: { c: 1, r: finaldata.length + 1},
+    });
+  
+    ws['!merges'] = merges;
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Total Summary');
+
+    XLSX.utils.sheet_add_aoa(ws, [
+      ["Total, USD"]
+    ], {origin: -1}, );
+
+
+    this.getPartnerTotalBudget(ws)
+
+    this.getInitiativeTotalBudget(ws)
+
+    this.appendStyleForXlsx(ws);
+
+    this.autofitColumnsXlsx(finaldata,ws);
+
+
+    await XLSX.writeFile(
+      wb,
+      join(process.cwd(), 'generated_files', file_name),
+      { cellStyles: true },
+    );
+    const file = createReadStream(
+      join(process.cwd(), 'generated_files', file_name),
+    );
+
+    setTimeout(async () => {
+      try {
+        unlink(join(process.cwd(), 'generated_files', file_name), null);
+      } catch (e) {}
+    }, 9000);
+    return new StreamableFile(file, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      disposition: `attachment; filename="${file_name}"`,
+    });
+  }
+
+  async getTemplateBudgetSummary(partnersFiltered: any[]) {
+    let header = {
+      'Official Code'	: null,
+      'Initiative/Platform title': null,
+      'Total budget, USD'	: null,
+    };
+
+    let partners: Organization[] = [];
+
+    if(partnersFiltered)
+       partners = await this.organizationRepository.find({
+        where: {
+          code: In([partnersFiltered])
+        },
+        order: {
+          acronym: 'ASC'
+        }
+      });
+     else 
+       partners = await this.organizationRepository.find({
+        order: {
+          acronym: 'ASC'
+        }
+      });
+
+    partners.forEach(d => header[d.acronym] = null)
+    return header
+  }
+
+
+  async mapTemplateBudgetSummary(template, element, partnersFiltered: any[]) {
+    template['Official Code'] = element?.official_code;
+    template['Initiative/Platform title'] = element?.name;
+    template['Total budget, USD'] = null;
+
+    let partners: Organization[] = [];
+
+    if(partnersFiltered)
+       partners = await this.organizationRepository.find({
+        where: {
+          code: In([partnersFiltered])
+        },
+        order: {
+          acronym: 'ASC'
+        }
+      });
+     else 
+       partners = await this.organizationRepository.find({
+        order: {
+          acronym: 'ASC'
+        }
+      });
+    
+
+
+    for(let partner of partners) {
+      element.submissions[0].wp_budget.some(d => {
+        if(d.organization_code === partner.code) {
+          return template[partner.acronym] = d.total
+        } else {
+          return template[partner.acronym] = 0
+        }
+      })
+    }
+  }
+
+
+  async prepareUserTemplate(data: any, partnersFiltered: any[]) {
+  let finaldata = [await this.getTemplateBudgetSummary(partnersFiltered)];
+
+  let partners: Organization[] = [];
+
+    if(partnersFiltered)
+      partners = await this.organizationRepository.find({
+        where: {
+          code: In([partnersFiltered])
+        },
+        order: {
+          acronym: 'ASC'
+        }
+      });
+   else 
+     partners = await this.organizationRepository.find({
+      order: {
+        acronym: 'ASC'
+      }
+    });
+    let merges = [];
+
+
+  for (let index = 0; index < partners.length + 3; index++) {
+    merges.push({
+      s: { c: index, r: 0 },
+      e: { c: index, r: 1 },
+    });
+  }
+
+  for(let element of data) {
+    const template: any = await this.getTemplateBudgetSummary(partnersFiltered);
+    await this.mapTemplateBudgetSummary(template, element, partnersFiltered);
+    finaldata.push(template);
+  }
+
+  return { finaldata, merges };
+  }
+
+
+  getInitiativeTotalBudget(ws: any) {
+    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const rowCount = range.e.r;
+    const startCol = 2;
+    const startRow = 2;
+
+    for (let row = startRow; row <= rowCount; row++) {
+      let cellRef = XLSX.utils.encode_cell({ r: row, c: startCol });
+      let formula = this.getFormulaInitiativeTotalBudget(ws, row);
+      ws[cellRef] = {
+        t: 'n',
+        f: '=' + `${formula}`,
+        z: "#,##0",
+        s: {
+          font: {
+            bold: true,
+          },
+          alignment: {
+            horizontal: 'center',
+            vertical: 'center',
+          }
+        },
+      }
+    }
+  }
+
+  getFormulaInitiativeTotalBudget(ws: any, currentRow: number) {
+    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+
+    const columnCount = range.e.c;
+    const startCol = 3;
+
+    let arrData = [];
+
+    for (let col = startCol; col <= columnCount; col++) {
+      let cellRef = XLSX.utils.encode_cell({ r: currentRow, c: col });
+      arrData.push(cellRef);
+    }
+    return arrData.map(d =>  d + '+').join('').slice(0, -1);
+  }
+
+
+  getPartnerTotalBudget(ws: any) {
+    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const rowCount = range.e.r;
+    const columnCount = range.e.c;
+    const startCount = 3;
+
+
+    for (let col = startCount; col <= columnCount; col++) {
+      let cellRef = XLSX.utils.encode_cell({ r: rowCount, c: col });
+      let formula = this.getFormulaPartnerTotalBudget(ws, col);
+      ws[cellRef] = {
+        t: 'n',
+        f: '=' + `${formula}`,
+        z: "#,##0",
+        s: {
+          font: {
+            bold: true,
+          },
+          alignment: {
+            horizontal: 'center',
+            vertical: 'center',
+          }
+        },
+      }
+    }
+  }
+
+  getFormulaPartnerTotalBudget(ws: any, currentCol: number) {
+    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+
+    const rowCount = range.e.r;
+    const startRow = 2;
+
+    let arrData = [];
+
+    for (let row = startRow; row <= rowCount - 1; row++) {
+      let cellRef = XLSX.utils.encode_cell({ r: row, c: currentCol });
+      arrData.push(cellRef);
+    }
+    return arrData.map(d =>  d + '+').join('').slice(0, -1);
   }
 }
