@@ -66,7 +66,11 @@ export class InitiativesComponent implements OnInit {
   pageIndex: number = 1;
   allfilters: any;
   async ngOnInit() {
-    if (this.authService.getLoggedInUser()) await this.getInitiatives();
+    if (this.authService.getLoggedInUser())
+      await this.getInitiatives();
+    else
+      this.authService.goToLogin();
+    
     this.user = this.authService.getLoggedInUser();
 
     this.title.setTitle("Planning");
