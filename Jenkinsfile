@@ -13,6 +13,13 @@ pipeline {
         '''
       }
     }
+    stage('Copy Env') {
+      steps {
+        sh '''
+         cp /var/lib/jenkins/workspace/Environments/planning/back-end/.env back-end/
+        '''
+      }
+    }
     stage('Clean up') {
       steps {
         sh 'docker system prune -a -f'
@@ -34,6 +41,9 @@ pipeline {
     }
     failure {
       slackSend color: 'bad', message: 'planning build process is done with failure'
+      writeFile file: 'jenkins_console_output.txt', text: currentBuild.rawBuild.logFile.text
+      sh 'sed -ri "s/\\x1b\\[8m.*?\\x1b\\[0m//g" jenkins_console_output.txt'
+      slackUploadFile filePath: 'jenkins_console_output.txt', initialComment: 'here is the log file '
     }
   }
 }
