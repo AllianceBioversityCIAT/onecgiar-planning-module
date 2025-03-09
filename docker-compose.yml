@@ -5,7 +5,7 @@ services:
     build: back-end
     restart: always
     volumes:
-      - ./back-end/generated_files:/back-end/generated_files
+      -  /var/lib/jenkins/workspace/Environments/planning/back-end/generated_files:/back-end/generated_files
   planning_front_end:
     depends_on:
       - planning_api
