@@ -26,6 +26,7 @@ import { UnderMaintenancePageComponent } from "./under-maintenance-page/under-ma
 import { UserGuard } from "./guards/under-maintenance.guard";
 import { UnderMaintenanceService } from "./services/under-maintenance.service";
 import { TotalInitSummaryComponent } from "./admin/total-init-summary/total-init-summary.component";
+import { SyncInitComponent } from "./admin/sync-init/sync-init.component";
 
 const routes: Routes = [
   {
@@ -64,6 +65,8 @@ const routes: Routes = [
       { path: "popover-management", component: PopoverManagementComponent },
       { path: "emails", component: EmailsComponent },
       { path: "track-porbs", component: TrackPORBsComponent },
+      { path: "sync-init", component: SyncInitComponent },
+
     ],
   },
 

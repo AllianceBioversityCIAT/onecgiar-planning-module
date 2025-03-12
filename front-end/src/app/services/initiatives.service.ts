@@ -173,4 +173,12 @@ export class InitiativesService {
       environment.api_url + "/initiatives/" + id + "/is-allowed-to-access-chat"
     );
   }
+
+  async getClarisaPrograms() {
+    return await firstValueFrom(
+      this.http
+        .get(environment.api_url + '/initiatives/clarisa-programs')
+        .pipe(map((d: any) => d))
+    );
+  }
 }

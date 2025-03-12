@@ -56,6 +56,12 @@ export class InitiativesController {
     return 'Initiatives imported successfully';
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('clarisa-programs')
+  async getclarisaPrograms() {
+    // return await this.initiativesService.clarisaPrograms()
+  }
+
   @Get('data-import/:init_id/:uuid')
   @ApiBearerAuth()
   async importDatada(@Param('init_id') init_id,@Param('uuid') uuid) {
