@@ -625,3 +625,11 @@
   animation: moveInBottom 0.5s ease-out 0.85s;
   animation-fill-mode: backwards;
 }
+.user-management__icon-box {
+  margin: 4rem 0 !important;
+}
+
+.risk-report-button-box {
+  display: flex;
+  justify-content: end;
+}

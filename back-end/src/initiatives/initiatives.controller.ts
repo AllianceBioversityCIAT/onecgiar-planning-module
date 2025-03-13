@@ -45,21 +45,29 @@ export class InitiativesController {
   constructor(private readonly initiativesService: InitiativesService,
     private readonly httpService: HttpService) {}
 
-  @Get('import')
-  @ApiBearerAuth()
-  @ApiCreatedResponse({
-    description: '',
-    type: [importInitiatives],
-  })
-  async import() {
-    await this.initiativesService.importInitiatives();
-    return 'Initiatives imported successfully';
-  }
+  //(old sync)
+  // @Get('import')
+  // @ApiBearerAuth()
+  // @ApiCreatedResponse({
+  //   description: '',
+  //   type: [importInitiatives],
+  // })
+  // async import() {
+  //   await this.initiativesService.importInitiatives();
+  //   return 'Initiatives imported successfully';
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Get('clarisa-programs')
   async getclarisaPrograms() {
-    // return await this.initiativesService.clarisaPrograms()
+    return await this.initiativesService.getClarisaPrograms()
+  }
+
+  //(new sync)
+  @UseGuards(JwtAuthGuard)
+  @Post('sync-clarisa')
+  async syncInit(@Body() data: number[]) {
+    return await this.initiativesService.syncInit(data)
   }
 
   @Get('data-import/:init_id/:uuid')

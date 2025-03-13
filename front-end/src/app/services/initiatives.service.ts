@@ -8,7 +8,7 @@ import { environment } from "src/environments/environment";
   providedIn: "root",
 })
 export class InitiativesService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   async getInitiative(id: number) {
     return firstValueFrom(
@@ -40,7 +40,7 @@ export class InitiativesService {
         this.http
           .get(
             environment.api_url +
-              `/initiatives/full?page=${page}&limit=${limit}`,
+            `/initiatives/full?page=${page}&limit=${limit}`,
             { params: finalFilters }
           )
           .pipe(map((d: any) => d))
@@ -50,7 +50,7 @@ export class InitiativesService {
         this.http
           .get(
             environment.api_url +
-              `/initiatives/full?page=${page}&limit=${limit}`
+            `/initiatives/full?page=${page}&limit=${limit}`
           )
           .pipe(map((d: any) => d))
       );
@@ -60,7 +60,7 @@ export class InitiativesService {
   async exportInitiativesForTrackPORBs() {
     const data = await firstValueFrom(
       this.http
-        .get(environment.api_url+`/initiatives/track`, {
+        .get(environment.api_url + `/initiatives/track`, {
           responseType: "blob",
         })
         .pipe(map((d: Blob) => d))
@@ -70,7 +70,7 @@ export class InitiativesService {
 
   async exportExcel(filters: any = null) {
     let finalFilters: any = {};
-    if(filters)
+    if (filters)
       Object.keys(filters).forEach((element) => {
         if (typeof filters[element] === "string")
           filters[element] = filters[element].trim();
@@ -80,7 +80,7 @@ export class InitiativesService {
       });
     const data = await firstValueFrom(
       this.http
-        .get(environment.api_url+`/initiatives/budgetSummary`, {
+        .get(environment.api_url + `/initiatives/budgetSummary`, {
           responseType: "blob",
           params: finalFilters
         })
@@ -160,10 +160,10 @@ export class InitiativesService {
     return this.http
       .delete(
         environment.api_url +
-          "/initiatives/" +
-          initiativeId +
-          "/roles/" +
-          roleId
+        "/initiatives/" +
+        initiativeId +
+        "/roles/" +
+        roleId
       )
       .toPromise();
   }
@@ -178,6 +178,18 @@ export class InitiativesService {
     return await firstValueFrom(
       this.http
         .get(environment.api_url + '/initiatives/clarisa-programs')
+        .pipe(map((d: any) => d))
+    );
+  }
+  async syncInit(initIds: string[]) {
+    return await firstValueFrom(
+      this.http
+        .post(
+          environment.api_url + '/initiatives/sync-clarisa',
+          {
+            ids: initIds
+          }
+        )
         .pipe(map((d: any) => d))
     );
   }

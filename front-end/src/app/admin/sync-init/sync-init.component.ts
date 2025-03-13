@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { Meta, Title } from '@angular/platform-browser';
 import { ToastrService } from 'ngx-toastr';
+import { DeleteConfirmDialogComponent } from 'src/app/delete-confirm-dialog/delete-confirm-dialog.component';
 import { HeaderService } from 'src/app/header.service';
 import { InitiativesService } from 'src/app/services/initiatives.service';
 
@@ -70,28 +71,28 @@ export class SyncInitComponent {
   }
 
   async syncData() {
-    // if(this.initCodes.length) {
-    //   this.dialog
-    //   .open(DeleteConfirmDialogComponent, {
-    //     data: {
-    //       message: `Are you sure you want to sync this program`,
-    //       svg: '../../../assets/shared-image/sync.png'
-    //     },
-    //   })
-    //   .afterClosed().subscribe(async res => {
-    //     if(res){
-    //       await this.initiativeService.syncInit(this.initCodes).then(
-    //         () => {
-    //           this.getInitiatives();
-    //           this.toastr.success('Sync successfully');
-    //         }, (error) => {
-    //           this.toastr.error(error.error.message);
-    //         }
-    //       );
-    //     }
-    //   });
-    // } else {
-    //   this.toastr.error('please select programs you want to sync it');
-    // }
+    if(this.initCodes.length) {
+      this.dialog
+      .open(DeleteConfirmDialogComponent, {
+        data: {
+          message: `Are you sure you want to sync this program`,
+          svg: '../../../assets/shared-image/sync.png'
+        },
+      })
+      .afterClosed().subscribe(async res => {
+        if(res){
+          await this.initiativeService.syncInit(this.initCodes).then(
+            () => {
+              this.getInitiatives();
+              this.toastr.success('Sync successfully');
+            }, (error) => {
+              this.toastr.error(error.error.message);
+            }
+          );
+        }
+      });
+    } else {
+      this.toastr.error('please select Initiative you want to sync it');
+    }
   }
 }

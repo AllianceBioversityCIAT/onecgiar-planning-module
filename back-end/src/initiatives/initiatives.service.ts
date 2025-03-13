@@ -82,8 +82,7 @@ export class InitiativesService {
     private chatGroupRepositoryService: ChatMessageRepositoryService,
   ) {}
 
-  @Cron(CronExpression.EVERY_WEEK)
-  async importInitiatives() {
+  async getClarisaPrograms() {
     const initiativesData = await firstValueFrom(
       this.httpService
         .get('https://api.clarisa.cgiar.org/api/initiatives')
@@ -95,7 +94,28 @@ export class InitiativesService {
         ),
     );
 
-    initiativesData.forEach(async (element) => {
+    const currenetInitiatives = await this.initiativeRepository.find();
+
+    const clarisaExistCodes = currenetInitiatives.map(d => d.official_code);
+
+    return initiativesData.filter(d => !clarisaExistCodes.includes(d.official_code));
+  }
+  //(new sync)
+  async syncInit(data: any) {
+    const initiativesData = await firstValueFrom(
+      this.httpService
+        .get('https://api.clarisa.cgiar.org/api/initiatives')
+        .pipe(
+          map((d: any) => d.data),
+          catchError((error: AxiosError) => {
+            throw new InternalServerErrorException();
+          }),
+        ),
+    );
+
+    const filtered_clarisa_initiatives = initiativesData.filter(d => data.ids.includes(d.official_code))
+
+    filtered_clarisa_initiatives.forEach(async (element) => {
       const { id, stages, ...parameters } = element;
       const entity = await this.initiativeRepository.findOneBy({ id });
       if (entity != null) {
@@ -105,6 +125,31 @@ export class InitiativesService {
       }
     });
   }
+
+  //(old sync)
+  // @Cron(CronExpression.EVERY_WEEK)
+  // async importInitiatives() {
+  //   const initiativesData = await firstValueFrom(
+  //     this.httpService
+  //       .get('https://api.clarisa.cgiar.org/api/initiatives')
+  //       .pipe(
+  //         map((d: any) => d.data),
+  //         catchError((error: AxiosError) => {
+  //           throw new InternalServerErrorException();
+  //         }),
+  //       ),
+  //   );
+
+  //   initiativesData.forEach(async (element) => {
+  //     const { id, stages, ...parameters } = element;
+  //     const entity = await this.initiativeRepository.findOneBy({ id });
+  //     if (entity != null) {
+  //       this.update(id, { ...parameters });
+  //     } else {
+  //       this.create({ id, ...parameters });
+  //     }
+  //   });
+  // }
   
   @Cron(CronExpression.EVERY_WEEK)
   async importWorkPackages() {
