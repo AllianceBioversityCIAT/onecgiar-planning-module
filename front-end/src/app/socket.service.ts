@@ -11,7 +11,7 @@ export class AppSocket extends Socket {
       options: {
         path: environment.socket_path,
         autoConnect: false,
-        auth: { authorization: 'Barer ' + token },
+        query: { authorization: 'Barer ' + token },
       },
     });
   }
