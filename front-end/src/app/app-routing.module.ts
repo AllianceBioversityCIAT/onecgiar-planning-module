@@ -27,6 +27,7 @@ import { UserGuard } from "./guards/under-maintenance.guard";
 import { UnderMaintenanceService } from "./services/under-maintenance.service";
 import { TotalInitSummaryComponent } from "./admin/total-init-summary/total-init-summary.component";
 import { SyncInitComponent } from "./admin/sync-init/sync-init.component";
+import { ArchivedComponent } from "./admin/archived/archived.component";
 
 const routes: Routes = [
   {
@@ -66,6 +67,7 @@ const routes: Routes = [
       { path: "emails", component: EmailsComponent },
       { path: "track-porbs", component: TrackPORBsComponent },
       { path: "sync-init", component: SyncInitComponent },
+      { path: "archive", component: ArchivedComponent },
 
     ],
   },

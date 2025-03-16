@@ -1,0 +1,104 @@
+import { Component } from '@angular/core';
+import { FormBuilder } from '@angular/forms';
+import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTableDataSource } from '@angular/material/table';
+import { Meta, Title } from '@angular/platform-browser';
+import { ToastrService } from 'ngx-toastr';
+import { DeleteConfirmDialogComponent } from 'src/app/delete-confirm-dialog/delete-confirm-dialog.component';
+import { HeaderService } from 'src/app/header.service';
+import { InitiativesService } from 'src/app/services/initiatives.service';
+
+@Component({
+  selector: 'app-archived',
+  templateUrl: './archived.component.html',
+  styleUrls: ['./archived.component.scss']
+})
+export class ArchivedComponent {
+  constructor(
+    private initiativeService: InitiativesService,
+    private dialog: MatDialog,
+    private headerService: HeaderService,
+    private toastr: ToastrService,
+    private title: Title,
+    private meta: Meta,
+    private fb: FormBuilder
+  ) {
+    this.headerService.background =
+      "linear-gradient(to  bottom, #04030F, #020106)";
+    this.headerService.backgroundNavMain =
+      "linear-gradient(to  top, #0F212F, #09151E)";
+    this.headerService.backgroundUserNavButton =
+      "linear-gradient(to  top, #0F212F, #09151E)";
+    this.headerService.backgroundFooter =
+      "linear-gradient(to  top, #0F212F, #09151E)";
+
+    this.headerService.backgroundDeleteYes = "#FF5A54";
+    this.headerService.backgroundDeleteClose = "#04030F";
+    this.headerService.backgroundDeleteLr = "#04030F";
+    this.headerService.logoutSvg = "brightness(0) saturate(100%) invert(4%) sepia(6%) saturate(6779%) hue-rotate(208deg) brightness(80%) contrast(104%)";
+  }
+
+  displayedColumns: string[] = [
+    'ID',
+    'Official code',
+    'Name',
+    'Short Name',
+    'Current Status',
+    'Actions',
+  ];
+
+  dataSource = new MatTableDataSource<any>([]);
+  initCodes: string[] = [];
+
+
+  async ngOnInit() {
+    this.getInitiatives();
+
+    this.title.setTitle('Archive Initiative');
+    this.meta.updateTag({ name: 'description', content: 'Archive Initiative' });
+  }
+
+
+  async getInitiatives() {
+    let initiative: any = await this.initiativeService.getInitiatives(null, 1, 500);
+    this.dataSource = new MatTableDataSource<any>(initiative.result);
+  }
+
+  checkInit(event: MatCheckboxChange, code: string) {
+    if (event.checked) {
+      this.initCodes.push(code);
+    } else {
+      const indexCode = this.initCodes.indexOf(code);
+      if (indexCode !== -1) {
+        this.initCodes.splice(indexCode, 1);
+      }
+    }
+  }
+
+  async archiveInit() {
+    if (this.initCodes.length) {
+      this.dialog
+        .open(DeleteConfirmDialogComponent, {
+          data: {
+            message: `Are you sure you want to archive this Initiatives`,
+            svg: '../../../assets/shared-image/archive.png'
+          },
+        })
+        .afterClosed().subscribe(async res => {
+          if (res) {
+            await this.initiativeService.archiveInit(this.initCodes).then(
+              () => {
+                this.getInitiatives();
+                this.toastr.success('Archived successfully');
+              }, (error) => {
+                this.toastr.error(error.error.message);
+              }
+            );
+          }
+        });
+    } else {
+      this.toastr.error('please select Initiative you want to Archive it');
+    }
+  }
+}

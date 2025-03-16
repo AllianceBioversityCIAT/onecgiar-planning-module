@@ -217,6 +217,7 @@ export class InitiativesService {
         .where(
           new Brackets((qb) => {
             qb.where('init.name like :name', { name: `%${query.name || ''}%` });
+            qb.andWhere('init.archived = :archived', { archived: false });
             if (query.initiative_id != undefined) {
               qb.andWhere('init.official_code IN (:...initiative_id)', {
                 initiative_id: [
@@ -988,5 +989,8 @@ export class InitiativesService {
       arrData.push(cellRef);
     }
     return arrData.map(d =>  d + '+').join('').slice(0, -1);
+  }
+  async archiveInit(data: any) {
+    console.log(data)
   }
 }

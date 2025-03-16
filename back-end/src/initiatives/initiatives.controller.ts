@@ -70,6 +70,12 @@ export class InitiativesController {
     return await this.initiativesService.syncInit(data)
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('archive')
+  async archiveInit(@Body() data: number[]) {
+    return await this.initiativesService.archiveInit(data);
+  }
+
   @Get('data-import/:init_id/:uuid')
   @ApiBearerAuth()
   async importDatada(@Param('init_id') init_id,@Param('uuid') uuid) {

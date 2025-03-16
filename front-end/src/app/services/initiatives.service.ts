@@ -193,4 +193,18 @@ export class InitiativesService {
         .pipe(map((d: any) => d))
     );
   }
+
+
+  async archiveInit(initIds: string[]) {
+    return await firstValueFrom(
+      this.http
+        .post(
+          environment.api_url + '/initiatives/archive',
+          {
+            ids: initIds
+          }
+        )
+        .pipe(map((d: any) => d))
+    );
+  }
 }

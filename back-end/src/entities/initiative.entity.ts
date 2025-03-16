@@ -126,6 +126,10 @@ export class Initiative {
   @OneToMany(() => History, (history) => history.initiative)
   history: History[];
 
+  @ApiProperty()
+  @Column({type: 'bool', default: false})
+  archived: boolean;
+
   // @ManyToMany(() => Melia, (melia) => melia.other_initiatives)
   // melia: Melia[];
 

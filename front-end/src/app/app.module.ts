@@ -96,6 +96,7 @@ import { EditUnderMaintenanceComponent } from "./admin/parameters-settings/edit-
 import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask';
 import { TotalInitSummaryComponent } from './admin/total-init-summary/total-init-summary.component';
 import { SyncInitComponent } from './admin/sync-init/sync-init.component';
+import { ArchivedComponent } from './admin/archived/archived.component';
 
 
 @NgModule({
@@ -152,6 +153,7 @@ import { SyncInitComponent } from './admin/sync-init/sync-init.component';
     EditUnderMaintenanceComponent,
     TotalInitSummaryComponent,
     SyncInitComponent,
+    ArchivedComponent,
   ],
   imports: [
     BrowserModule,
