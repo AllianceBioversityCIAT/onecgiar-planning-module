@@ -22,6 +22,7 @@ import { Result } from 'src/entities/result.entity';
 import { PhasesModule } from 'src/phases/phases.module';
 import { WpBudget } from 'src/entities/wp-budget.entity';
 import { Organization } from 'src/entities/organization.entity';
+import { Archive } from 'src/entities/archive.entity';
 
 
 
@@ -39,7 +40,8 @@ import { Organization } from 'src/entities/organization.entity';
       History,
       Result,
       WpBudget,
-      Organization
+      Organization,
+      Archive
     ]),
     HttpModule,
     UsersModule,

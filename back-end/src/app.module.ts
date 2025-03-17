@@ -23,6 +23,7 @@ import { EmailModule } from './email/email.module';
 import { VariableModule } from './variable/variable.module';
 import { WsGuard } from './ws.guard';
 import { UnderMaintenanceModule } from './under-maintenance/under-maintenance.module';
+import { ArchiveModule } from './archive/archive.module';
 
 @Module({
   controllers:[AppController],
@@ -60,6 +61,7 @@ import { UnderMaintenanceModule } from './under-maintenance/under-maintenance.mo
     EmailModule,
     VariableModule,
     UnderMaintenanceModule,
+    ArchiveModule,
     
   ],
 })

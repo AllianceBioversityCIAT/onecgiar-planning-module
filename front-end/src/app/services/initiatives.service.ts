@@ -207,4 +207,15 @@ export class InitiativesService {
         .pipe(map((d: any) => d))
     );
   }
+
+  getInitiativesWithoutTocData() {
+    return firstValueFrom(
+      this.http
+        .get(
+          environment.api_url +
+          `/initiatives`
+        )
+        .pipe(map((d: any) => d))
+    );
+  }
 }

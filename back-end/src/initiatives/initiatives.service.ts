@@ -30,6 +30,7 @@ import { Submission, SubmissionStatus } from 'src/entities/submission.entity';
 import { PhasesService } from 'src/phases/phases.service';
 import { WpBudget } from 'src/entities/wp-budget.entity';
 import { Organization } from 'src/entities/organization.entity';
+import { Archive } from 'src/entities/archive.entity';
 
 @Injectable()
 export class InitiativesService {
@@ -62,6 +63,8 @@ export class InitiativesService {
     private readonly httpService: HttpService,
     @InjectRepository(Initiative)
     public initiativeRepository: Repository<Initiative>,
+    @InjectRepository(Archive)
+    public archiveRepository: Repository<Archive>,
     @InjectRepository(WorkPackage)
     private workPackageRepository: Repository<WorkPackage>,
     @InjectRepository(InitiativeRoles)
@@ -204,6 +207,9 @@ export class InitiativesService {
 
   findAll() {
     return this.initiativeRepository.find({
+      where: {
+        archived: false
+      },
       order: { official_code: 'asc' },
     });
   }
@@ -991,6 +997,37 @@ export class InitiativesService {
     return arrData.map(d =>  d + '+').join('').slice(0, -1);
   }
   async archiveInit(data: any) {
-    console.log(data)
+    for(let id of data.ids) {
+      const init = await this.initiativeRepository.findOne(
+        {
+          where: {id: id},
+          relations: ['roles', 'latest_submission']
+        }
+      );
+
+      const roles = await this.iniRolesRepository.find({
+        where: { initiative_id: id},
+        relations: ['user']
+      });
+
+
+      const archived = this.archiveRepository.create();
+      archived.data = JSON.stringify(roles);
+      archived.initiative = init;
+      
+      
+      await this.archiveRepository.save(archived).then(
+        async () => {
+          await this.initiativeRepository.update(id, {
+            archived: true
+          });
+        }, (error) => {
+          console.log('error => ', error);
+          throw new BadRequestException(
+            `something wrong`,
+          );
+        }
+      )
+    }
   }
 }

@@ -28,6 +28,7 @@ import { UnderMaintenanceService } from "./services/under-maintenance.service";
 import { TotalInitSummaryComponent } from "./admin/total-init-summary/total-init-summary.component";
 import { SyncInitComponent } from "./admin/sync-init/sync-init.component";
 import { ArchivedComponent } from "./admin/archived/archived.component";
+import { ArchiveComponent } from "./archive/archive.component";
 
 const routes: Routes = [
   {
@@ -46,6 +47,13 @@ const routes: Routes = [
     component: TotalInitSummaryComponent,
     canActivate: [UserGuard],
   },
+
+  {
+    path: "archive",
+    component: ArchiveComponent,
+    canActivate: [UserGuard],
+  },
+
 
   { path: "auth", component: AuthComponent },
 

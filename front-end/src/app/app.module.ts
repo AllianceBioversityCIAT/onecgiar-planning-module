@@ -97,6 +97,7 @@ import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask';
 import { TotalInitSummaryComponent } from './admin/total-init-summary/total-init-summary.component';
 import { SyncInitComponent } from './admin/sync-init/sync-init.component';
 import { ArchivedComponent } from './admin/archived/archived.component';
+import { ArchiveComponent } from './archive/archive.component';
 
 
 @NgModule({
@@ -154,6 +155,7 @@ import { ArchivedComponent } from './admin/archived/archived.component';
     TotalInitSummaryComponent,
     SyncInitComponent,
     ArchivedComponent,
+    ArchiveComponent,
   ],
   imports: [
     BrowserModule,

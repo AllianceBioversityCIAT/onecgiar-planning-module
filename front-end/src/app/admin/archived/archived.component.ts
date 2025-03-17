@@ -44,7 +44,6 @@ export class ArchivedComponent {
     'Official code',
     'Name',
     'Short Name',
-    'Current Status',
     'Actions',
   ];
 
@@ -61,8 +60,8 @@ export class ArchivedComponent {
 
 
   async getInitiatives() {
-    let initiative: any = await this.initiativeService.getInitiatives(null, 1, 500);
-    this.dataSource = new MatTableDataSource<any>(initiative.result);
+    let initiative: any = await this.initiativeService.getInitiativesWithoutTocData();
+    this.dataSource = new MatTableDataSource<any>(initiative);
   }
 
   checkInit(event: MatCheckboxChange, code: string) {
