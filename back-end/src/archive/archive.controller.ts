@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { ArchiveService } from './archive.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
@@ -12,5 +12,10 @@ export class ArchiveController {
     @Get('')
     async findAllFull(@Query() query: any, @Req() req) {
         return this.archiveService.findAll(query, req);
+    }
+
+    @Get(':id')
+    async findOneById(@Param('id') id: number) {
+        return this.archiveService.findOne(id);
     }
 }

@@ -29,6 +29,9 @@ import { TotalInitSummaryComponent } from "./admin/total-init-summary/total-init
 import { SyncInitComponent } from "./admin/sync-init/sync-init.component";
 import { ArchivedComponent } from "./admin/archived/archived.component";
 import { ArchiveComponent } from "./archive/archive.component";
+import { SubmittedVersionComponent } from "./archive/submitted-version/submitted-version.component";
+import { TeamMemberComponent } from "./archive/team-member/team-member.component";
+import { TableComponent } from "./archive/table/table.component";
 
 const routes: Routes = [
   {
@@ -52,6 +55,11 @@ const routes: Routes = [
     path: "archive",
     component: ArchiveComponent,
     canActivate: [UserGuard],
+    children: [
+      { path: "", component: TableComponent },
+      { path: ":id/submitted-versions", component: SubmittedVersionComponent },
+      { path: ":id/team-member", component: TeamMemberComponent },
+    ]
   },
 
 

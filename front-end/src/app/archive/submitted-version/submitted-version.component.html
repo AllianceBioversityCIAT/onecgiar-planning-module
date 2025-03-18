@@ -1,0 +1,107 @@
+<div class="section-risk-report-component">
+    <div class="team-members-container">
+        <nav class="risk-nav-main">
+            <ul class="risk-nav-list">
+                <li>
+                    <a class="risk-nav-link" routerLink="/">Initiatives</a>
+                </li>
+                <li>
+                    <a routerLink="''" class="risk-nav-link">></a>
+                </li>
+                <li>
+                    <span class="line">&nbsp;</span>{{ archivedData?.initiative?.official_code }}
+                </li>
+                <li>
+                    <a routerLink="''" class="risk-nav-link">></a>
+                </li>
+                <li>
+                    <a routerLink="./" class="risk-nav-link">Submitted versions</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="team-member-content-box">
+            <div class="team-members-text-box m-b">
+                <p class="team-members-text-box__text">Submitted versions</p>
+            </div>
+
+            <app-filter-version (filters)="filter($event)"></app-filter-version>
+
+            <div class="table-box-4 mat-elevation-z8">
+                <table mat-table [dataSource]="dataSource" matSort>
+                    <!-- ID Column -->
+                    <ng-container matColumnDef="id">
+                        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                            <span class="th-3">ID</span>
+                        </th>
+                        <td mat-cell *matCellDef="let row">
+                            {{ row.id }}
+                        </td>
+                    </ng-container>
+
+                    <!-- phase -->
+                    <ng-container matColumnDef="phase">
+                        <th mat-header-cell *matHeaderCellDef>Phase</th>
+                        <td mat-cell *matCellDef="let row">{{ row.phase.name }}</td>
+                    </ng-container>
+
+                    <!-- created_by -->
+                    <ng-container matColumnDef="created_by">
+                        <th mat-header-cell *matHeaderCellDef>Created by</th>
+                        <td mat-cell *matCellDef="let row">{{ row.user.full_name }}</td>
+                    </ng-container>
+
+                    <!-- created_at -->
+                    <ng-container matColumnDef="created_at">
+                        <th mat-header-cell *matHeaderCellDef>Created on</th>
+                        <td mat-cell *matCellDef="let row">{{ row.created_at | date }}</td>
+                    </ng-container>
+
+                    <!-- status -->
+                    <ng-container matColumnDef="status">
+                        <th mat-header-cell *matHeaderCellDef>Status</th>
+                        <td mat-cell *matCellDef="let row">{{ row.status }}</td>
+                    </ng-container>
+                    <!-- status_reason -->
+                    <ng-container matColumnDef="status_reason">
+                        <th mat-header-cell *matHeaderCellDef>Status Reason</th>
+                        <td mat-cell *matCellDef="let row" [innerHTML]="row.status_reason"></td>
+                    </ng-container>
+
+                    <ng-container matColumnDef="toc_version_id">
+                        <th mat-header-cell *matHeaderCellDef>Toc version ID</th>
+                        <td mat-cell *matCellDef="let row">{{ row.toc_version ? row.toc_version : 'N/A' }}</td>
+                    </ng-container>
+
+                    <!-- actions -->
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Actions</th>
+                        <td mat-cell *matCellDef="let row; first as isFirst">
+                            <div class="m">
+                                <button class="team-members-icon-table" matTooltip="View" matTooltipPosition="above"
+                                    routerLink="./{{ row['id'] }}">
+                                    <mat-icon class="user-management-table__icon"><svg
+                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24">
+                                            <path fill="#403f3f"
+                                                d="M12 16q1.875 0 3.188-1.313T16.5 11.5q0-1.875-1.313-3.188T12 7q-1.875 0-3.188 1.313T7.5 11.5q0 1.875 1.313 3.188T12 16Zm0-1.8q-1.125 0-1.913-.788T9.3 11.5q0-1.125.788-1.913T12 8.8q1.125 0 1.913.788T14.7 11.5q0 1.125-.787 1.913T12 14.2Zm0 4.8q-3.65 0-6.65-2.038T1 11.5q1.35-3.425 4.35-5.463T12 4q3.65 0 6.65 2.038T23 11.5q-1.35 3.425-4.35 5.463T12 19Z" />
+                                        </svg></mat-icon>
+                                </button>
+                            </div>
+                        </td>
+                    </ng-container>
+
+                    <tr class="table-header" mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                    <tr class="table-header" mat-row *matRowDef="let row; columns: displayedColumns"
+                        [ngClass]="{ last: this.dataSource.data[0] == row }"></tr>
+
+                </table>
+                <div class="glossary-content-container user-management-paginator-box">
+                    <mat-paginator [pageSizeOptions]="[10, 20, 30, 50, 100]" [length]="length"
+                        [pageIndex]="pageIndex - 1" (page)="pagination($event)"
+                        aria-label="Select page of users"></mat-paginator>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

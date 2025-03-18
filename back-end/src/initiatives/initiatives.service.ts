@@ -1007,7 +1007,7 @@ export class InitiativesService {
 
       const roles = await this.iniRolesRepository.find({
         where: { initiative_id: id},
-        relations: ['user']
+        relations: ['user', 'organizations']
       });
 
 

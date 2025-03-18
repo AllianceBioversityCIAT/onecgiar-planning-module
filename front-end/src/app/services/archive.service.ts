@@ -26,4 +26,12 @@ export class ArchiveService {
           .pipe(map((d: any) => d))
       ).catch((e) => false);
   }
+
+  getArchivedInitiativesById(id: number) {
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + "/archive/" + id)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
 }

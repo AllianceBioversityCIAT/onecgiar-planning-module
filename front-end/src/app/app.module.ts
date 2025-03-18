@@ -98,6 +98,9 @@ import { TotalInitSummaryComponent } from './admin/total-init-summary/total-init
 import { SyncInitComponent } from './admin/sync-init/sync-init.component';
 import { ArchivedComponent } from './admin/archived/archived.component';
 import { ArchiveComponent } from './archive/archive.component';
+import { SubmittedVersionComponent } from './archive/submitted-version/submitted-version.component';
+import { TeamMemberComponent } from './archive/team-member/team-member.component';
+import { TableComponent } from './archive/table/table.component';
 
 
 @NgModule({
@@ -156,6 +159,9 @@ import { ArchiveComponent } from './archive/archive.component';
     SyncInitComponent,
     ArchivedComponent,
     ArchiveComponent,
+    SubmittedVersionComponent,
+    TeamMemberComponent,
+    TableComponent,
   ],
   imports: [
     BrowserModule,
