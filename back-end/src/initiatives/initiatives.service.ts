@@ -88,12 +88,9 @@ export class InitiativesService {
   async getClarisaPrograms() {
     const initiativesData = await firstValueFrom(
       this.httpService
-        .get('https://api.clarisa.cgiar.org/api/initiatives')
+        .get('https://api.clarisa.cgiar.org/api/cgiar-entities?version=2')
         .pipe(
-          map((d: any) => d.data),
-          catchError((error: AxiosError) => {
-            throw new InternalServerErrorException();
-          }),
+          map((response: any) => response.data.filter((item: any) => item.level == 1))
         ),
     );
 
@@ -101,33 +98,36 @@ export class InitiativesService {
 
     const clarisaExistCodes = currenetInitiatives.map(d => d.official_code);
 
-    return initiativesData.filter(d => !clarisaExistCodes.includes(d.official_code));
+    return initiativesData.filter(d => !clarisaExistCodes.includes(d.code));
   }
   //(new sync)
-  async syncInit(data: any) {
+  async syncInit(data: any) { 
     const initiativesData = await firstValueFrom(
       this.httpService
-        .get('https://api.clarisa.cgiar.org/api/initiatives')
+        .get('https://api.clarisa.cgiar.org/api/cgiar-entities?version=2')
         .pipe(
-          map((d: any) => d.data),
-          catchError((error: AxiosError) => {
-            throw new InternalServerErrorException();
-          }),
+          map((response: any) => response.data.filter((item: any) => item.level == 1))
         ),
     );
 
-    const filtered_clarisa_initiatives = initiativesData.filter(d => data.ids.includes(d.official_code))
+    const filtered_clarisa_initiatives = initiativesData.filter(d => data.ids.includes(d.code));
+
 
     filtered_clarisa_initiatives.forEach(async (element) => {
-      const { id, stages, ...parameters } = element;
-      const entity = await this.initiativeRepository.findOneBy({ id });
-      if (entity != null) {
-        this.update(id, { ...parameters });
-      } else {
-        this.create({ id, ...parameters });
-      }
+      let entity; 
+      entity = await this.initiativeRepository.findOne({ where: {
+        official_code: element.code
+      }});
+      if (!entity) {
+        entity = this.initiativeRepository.create();
+        entity.name = element.name;
+        entity.official_code = element.code;
+        entity.short_name = element.short_name;
+        await this.initiativeRepository.save(entity);
+      } 
     });
-  }
+    this.importWorkPackages()
+  } 
 
   //(old sync)
   // @Cron(CronExpression.EVERY_WEEK)
@@ -155,7 +155,7 @@ export class InitiativesService {
   // }
   
   @Cron(CronExpression.EVERY_WEEK)
-  async importWorkPackages() {
+  async importWorkPackages() { 
     const workPackagesData = await firstValueFrom(
       this.httpService
         .get('https://api.clarisa.cgiar.org/api/workpackages')
@@ -181,7 +181,7 @@ export class InitiativesService {
         this.createWorkPackage({ ...element });
       }
     });
-  }
+  } 
 
   create(createInitiativeDto: CreateInitiativeDto) {
     const newInitiative = this.initiativeRepository.create({

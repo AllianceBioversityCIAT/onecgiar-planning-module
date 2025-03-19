@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Organization } from './organization.entity';
 import { Submission } from './submission.entity';
@@ -19,7 +20,7 @@ import { History } from './history.entity';
 @Entity()
 export class Initiative {
   @ApiProperty()
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
   @ApiProperty()
@@ -27,15 +28,15 @@ export class Initiative {
   name: string;
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   active: number;
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   status: string;
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   stageId: number;
 
 
@@ -48,7 +49,7 @@ export class Initiative {
   short_name: string;
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   @ApiProperty()
@@ -56,11 +57,11 @@ export class Initiative {
   official_code: string;
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   action_area_id: string;
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   action_area_description: string;
 
   @ApiProperty()
