@@ -32,6 +32,7 @@ import { ArchiveComponent } from "./archive/archive.component";
 import { SubmittedVersionComponent } from "./archive/submitted-version/submitted-version.component";
 import { TeamMemberComponent } from "./archive/team-member/team-member.component";
 import { TableComponent } from "./archive/table/table.component";
+import { VersionComponent } from "./archive/version/version.component";
 
 const routes: Routes = [
   {
@@ -58,6 +59,7 @@ const routes: Routes = [
     children: [
       { path: "", component: TableComponent },
       { path: ":id/submitted-versions", component: SubmittedVersionComponent },
+      { path: ":id/submitted-versions/:id", component: VersionComponent },
       { path: ":id/team-member", component: TeamMemberComponent },
     ]
   },

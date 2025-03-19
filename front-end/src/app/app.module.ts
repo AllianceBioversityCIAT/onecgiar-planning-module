@@ -101,6 +101,7 @@ import { ArchiveComponent } from './archive/archive.component';
 import { SubmittedVersionComponent } from './archive/submitted-version/submitted-version.component';
 import { TeamMemberComponent } from './archive/team-member/team-member.component';
 import { TableComponent } from './archive/table/table.component';
+import { VersionComponent } from './archive/version/version.component';
 
 
 @NgModule({
@@ -162,6 +163,7 @@ import { TableComponent } from './archive/table/table.component';
     SubmittedVersionComponent,
     TeamMemberComponent,
     TableComponent,
+    VersionComponent,
   ],
   imports: [
     BrowserModule,
