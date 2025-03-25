@@ -84,6 +84,7 @@ export class SyncInitComponent {
           await this.initiativeService.syncInit(this.initCodes).then(
             () => {
               this.getInitiatives();
+              this.initCodes = [];
               this.toastr.success('Sync successfully');
             }, (error) => {
               this.toastr.error(error.error.message);

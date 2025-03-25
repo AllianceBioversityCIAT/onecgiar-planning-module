@@ -16,25 +16,25 @@ export class WorkPackage {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ nullable: true })
   acronym: string;
 
   @Column({ nullable: true })
   results: string;
 
-  @Column()
+  @Column({ nullable: true })
   stage_id: number;
 
-  @Column()
+  @Column({ nullable: true })
   initiative_id: number;
 
-  @Column({type:'text'})
+  @Column({type:'text', nullable: true})
   pathway_content: string;
 
   @Column()
   wp_official_code: string;
 
-  @Column()
+  @Column({ nullable: true })
   initiative_status: string;
 
   @Column()

@@ -90,7 +90,9 @@ export class InitiativesService {
       this.httpService
         .get('https://api.clarisa.cgiar.org/api/cgiar-entities?version=2')
         .pipe(
-          map((response: any) => response.data.filter((item: any) => item.level == 1))
+          map((response: any) => response.data.filter((item: any) => item.level == 1 && 
+            !(item.entity_type?.name === 'Initiative' || item.entity_type?.name === 'CRP')
+          ))
         ),
     );
 
@@ -113,20 +115,30 @@ export class InitiativesService {
     const filtered_clarisa_initiatives = initiativesData.filter(d => data.ids.includes(d.code));
 
 
-    filtered_clarisa_initiatives.forEach(async (element) => {
+    const maxIdEntity = await this.initiativeRepository
+    .createQueryBuilder('initiative')
+    .select('MAX(initiative.id)', 'maxId')
+    .getRawOne();
+  
+    let maxId = maxIdEntity?.maxId ?? 0;
+
+
+    for (const element of filtered_clarisa_initiatives) {
       let entity; 
       entity = await this.initiativeRepository.findOne({ where: {
         official_code: element.code
       }});
       if (!entity) {
+        maxId++;
         entity = this.initiativeRepository.create();
+        entity.id = maxId;
         entity.name = element.name;
         entity.official_code = element.code;
         entity.short_name = element.short_name;
         await this.initiativeRepository.save(entity);
       } 
-    });
-    this.importWorkPackages()
+    }
+    this.importWorkPackages(data)
   } 
 
   //(old sync)
@@ -155,32 +167,52 @@ export class InitiativesService {
   // }
   
   @Cron(CronExpression.EVERY_WEEK)
-  async importWorkPackages() { 
-    const workPackagesData = await firstValueFrom(
+  async importWorkPackages(programIds: any) { 
+    console.log(programIds)
+    let workPackagesData = await firstValueFrom(
       this.httpService
-        .get('https://api.clarisa.cgiar.org/api/workpackages')
+        .get('https://api.clarisa.cgiar.org/api/cgiar-entities?version=2')
         .pipe(
-          map((d: any) => d.data),
-          catchError((error: AxiosError) => {
-            throw new InternalServerErrorException();
-          }),
+          map((response: any) => response.data.filter((item: any) => item.level == 2))
         ),
     );
 
-    workPackagesData.forEach(async (element) => {
-      const entity = await this.workPackageRepository.findOneBy({
-        wp_id: element.wp_id,
+    let filteredWorkPackages = workPackagesData.filter(wp => programIds.ids.includes(wp.parent.code))
+
+
+    const maxIdEntity = await this.workPackageRepository
+    .createQueryBuilder('wp')
+    .select('MAX(wp.wp_id)', 'maxId')
+    .where('wp.wp_id NOT IN (:...excludedIds)', { excludedIds: [99999, 99998] })
+    .getRawOne();
+  
+    let maxId = maxIdEntity?.maxId ?? 0;
+
+    for(let element of filteredWorkPackages) {
+      let entity = await this.workPackageRepository.findOneBy({
+        wp_official_code: element.code,
+        initiative_offical_code: element.parent.code
       });
-      delete element.is_global;
-      delete element.status;
-      delete element.countries;
-      delete element.regions;
-      if (entity != null) {
-        this.updateWorkPackage(element.wp_id, { ...element });
-      } else {
-        this.createWorkPackage({ ...element });
+
+      let initiative = await this.initiativeRepository.findOne({
+        where: {
+          official_code: element.parent.code
+        }
+      })
+
+      if (!entity) {
+        maxId++;
+        entity = this.workPackageRepository.create();
+        entity.wp_id = maxId;
+        entity.name = element.name;
+        entity.acronym = element.acronym;
+        entity.initiative_id = initiative.id;
+        entity.wp_official_code = element.code;
+        entity.initiative_status = initiative.status;
+        entity.initiative_offical_code = element.parent.code;
+        await this.workPackageRepository.save(entity);
       }
-    });
+    }
   } 
 
   create(createInitiativeDto: CreateInitiativeDto) {

@@ -20,7 +20,7 @@ import { History } from './history.entity';
 @Entity()
 export class Initiative {
   @ApiProperty()
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: number;
 
   @ApiProperty()
@@ -45,8 +45,12 @@ export class Initiative {
   type_id: number;
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   short_name: string;
+
+  // @ApiProperty()
+  // @Column()
+  // short_name: string;
 
   @ApiProperty()
   @Column({ nullable: true })
@@ -73,9 +77,9 @@ export class Initiative {
   @OneToMany(() => Submission, (submission) => submission.initiative)
   submissions: Submission[];
 
-  @ApiProperty()
-  @OneToMany(() => Submission, (melias) => melias.initiative)
-  melias: Submission[];
+  // @ApiProperty()
+  // @OneToMany(() => Submission, (melias) => melias.initiative)
+  // melias: Submission[];
 
   @ApiProperty({ type: () => [InitiativeRoles] })
   @OneToMany(

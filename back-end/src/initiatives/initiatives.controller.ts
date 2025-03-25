@@ -181,15 +181,15 @@ export class InitiativesController {
     return { msg: 'imported' }
   }
 
-  @Get('import/wp')
-  @ApiCreatedResponse({
-    description: '',
-    type: [importInitiativeswp],
-  })
-  async importWP() {
-    await this.initiativesService.importWorkPackages();
-    return 'wp imported successfully';
-  }
+  // @Get('import/wp')
+  // @ApiCreatedResponse({
+  //   description: '',
+  //   type: [importInitiativeswp],
+  // })
+  // async importWP() {
+  //   await this.initiativesService.importWorkPackages();
+  //   return 'wp imported successfully';
+  // }
 
   @Get()
   @ApiBearerAuth()
