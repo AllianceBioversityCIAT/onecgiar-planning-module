@@ -771,7 +771,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       d["wp_id"] = "CROSS";
       return d;
     });
-
+ 
     await this.submissionService.getToc(this.params.id).then(
       (data) => {
         if(!data)
