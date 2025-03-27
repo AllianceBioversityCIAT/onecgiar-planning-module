@@ -207,7 +207,8 @@ export class InitiativesService {
         entity.name = element.name;
         entity.acronym = element.acronym;
         entity.initiative_id = initiative.id;
-        entity.wp_official_code = element.code;
+        // entity.wp_official_code = element.code;
+        entity.wp_official_code = element.parent.code + '-' + element.code;
         entity.initiative_status = initiative.status;
         entity.initiative_offical_code = element.parent.code;
         await this.workPackageRepository.save(entity);

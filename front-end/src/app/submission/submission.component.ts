@@ -777,6 +777,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         if(!data)
           this.tocIncompleteData = true
         else
+          console.log(data)
           this.results = data;
           this.results = [
             ...cross_data,
