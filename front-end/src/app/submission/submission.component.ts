@@ -772,7 +772,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       return d;
     });
  
-    await this.submissionService.getToc(this.params.id).then(
+    await this.submissionService.getToc(this.initiative_data.synchronized == true ? this.params.code : this.params.id).then(
       (data) => {
         if(!data)
           this.tocIncompleteData = true
@@ -781,10 +781,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.results = data;
           this.results = [
             ...cross_data,
-            // ...melia_data,
             ...this.ipsr_value_data,
             ...this?.results,
-            // ...indicators_data,
           ];
       },
       (error) => {
@@ -794,10 +792,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           })
         this.results = [
           ...cross_data,
-          // ...melia_data,
           ...this.ipsr_value_data,
-          // ...this.results,
-          // ...indicators_data,
         ];
       }
     );

@@ -135,6 +135,10 @@ export class Initiative {
   @Column({type: 'bool', default: false})
   archived: boolean;
 
+  @ApiProperty()
+  @Column({type: 'bool', default: false})
+  synchronized: boolean;
+
   // @ManyToMany(() => Melia, (melia) => melia.other_initiatives)
   // melia: Melia[];
 

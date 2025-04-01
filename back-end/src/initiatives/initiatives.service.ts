@@ -135,6 +135,7 @@ export class InitiativesService {
         entity.name = element.name;
         entity.official_code = element.code;
         entity.short_name = element.short_name;
+        entity.synchronized = true;
         await this.initiativeRepository.save(entity);
       } 
     }
