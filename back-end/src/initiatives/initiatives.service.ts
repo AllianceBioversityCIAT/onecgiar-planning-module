@@ -115,13 +115,6 @@ export class InitiativesService {
     const filtered_clarisa_initiatives = initiativesData.filter(d => data.ids.includes(d.code));
 
 
-    const maxIdEntity = await this.initiativeRepository
-    .createQueryBuilder('initiative')
-    .select('MAX(initiative.id)', 'maxId')
-    .getRawOne();
-  
-    let maxId = maxIdEntity?.maxId ?? 0;
-
 
     for (const element of filtered_clarisa_initiatives) {
       let entity; 
@@ -129,9 +122,7 @@ export class InitiativesService {
         official_code: element.code
       }});
       if (!entity) {
-        maxId++;
         entity = this.initiativeRepository.create();
-        entity.id = maxId;
         entity.name = element.name;
         entity.official_code = element.code;
         entity.short_name = element.short_name;
@@ -181,14 +172,6 @@ export class InitiativesService {
     let filteredWorkPackages = workPackagesData.filter(wp => programIds.ids.includes(wp.parent.code))
 
 
-    const maxIdEntity = await this.workPackageRepository
-    .createQueryBuilder('wp')
-    .select('MAX(wp.wp_id)', 'maxId')
-    .where('wp.wp_id NOT IN (:...excludedIds)', { excludedIds: [99999, 99998] })
-    .getRawOne();
-  
-    let maxId = maxIdEntity?.maxId ?? 0;
-
     for(let element of filteredWorkPackages) {
       let entity = await this.workPackageRepository.findOneBy({
         wp_official_code: element.code,
@@ -202,13 +185,10 @@ export class InitiativesService {
       })
 
       if (!entity) {
-        maxId++;
         entity = this.workPackageRepository.create();
-        entity.wp_id = maxId;
         entity.name = element.name;
         entity.acronym = element.acronym;
         entity.initiative_id = initiative.id;
-        // entity.wp_official_code = element.code;
         entity.wp_official_code = element.parent.code + '-' + element.code;
         entity.initiative_status = initiative.status;
         entity.initiative_offical_code = element.parent.code;

@@ -3,6 +3,7 @@ import {
   Entity,
   OneToMany,
   PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Result } from './result.entity';
 import { History } from './history.entity';
@@ -10,7 +11,7 @@ import { History } from './history.entity';
 
 @Entity()
 export class WorkPackage {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   wp_id: number;
 
   @Column()

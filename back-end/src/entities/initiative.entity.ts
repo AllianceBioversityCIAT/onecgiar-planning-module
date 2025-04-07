@@ -20,7 +20,7 @@ import { History } from './history.entity';
 @Entity()
 export class Initiative {
   @ApiProperty()
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn()
   id: number;
 
   @ApiProperty()
