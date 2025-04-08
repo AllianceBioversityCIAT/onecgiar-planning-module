@@ -210,7 +210,10 @@ export class SubmissionController {
             .map((items:any)=>{
               if(items?.related_node_id && items.category != 'WP')
               if(items?.id)
-              items['id']=items?.related_node_id
+              items['id']=items?.related_node_id;
+
+              if(items.category == 'OUTCOME' && !items.group)
+                items['toc_outcome']= true;
             return items;
             }),
           ),

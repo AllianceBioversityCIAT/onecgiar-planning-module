@@ -446,6 +446,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     wp_id: any,
     value: boolean
   ) {
+    console.log(partner_code, wp_id, value)
     if(!value) {
       this.dialog
       .open(DeleteConfirmDialogComponent, {
@@ -851,23 +852,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       category: "IPSR",
       ost_wp: { wp_official_code: "IPSR" },
     });
-    // const partners_result = this.results
-    //   .filter((d: any) => d.partners)
-    //   .map((d: any) => d.partners)
-    //   .flat(1);
 
-    // this.results
-    //   .filter((d: any) => d.responsible_organization)
-    //   .map((d: any) => d.responsible_organization)
-    //   .forEach((element: any) => {
-    //     partners_result.push(element);
-    //   });
+    const tocOutcoms = {
+      id: "toc-outcomes",
+      title: "Toc Outcomes",
+      category: "Toc Outcomes",
+      ost_wp: { wp_official_code: "toc-outcomes" },
+    };
 
-    // this.partners = [
-    //   ...new Map(
-    //     partners_result.map((item: any) => [item['code'], item])
-    //   ).values(),
-    // ];
+    this.wps.splice(1, 0, tocOutcoms)
+
+
     for (let partner of this.partners) {
       this.partnersStatus[partner.code] = this.checkComplete(partner.code);
       if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
@@ -1040,7 +1035,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         null,
         wp.ost_wp.wp_official_code
       );
-      if(wp.ost_wp.wp_official_code != 'IPSR' && this.allData[wp.ost_wp.wp_official_code].length == 0)
+      if(this.allData['toc-outcomes']?.length == 0)
+        delete this.allData['toc-outcomes'];
+      if(wp.ost_wp.wp_official_code != 'IPSR' && this.allData[wp.ost_wp.wp_official_code]?.length == 0)
         this.tocIncompleteData = true
     }
     this.savedValues = await this.submissionService.getSavedData(
@@ -1445,7 +1442,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             d.category == "IPSR") &&
           (d.group == id ||
             d.wp_id == official_code ||
-            (official_code == "CROSS" && this.checkEOI(d.category)))
+            (official_code == "CROSS" && this.checkEOI(d.category)) || 
+            (official_code == "toc-outcomes" && d.toc_outcome)
+          )
         );
       else
         return (
@@ -1455,7 +1454,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             d.category == "Cross Cutting" ||
             d.category == "IPSR") &&
             (d.group == id || d.wp_id == official_code)) ||
-          (official_code == "CROSS" && this.checkEOI(d.category))
+          (official_code == "CROSS" && this.checkEOI(d.category))|| 
+          (official_code == "toc-outcomes" && d.toc_outcome)
         );
     });
 

@@ -373,6 +373,7 @@
                 ></app-popover>
               </mat-card-title>
               <mat-slide-toggle
+                *ngIf="wp.id != 'toc-outcomes'"
                 [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code]"
                 (toggleChange)="
                   toggleSummaryActualValues(wp.ost_wp.wp_official_code)
@@ -518,8 +519,8 @@
                       <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container>
-                      <th>Budget Percentage</th>
-                      <th>Budget (USD)</th>
+                      <th *ngIf="!(wp.id == 'toc-outcomes')">Budget Percentage</th>
+                      <th *ngIf="!(wp.id == 'toc-outcomes')">Budget (USD)</th>
                     </tr>
                     <ng-container
                       *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
@@ -772,7 +773,7 @@
                             >
                           </td>
                         </ng-container>
-                        <td (click)="item.isExpand = !item.isExpand">
+                        <td (click)="item.isExpand = !item.isExpand" *ngIf="!(wp.id == 'toc-outcomes')">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? sammary[wp.ost_wp.wp_official_code][item.id]
@@ -781,7 +782,7 @@
                                 )
                           }}%
                         </td>
-                        <td (click)="item.isExpand = !item.isExpand">
+                        <td (click)="item.isExpand = !item.isExpand" *ngIf="!(wp.id == 'toc-outcomes')">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? (summaryBudgets[wp.ost_wp.wp_official_code][
@@ -919,7 +920,7 @@
                           >
                         </td>
                       </ng-container>
-                      <td>
+                      <td *ngIf="!(wp.id == 'toc-outcomes')">
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? sammaryTotal[wp.ost_wp.wp_official_code]
@@ -928,7 +929,7 @@
                               )
                         }}%
                       </td>
-                      <td>
+                      <td *ngIf="!(wp.id == 'toc-outcomes')">
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code]
@@ -1242,6 +1243,7 @@
                 </div>
 
                 <mat-slide-toggle
+                *ngIf="!(wp.id == 'toc-outcomes')"
                   [(ngModel)]="
                     toggleValues[partner.code][wp.ost_wp.wp_official_code]
                   "
@@ -1266,9 +1268,9 @@
                     <ng-container *ngFor="let item of period">
                       <th>{{ item.year }} - {{ item.quarter }}</th>
                     </ng-container>
-                    <th class="per">Budget Percentage</th>
+                    <th class="per" *ngIf="!(wp.id == 'toc-outcomes')">Budget Percentage</th> 
                     <!-- <th class="no_budget"></th> -->
-                    <th class="budget">Budget (USD)</th>
+                    <th class="budget" *ngIf="!(wp.id == 'toc-outcomes')">Budget (USD)</th> 
                   </tr>
 
                   <ng-container
@@ -1435,7 +1437,7 @@
                         </td>
                       </ng-container>
 
-                      <td>
+                      <td *ngIf="!(wp.id == 'toc-outcomes')">
                         <div class="flex-icon-checkbox">
                           <mat-form-field
                             class="form-dialog-content__field"
@@ -1691,7 +1693,7 @@
                         </sat-popover>
                       </td>
 
-                      <td>
+                      <td *ngIf="!(wp.id == 'toc-outcomes')">
                         <mat-form-field
                           class="form-dialog-content__field"
                           floatLabel="always"
@@ -1873,7 +1875,7 @@
                       </tr>
                     </ng-container>
                   </ng-container>
-                  <tr class="total">
+                  <tr class="total" *ngIf="!(wp.id == 'toc-outcomes')">
                     <td [colSpan]="period.length + 2">
                       <div class="subtotal">Subtotal</div>
                     </td>
