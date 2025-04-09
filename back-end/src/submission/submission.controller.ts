@@ -39,12 +39,14 @@ import {
   updateLatestSubmitionStatus,
   updateStatus,
 } from 'src/DTO/submission.dto';
+import { InitiativesService } from 'src/initiatives/initiatives.service';
 @UseGuards(JwtAuthGuard)
 @ApiTags('submission')
 @Controller('submission')
 export class SubmissionController {
   constructor(
     private readonly submissionService: SubmissionService,
+    private readonly initService: InitiativesService,
     private readonly httpService: HttpService,
   ) {}
 
@@ -86,8 +88,10 @@ export class SubmissionController {
     @Request() req,
     @Body('phase_id') phase_id: number,
   ) {
-    const json = await this.getTocs(id);
-    const tocSubmissionData = await this.submissionService.getTocSubmissionData(id);
+    const init = await this.initService.findOne(id);
+    const json = await this.getTocs(init.synchronized == true ? init.official_code : id);
+    const tocSubmissionData = await this.submissionService.getTocSubmissionData(init.synchronized == true ? init.official_code : id);
+
     return this.submissionService.createNew(
       req.user.id,
       id,
