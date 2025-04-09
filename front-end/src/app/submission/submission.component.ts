@@ -941,6 +941,19 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               wp.ost_wp.wp_official_code,
               item.id
             );
+          } else if(item.category == "OUTCOME" && !item.group) {
+            this.check(
+              this.values,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item.id
+            );
+            this.check(
+              this.displayValues,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item.id
+            );
           }
           this.budgetValues[partner.code][wp.ost_wp.wp_official_code][item.id] =
             null;
