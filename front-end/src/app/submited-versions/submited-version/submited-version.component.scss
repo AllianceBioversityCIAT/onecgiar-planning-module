@@ -1,6 +1,12 @@
 @import "../../sass/abstracts/variables";
 @import "../../sass/components/button";
 
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
 // td {
 //   text-align: center;
 // }
@@ -924,7 +930,7 @@ mat-tab-group {
   font-family: "Poppins", sans-serif !important;
   white-space: normal !important;
   max-width: 89rem;
-  margin: 3rem 0 -8rem 0;
+  margin: 1rem 0 -8rem 0;
   padding: 0 1.5rem 0 1.5rem;
   color: #0f212f;
   font-family: "Poppins", sans-serif !important;

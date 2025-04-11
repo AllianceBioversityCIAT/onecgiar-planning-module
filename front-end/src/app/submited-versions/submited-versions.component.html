@@ -380,8 +380,8 @@
                       <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container>
-                      <th>Percentage %</th>
-                      <th>Budget</th>
+                      <th *ngIf="!(wp.id == 'toc-outcomes')">Percentage %</th>
+                      <th *ngIf="!(wp.id == 'toc-outcomes')">Budget</th>
                     </tr>
                     <ng-container
                       *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
@@ -428,7 +428,7 @@
                             >
                           </td>
                         </ng-container>
-                        <td>
+                        <td *ngIf="!(wp.id == 'toc-outcomes')">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? sammary[wp.ost_wp.wp_official_code][item.id]
@@ -437,7 +437,7 @@
                                 )
                           }}%
                         </td>
-                        <td>
+                        <td *ngIf="!(wp.id == 'toc-outcomes')">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? summaryBudgets[wp.ost_wp.wp_official_code][
@@ -484,7 +484,7 @@
                         </td>
                       </ng-container>
 
-                      <td>
+                      <td *ngIf="!(wp.id == 'toc-outcomes')">
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? sammaryTotal[wp.ost_wp.wp_official_code]
@@ -494,7 +494,7 @@
                         }}%
                       </td>
 
-                      <td>
+                      <td *ngIf="!(wp.id == 'toc-outcomes')">
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? summaryBudgetsTotal[wp.ost_wp.wp_official_code]
@@ -616,8 +616,8 @@
                       <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container>
-                      <th>Percentage %</th>
-                      <th>Budget</th>
+                      <th *ngIf="!(wp.id == 'toc-outcomes')">Percentage %</th>
+                      <th *ngIf="!(wp.id == 'toc-outcomes')">Budget</th>
                     </tr>
 
                     <ng-container
@@ -668,7 +668,7 @@
                             >
                           </td>
                         </ng-container>
-                        <td>
+                        <td *ngIf="!(wp.id == 'toc-outcomes')">
                           {{
                             toggleValues[partner.code][
                               wp.ost_wp.wp_official_code
@@ -681,7 +681,7 @@
                                 ][item.id]
                           }}%
                         </td>
-                        <td>
+                        <td *ngIf="!(wp.id == 'toc-outcomes')">
                           {{
                             toggleValues[partner.code][
                               wp.ost_wp.wp_official_code
@@ -716,7 +716,7 @@
                           >
                         </td>
                       </ng-container>
-                      <td>
+                      <td *ngIf="!(wp.id == 'toc-outcomes')">
                         {{ 
                           toggleValues[partner.code][wp.ost_wp.wp_official_code]
                             ? totals[partner.code][wp.ost_wp.wp_official_code]
@@ -725,7 +725,7 @@
                               )
                         }}%
                       </td>
-                      <td>
+                      <td *ngIf="!(wp.id == 'toc-outcomes')">
                         {{ 
                           wp_budgets[partner.code][wp.ost_wp.wp_official_code] | number 
                         }}

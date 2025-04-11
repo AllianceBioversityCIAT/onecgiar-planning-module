@@ -430,10 +430,6 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       d["wp_id"] = "CROSS";
       return d;
     });
-    // melia_data.map((d: any) => {
-    //   d["category"] = "MELIA";
-    //   return d;
-    // });
     this.ipsr_value_data.map((d: any) => {
       d["category"] = "IPSR";
       d["wp_id"] = "IPSR";
@@ -441,10 +437,8 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
     });
     this.results = [
       ...cross_data,
-      // ...melia_data,
       ...this.ipsr_value_data,
       ...this.results,
-      // ...indicators_data,
     ];
     this.wps = this.results
     .filter((d: any) => {
@@ -465,6 +459,17 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       category: "IPSR",
       ost_wp: { wp_official_code: "IPSR" },
     });
+    if(this.initiative_data.synchronized) {
+      const tocOutcoms = {
+        id: "toc-outcomes",
+        title: "Toc Outcomes",
+        category: "Toc Outcomes",
+        ost_wp: { wp_official_code: "toc-outcomes" },
+      };
+
+      this.wps.splice(1, 0, tocOutcoms);
+    }
+    
     for (let partner of this.partners) {
       if (!this.budgetValues[partner.code])
         this.budgetValues[partner.code] = {};
@@ -616,6 +621,8 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
         null,
         wp.ost_wp.wp_official_code
       );
+      if(this.allData['toc-outcomes']?.length == 0)
+        delete this.allData['toc-outcomes'];
     }
 
     this.savedValues = this.submission_data.consolidated;
@@ -805,13 +812,11 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
             d.category == "OUTCOME" ||
             d.category == "EOI" ||
             d.category == "Cross Cutting" ||
-            d.category == "IPSR" 
-          //   ||d.category == 'INDICATOR' ||
-            // d.category == "MELIA"
-            ) &&
+            d.category == "IPSR") &&
           (d.group == id ||
             d.wp_id == official_code ||
-            (official_code == "CROSS" && d.category == "EOI"))
+            (official_code == "CROSS" && d.category == "EOI")) || 
+            (official_code == "toc-outcomes" && d.toc_outcome)
         );
       else
         return (
@@ -819,13 +824,10 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
             d.category == "OUTCOME" ||
             d.category == "EOI" ||
             d.category == "IPSR" ||
-            d.category == "Cross Cutting" 
-            // ||
-            // d.category == 'INDICATOR' ||
-            // d.category == "MELIA"
-            ) &&
+            d.category == "Cross Cutting") &&
             (d.group == id || d.wp_id == official_code)) ||
-          (official_code == "CROSS" && d.category == "EOI")
+          (official_code == "CROSS" && d.category == "EOI") || 
+          (official_code == "toc-outcomes" && d.toc_outcome)
         );
     });
 

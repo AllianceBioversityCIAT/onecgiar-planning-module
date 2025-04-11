@@ -660,16 +660,19 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
   allvalueChange() {
     for (let wp of this.wps) {
-      this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
-        this.period.forEach((element) => {
-          if (!this.perAllValues[wp.ost_wp.wp_official_code])
-            this.perAllValues[wp.ost_wp.wp_official_code] = {};
-          if (!this.perAllValues[wp.ost_wp.wp_official_code][item.id])
-            this.perAllValues[wp.ost_wp.wp_official_code][item.id] = {};
-          this.perAllValues[wp.ost_wp.wp_official_code][item.id][element.id] =
-            false;
+      if(this.allData[wp.ost_wp.wp_official_code]) {
+        this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
+          this.period.forEach((element) => {
+            if (!this.perAllValues[wp.ost_wp.wp_official_code])
+              this.perAllValues[wp.ost_wp.wp_official_code] = {};
+            if (!this.perAllValues[wp.ost_wp.wp_official_code][item.id])
+              this.perAllValues[wp.ost_wp.wp_official_code][item.id] = {};
+            this.perAllValues[wp.ost_wp.wp_official_code][item.id][element.id] =
+              false;
+          });
         });
-      });
+      }
+
     }
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
@@ -852,17 +855,16 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       category: "IPSR",
       ost_wp: { wp_official_code: "IPSR" },
     });
+    if(this.initiative_data.synchronized) {
+      const tocOutcoms = {
+        id: "toc-outcomes",
+        title: "Toc Outcomes",
+        category: "Toc Outcomes",
+        ost_wp: { wp_official_code: "toc-outcomes" },
+      };
 
-    const tocOutcoms = {
-      id: "toc-outcomes",
-      title: "Toc Outcomes",
-      category: "Toc Outcomes",
-      ost_wp: { wp_official_code: "toc-outcomes" },
-    };
-
-    this.wps.splice(1, 0, tocOutcoms)
-
-
+      this.wps.splice(1, 0, tocOutcoms)
+    }
     for (let partner of this.partners) {
       this.partnersStatus[partner.code] = this.checkComplete(partner.code);
       if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
@@ -1141,7 +1143,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.user = this.AuthService.getLoggedInUser();
     this.params = this.activatedRoute?.snapshot.params;
     this.phase = await this.phasesService.getActivePhase();
-    this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.params.id)
+    this.initiative_data = await this.submissionService.getInitiative(
+      this.params.id
+    );
+    this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.initiative_data.synchronized == true ? this.params.code : this.params.id)
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
@@ -1155,9 +1160,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     if (partners.length < 1) {
       partners = await this.submissionService.getOrganizations();
     }
-    this.initiative_data = await this.submissionService.getInitiative(
-      this.params.id
-    );
     this.initUser = this.InitiativeUsers.filter(
       (d: any) => d?.user_id == this?.user?.id
     )[0];
