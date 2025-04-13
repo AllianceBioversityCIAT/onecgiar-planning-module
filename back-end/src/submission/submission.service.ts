@@ -1506,10 +1506,7 @@ export class SubmissionService {
       return d;
     });
 
-    // melia_data.map((d: any) => {
-    //   d['category'] = 'MELIA';
-    //   return d;
-    // });
+          
 
     ipsr_value_data.map((d: any) => {
       d['category'] = 'IPSR';
@@ -1519,7 +1516,6 @@ export class SubmissionService {
 
     this.results = [
       ...cross_data,
-      // ...melia_data,
       ...ipsr_value_data,
       ...this.results,
     ];
@@ -1544,10 +1540,17 @@ export class SubmissionService {
       ost_wp: { wp_official_code: 'IPSR' },
     });
 
-    // let partners = await this.PhasesService.fetchAssignedOrganizations(
-    //   submission?.phase?.id,
-    //   submission?.initiative?.id,
-    // );
+    if(this.initiative_data.synchronized) {
+      const tocOutcoms = {
+        id: "toc-outcomes",
+        title: "Toc Outcomes",
+        category: "Toc Outcomes",
+        ost_wp: { wp_official_code: "toc-outcomes" },
+      };
+      this.wps.splice(1, 0, tocOutcoms)
+    }
+
+    
     if (partners.length < 1)
       partners = await this.organizationRepository.find();
 
@@ -1714,6 +1717,8 @@ export class SubmissionService {
         null,
         wp.ost_wp.wp_official_code,
       );
+      if(this.allData['toc-outcomes']?.length == 0)
+        delete this.allData['toc-outcomes'];
     }
     if (submissionId != null) {
       this.setvalues(
@@ -2789,16 +2794,18 @@ export class SubmissionService {
 
   allvalueChange() {
     for (let wp of this.wps) {
-      this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
-        this.period.forEach((element) => {
-          if (!this.perAllValues[wp.ost_wp.wp_official_code])
-            this.perAllValues[wp.ost_wp.wp_official_code] = {};
-          if (!this.perAllValues[wp.ost_wp.wp_official_code][item.id])
-            this.perAllValues[wp.ost_wp.wp_official_code][item.id] = {};
-          this.perAllValues[wp.ost_wp.wp_official_code][item.id][element.id] =
-            false;
+      if(this.allData[wp.ost_wp.wp_official_code]) {
+        this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
+          this.period.forEach((element) => {
+            if (!this.perAllValues[wp.ost_wp.wp_official_code])
+              this.perAllValues[wp.ost_wp.wp_official_code] = {};
+            if (!this.perAllValues[wp.ost_wp.wp_official_code][item.id])
+              this.perAllValues[wp.ost_wp.wp_official_code][item.id] = {};
+            this.perAllValues[wp.ost_wp.wp_official_code][item.id][element.id] =
+              false;
+          });
         });
-      });
+      }
     }
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
@@ -2877,12 +2884,11 @@ export class SubmissionService {
             d.category == 'OUTCOME' ||
             d.category == 'EOI' ||
             d.category == 'Cross Cutting' ||
-            d.category == 'IPSR' ||
-            // d.category == 'INDICATOR' ||
-            d.category == 'MELIA') &&
+            d.category == 'IPSR') &&
           (d.group == id ||
             d.wp_id == official_code ||
-            (official_code == 'CROSS' && this.checkEOI(d.category)))
+            (official_code == 'CROSS' && this.checkEOI(d.category))) || 
+            (official_code == "toc-outcomes" && d.toc_outcome)
         );
       else
         return (
@@ -2890,11 +2896,10 @@ export class SubmissionService {
             d.category == 'OUTCOME' ||
             d.category == 'EOI' ||
             d.category == 'IPSR' ||
-            d.category == 'Cross Cutting' ||
-            // d.category == 'INDICATOR' ||
-            d.category == 'MELIA') &&
+            d.category == 'Cross Cutting') &&
             (d.group == id || d.wp_id == official_code)) ||
-          (official_code == 'CROSS' && this.checkEOI(d.category))
+          (official_code == 'CROSS' && this.checkEOI(d.category)) || 
+          (official_code == "toc-outcomes" && d.toc_outcome)
         );
     });
 

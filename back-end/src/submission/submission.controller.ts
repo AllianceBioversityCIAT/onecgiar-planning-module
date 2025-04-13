@@ -247,7 +247,8 @@ export class SubmissionController {
   @Get('excelCurrent/:id')
   @ApiBearerAuth()
   async excelCurrent(@Param('id') initId) {
-    const toc_data = this.getTocs(initId);
+    const init = await this.initService.findOne(initId);
+    const toc_data = this.getTocs(init.synchronized == true ? init.official_code : initId);
     return await this.submissionService.generateExcel(
       null,
       initId,
@@ -258,7 +259,8 @@ export class SubmissionController {
   @Post('excelCurrentCenter')
   @ApiBearerAuth()
   async excelCurrentCenter(@Body() data: any) {
-    const toc_data = this.getTocs(data.initId);
+    const init = await this.initService.findOne(data.initId);
+    const toc_data = this.getTocs(init.synchronized == true ? init.official_code : data.initId);
     return await this.submissionService.generateExcel(
       null,
       data.initId,
