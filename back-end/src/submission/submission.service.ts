@@ -1462,6 +1462,7 @@ export class SubmissionService {
       this.period = submission.phase.periods;
       this.wp_budgets = await this.getSubmissionBudgets(submissionId, submission.phase.id);
 
+      this.initiative_data = await this.initService.findOne(submission.initiative_id);
       cross_data = await this.CrossCuttingService.findBySubmissionID(
         submissionId
       );
