@@ -179,7 +179,7 @@
         <div class="form-dialog-conten-box-2">
           <div class="form-dialog-content__title-box">
             <mat-label class="form-dialog-content__title-box__title"
-              >Previous Phase<span class="star">*</span></mat-label
+              >Previous Phase</mat-label
             >
           </div>
           <mat-form-field
@@ -194,13 +194,7 @@
                   {{ phase.name }}
                 </mat-option>
               </ng-container>
-            </mat-select>
-
-            <mat-error
-              class="error"
-              *ngIf="phaseForm.controls?.['previousPhase']?.errors?.['required']"
-              >This field is mandatory</mat-error
-            >
+            </mat-select>        
           </mat-form-field>
         </div>
 

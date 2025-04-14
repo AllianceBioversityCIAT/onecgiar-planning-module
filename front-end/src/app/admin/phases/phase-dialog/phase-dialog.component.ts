@@ -40,7 +40,7 @@ export class PhaseDialogComponent implements OnInit {
       tocPhase: [null, Validators.required],
       startDate: [null, Validators.required],
       endDate: [null, Validators.required],
-      previousPhase: [null, Validators.required],
+      previousPhase: [null],
       status: [null, Validators.required],
       show_eoi: [false],
     });
