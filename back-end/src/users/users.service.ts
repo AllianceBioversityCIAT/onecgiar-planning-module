@@ -170,7 +170,7 @@ export class UsersService {
       Name: null,
       Email: null,
       Role: null,
-      'Initiatives and Roles': width ? 'Initiatives' : null,
+      'Programs and Roles': width ? 'Programs' : null,
       init_roles: width ? 'Roles' : null,
     };
   }
@@ -219,12 +219,12 @@ export class UsersService {
 
       element.user_init_roles.forEach((d, index) => {
         if (index == 0) {
-          template['Initiatives and Roles'] = d.initiative.official_code;
+          template['Programs and Roles'] = d.initiative.official_code;
           template.init_roles = d.role;
           finaldata.push(template);
         } else {
           const template2 = this.getTemplateUser();
-          template2['Initiatives and Roles'] = d.initiative.official_code;
+          template2['Programs and Roles'] = d.initiative.official_code;
           template2.init_roles = d.role;
           finaldata.push(template2);
         }

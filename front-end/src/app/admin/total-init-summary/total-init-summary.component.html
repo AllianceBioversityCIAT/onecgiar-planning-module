@@ -11,7 +11,7 @@
 
       <div class="track-porbs__text-box--1">
         <p class="track-porbs__text-box__title">
-          The Budget Summary module offers an overview of the approved budget across various Initiatives/Platforms.
+          The Budget Summary module offers an overview of the approved budget across various Programs/Platforms.
         </p>
         <p class="track-porbs__text-box__title">
           Note: To horizontally scroll the table use a combination Shift and the scroll wheel of the mouse.
@@ -31,7 +31,7 @@
 
           <div class="sec-5">
             <div class="risk-management-form-field field-3">
-              <mat-label class="risk-management-form-field__label">Initiative/Platform official code</mat-label>
+              <mat-label class="risk-management-form-field__label">Program official code</mat-label>
 
               <mat-select formControlName="initiatives" class="risk-management-form-field-box__input-3"
                 [placeholder]="'All'" multiple>
@@ -117,7 +117,7 @@
 
           <ng-container matColumnDef="title">
             <th mat-header-cell *matHeaderCellDef>
-              <span>Initiative/Platform title</span>
+              <span>Program title</span>
             </th>
             <td mat-cell *matCellDef="let element">{{ element.name }}</td>
             <td mat-footer-cell *matFooterCellDef style="display: none;"></td>

@@ -1821,7 +1821,7 @@ export class SubmissionService {
         ...this.getHeader(submission, 'CONSOLIDATED', this.initiative_data),
         ...ConsolidatedData.map((d_, total_index) => [
           {
-            v: 'Total Initiative',
+            v: 'Total Program',
             s: {
               fill: { fgColor: { rgb: '454962' } },
               font: { color: { rgb: 'ffffff' } },

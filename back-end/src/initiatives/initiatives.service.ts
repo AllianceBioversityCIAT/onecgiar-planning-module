@@ -469,16 +469,16 @@ export class InitiativesService {
 
   getTemplate() {
     return {
-      'Initiative ID': null,
-      'Initiative Title': null,
+      'Program ID': null,
+      'Program Title': null,
       'Updated by': null,
       'Current status': null,
     };
   }
   
   mapTemplate(template, element) {
-    template['Initiative ID'] = element?.official_code;
-    template['Initiative Title'] = element?.name;
+    template['Program ID'] = element?.official_code;
+    template['Program Title'] = element?.name;
     template['Updated by'] = element?.history;
     template['Current status'] = 
     new Date(element.last_submitted_at).getTime() != null &&
@@ -823,7 +823,7 @@ export class InitiativesService {
   async getTemplateBudgetSummary(partnersFiltered: any[]) {
     let header = {
       'Official Code'	: null,
-      'Initiative/Platform title': null,
+      'Program title': null,
       'Total budget, USD'	: null,
     };
 
@@ -852,7 +852,7 @@ export class InitiativesService {
 
   async mapTemplateBudgetSummary(template, element, partnersFiltered: any[]) {
     template['Official Code'] = element?.official_code;
-    template['Initiative/Platform title'] = element?.name;
+    template['Program title'] = element?.name;
     template['Total budget, USD'] = null;
 
     let partners: Organization[] = [];
