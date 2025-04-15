@@ -25,7 +25,6 @@ export class InitiativesComponent implements OnInit {
     "id",
     "official_code",
     "name",
-    "short_name",
     "my_role",
     "last_update_at",
     "status",

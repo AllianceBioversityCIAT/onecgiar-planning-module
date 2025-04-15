@@ -201,7 +201,7 @@ export class EmailService {
     createBodyForCoordinatorAndContributorAssigned(init, roleAssigned) {
     return `
     	<p style="font-weight: 200">
-        You have been assigned the ${roleAssigned} role for Initiative/Platform <span style="font-weight: bold;">${init.official_code}</span>
+        You have been assigned the ${roleAssigned} role for Program <span style="font-weight: bold;">${init.official_code}</span>
       </p>
     `
   }
@@ -209,7 +209,7 @@ export class EmailService {
   createBodyForLeaderAssigned(init, roleAssigned) {
     return `
     	<p style="font-weight: 200">
-        You have been assigned by the admin as the ${roleAssigned} role for Intiative/Platform <span style="font-weight: bold;">${init.official_code}</span>
+        You have been assigned by the admin as the ${roleAssigned} role for Program <span style="font-weight: bold;">${init.official_code}</span>
       </p>
     `
   }
@@ -219,7 +219,7 @@ export class EmailService {
   createBodyForAdminsToBeValidated(init) {
     return `
     	<p style="font-weight: 200">
-        The PORB for Initiative <span style="font-weight: bold;">${init.official_code}</span> is waiting for your approval.
+        The PORB for Program <span style="font-weight: bold;">${init.official_code}</span> is waiting for your approval.
       </p>
     `
   }
@@ -229,7 +229,7 @@ export class EmailService {
   createBodyForLeaderAndCoordinatorToBeValidated(init) {
     return `
     	<p style="font-weight: 200">
-        Initiative/Platform <span style="font-weight: bold;">${init.official_code}</span> was submitted for approval
+        Program <span style="font-weight: bold;">${init.official_code}</span> was submitted for approval
       </p>
     `
   }
@@ -239,7 +239,7 @@ export class EmailService {
 
     let emailBody = `
     <p style="font-weight: 200">
-      The PORB for your Initiative <span style="font-weight: bold;">${init.official_code}</span> of which you are ${roleAssigned} has been approved
+      The PORB for your Program <span style="font-weight: bold;">${init.official_code}</span> of which you are ${roleAssigned} has been approved
     </p>
     `
     if(statusReason)
@@ -256,7 +256,7 @@ export class EmailService {
   createBodyForRejectedSubmission(init, roleAssigned, statusReason) {
     let emailBody = `
     <p style="font-weight: 200">
-      The PORB for your Initiative <span style="font-weight: bold;">${init.official_code}</span> of which you are ${roleAssigned} has been rejected
+      The PORB for your Program <span style="font-weight: bold;">${init.official_code}</span> of which you are ${roleAssigned} has been rejected
     </p>
     `
     if(statusReason)
@@ -292,7 +292,7 @@ export class EmailService {
   createBodyForPORBCollaboratingInitiativeMELIA(init, otherInitiative, meliaStudy) {
     return `
     	<p style="font-weight: 200">
-        The   Initiative/Platform <span style="font-weight: bold;">${otherInitiative.official_code}</span> was added by Initiative/Platform <span style="font-weight: bold;">${init.official_code}</span> as collaborating  to conduct the MELIA studies   <span style="font-weight: bold;"> ${meliaStudy.name}  </span> 
+        The   Initiative/Platform <span style="font-weight: bold;">${otherInitiative.official_code}</span> was added by Program <span style="font-weight: bold;">${init.official_code}</span> as collaborating  to conduct the MELIA studies   <span style="font-weight: bold;"> ${meliaStudy.name}  </span> 
       </p>
     `
   }
