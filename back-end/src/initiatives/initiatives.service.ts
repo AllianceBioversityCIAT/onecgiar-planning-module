@@ -492,6 +492,7 @@ export class InitiativesService {
   async getAllFull() {
     const finalResult = await this.initiativeRepository
       .createQueryBuilder('init')
+      .where('init.archived = :archived', { archived: false })
       .leftJoinAndSelect('init.roles', 'roles')
       .leftJoinAndSelect('init.latest_submission', 'latest_submission')
       .leftJoinAndSelect('init.center_status', 'center_status')
