@@ -215,6 +215,10 @@ export class SubmissionController {
               if(items?.related_node_id && items.category != 'WP')
               if(items?.id)
               items['id']=items?.related_node_id;
+              if(items.melias.length)
+                items.melias.map((melia: any) => {
+                  melia['id'] = melia.related_node_id
+                })
 
               if(items.category == 'OUTCOME' && !items.group)
                 items['toc_outcome']= true;

@@ -177,8 +177,12 @@
                 <div class="table-box mat-elevation-z8">
                   <table>
                     <tr>
-                      <th>WP/Results</th>
-                      <th>Type</th>
+                      <th *ngIf="wp.id == 'melia'">Study Title</th>
+                      <th *ngIf="wp.id != 'melia'">WP/Results</th>
+                      <ng-container *ngIf="wp.id != 'projects'">
+                        <th *ngIf="wp.id == 'melia'">Study Type</th>
+                        <th *ngIf="wp.id != 'melia'">Type</th>
+                      </ng-container>
                       <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container>
@@ -204,8 +208,11 @@
                                 : item.title
                             }}
                           </ng-container>
+                          <ng-container *ngIf="wp.id == 'projects'">
+                            {{item.name}}
+                            </ng-container>
                         </td>
-                        <td>{{ item.category }}</td>
+                        <td *ngIf="wp.id != 'projects'">{{ item.category }}</td>
                         <ng-container *ngFor="let per of period">
                           <td>
                             <!-- to be checked -->
@@ -245,7 +252,7 @@
                       </tr>
                     </ng-container>
                     <tr class="total">
-                      <td colspan="2">
+                      <td [attr.colspan]="(wp.id == 'projects') ? 1 : 2">
                         <span class="subtotal">Subtotal</span>
                       </td>
                       <ng-container *ngFor="let per of period">
@@ -407,8 +414,12 @@
                   }"
                 >
                   <tr>
-                    <th>WP/Results</th>
-                    <th>Type</th>
+                    <th *ngIf="wp.id == 'melia'">Study Title</th>
+                    <th *ngIf="wp.id != 'melia'">WP/Results</th>
+                    <ng-container *ngIf="wp.id != 'projects'">
+                      <th *ngIf="wp.id == 'melia'">Study Type</th>
+                      <th *ngIf="wp.id != 'melia'">Type</th>
+                    </ng-container>
                     <ng-container *ngFor="let item of period">
                       <th>{{ item.year }} - {{ item.quarter }}</th>
                     </ng-container>
@@ -439,8 +450,11 @@
                               : item.title
                           }}
                         </ng-container>
+                        <ng-container  *ngIf="wp.id == 'projects'">
+                          {{item.name}}
+                        </ng-container>
                       </td>
-                      <td>{{ item.category }}</td>
+                      <td *ngIf="wp.id != 'projects'">{{ item.category }}</td>
                       <ng-container *ngFor="let per of period">
                         <td>
                           <mat-icon
@@ -479,7 +493,7 @@
                     </tr>
                   </ng-container>
                   <tr class="total">
-                    <td [colSpan]="2">
+                    <td [attr.colspan]="(wp.id == 'projects') ? 1 : 2">
                       <span class="subtotal">Subtotal</span>
                     </td>
 
