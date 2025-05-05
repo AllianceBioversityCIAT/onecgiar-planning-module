@@ -1086,8 +1086,8 @@ export class SubmissionService {
           ? d.initiativeMelia?.meliaType?.name
           : d?.ipsr?.id
             ? d?.ipsr.title + ' (' + d.value + ')'
-            : d.title;
-        obj['Type'] = d.category;
+            : d.title || d.name;
+        obj['Type'] = d.category || 'N/A';
         period.forEach((per: any) => {
           obj[per.year + '-' + per.quarter] =
             this.perAllValues[wp.ost_wp.wp_official_code][obj.id][per.id] ==
@@ -1156,8 +1156,8 @@ export class SubmissionService {
               ? d?.initiativeMelia?.meliaType?.name
               : d?.ipsr?.id
                 ? d?.ipsr.title + ' (' + d.value + ')'
-                : d.title;
-            obj['Type'] = d.category;
+                : d.title || d.name;
+            obj['Type'] = d.category || 'N/A';
             period.forEach((per: any) => {
               obj[per?.year + '-' + per?.quarter] =
                 this.perValues[partner?.code][wp?.ost_wp?.wp_official_code][
@@ -1552,12 +1552,21 @@ export class SubmissionService {
     }
     const melia = {
       id: "melia",
-      title: "Melia",
+      title: "MELIA",
       category: "melia",
       ost_wp: { wp_official_code: "melia" },
     };
 
-    this.wps.splice(1, 0, melia)
+    this.wps.splice(1, 0, melia);
+
+    const projects = {
+      id: "projects",
+      title: "Bilateral Projects",
+      category: "projects",
+      ost_wp: { wp_official_code: "projects" },
+    };
+
+    this.wps.splice(1, 0, projects)
     
     if (partners.length < 1)
       partners = await this.organizationRepository.find();
@@ -2883,10 +2892,12 @@ export class SubmissionService {
   getDataForWp(
     id: string,
     partner_code: any | null = null,
-    official_code = null,
+    official_code: any  = null,
   ) {
     let wp_data;
-    if(official_code != "melia") {
+    const wp = ['melia', 'projects'];
+
+    if(!wp.includes(official_code)) {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -2912,7 +2923,7 @@ export class SubmissionService {
             (official_code == "toc-outcomes" && d.toc_outcome)
           );
       });
-    } else {
+    } else if(official_code == "melia") {
       let allMelias = this.results.flatMap((item: any) => {
         return (item.melias || []).map((melia: any) => ({
           ...melia,
@@ -2931,7 +2942,23 @@ export class SubmissionService {
         }
       }
       wp_data = uniqueMelias
+    } else if(official_code == "projects") {
+      const projects = this.results.flatMap((item: any) => item.projects?.map((project: any) => ({ ...project })) || []);
+  
+      const uniqueProjects = [];
+
+      const set = new Set();
+
+      for (const project of projects) {
+        if (!set.has(project.id)) {
+          set.add(project.id);
+          uniqueProjects.push(project);
+        }
+      }
+      wp_data = uniqueProjects
     }
+
+
     wp_data.sort(this.compare);
 
     return wp_data;
