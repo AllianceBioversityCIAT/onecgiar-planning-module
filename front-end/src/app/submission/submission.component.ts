@@ -1069,6 +1069,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       );
       if(this.allData['toc-outcomes']?.length == 0)
         delete this.allData['toc-outcomes'];
+      if(this.allData['projects']?.length == 0)
+        delete this.allData['projects'];
       if(wp.ost_wp.wp_official_code != 'IPSR' && this.allData[wp.ost_wp.wp_official_code]?.length == 0)
         this.tocIncompleteData = true
     }
