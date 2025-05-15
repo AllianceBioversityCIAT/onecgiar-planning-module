@@ -1106,7 +1106,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     newCROSS.forEach((d: any) => this.allData["CROSS"].unshift(d))
 
-
+    console.log(this.allData)
     //sort WP titles
     this.wps.forEach((d: any) => {
       if (d.category == "WP") {
