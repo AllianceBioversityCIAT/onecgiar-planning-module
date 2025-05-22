@@ -159,7 +159,6 @@
                 }}</mat-card-title>
   
                 <mat-slide-toggle
-                *ngIf="!(wp.id == 'toc-outcomes')"
                   [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code]"
                   (toggleChange)="
                     toggleSummaryActualValues(wp.ost_wp.wp_official_code)
@@ -186,8 +185,8 @@
                       <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container>
-                      <th *ngIf="!(wp.id == 'toc-outcomes')">Budget Percentage</th>
-                      <th *ngIf="!(wp.id == 'toc-outcomes')">Budget (USD)</th>
+                      <th>Budget Percentage</th>
+                      <th>Budget (USD)</th>
                     </tr>
                     <ng-container
                       *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
@@ -212,7 +211,7 @@
                             {{item.name}}
                             </ng-container>
                         </td>
-                        <td *ngIf="wp.id != 'projects'">{{ item.category }}</td>
+                        <td *ngIf="wp.id != 'projects'">{{ getCategory(item.category) }}</td>
                         <ng-container *ngFor="let per of period">
                           <td>
                             <!-- to be checked -->
@@ -227,7 +226,7 @@
                             >
                           </td>
                         </ng-container>
-                        <td *ngIf="!(wp.id == 'toc-outcomes')">
+                        <td>
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? sammary[wp.ost_wp.wp_official_code][item.id]
@@ -236,7 +235,7 @@
                                 )
                           }}%
                         </td>
-                        <td *ngIf="!(wp.id == 'toc-outcomes')">
+                        <td>
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? (summaryBudgets[wp.ost_wp.wp_official_code][
@@ -271,7 +270,7 @@
                         </td>
                       </ng-container>
 
-                      <td *ngIf="!(wp.id == 'toc-outcomes')">
+                      <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? sammaryTotal[wp.ost_wp.wp_official_code]
@@ -281,7 +280,7 @@
                         }}%
                       </td>
 
-                      <td *ngIf="!(wp.id == 'toc-outcomes')">
+                      <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code] | number) 
@@ -390,7 +389,6 @@
               wp.title
             }}</mat-card-title>
             <mat-slide-toggle
-            *ngIf="!(wp.id == 'toc-outcomes')"
               [(ngModel)]="
                 toggleValues[partner.code][wp.ost_wp.wp_official_code]
               "
@@ -423,8 +421,8 @@
                     <ng-container *ngFor="let item of period">
                       <th>{{ item.year }} - {{ item.quarter }}</th>
                     </ng-container>
-                    <th *ngIf="!(wp.id == 'toc-outcomes')">Percentage %</th>
-                    <th *ngIf="!(wp.id == 'toc-outcomes')">Budget</th>
+                    <th>Percentage %</th>
+                    <th>Budget</th>
                   </tr>
 
                   <ng-container
@@ -454,7 +452,7 @@
                           {{item.name}}
                         </ng-container>
                       </td>
-                      <td *ngIf="wp.id != 'projects'">{{ item.category }}</td>
+                      <td *ngIf="wp.id != 'projects'">{{ getCategory(item.category) }}</td>
                       <ng-container *ngFor="let per of period">
                         <td>
                           <mat-icon
@@ -468,7 +466,7 @@
                           >
                         </td>
                       </ng-container>
-                      <td *ngIf="!(wp.id == 'toc-outcomes')">
+                      <td>
                         {{
                           toggleValues[partner.code][wp.ost_wp.wp_official_code]
                             ? values[partner.code][wp.ost_wp.wp_official_code][
@@ -479,7 +477,7 @@
                               ][item.id]
                         }}%
                       </td>
-                      <td *ngIf="!(wp.id == 'toc-outcomes')">
+                      <td>
                         {{
                           toggleValues[partner.code][wp.ost_wp.wp_official_code]
                             ? (budgetValues[partner.code][
@@ -513,7 +511,7 @@
                         >
                       </td>
                     </ng-container>
-                    <td *ngIf="!(wp.id == 'toc-outcomes')">
+                    <td>
                       {{
                         toggleValues[partner.code][wp.ost_wp.wp_official_code]
                           ? totals[partner.code][wp.ost_wp.wp_official_code]
@@ -522,7 +520,7 @@
                             )
                       }}%
                     </td>
-                    <td *ngIf="!(wp.id == 'toc-outcomes')">
+                    <td>
                       {{ wp_budgets[partner.code][wp.ost_wp.wp_official_code] | number  }}
                     </td>
                   </tr>

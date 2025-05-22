@@ -1087,7 +1087,7 @@ export class SubmissionService {
           : d?.ipsr?.id
             ? d?.ipsr.title + ' (' + d.value + ')'
             : d.title || d.name;
-        obj['Type'] = d.category || 'N/A';
+        obj['Type'] = this.getCategory(d.category);
         period.forEach((per: any) => {
           obj[per.year + '-' + per.quarter] =
             this.perAllValues[wp.ost_wp.wp_official_code][obj.id][per.id] ==
@@ -1157,7 +1157,7 @@ export class SubmissionService {
               : d?.ipsr?.id
                 ? d?.ipsr.title + ' (' + d.value + ')'
                 : d.title || d.name;
-            obj['Type'] = d.category || 'N/A';
+            obj['Type'] = this.getCategory(d.category);
             period.forEach((per: any) => {
               obj[per?.year + '-' + per?.quarter] =
                 this.perValues[partner?.code][wp?.ost_wp?.wp_official_code][
@@ -1450,7 +1450,6 @@ export class SubmissionService {
     // let melia_data;
     let cross_data;
 
-    let ipsr_value_data;
     let partners;
 
     this.InitiativeId = initId;
@@ -1466,9 +1465,10 @@ export class SubmissionService {
       cross_data = await this.CrossCuttingService.findBySubmissionID(
         submissionId
       );
-      ipsr_value_data = await this.IpsrValueService.findBySubmissionId(
-        submissionId
-      );
+      if(!this.initiative_data.synchronized)
+        this.ipsr_value_data = await this.IpsrValueService.findBySubmissionId(
+          submissionId
+        );
       partners = await this.PhasesService.fetchAssignedOrganizations(
         submission?.phase?.id,
         submission?.initiative?.id,
@@ -1492,8 +1492,8 @@ export class SubmissionService {
       this.results = await tocData;
 
 
-
-      ipsr_value_data = await this.IpsrValueService.findByInitiativeID(initId);
+      if(!this.initiative_data.synchronized)
+        this.ipsr_value_data = await this.IpsrValueService.findByInitiativeID(initId);
 
       cross_data = await this.CrossCuttingService.findByInitiativeID(initId)
 
@@ -1508,18 +1508,25 @@ export class SubmissionService {
     });
 
           
-
-    ipsr_value_data.map((d: any) => {
-      d['category'] = 'IPSR';
-      d['wp_id'] = 'IPSR';
-      return d;
-    });
-
-    this.results = [
-      ...cross_data,
-      ...ipsr_value_data,
-      ...this.results,
-    ];
+    if(!this.initiative_data.synchronized){
+      this.ipsr_value_data.map((d: any) => {
+        d['category'] = 'IPSR';
+        d['wp_id'] = 'IPSR';
+        return d;
+      });
+    }
+    
+    if(!this.initiative_data.synchronized)
+      this.results = [
+        ...cross_data,
+        ...this.ipsr_value_data,
+        ...this?.results,
+      ];
+    else
+      this.results = [
+        ...cross_data,
+        ...this?.results,
+      ];
 
     this.wps = this.results
       .filter((d: any) => {
@@ -1528,45 +1535,29 @@ export class SubmissionService {
         return d.category == "WP" && !d.group;
       }).sort((a: any, b: any) => a.title.localeCompare(b.title));
 
-    this.wps.unshift({
-      id: 'CROSS',
-      title: 'Cross Cutting',
-      category: 'Cross Cutting',
-      ost_wp: { wp_official_code: 'CROSS' },
-    });
-    this.wps.push({
-      id: 'IPSR',
-      title: 'Innovation packages & Scalling Readiness',
-      category: 'IPSR',
-      ost_wp: { wp_official_code: 'IPSR' },
-    });
+      if(!this.initiative_data.synchronized)
+        this.wps.unshift({
+          id: 'CROSS',
+          title: 'Cross Cutting',
+          category: 'Cross Cutting',
+          ost_wp: { wp_official_code: 'CROSS' },
+        });
+      if(!this.initiative_data.synchronized)
+        this.wps.push({
+          id: 'IPSR',
+          title: 'Innovation packages & Scalling Readiness',
+          category: 'IPSR',
+          ost_wp: { wp_official_code: 'IPSR' },
+        });
 
-    if(this.initiative_data.synchronized) {
-      const tocOutcoms = {
-        id: "toc-outcomes",
-        title: "Toc Outcomes",
-        category: "Toc Outcomes",
-        ost_wp: { wp_official_code: "toc-outcomes" },
-      };
-      this.wps.splice(1, 0, tocOutcoms)
-    }
-    const melia = {
-      id: "melia",
-      title: "MELIA",
-      category: "melia",
-      ost_wp: { wp_official_code: "melia" },
-    };
+    // const projects = {
+    //   id: "projects",
+    //   title: "Bilateral Projects",
+    //   category: "projects",
+    //   ost_wp: { wp_official_code: "projects" },
+    // };
 
-    this.wps.splice(1, 0, melia);
-
-    const projects = {
-      id: "projects",
-      title: "Bilateral Projects",
-      category: "projects",
-      ost_wp: { wp_official_code: "projects" },
-    };
-
-    this.wps.splice(1, 0, projects)
+    // this.wps.splice(1, 0, projects)
     
     if (partners.length < 1)
       partners = await this.organizationRepository.find();
@@ -1610,6 +1601,7 @@ export class SubmissionService {
           wp.id,
           partner.code,
           wp.ost_wp.wp_official_code,
+          wp.ost_wp.acronym
         );
 
         if (result.length) {
@@ -1704,16 +1696,18 @@ export class SubmissionService {
         });
       }
 
-      if (this.partnersData[partner.code]?.IPSR)
-        this.partnersData[partner.code].IPSR = this.partnersData[
-          partner.code
-        ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+      if(!this.initiative_data.synchronized)
+        if (this.partnersData[partner.code]?.IPSR)
+          this.partnersData[partner.code].IPSR = this.partnersData[
+            partner.code
+          ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
 
-      let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
-
-      this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
-
-      newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+          if(!this.initiative_data.synchronized){
+            let newCrossCenters = this.partnersData[partner.code]?.CROSS?.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+           if(this.partnersData[partner.code]?.CROSS)
+             this.partnersData[partner.code].CROSS = this.partnersData[partner.code]?.CROSS?.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+           newCrossCenters?.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+         }
 
       this.wps.forEach((d: any) => {
         if (d.category == "WP") {
@@ -1733,9 +1727,8 @@ export class SubmissionService {
         wp.id,
         null,
         wp.ost_wp.wp_official_code,
+        wp.ost_wp.acronym
       );
-      if(this.allData['toc-outcomes']?.length == 0)
-        delete this.allData['toc-outcomes'];
     }
     if (submissionId != null) {
       this.setvalues(
@@ -1749,18 +1742,19 @@ export class SubmissionService {
         this.savedValues.no_budget
       );
     }
-    //sort (Cross Cutting)
-    const newCROSS = this.allData["CROSS"].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+    const firstKey = Object.keys(this.allData)[0];
+    //sort first AOW
+      const newCROSS = this.allData[firstKey].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+      this.allData[firstKey] = this.allData[firstKey].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+      newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
+    
 
-    this.allData["CROSS"] = this.allData["CROSS"].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
-
-    newCROSS.forEach((d: any) => this.allData["CROSS"].unshift(d))
-
-
-    const newIPSR = this.allData["IPSR"]
-      .filter((d: any) => d.value != "")
-      .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
-    this.allData["IPSR"] = newIPSR;
+    if(!this.initiative_data.synchronized){
+      const newIPSR = this.allData["IPSR"]
+        .filter((d: any) => d.value != "")
+        .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+      this.allData["IPSR"] = newIPSR;
+    }
 
     //sort WP titles
     this.wps.forEach((d: any) => {
@@ -1775,10 +1769,10 @@ export class SubmissionService {
       }
     })
 
-    if (!this.allData["IPSR"].length) {
-      delete this.allData["IPSR"]
-      this.wps = this.wps.filter(d => d.id != 'IPSR')
-    }
+    // if (!this.allData["IPSR"].length) {
+    //   delete this.allData["IPSR"]
+    //   this.wps = this.wps.filter(d => d.id != 'IPSR')
+    // }
 
     const { ConsolidatedData } = this.getConsolidatedData(
       this.wps,
@@ -2893,11 +2887,12 @@ export class SubmissionService {
     id: string,
     partner_code: any | null = null,
     official_code: any  = null,
+    ost_wp_acronym: string
   ) {
     let wp_data;
     const wp = ['melia', 'projects'];
 
-    if(!wp.includes(official_code)) {
+    // if(!wp.includes(official_code)) {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -2905,11 +2900,13 @@ export class SubmissionService {
               d.category == 'OUTCOME' ||
               d.category == 'EOI' ||
               d.category == 'Cross Cutting' ||
-              d.category == 'IPSR') &&
+              d.category == 'IPSR'||
+              d.category == "Melia" ) &&
             (d.group == id ||
+              d?.parent_id == id ||
+              ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
               d.wp_id == official_code ||
-              (official_code == 'CROSS' && this.checkEOI(d.category))) || 
-              (official_code == "toc-outcomes" && d.toc_outcome)
+              (official_code == 'CROSS' && this.checkEOI(d.category)))
           );
         else
           return (
@@ -2917,46 +2914,30 @@ export class SubmissionService {
               d.category == 'OUTCOME' ||
               d.category == 'EOI' ||
               d.category == 'IPSR' ||
-              d.category == 'Cross Cutting') &&
-              (d.group == id || d.wp_id == official_code)) ||
-            (official_code == 'CROSS' && this.checkEOI(d.category)) || 
-            (official_code == "toc-outcomes" && d.toc_outcome)
+              d.category == 'Cross Cutting'||
+              d.category == "Melia" ) &&
+              (d.group == id ||
+              d?.parent_id == id ||
+              ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+              d.wp_id == official_code)) ||
+            (official_code == 'CROSS' && this.checkEOI(d.category))
           );
       });
-    } else if(official_code == "melia") {
-      let allMelias = this.results.flatMap((item: any) => {
-        return (item.melias || []).map((melia: any) => ({
-          ...melia,
-          category: 'Melia'
-        }));
-      });
+    // }  else if(official_code == "projects") {
+    //   const projects = this.results.flatMap((item: any) => item.projects?.map((project: any) => ({ ...project })) || []);
   
-      const uniqueMelias = [];
+    //   const uniqueProjects = [];
 
-      const set = new Set();
+    //   const set = new Set();
 
-      for (const melia of allMelias) {
-        if (!set.has(melia.id)) {
-          set.add(melia.id);
-          uniqueMelias.push(melia);
-        }
-      }
-      wp_data = uniqueMelias
-    } else if(official_code == "projects") {
-      const projects = this.results.flatMap((item: any) => item.projects?.map((project: any) => ({ ...project })) || []);
-  
-      const uniqueProjects = [];
-
-      const set = new Set();
-
-      for (const project of projects) {
-        if (!set.has(project.id)) {
-          set.add(project.id);
-          uniqueProjects.push(project);
-        }
-      }
-      wp_data = uniqueProjects
-    }
+    //   for (const project of projects) {
+    //     if (!set.has(project.id)) {
+    //       set.add(project.id);
+    //       uniqueProjects.push(project);
+    //     }
+    //   }
+    //   wp_data = uniqueProjects
+    // }
 
 
     wp_data.sort(this.compare);
@@ -3261,5 +3242,18 @@ export class SubmissionService {
 
     return arrayBudgets.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2)
   }
-
+  getCategory(category: string) {
+    switch (category) {
+      case "OUTPUT":
+        return "High Level Output";
+      case "OUTCOME":
+        return "Intermediate Outcome";
+      case "EOI":
+        return "2030 Outcome";
+      case "Melia":
+        return "MELIA Studies";
+      default:
+        return category;
+    }
+  }
 }

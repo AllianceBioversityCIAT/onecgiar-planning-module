@@ -435,11 +435,17 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       d["wp_id"] = "IPSR";
       return d;
     });
-    this.results = [
-      ...cross_data,
-      ...this.ipsr_value_data,
-      ...this.results,
-    ];
+    if(!this.initiative_data.synchronized)
+      this.results = [
+        ...cross_data,
+        ...this.ipsr_value_data,
+        ...this.results,
+      ];
+    else 
+      this.results = [
+        ...cross_data,
+        ...this.results,
+      ];
     this.wps = this.results
     .filter((d: any) => {
       if (d.category == "WP")
@@ -447,45 +453,29 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       return d.category == "WP" && !d.group;
     })
     .sort((a: any, b: any) => a.title.localeCompare(b.title));
-    this.wps.unshift({
+    if(!this.initiative_data.synchronized){
+      this.wps.unshift({
       id: "CROSS",
       title: "Cross Cutting",
       category: "Cross Cutting",
       ost_wp: { wp_official_code: "CROSS" },
-    });
-    this.wps.push({
-      id: "IPSR",
-      title: "Innovation Packages & Scaling Readiness (IPSR)",
-      category: "IPSR",
-      ost_wp: { wp_official_code: "IPSR" },
-    });
-    if(this.initiative_data.synchronized) {
-      const tocOutcoms = {
-        id: "toc-outcomes",
-        title: "Toc Outcomes",
-        category: "Toc Outcomes",
-        ost_wp: { wp_official_code: "toc-outcomes" },
-      };
-
-      this.wps.splice(1, 0, tocOutcoms);
+      });
+      this.wps.push({
+        id: "IPSR",
+        title: "Innovation Packages & Scaling Readiness (IPSR)",
+        category: "IPSR",
+        ost_wp: { wp_official_code: "IPSR" },
+      });
     }
-    const melia = {
-      id: "melia",
-      title: "MELIA",
-      category: "melia",
-      ost_wp: { wp_official_code: "melia" },
-    };
+    
+    // const projects = {
+    //   id: "projects",
+    //   title: "Bilateral Projects",
+    //   category: "projects",
+    //   ost_wp: { wp_official_code: "projects" },
+    // };
 
-    this.wps.splice(1, 0, melia);
-
-    const projects = {
-      id: "projects",
-      title: "Bilateral Projects",
-      category: "projects",
-      ost_wp: { wp_official_code: "projects" },
-    };
-
-    this.wps.splice(1, 0, projects)
+    // this.wps.splice(1, 0, projects)
     for (let partner of this.partners) {
       if (!this.budgetValues[partner.code])
         this.budgetValues[partner.code] = {};
@@ -519,7 +509,8 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
         const result = await this.getDataForWp(
           wp.id,
           partner.code,
-          wp.ost_wp.wp_official_code
+          wp.ost_wp.wp_official_code,
+          wp.ost_wp.acronym
         );
         if (result.length) {
           if (!this.partnersData[partner.code])
@@ -603,18 +594,17 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
           });
         });
       }
-
-      if (this.partnersData[partner.code]?.IPSR)
-        this.partnersData[partner.code].IPSR = this.partnersData[
-          partner.code
-        ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
-        
-      let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
-
-      this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
-
-      newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
-
+      if(!this.initiative_data.synchronized){
+        if (this.partnersData[partner.code]?.IPSR)
+          this.partnersData[partner.code].IPSR = this.partnersData[
+            partner.code
+          ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+      }
+      if(!this.initiative_data.synchronized){
+        let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+        this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+        newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+      }
       this.wps.forEach((d : any) => {
         if(d.category == "WP") {
           let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
@@ -635,24 +625,22 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       this.allData[wp.ost_wp.wp_official_code] = await this.getDataForWp(
         wp.id,
         null,
-        wp.ost_wp.wp_official_code
+        wp.ost_wp.wp_official_code,
+        wp.ost_wp.acronym
       );
-      if(this.allData['toc-outcomes']?.length == 0)
-        delete this.allData['toc-outcomes'];
+
     }
 
     this.savedValues = this.submission_data.consolidated;
 
     this.setvalues(this.savedValues.values, this.savedValues.perValues);
 
-
-    const newCROSS = this.allData["CROSS"].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
-
-    this.allData["CROSS"] = this.allData["CROSS"].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
-
-    newCROSS.forEach((d: any) => this.allData["CROSS"].unshift(d))
-
-
+    const firstKey = Object.keys(this.allData)[0];
+    //sort first AOW
+      const newCROSS = this.allData[firstKey].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+      this.allData[firstKey] = this.allData[firstKey].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+      newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
+    
     //sort WP titles
     this.wps.forEach((d : any) => {
       if(d.category == "WP") {
@@ -819,11 +807,12 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
   async getDataForWp(
     id: string,
     partner_code: any | null = null,
-    official_code: any = null
+    official_code: any = null,
+    ost_wp_acronym: string
   ) {
     let wp_data;
     const wp = ['melia', 'projects'];
-    if(!wp.includes(official_code)) {
+    // if(!wp.includes(official_code)) {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -831,11 +820,13 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
               d.category == "OUTCOME" ||
               d.category == "EOI" ||
               d.category == "Cross Cutting" ||
-              d.category == "IPSR") &&
+              d.category == "IPSR" ||
+              d.category == "Melia" ) &&
             (d.group == id ||
+              d?.parent_id == id ||
+              ((d.category == "EOI" || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
               d.wp_id == official_code ||
-              (official_code == "CROSS" && d.category == "EOI")) || 
-              (official_code == "toc-outcomes" && d.toc_outcome)
+              (official_code == "CROSS" && d.category == "EOI"))
           );
         else
           return (
@@ -843,46 +834,30 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
               d.category == "OUTCOME" ||
               d.category == "EOI" ||
               d.category == "IPSR" ||
-              d.category == "Cross Cutting") &&
-              (d.group == id || d.wp_id == official_code)) ||
-            (official_code == "CROSS" && d.category == "EOI") || 
-            (official_code == "toc-outcomes" && d.toc_outcome)
+              d.category == "Cross Cutting" ||
+              d.category == "Melia" ) &&
+              (d.group == id ||
+                d?.parent_id == id ||
+                ((d.category == "EOI" || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+                d.wp_id == official_code)) ||
+            (official_code == "CROSS" && d.category == "EOI")
           );
       });
-    } else if(official_code == "melia") {
-      let allMelias = this.results.flatMap((item: any) => {
-        return (item.melias || []).map((melia: any) => ({
-          ...melia,
-          category: 'Melia'
-        }));
-      });
-
-      const uniqueMelias = [];
-
-      const set = new Set();
-
-      for (const melia of allMelias) {
-        if (!set.has(melia.id)) {
-          set.add(melia.id);
-          uniqueMelias.push(melia);
-        }
-      }
-      wp_data = uniqueMelias
-    } else if(official_code == "projects") {
-      const projects = this.results.flatMap((item: any) => item.projects?.map((project: any) => ({ ...project })) || []);
+    // } else if(official_code == "projects") {
+    //   const projects = this.results.flatMap((item: any) => item.projects?.map((project: any) => ({ ...project })) || []);
   
-      const uniqueProjects = [];
+    //   const uniqueProjects = [];
 
-      const set = new Set();
+    //   const set = new Set();
 
-      for (const project of projects) {
-        if (!set.has(project.id)) {
-          set.add(project.id);
-          uniqueProjects.push(project);
-        }
-      }
-      wp_data = uniqueProjects
-    }
+    //   for (const project of projects) {
+    //     if (!set.has(project.id)) {
+    //       set.add(project.id);
+    //       uniqueProjects.push(project);
+    //     }
+    //   }
+    //   wp_data = uniqueProjects
+    // }
 
     wp_data.sort(this.compare);
 
@@ -955,5 +930,19 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
         this.toastrService.success("dialof closed");
       }
     });
+  }
+  getCategory(category: string) {
+    switch (category) {
+      case "OUTPUT":
+        return "High Level Output";
+      case "OUTCOME":
+        return "Intermediate Outcome";
+      case "EOI":
+        return "2030 Outcome";
+      case "Melia":
+        return "MELIA Studies";
+      default:
+        return category;
+    }
   }
 }
