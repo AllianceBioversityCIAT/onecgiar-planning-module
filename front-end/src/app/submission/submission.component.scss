@@ -926,7 +926,9 @@ mat-tab-group {
 }
 .plural-head {
   display: flex;
-  align-items: center;
+  // align-items: center;
+  flex-direction: column;
+
   justify-content: space-between;
   .card-title-table {
     text-align: left;
@@ -964,7 +966,7 @@ mat-tab-group {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    width: 350px;
+    width: 100%;
     .show-d-1 {
       align-self: self-end;
       color: transparent;
@@ -2948,12 +2950,16 @@ pre {
   top: 0.4rem;
   left: 0.5rem;
 }
+.risk-report-title-box-2 {
+  justify-content: center !important;
+
+}
 .risk-report-title-box {
-  text-align: center;
+  text-align: center !important;
   padding: 4.8rem 0;
   &__title {
     color: #0f212f;
-    text-align: center;
+    text-align: center !important;
     font-family: "Poppins", sans-serif !important;
     font-size: 2.2rem;
     font-style: normal;
@@ -3156,4 +3162,37 @@ pre {
     text-decoration: none;
     color: #5569dd;
   }
+}
+
+.sub-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+
+    width: 100%;
+  .sub-title {
+    bottom: -25px;
+    position: relative;
+    font-family: var(--mdc-typography-headline6-font-family, var(--mdc-typography-font-family, Roboto, sans-serif));
+    font-size: 18px;
+    line-height: 32px;
+    font-weight: 500;
+    letter-spacing: 0.0125em;
+  }
+}
+
+.w3-project-table {
+  margin-top: 60px;
+}
+
+.sub-title-2 {
+  bottom: -50px !important;
+
+}
+
+.btns-sec {
+    display: flex;
+    align-items: center;
+    width: 350px;
 }

@@ -40,7 +40,7 @@ import {
   updateStatus,
 } from 'src/DTO/submission.dto';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
-@UseGuards(JwtAuthGuard)
+// @UseGuards(JwtAuthGuard)
 @ApiTags('submission')
 @Controller('submission')
 export class SubmissionController {
@@ -198,234 +198,14 @@ export class SubmissionController {
   })
   @Get('toc/:id')
   async getTocs(@Param('id') id) {
-    // return await firstValueFrom(
-    //   this.httpService
-    //     .get(process.env.TOC_API + '/toc/' + id)
-    //     .pipe(
-    //       map((dd: any) =>
-    //       dd.data?.data?.filter(
-    //           (d) =>
-    //             ((d.category == 'WP' && !d.group) ||
-    //               d.category == 'OUTPUT' ||
-    //               d.category == 'EOI' ||
-    //               d.category == 'OUTCOME') &&
-    //               d?.flow_id == dd?.data?.version_id,
-    //         )
-    //         .map((items:any)=>{
-    //           if(items?.related_node_id && items.category != 'WP')
-    //           if(items?.id)
-    //           items['id']=items?.related_node_id;
-    //           if(items.melias.length)
-    //             items.melias.map((melia: any) => {
-    //               melia['id'] = melia.related_node_id
-    //               melia['parent_id'] = items.group
-    //             })
-
-    //           if(items.category == 'OUTCOME' && !items.group)
-    //             items['toc_outcome']= true;
-    //         return items;
-    //         }),
-    //       ),
-    //       catchError((error: AxiosError) => {
-    //         console.error(error);
-    //         throw new InternalServerErrorException();
-    //       }),
-    //     ),
-    // );
-    // return await firstValueFrom(
-    //   this.httpService
-    //     .get(process.env.TOC_API + '/toc/' + id)
-    //     .pipe(
-    //       map((dd: any) => {
-    //         const result = [];
-    //         const seenIds = new Set(); // To track unique IDs
-    
-    //         dd.data?.data?.forEach((item) => {
-    //           const isValidCategory =
-    //             (item.category === 'WP' && !item.group) ||
-    //             item.category === 'OUTPUT' ||
-    //             item.category === 'EOI' ||
-    //             item.category === 'OUTCOME';
-    
-    //           if (isValidCategory && item?.flow_id === dd?.data?.version_id) {
-    //             // Handle related_node_id for parent
-    //             if (item?.related_node_id && item.category !== 'WP') {
-    //               item.id = item.related_node_id;
-    //             }
-    
-    //             if (item.category === 'OUTCOME' && !item.group) {
-    //               item['toc_outcome'] = true;
-    //             }
-    
-    //             // Push parent if not already included
-    //             if (item?.id && !seenIds.has(item.id)) {
-    //               result.push(item);
-    //               seenIds.add(item.id);
-    //             }
-    
-    //             // Handle melias
-    //             if (Array.isArray(item.melias)) {
-    //               item.melias.forEach((melia: any) => {
-    //                 melia.id = melia.related_node_id;
-    //                 melia.parent_id = item.group;
-    
-    //                 if (melia.id && !seenIds.has(melia.id)) {
-    //                   result.push(melia);
-    //                   seenIds.add(melia.id);
-    //                 }
-    //               });
-    //             }
-    //           }
-    //         });
-    
-    //         return result;
-    //       }),
-    //       catchError((error: AxiosError) => {
-    //         console.error(error);
-    //         throw new InternalServerErrorException();
-    //       }),
-    //     )
-    // );
-
-
-    
-    // return await firstValueFrom(
-    //   this.httpService
-    //     .get(process.env.TOC_API + '/toc/' + id)
-    //     .pipe(
-    //       map((dd: any) => {
-    //         const result = [];
-    //         const seenIds = new Set(); // To track unique items in result
-    //         const meliaMap = new Map(); // Map of melia.id => melia object
-    
-    //         dd.data?.data?.forEach((item) => {
-    //           const isValidCategory =
-    //             (item.category === 'WP' && !item.group) ||
-    //             item.category === 'OUTPUT' ||
-    //             item.category === 'EOI' ||
-    //             item.category === 'OUTCOME';
-    
-    //           if (isValidCategory && item?.flow_id === dd?.data?.version_id) {
-    //             if (item?.related_node_id && item.category !== 'WP') {
-    //               item.id = item.related_node_id;
-    //             }
-    
-    //             if (item.category === 'OUTCOME' && !item.group) {
-    //               item['toc_outcome'] = true;
-    //             }
-    
-    //             if (item?.id && !seenIds.has(item.id)) {
-    //               result.push(item);
-    //               seenIds.add(item.id);
-    //             }
-    
-    //             // Handle melias
-    //             if (Array.isArray(item.melias)) {
-    //               item.melias.forEach((melia: any) => {
-    //                 melia.id = melia.related_node_id;
-    //                 const parentGroup = item.group;
-    //                 const parentTitle = item.title || null;
-
-    
-    //                 // If already exists, add the new group to its list
-    //                 if (meliaMap.has(melia.id)) {
-    //                   const existingMelia = meliaMap.get(melia.id);
-    //                   if (parentGroup && !existingMelia.aows.includes(parentGroup)) {
-    //                     existingMelia.aows.push(parentGroup);
-    //                   }
-    //                   if (parentTitle) {
-    //                     if (!existingMelia.parent_titles) {
-    //                       existingMelia.parent_titles = parentTitle;
-    //                     } else if (!existingMelia.parent_titles.split(', ').includes(parentTitle)) {
-    //                       existingMelia.parent_titles += ', ' + parentTitle;
-    //                     }
-    //                   }
-    //                 } else {
-    //                   // New melia — create and track
-    //                   melia.aows = parentGroup ? [parentGroup] : [];
-    //                   melia.parent_titles = parentTitle ?? '';
-    //                   result.push(melia);
-    //                   meliaMap.set(melia.id, melia);
-    //                   seenIds.add(melia.id);
-    //                 }
-    //               });
-    //             }
-    //           }
-    //         });
-    
-    //         return result;
-    //       }),
-    //       catchError((error: AxiosError) => {
-    //         console.error(error);
-    //         throw new InternalServerErrorException();
-    //       }),
-    //     )
-    // );
-
-    // return await firstValueFrom(
-    //   this.httpService
-    //     .get(process.env.TOC_API + '/toc/' + id)
-    //     .pipe(
-    //       map((dd: any) => {
-    //         const result = [];
-    //         const seenIds = new Set(); // To track unique items in result
-    
-    //         dd.data?.data?.forEach((item) => {
-    //           const isValidCategory =
-    //             (item.category === 'WP' && !item.group) ||
-    //             item.category === 'OUTPUT' ||
-    //             item.category === 'EOI' ||
-    //             item.category === 'OUTCOME';
-    
-    //           if (isValidCategory && item?.flow_id === dd?.data?.version_id) {
-    //             if (item?.related_node_id && item.category !== 'WP') {
-    //               item.id = item.related_node_id;
-    //             }
-    
-    //             if (item.category === 'OUTCOME' && !item.group) {
-    //               item['toc_outcome'] = true;
-    //             }
-    
-    //             if (item?.id && !seenIds.has(item.id)) {
-    //               seenIds.add(item.id);
-    
-    //               // Handle melias inside the parent item
-    //               if (Array.isArray(item.melias)) {
-    //                 const parentGroup = item.group;
-    //                 const parentTitle = item.title || null;
-    
-    //                 item.melias.forEach((melia: any) => {
-    //                   melia.id = melia.related_node_id;
-                      
-    //                   // Add group (aows)
-    //                   melia.aows = parentGroup ? [parentGroup] : [];
-    
-    //                   // Add parent title as string (group-concat-like)
-    //                   melia.parent_titles = parentTitle ?? '';
-    //                 });
-    //               }
-    
-    //               result.push(item);
-    //             }
-    //           }
-    //         });
-    
-    //         return result;
-    //       }),
-    //       catchError((error: AxiosError) => {
-    //         console.error(error);
-    //         throw new InternalServerErrorException();
-    //       }),
-    //     )
-    // );
-    
     return await firstValueFrom(
       this.httpService
         .get(process.env.TOC_API + '/toc/' + id)
         .pipe(
           map((dd: any) => {
             const melias = dd?.data?.melias ?? [];
-    
+            const projects = dd?.data?.projects ?? [];
+
             const filteredData = dd.data?.data?.filter(
               (d) =>
                 ((d.category == 'WP' && !d.group) ||
@@ -438,16 +218,14 @@ export class SubmissionController {
                 if (items?.id) items['id'] = items.related_node_id;
               }
     
-              if (items.melias?.length) {
-                items.melias = items.melias.map((melia: any) => {
-                  // melia['id'] = melia.related_node_id;
-                  return melia.id;
-                });
-              }
+                if (items.melias?.length) {
+                  items.melias = items.melias.map((melia: any) => melia.id);
+                }
+
+                if (items.projects?.length) {
+                  items.projects = items.projects.map((proj: any) => proj.id);
+                }
     
-              // if (items.category == 'OUTCOME' && !items.group) {
-              //   items['toc_outcome'] = true;
-              // }
     
               return items;
             });
@@ -483,8 +261,39 @@ export class SubmissionController {
             }
 
             const newMelias = Array.from(meliaMap.values());
+
+
+
+            const projectMap = new Map<string, any>();
+
+            for (let data of filteredData) {
+              for (let project of projects) {
+                const isLinked = data.projects?.includes(project.id);
     
-            return [...newMelias, ...filteredData ]; 
+                if (isLinked) {
+                  const key = `${project.id}_${data.group}`;
+                  if (projectMap.has(key)) {
+                    const existing = projectMap.get(key);
+                    if (!existing.results.includes(data.title)) {
+                      existing.results += ', ' + data.title;
+                    }
+                  } else {
+                    projectMap.set(key, {
+                      id: project.id,
+                      parent_id: data.group,
+                      results: data.title,
+                      category: 'Project',
+                      title: project.name,
+                      ...project,
+                    });
+                  }
+                }
+              }
+            }
+
+            const newProjects = Array.from(projectMap.values());
+    
+            return [...newMelias, ...newProjects, ...filteredData ]; 
           }),
           catchError((error: AxiosError) => {
             console.error(error);

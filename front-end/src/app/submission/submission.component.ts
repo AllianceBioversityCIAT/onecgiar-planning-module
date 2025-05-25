@@ -1473,7 +1473,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               this.checkEOI(d.category) ||
               d.category == "Cross Cutting" ||
               d.category == "IPSR" ||
-              d.category == "Melia" ) &&
+              d.category == "Melia" ||
+              d.category == "Project"
+            ) &&
             (d.group == id ||
               d?.parent_id == id ||
               ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
@@ -1487,9 +1489,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               d.category == "OUTCOME" ||
               this.checkEOI(d.category) ||
               d.category == "Cross Cutting" ||
-              d.category == "IPSR" 
-              ||
-              d.category == "Melia" ) &&
+              d.category == "IPSR" ||
+              d.category == "Melia" ||
+              d.category == "Project"
+            ) &&
               (d.group == id || d?.parent_id == id  ||
               ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
                 d.wp_id == official_code)) ||
