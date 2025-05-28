@@ -301,13 +301,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       ).reduce((a: any, b: any) => a || b)
   }
 
-  finalItemPeriodVal(wp_id: any, period_id: any) {
+  finalItemPeriodVal(wp_id: any, period_id: any) { 
     let periods = this.allData[wp_id].map(
       (item: any) => this.perAllValues[wp_id][item.id][period_id]
     );
     if (periods.length) return periods.reduce((a: any, b: any) => a || b);
     else return false;
-  }
+  } 
 
   perValues: any = {};
   haveTrue: any = {};
@@ -388,8 +388,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     item_id: any,
     title: string,
     per_id: number,
+    category: string,
     event: any
-  ) {
+  ) { 
     if (
       !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
         true
@@ -410,6 +411,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         per_id,
         value: event.checked,
         phase_id: this.phase.id,
+        is_project: category == "Project" ? true : false
       }
     );
     if (
@@ -439,12 +441,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id
     );
     this.getInitStatus(this.initiative_data);
-  }
+  } 
 
   async checkAll(
     partner_code: any,
     wp_id: any,
-    value: boolean
+    value: boolean,
+    is_project: boolean
   ) {
     console.log(partner_code, wp_id, value)
     if(!value) {
@@ -459,15 +462,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe(dialogResult => {
         if (dialogResult == true) {
-          this.doCheck(partner_code, wp_id, value);
+          this.doCheck(partner_code, wp_id, value, is_project);
         }
       });
     } else {
-      this.doCheck(partner_code, wp_id, value);
+      this.doCheck(partner_code, wp_id, value, is_project);
     }
   }
 
-  async doCheck(partner_code: any, wp_id: any, value: boolean) {
+  async doCheck(partner_code: any, wp_id: any, value: boolean, is_project: boolean) {
     const itemsIds = Object.keys(this.perValues[partner_code][wp_id]);
     for (let item_id of itemsIds) {
       if (
@@ -521,7 +524,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         title: value ? 'Checked all periods' : 'Unchecked all periods',
         value: value,
         phase_id: this.phase.id,
-        itemsIds: itemsIds
+        itemsIds: itemsIds,
+        is_project: is_project
       }
     );
 
@@ -718,6 +722,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   initiative_data: any = {};
   ipsr_value_data: any;
   phase: any;
+  actualWps:any;
   tocIncompleteData: boolean = false;
   async InitData() {
     this.loading = true;
@@ -732,6 +737,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.sammaryTotalConsolidated = {};
     this.data = [];
     this.wps = [];
+    this.actualWps = [];
     this.partnersData = {};
     this.sammary = {};
     this.summaryBudgets = {};
@@ -847,6 +853,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         return d.category == "WP" && !d.group;
       })
       .sort((a: any, b: any) => a.title.localeCompare(b.title));
+      this.actualWps = this.wps;
       if(!this.initiative_data.synchronized)
         this.wps.unshift({
           id: "CROSS",
@@ -863,15 +870,20 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         ost_wp: { wp_official_code: "IPSR" },
       });
 
-    
-    // const projects = {
-    //   id: "projects",
-    //   title: "Bilateral Projects",
-    //   category: "projects",
-    //   ost_wp: { wp_official_code: "projects" },
-    // };
+      if(this.initiative_data.synchronized){
+        let w3Projects = [];
+        for (let wp of this.wps) {
+          w3Projects.push({
+            id: wp.id, // actual wp id 
+            title: wp.ost_wp.wp_official_code + '-project',
+            category: "Projects",
+            ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-project' },
+          });
+        }
+        this.wps = [...this.wps, ...w3Projects];
+      }
+      
 
-    // this.wps.splice(1, 0, projects)
     for (let partner of this.partners) {
       this.partnersStatus[partner.code] = this.checkComplete(partner.code);
       if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
@@ -911,7 +923,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           wp.id,
           partner.code,
           wp.ost_wp.wp_official_code,
-          wp.ost_wp.acronym
+          wp.ost_wp.acronym,
+          wp.category
         );
         if (result.length) {
           if (!this.partnersData[partner.code])
@@ -1059,12 +1072,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         wp.id,
         null,
         wp.ost_wp.wp_official_code,
-        wp.ost_wp.acronym
+        wp.ost_wp.acronym,
+        wp.category
       );
-      if(this.allData['projects']?.length == 0)
-        delete this.allData['projects'];
-      // if(wp.ost_wp.wp_official_code != 'IPSR' && this.allData[wp.ost_wp.wp_official_code]?.length == 0)
-      //   this.tocIncompleteData = true
     }
     this.savedValues = await this.submissionService.getSavedData(
       this.params.id,
@@ -1100,6 +1110,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
+
     console.log(this.wps)
 
     //sort WP titles
@@ -1460,11 +1471,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     id: string,
     partner_code: any | null = null,
     official_code: any = null,
-    ost_wp_acronym: string
+    ost_wp_acronym: string,
+    wp_category: string
   ) {
     let wp_data;
-    const wp = ['melia', 'projects'];
-    // if(!wp.includes(official_code)) {
+    // const wp = ['melia', 'projects'];
+    if(wp_category != 'Projects') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -1473,11 +1485,11 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               this.checkEOI(d.category) ||
               d.category == "Cross Cutting" ||
               d.category == "IPSR" ||
-              d.category == "Melia" ||
-              d.category == "Project"
+              d.category == "Melia"
             ) &&
             (d.group == id ||
-              d?.parent_id == id ||
+              (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
+              // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
               ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
               d.wp_id == official_code ||
               (official_code == "CROSS" && this.checkEOI(d.category))
@@ -1490,30 +1502,33 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               this.checkEOI(d.category) ||
               d.category == "Cross Cutting" ||
               d.category == "IPSR" ||
-              d.category == "Melia" ||
-              d.category == "Project"
+              d.category == "Melia" 
             ) &&
-              (d.group == id || d?.parent_id == id  ||
+              (d.group == id || (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects')  ||
+              // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
               ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
                 d.wp_id == official_code)) ||
             (official_code == "CROSS" && this.checkEOI(d.category))
           );
       });
-    // }  else if(official_code == "projects") {
-    //   const projects = this.results.flatMap((item: any) => item.projects?.map((project: any) => ({ ...project })) || []);
-  
-    //   const uniqueProjects = [];
-
-    //   const set = new Set();
-
-    //   for (const project of projects) {
-    //     if (!set.has(project.id)) {
-    //       set.add(project.id);
-    //       uniqueProjects.push(project);
-    //     }
-    //   }
-    //   wp_data = uniqueProjects
-    // }
+    }  else if(wp_category == 'Projects') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "Project") &&
+            (
+              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+            )
+          );
+        else
+        return (
+          (d.category == "Project") &&
+          (
+            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+          )
+        );
+      });
+    }
  
 
 

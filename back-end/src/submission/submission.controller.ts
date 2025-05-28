@@ -40,7 +40,7 @@ import {
   updateStatus,
 } from 'src/DTO/submission.dto';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 @ApiTags('submission')
 @Controller('submission')
 export class SubmissionController {
