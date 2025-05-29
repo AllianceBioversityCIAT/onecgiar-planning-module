@@ -495,14 +495,24 @@ export class SubmissionService {
   }
   async saveResultData(id, data: any, user) {
     const initiativeId = id;
-    const { partner_code, wp_id, item_id, per_id, value, phase_id, title } = data;
-
+    const { partner_code, wp_id, item_id, per_id, value, phase_id, title, is_project } = data;
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
     });
     let workPackageObject = await this.workPackageRepository.findOneBy({
       wp_official_code: wp_id,
     });
+    
+    if(!workPackageObject){
+      workPackageObject = this.workPackageRepository.create();
+      workPackageObject.name = wp_id;
+      workPackageObject.initiative_id = initiativeObject.id;
+      workPackageObject.wp_official_code = wp_id;
+      workPackageObject.initiative_status = initiativeObject.status;
+      workPackageObject.initiative_offical_code = initiativeObject.official_code;
+      await this.workPackageRepository.save(workPackageObject);
+    }
+
     let organizationObject = await this.organizationRepository.findOneBy({
       code: partner_code,
     });
@@ -520,6 +530,7 @@ export class SubmissionService {
       result_uuid: item_id,
       phase_id: phase_id,
       value: 0,
+      is_project: is_project
     };
 
     if (organizationObject != null) {
@@ -577,7 +588,7 @@ export class SubmissionService {
   }
   async saveAllResultData(id, data: any, user) {
     const initiativeId = id;
-    const { partner_code, wp_id, title, itemsIds, value, phase_id } = data;
+    const { partner_code, wp_id, title, itemsIds, value, phase_id, is_project } = data;
 
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
@@ -585,6 +596,15 @@ export class SubmissionService {
     let workPackageObject = await this.workPackageRepository.findOneBy({
       wp_official_code: wp_id,
     });
+    if(!workPackageObject){
+      workPackageObject = this.workPackageRepository.create();
+      workPackageObject.name = wp_id;
+      workPackageObject.initiative_id = initiativeObject.id;
+      workPackageObject.wp_official_code = wp_id;
+      workPackageObject.initiative_status = initiativeObject.status;
+      workPackageObject.initiative_offical_code = initiativeObject.official_code;
+      await this.workPackageRepository.save(workPackageObject);
+    }
     let organizationObject = await this.organizationRepository.findOneBy({
       code: partner_code,
     });
@@ -603,6 +623,7 @@ export class SubmissionService {
         result_uuid: item_id,
         phase_id: phase_id,
         value: 0,
+        is_project: is_project
       };
 
       if (organizationObject != null) {
@@ -660,14 +681,24 @@ export class SubmissionService {
       itemsIds,
       phase_id
     } = data;
-
+    const initiativeObject = await this.initiativeRepository.findOneBy({
+      id: initiativeId,
+    });
     let organizationObject = await this.organizationRepository.findOneBy({
       code: partner_code,
     });
     let workPackageObject = await this.workPackageRepository.findOneBy({
       wp_official_code: wp_id,
     });
-
+    if(!workPackageObject){
+      workPackageObject = this.workPackageRepository.create();
+      workPackageObject.name = wp_id;
+      workPackageObject.initiative_id = initiativeObject.id;
+      workPackageObject.wp_official_code = wp_id;
+      workPackageObject.initiative_status = initiativeObject.status;
+      workPackageObject.initiative_offical_code = initiativeObject.official_code;
+      await this.workPackageRepository.save(workPackageObject);
+    }
 
     for (let item_id of itemsIds) {
       let oldResult = await this.resultRepository.findOneBy({
@@ -707,14 +738,24 @@ export class SubmissionService {
       no_budget,
       phase_id
     } = data;
-
+    const initiativeObject = await this.initiativeRepository.findOneBy({
+      id: initiativeId,
+    });
     let organizationObject = await this.organizationRepository.findOneBy({
       code: partner_code,
     });
     let workPackageObject = await this.workPackageRepository.findOneBy({
       wp_official_code: wp_id,
     });
-
+    if(!workPackageObject){
+      workPackageObject = this.workPackageRepository.create();
+      workPackageObject.name = wp_id;
+      workPackageObject.initiative_id = initiativeObject.id;
+      workPackageObject.wp_official_code = wp_id;
+      workPackageObject.initiative_status = initiativeObject.status;
+      workPackageObject.initiative_offical_code = initiativeObject.official_code;
+      await this.workPackageRepository.save(workPackageObject);
+    }
     let oldResult = await this.resultRepository.findOneBy({
       initiative_id: id,
       result_uuid: item_id,
@@ -816,10 +857,21 @@ export class SubmissionService {
 
   async saveWpBudget(initiativeId: number, data: any, user) {
     const { partner_code, wp_id, budget, phaseId } = data;
+    const initiativeObject = await this.initiativeRepository.findOneBy({
+      id: initiativeId,
+    });
     let workPackageObject = await this.workPackageRepository.findOneBy({
       wp_official_code: wp_id,
     });
-
+    if(!workPackageObject){
+      workPackageObject = this.workPackageRepository.create();
+      workPackageObject.name = wp_id;
+      workPackageObject.initiative_id = initiativeObject.id;
+      workPackageObject.wp_official_code = wp_id;
+      workPackageObject.initiative_status = initiativeObject.status;
+      workPackageObject.initiative_offical_code = initiativeObject.official_code;
+      await this.workPackageRepository.save(workPackageObject);
+    }
     let oldWpBudget = await this.wpBudgetRepository.findOneBy({
       initiative_id: initiativeId,
       organization_code: partner_code,
