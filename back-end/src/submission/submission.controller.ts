@@ -262,7 +262,13 @@ export class SubmissionController {
 
             const newMelias = Array.from(meliaMap.values());
 
-
+            for (const melia of newMelias) {
+              if (melia?.related_node_id) {
+                melia.id = melia.related_node_id;
+              } else {
+                console.warn(`Melia with missing related_node_id:`, melia);
+              }
+            }
 
             const projectMap = new Map<string, any>();
 

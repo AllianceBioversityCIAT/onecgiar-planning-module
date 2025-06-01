@@ -873,6 +873,23 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         return d.category == "WP" && !d.group;
       })
       .sort((a: any, b: any) => a.title.localeCompare(b.title));
+      const isCrosscuttingAndManagementValid = this.wps.some((wp: any) => wp.ost_wp?.acronym == "AOW00");
+      
+      if(!isCrosscuttingAndManagementValid && this.initiative_data.synchronized) {
+        this.wps.unshift({
+          id: "CROSS",
+          title: "AOW00: Cross-Cutting and Management",
+          category: "WP",
+          ost_wp: { wp_official_code: "CROSS", acronym: "AOW00" },
+        });
+      } else {
+        const wpToUpdate = this.wps.find(
+          (wp: any) => wp.ost_wp?.acronym === "AOW00"
+        );
+        if (wpToUpdate) {
+          wpToUpdate.ost_wp.wp_official_code = "CROSS";
+        }
+      }
       this.actualWps = this.wps;
       if(!this.initiative_data.synchronized)
         this.wps.unshift({
@@ -1131,7 +1148,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     console.log(this.allData)
 
-    console.log(this.wps)
 
     //sort WP titles
     this.wps.forEach((d: any) => {
@@ -1855,7 +1871,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       if (this.totals[partner_code][wp_id] > 100)
         this.toggleValues[partner_code][wp_id] = true;
       this.errors[partner_code][wp_id] =
-        "Subtotal percentage should equal 100%";
+        "Results budget must be equal total budget";
       message = "The subtotal of all percentages should equal 100%";
     } else if (
       this.totals[partner_code][wp_id] > 0 &&
