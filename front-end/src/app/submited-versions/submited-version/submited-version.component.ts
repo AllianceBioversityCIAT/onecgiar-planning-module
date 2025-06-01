@@ -402,6 +402,23 @@ export class SubmitedVersionComponent implements OnInit {
         return d.category == "WP" && !d.group;
       })
       .sort((a: any, b: any) => a.title.localeCompare(b.title));
+      const isCrosscuttingAndManagementValid = this.wps.some((wp: any) => wp.ost_wp?.acronym == "AOW00");
+      
+      if(!isCrosscuttingAndManagementValid && this.initiative_data.synchronized) {
+        this.wps.unshift({
+          id: "CROSS",
+          title: "AOW00: Cross-Cutting and Management",
+          category: "WP",
+          ost_wp: { wp_official_code: "CROSS", acronym: "AOW00" },
+        });
+      } else {
+        const wpToUpdate = this.wps.find(
+          (wp: any) => wp.ost_wp?.acronym === "AOW00"
+        );
+        if (wpToUpdate) {
+          wpToUpdate.ost_wp.wp_official_code = "CROSS";
+        }
+      }
       this.actualWps = this.wps;
       if(!this.initiative_data.synchronized){
         this.wps.unshift({
