@@ -2160,8 +2160,9 @@
                     <th>{{ item.year }} - {{ item.quarter }}</th>
                   </ng-container>
 
-                  <th>Budget Percentage</th>
+                  <!-- <th>Budget Percentage</th> -->
                   <th>Budget (USD)</th>
+                  <th>W3 Baratialar Project (USD)</th>
                 </tr>
                 <ng-container *ngFor="let wp of actualWps">
                   <tr>
@@ -2180,16 +2181,23 @@
                         >
                       </td>
                     </ng-container>
-                    <td>
+                    <!-- <td>
                       {{
                         sammaryTotalConsolidated[wp.ost_wp.wp_official_code]
                           | number : "1.2-2"
                       }}%
-                    </td>
+                    </td> -->
                     <td>
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                        ) | number
+                      }}
+                    </td>
+                    <td>
+                      {{
+                        roundNumber(
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
                         ) | number
                       }}
                     </td>
@@ -2207,8 +2215,9 @@
                       >
                     </td>
                   </ng-container>
-                  <td>{{ wpsTotalSum | number : "1.2-2" }}%</td>
+                  <!-- <td>{{ wpsTotalSum | number : "1.2-2" }}%</td> -->
                   <td>{{ roundNumber(summaryBudgetsAllTotal) | number }}</td>
+                  <td>{{ roundNumber(summaryBudgetsProjectsTotal) | number }}</td>
                 </tr>
               </table>
             </div>
@@ -2334,7 +2343,7 @@
                       <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container>
-                      <th>Budget Percentage</th>
+                      <!-- <th>Budget Percentage</th> -->
                       <th>Budget (USD)</th>
                     </tr>
 
@@ -2572,7 +2581,7 @@
                             >
                           </td>
                         </ng-container>
-                        <td (click)="item.isExpand = !item.isExpand">
+                        <!-- <td (click)="item.isExpand = !item.isExpand">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? sammary[wp.ost_wp.wp_official_code][item.id]
@@ -2580,7 +2589,7 @@
                                   sammary[wp.ost_wp.wp_official_code][item.id]
                                 )
                           }}%
-                        </td>
+                        </td> -->
                         <td (click)="item.isExpand = !item.isExpand">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
@@ -2703,7 +2712,7 @@
                           >
                         </td>
                       </ng-container>
-                      <td>
+                      <!-- <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? sammaryTotal[wp.ost_wp.wp_official_code]
@@ -2711,7 +2720,7 @@
                                 sammaryTotal[wp.ost_wp.wp_official_code]
                               )
                         }}%
-                      </td>
+                      </td> -->
                       <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
@@ -2743,7 +2752,7 @@
                     <ng-container *ngFor="let item of period">
                       <th>{{ item.year }} - {{ item.quarter }}</th>
                     </ng-container>
-                    <th>Budget Percentage</th>
+                    <!-- <th>Budget Percentage</th> -->
                     <th>Budget (USD)</th>
                   </tr>
 
@@ -2980,7 +2989,7 @@
                           >
                         </td>
                       </ng-container>
-                      <td (click)="item.isExpand = !item.isExpand">
+                      <!-- <td (click)="item.isExpand = !item.isExpand">
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
                             ? sammary[wp.ost_wp.wp_official_code + '-project'][item.id]
@@ -2988,7 +2997,7 @@
                                 sammary[wp.ost_wp.wp_official_code + '-project'][item.id]
                               )
                         }}%
-                      </td>
+                      </td> -->
                       <td (click)="item.isExpand = !item.isExpand">
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
@@ -3111,7 +3120,7 @@
                         >
                       </td>
                     </ng-container>
-                    <td>
+                    <!-- <td>
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
                           ? sammaryTotal[wp.ost_wp.wp_official_code + '-project']
@@ -3119,7 +3128,7 @@
                               sammaryTotal[wp.ost_wp.wp_official_code + '-project']
                             )
                       }}%
-                    </td>
+                    </td> -->
                     <td>
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
@@ -3341,8 +3350,9 @@
                     <th>{{ item.year }} - {{ item.quarter }}</th>
                   </ng-container>
 
-                  <th>Budget Percentage</th>
+                  <!-- <th>Budget Percentage</th> -->
                   <th>Budget (USD)</th>
+                  <th>W3 Baratialar Project (USD)</th>
                 </tr>
                 <ng-container *ngFor="let wp of actualWps">
                   <tr>
@@ -3361,18 +3371,25 @@
                         >
                       </td>
                     </ng-container>
-                    <td>
+                    <!-- <td>
                       {{
                         getPercentageForeachPartnerWp(
                           wp_budgets[partner.code],
                           wp_budgets[partner.code][wp.ost_wp.wp_official_code]
                         ) || 0 | number : "1.2-2"
                       }}%
-                    </td>
+                    </td> -->
                     <td>
                       {{
                         roundNumber(
                           wp_budgets[partner.code][wp.ost_wp.wp_official_code]
+                        ) | number
+                      }}
+                    </td>
+                    <td>
+                      {{
+                        roundNumber(
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code + '-project']
                         ) | number
                       }}
                     </td>
@@ -3390,15 +3407,18 @@
                       >
                     </td>
                   </ng-container>
-                  <td>
+                  <!-- <td>
                     {{
                       getTotalPercentageForEachPartner(
                         wp_budgets[partner.code]
                       ) || 0 | number : "1.2-2"
                     }}%
-                  </td>
+                  </td> -->
                   <td>
                     {{ getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
+                  </td>
+                  <td>
+                    {{ getTotalBudgetForEachPartnerProject(wp_budgets[partner.code]) }}
                   </td>
                 </tr>
               </table>
@@ -3520,7 +3540,7 @@
                       <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container>
-                      <th class="per">Budget Percentage</th> 
+                      <!-- <th class="per">Budget Percentage</th>  -->
                       <th class="budget">Budget (USD)</th> 
                     </tr>
   
@@ -3628,7 +3648,7 @@
                           </td>
                         </ng-container>
   
-                        <td>
+                        <!-- <td>
                           <div class="flex-icon-checkbox">
                             <mat-form-field
                               class="form-dialog-content__field"
@@ -3882,7 +3902,7 @@
                               </p>
                             </div>
                           </sat-popover>
-                        </td>
+                        </td> -->
   
                         <td>
                           <mat-form-field
@@ -4066,7 +4086,7 @@
                       <td [colSpan]="wp.id == 'projects' ? period.length + 1 :  period.length + 2">
                         <div class="subtotal">Subtotal</div>
                       </td>
-                      <td>
+                      <!-- <td>
                         {{
                           toggleValues[partner.code][wp.ost_wp.wp_official_code]
                             ? totals[partner.code][wp.ost_wp.wp_official_code]
@@ -4074,7 +4094,7 @@
                                 totals[partner.code][wp.ost_wp.wp_official_code]
                               )
                         }}%
-                      </td>
+                      </td> -->
                       <td>
                         <div class="form">
                           <mat-form-field
@@ -4220,7 +4240,7 @@
                       <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container>
-                      <th class="per">Budget Percentage</th> 
+                      <!-- <th class="per">Budget Percentage</th>  -->
                       <th class="budget">Budget (USD)</th> 
                     </tr>
   
@@ -4328,7 +4348,7 @@
                           </td>
                         </ng-container>
   
-                        <td>
+                        <!-- <td>
                           <div class="flex-icon-checkbox">
                             <mat-form-field
                               class="form-dialog-content__field"
@@ -4582,7 +4602,7 @@
                               </p>
                             </div>
                           </sat-popover>
-                        </td>
+                        </td> -->
   
                         <td>
                           <mat-form-field
@@ -4766,7 +4786,7 @@
                       <td [colSpan]="wp.id == 'projects' ? period.length + 1 :  period.length + 2">
                         <div class="subtotal">Subtotal</div>
                       </td>
-                      <td>
+                      <!-- <td>
                         {{
                           toggleValues[partner.code][wp.ost_wp.wp_official_code + '-project']
                             ? totals[partner.code][wp.ost_wp.wp_official_code + '-project']
@@ -4774,7 +4794,7 @@
                                 totals[partner.code][wp.ost_wp.wp_official_code + '-project']
                               )
                         }}%
-                      </td>
+                      </td> -->
                       <td>
                         <div class="form">
                           <mat-form-field

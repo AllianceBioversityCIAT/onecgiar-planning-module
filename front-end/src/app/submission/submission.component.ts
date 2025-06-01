@@ -80,6 +80,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   summaryBudgets: any = {};
   summaryBudgetsTotal: any = {};
   summaryBudgetsAllTotal: any = 0;
+  summaryBudgetsProjectsTotal: any = 0;
   wp_budgets: any = {};
   budgetValues: any = {};
   displayBudgetValues: any = {};
@@ -121,8 +122,21 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       return this.totals[code][id];
   }
 
-  getTotalBudgetForEachPartner(budgets: string) {
-    return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+  getTotalBudgetForEachPartner(budgets: { [key: string]: any }) {
+    // return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+    return Object.entries(budgets)
+    .filter(([key]) => !key.includes("-project"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  getTotalBudgetForEachPartnerProject(budgets: { [key: string]: any }) {
+    // return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+    return Object.entries(budgets)
+    .filter(([key]) => key.includes("-project"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
   getTotalPercentageForEachPartner(budgets: any) {
@@ -287,7 +301,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   finalPeriodVal(period_id: any) {
-    return this.wps
+    return this.actualWps
       .map(
         (wp: any) =>
           this.perValuesSammary[wp.ost_wp.wp_official_code][period_id]
@@ -296,7 +310,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   finalPeriodValForPartner(partner_code: number,period_id: any) {
-      return this.wps.map((wp: any) => 
+      return this.actualWps.map((wp: any) => 
         this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
       ).reduce((a: any, b: any) => a || b)
   }
@@ -589,9 +603,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       });
     });
 
-    this.summaryBudgetsAllTotal = Object.values(
-      this.summaryBudgetsTotal
-    ).reduce((a: any, b: any) => a + b);
+
+
+    this.summaryBudgetsProjectsTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => key.includes('-project'))
+    .reduce((sum, [_, value]: any) => sum + value, 0);
+
+    this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => !key.includes('-project'))
+    .reduce((sum, [_, value]: any) => sum + value, 0);
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
       Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
@@ -1475,7 +1495,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     wp_category: string
   ) {
     let wp_data;
-    // const wp = ['melia', 'projects'];
     if(wp_category != 'Projects') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)

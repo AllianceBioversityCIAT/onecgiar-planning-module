@@ -2,10 +2,6 @@ import { Component, OnInit } from "@angular/core";
 import { SubmissionService } from "../../services/submission.service";
 import { AppSocket } from "../../socket.service";
 import { MatDialog } from "@angular/material/dialog";
-import {
-  ConfirmComponent,
-  ConfirmDialogModel,
-} from "../../confirm/confirm.component";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AuthService } from "../../services/auth.service";
 import { ToastrService } from "ngx-toastr";
@@ -62,6 +58,7 @@ export class SubmitedVersionComponent implements OnInit {
   summaryBudgets: any = {};
   summaryBudgetsTotal: any = {};
   summaryBudgetsAllTotal: any = 0;
+  summaryBudgetsProjectsTotal: any = 0;
   wp_budgets: any = {};
   budgetValues: any = {};
   displayBudgetValues: any = {};
@@ -200,9 +197,18 @@ export class SubmitedVersionComponent implements OnInit {
       });
     });
 
-    this.summaryBudgetsAllTotal = Object.values(
-      this.summaryBudgetsTotal
-    ).reduce((a: any, b: any) => a + b);
+    if(!this.initiative_data.synchronized)
+      this.summaryBudgetsAllTotal = Object.values(
+        this.summaryBudgetsTotal
+      ).reduce((a: any, b: any) => a + b);
+    else
+      this.summaryBudgetsProjectsTotal = Object.entries(this.summaryBudgetsTotal)
+      .filter(([key, _]) => key.includes('-project'))
+      .reduce((sum, [_, value]: any) => sum + value, 0);
+
+      this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
+      .filter(([key, _]) => !key.includes('-project'))
+      .reduce((sum, [_, value]: any) => sum + value, 0);
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
       if (this.summaryBudgetsTotal[wp_id]) {
@@ -329,6 +335,7 @@ export class SubmitedVersionComponent implements OnInit {
   params: any;
   initiative_data: any = {};
   ipsr_value_data: any;
+  actualWps:any;
   async InitData() {
     this.loading = true;
     this.wpsTotalSum = 0;
@@ -395,6 +402,7 @@ export class SubmitedVersionComponent implements OnInit {
         return d.category == "WP" && !d.group;
       })
       .sort((a: any, b: any) => a.title.localeCompare(b.title));
+      this.actualWps = this.wps;
       if(!this.initiative_data.synchronized){
         this.wps.unshift({
         id: "CROSS",
@@ -410,6 +418,18 @@ export class SubmitedVersionComponent implements OnInit {
         });
       }
 
+      if(this.initiative_data.synchronized){
+        let w3Projects = [];
+        for (let wp of this.wps) {
+          w3Projects.push({
+            id: wp.id, // actual wp id 
+            title: wp.ost_wp.wp_official_code + '-project',
+            category: "Projects",
+            ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-project' },
+          });
+        }
+        this.wps = [...this.wps, ...w3Projects];
+      }
     // const projects = {
     //   id: "projects",
     //   title: "Bilateral Projects",
@@ -453,7 +473,8 @@ export class SubmitedVersionComponent implements OnInit {
           wp.id,
           partner.code,
           wp.ost_wp.wp_official_code,
-          wp.ost_wp.acronym
+          wp.ost_wp.acronym,
+          wp.category
         );
         // console.log(result)
         if (result.length) {
@@ -569,7 +590,8 @@ export class SubmitedVersionComponent implements OnInit {
         wp.id,
         null,
         wp.ost_wp.wp_official_code,
-        wp.ost_wp.acronym
+        wp.ost_wp.acronym,
+        wp.category
       );
     }
     console.log(this.allData)
@@ -671,7 +693,7 @@ export class SubmitedVersionComponent implements OnInit {
   }
 
   finalPeriodVal(period_id: any) {
-    return this.wps
+    return this.actualWps
       .map(
         (wp: any) =>
           this.perValuesSammary[wp.ost_wp.wp_official_code][period_id]
@@ -680,14 +702,25 @@ export class SubmitedVersionComponent implements OnInit {
   }
 
   finalPeriodValForPartner(partner_code: number,period_id: any) {
-    return this.wps.map((wp: any) => 
+    return this.actualWps.map((wp: any) => 
       this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
     ).reduce((a: any, b: any) => a || b)
   }
 
 
-  getTotalBudgetForEachPartner(budgets: string) {
-    return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
+  getTotalBudgetForEachPartner(budgets: { [key: string]: any }) {
+    return Object.entries(budgets)
+    .filter(([key]) => !key.includes("-project"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  getTotalBudgetForEachPartnerProject(budgets: { [key: string]: any }) {
+    return Object.entries(budgets)
+    .filter(([key]) => key.includes("-project"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
   getTotalPercentageForEachPartner(budgets: any) {
@@ -779,12 +812,12 @@ export class SubmitedVersionComponent implements OnInit {
     id: string,
     partner_code: any | null = null,
     official_code: any = null,
-    ost_wp_acronym: string
+    ost_wp_acronym: string,
+    wp_category: string
   ) {
     let wp_data;
-    const wp = ['melia', 'projects'];
 
-    // if(!wp.includes(official_code)) {
+    if(wp_category != 'Projects') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -795,7 +828,7 @@ export class SubmitedVersionComponent implements OnInit {
               d.category == "IPSR" ||
               d.category == "Melia" ) &&
             (d.group == id ||
-              d?.parent_id == id ||
+              (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
               ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
               d.wp_id == official_code ||
               (official_code == "CROSS" && this.checkEOI(d.category))
@@ -811,7 +844,7 @@ export class SubmitedVersionComponent implements OnInit {
               d.category == "Melia" ) &&
               (
                 d.group == id ||
-                d?.parent_id == id ||
+                (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
                 ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
                 d.wp_id == official_code
               )
@@ -819,21 +852,24 @@ export class SubmitedVersionComponent implements OnInit {
             (official_code == "CROSS" && this.checkEOI(d.category))
           );
       });
-    // }  else if(official_code == "projects") {
-    //   const projects = this.results.flatMap((item: any) => item.projects?.map((project: any) => ({ ...project })) || []);
-  
-    //   const uniqueProjects = [];
-
-    //   const set = new Set();
-
-    //   for (const project of projects) {
-    //     if (!set.has(project.id)) {
-    //       set.add(project.id);
-    //       uniqueProjects.push(project);
-    //     }
-    //   }
-    //   wp_data = uniqueProjects
-    // }
+    }  else if(wp_category == 'Projects') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "Project") &&
+            (
+              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+            )
+          );
+        else
+        return (
+          (d.category == "Project") &&
+          (
+            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+          )
+        );
+      });
+    }
  
 
 
