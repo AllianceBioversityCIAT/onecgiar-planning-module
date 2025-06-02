@@ -6,7 +6,15 @@
   position: relative;
   bottom: -6px;
 }
-
+.sub-title {
+  bottom: -25px;
+  position: relative;
+  font-family: var(--mdc-typography-headline6-font-family, var(--mdc-typography-font-family, Roboto, sans-serif));
+  font-size: 18px;
+  line-height: 32px;
+  font-weight: 500;
+  letter-spacing: 0.0125em;
+}
 .init-status {
   font-weight: bold;
   color: #5569dd;
