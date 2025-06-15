@@ -1039,7 +1039,7 @@ export class SubmissionService {
     return { ConsolidatedData, merges };
   }
 
-  getConsolidatedData(wps: any[], period: any[]) {
+  getConsolidatedData(wps: any[], period: any[]) { 
     let ConsolidatedData = [];
     let lockupArray = [];
     wps.forEach((wp: any) => {
@@ -1053,7 +1053,8 @@ export class SubmissionService {
             ? 'X'
             : '';
       });
-      obj['Percentage'] = this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] + '%';
+      // obj['Percentage'] = this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] + '%';
+      obj['Percentage'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']));
       obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]));
       ConsolidatedData.push(obj);
     });
@@ -1066,7 +1067,8 @@ export class SubmissionService {
         ? 'X'
         : '';
     });
-    (obj['Percentage'] = this.roundNumber(this.wpsTotalSum) + '%'),
+    // (obj['Percentage'] = this.roundNumber(this.wpsTotalSum) + '%'),
+      (obj['Percentage'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsProjectsTotal))),
       (obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsAllTotal))),
       ConsolidatedData.push(obj);
 
@@ -1078,7 +1080,7 @@ export class SubmissionService {
       ConsolidatedData: ConsolidatedData,
       lockupArray: lockupArray,
     };
-  }
+  } 
 
 
 
@@ -1099,7 +1101,9 @@ export class SubmissionService {
             ? 'X'
             : '';
       });
-      obj['Percentage'] = this.totals[partner_code][wp.ost_wp.wp_official_code] + '%';
+      // obj['Percentage'] = this.totals[partner_code][wp.ost_wp.wp_official_code] + '%';
+      obj['Percentage'] = this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner_code][
+        wp.ost_wp.wp_official_code + '-project']));
       obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner_code][
         wp.ost_wp.wp_official_code]));
       ConsolidatedDataForPartners.push(obj);
@@ -1112,7 +1116,7 @@ export class SubmissionService {
         ? 'X'
         : '';
     });
-    (obj['Percentage'] = this.roundNumber(this.totals[partner_code]) + '%'),
+    (obj['Percentage'] = this.getTotalBudgetForEachPartnerProject(this.wp_budgets[partner_code])),
       (obj['Budgets'] = this.wp_budgets[partner_code]),
       ConsolidatedDataForPartners.push(obj)
 
@@ -1147,12 +1151,13 @@ export class SubmissionService {
               ? 'X'
               : '';
         });
-        obj['BudgetPercentage'] = this.toggleSummaryValues[
-          wp.ost_wp.wp_official_code
-        ]
-          ? this.sammary[wp.ost_wp.wp_official_code][d.id]
-          : this.roundNumber(this.sammary[wp.ost_wp.wp_official_code][d.id]) +
-          '%';
+        // obj['BudgetPercentage'] = this.toggleSummaryValues[
+        //   wp.ost_wp.wp_official_code
+        // ]
+        //   ? this.sammary[wp.ost_wp.wp_official_code][d.id]
+        //   : this.roundNumber(this.sammary[wp.ost_wp.wp_official_code][d.id]) +
+        //   '%';
+        obj['BudgetPercentage'] = '';
         obj['Budget_USD'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleSummaryValues[wp.ost_wp.wp_official_code]))
           ? this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgets[wp.ost_wp.wp_official_code][d.id]))
           : this.formatWithThousandsSeparator(
@@ -1171,11 +1176,13 @@ export class SubmissionService {
           ? 'X'
           : '';
       });
-      obj['BudgetPercentage'] = this.toggleSummaryValues[
-        wp.ost_wp.wp_official_code
-      ]
-        ? this.sammaryTotal[wp.ost_wp.wp_official_code]
-        : this.roundNumber(this.sammaryTotal[wp.ost_wp.wp_official_code]) + '%';
+      // obj['BudgetPercentage'] = this.toggleSummaryValues[
+      //   wp.ost_wp.wp_official_code
+      // ]
+      //   ? this.sammaryTotal[wp.ost_wp.wp_official_code]
+      //   : this.roundNumber(this.sammaryTotal[wp.ost_wp.wp_official_code]) + '%';
+      obj['BudgetPercentage'] = '';
+
 
       obj['Budget_USD'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleSummaryValues[wp.ost_wp.wp_official_code]))
         ? this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]))
@@ -1218,13 +1225,14 @@ export class SubmissionService {
                   ? 'X'
                   : '';
             });
-            obj['Percentage'] = this.toggleValues[partner.code][
-              wp.ost_wp.wp_official_code
-            ]
-              ? this.values[partner.code][wp.ost_wp.wp_official_code][d.id]
-              : this.displayValues[partner.code][wp.ost_wp.wp_official_code][
-              d.id
-              ] + '%';
+            // obj['Percentage'] = this.toggleValues[partner.code][
+            //   wp.ost_wp.wp_official_code
+            // ]
+            //   ? this.values[partner.code][wp.ost_wp.wp_official_code][d.id]
+            //   : this.displayValues[partner.code][wp.ost_wp.wp_official_code][
+            //   d.id
+            //   ] + '%';
+            obj['Percentage'] = '';
 
             obj['Budget'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleValues[partner.code][
               wp.ost_wp.wp_official_code
@@ -1252,13 +1260,14 @@ export class SubmissionService {
             ? 'X'
             : '';
         });
-        obj['Percentage'] = this.toggleValues[partner.code][
-          wp.ost_wp.wp_official_code
-        ]
-          ? this.totals[partner.code][wp.ost_wp.wp_official_code]
-          : this.roundNumber(
-            this.totals[partner.code][wp.ost_wp.wp_official_code],
-          ) + '%';
+        // obj['Percentage'] = this.toggleValues[partner.code][
+        //   wp.ost_wp.wp_official_code
+        // ]
+        //   ? this.totals[partner.code][wp.ost_wp.wp_official_code]
+        //   : this.roundNumber(
+        //     this.totals[partner.code][wp.ost_wp.wp_official_code],
+        //   ) + '%';
+        obj['Percentage'] = '';
 
         obj['Budget'] =
           this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner.code][wp.ost_wp.wp_official_code]));
@@ -1285,6 +1294,7 @@ export class SubmissionService {
   summaryBudgets: any = {};
   summaryBudgetsTotal: any = {};
   summaryBudgetsAllTotal: any = 0;
+  summaryBudgetsProjectsTotal: any = 0;
   wp_budgets: any = {};
   budgetValues: any = {};
   displayBudgetValues: any = {};
@@ -1445,7 +1455,7 @@ export class SubmissionService {
         'Type',
         ...period_,
         {
-          v: '%',
+          v: 'W3 Baratialar Project (USD)',
           s: {
             fill: { fgColor: { rgb: '3d425e' } },
             font: { color: { rgb: 'ffffff' } },
@@ -1457,7 +1467,7 @@ export class SubmissionService {
           },
         },
         {
-          v: '$',
+          v: 'Budget (USD)',
           s: {
             fill: { fgColor: { rgb: '3d425e' } },
             font: { color: { rgb: 'ffffff' } },
@@ -1484,6 +1494,7 @@ export class SubmissionService {
     this.sammaryTotalConsolidated = {};
     this.data = [];
     this.wps = [];
+    this.actualWps = [];
     this.wpsTotalSum = 0;
     this.partnersData = {};
     this.sammary = {};
@@ -1586,7 +1597,24 @@ export class SubmissionService {
           d.title = d.ost_wp.acronym + ": " + d.ost_wp.name;
         return d.category == "WP" && !d.group;
       }).sort((a: any, b: any) => a.title.localeCompare(b.title));
-
+      const isCrosscuttingAndManagementValid = this.wps.some((wp: any) => wp.ost_wp?.acronym == "AOW00");
+      
+      if(!isCrosscuttingAndManagementValid && this.initiative_data.synchronized) {
+        this.wps.unshift({
+          id: "CROSS",
+          title: "AOW00: Cross-Cutting and Management",
+          category: "WP",
+          ost_wp: { wp_official_code: "CROSS", acronym: "AOW00" },
+        });
+      } else {
+        const wpToUpdate = this.wps.find(
+          (wp: any) => wp.ost_wp?.acronym === "AOW00"
+        );
+        if (wpToUpdate) {
+          wpToUpdate.ost_wp.wp_official_code = "CROSS";
+        }
+      }
+      this.actualWps = this.wps;
       if(!this.initiative_data.synchronized)
         this.wps.unshift({
           id: 'CROSS',
@@ -1602,15 +1630,18 @@ export class SubmissionService {
           ost_wp: { wp_official_code: 'IPSR' },
         });
 
-    // const projects = {
-    //   id: "projects",
-    //   title: "Bilateral Projects",
-    //   category: "projects",
-    //   ost_wp: { wp_official_code: "projects" },
-    // };
-
-    // this.wps.splice(1, 0, projects)
-    
+        if(this.initiative_data.synchronized){
+          let w3Projects = [];
+          for (let wp of this.wps) {
+            w3Projects.push({
+              id: wp.id, // actual wp id 
+              title: wp.ost_wp.wp_official_code + '-project',
+              category: "Projects",
+              ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-project' },
+            });
+          }
+          this.wps = [...this.wps, ...w3Projects];
+        }
     if (partners.length < 1)
       partners = await this.organizationRepository.find();
 
@@ -1653,7 +1684,8 @@ export class SubmissionService {
           wp.id,
           partner.code,
           wp.ost_wp.wp_official_code,
-          wp.ost_wp.acronym
+          wp.ost_wp.acronym,
+          wp.category
         );
 
         if (result.length) {
@@ -1779,7 +1811,8 @@ export class SubmissionService {
         wp.id,
         null,
         wp.ost_wp.wp_official_code,
-        wp.ost_wp.acronym
+        wp.ost_wp.acronym,
+        wp.category
       );
     }
     if (submissionId != null) {
@@ -1827,10 +1860,70 @@ export class SubmissionService {
     // }
 
     const { ConsolidatedData } = this.getConsolidatedData(
-      this.wps,
+      this.actualWps,
       this.period,
     );
-    const { lockupArray } = this.getConsolidatedData(this.wps, this.period);
+
+
+
+    // const aows = this.wps.filter(item => /^AOW\d{2}/.test(item.title)).sort((a, b) => {
+    //   const numA = parseInt(a.title.match(/^AOW(\d{2})/)[1]);
+    //   const numB = parseInt(b.title.match(/^AOW(\d{2})/)[1]);
+    //   return numA - numB;
+    // });
+    
+    // const projects = this.wps.filter(item => /^SP02-AOW\d{2}-project$/.test(item.title));
+    // const crossProject = this.wps.find(item => item.title === "CROSS-project");
+    // const totalItem = this.wps.find(item => item.title === "Total");
+    
+    // const sorted = [];
+    
+    // aows.forEach(aow => {
+    //   const number = aow.title.match(/^AOW(\d{2})/)[1];
+    //   sorted.push(aow);
+    
+    //   // Insert CROSS-project after AOW00
+    //   if (number === "00" && crossProject) {
+    //     sorted.push(crossProject);
+    //   }
+    
+    //   const relatedProject = projects.find(p => p.title.includes(`AOW${number}`));
+    //   if (relatedProject) {
+    //     sorted.push(relatedProject);
+    //   }
+    // });
+    
+    // if (totalItem) {
+    //   sorted.push(totalItem);
+    // }
+
+    // this.wps = sorted;
+
+    let { lockupArray } = this.getConsolidatedData(this.wps, this.period);
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
 
     const allData = this.getAllData(this.wps, this.period);
     let partnersData;
@@ -2049,7 +2142,7 @@ export class SubmissionService {
         for (let col = 0; col <= columnCount; col++) {
           let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           //get Total Initiative budget (cellRef)
-          if (col == columnCount && row == this.wps.length + 1 + 5) {
+          if (col == columnCount && row == this.actualWps.length + 1 + 5) {
             budget_for_Total_Initiative = cellRef
           }
         }
@@ -2058,13 +2151,32 @@ export class SubmissionService {
 
       let budget_for_each_wp;
       for (let row = 0; row <= rowCount; row++) {
-        for (let col = 0; col <= columnCount; col++) {
-          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          //calculate Budgets for (Summary)
-          if (col == columnCount && row > 5) {
-            ws[cellRef] = {
+        // for (let col = 0; col <= columnCount; col++) {
+          let cellRefForBudgetUsd = XLSX.utils.encode_cell({ r: row, c: columnCount });
+          let cellRefForBudgetUsdProject = XLSX.utils.encode_cell({ r: row, c: columnCount - 1 });
+
+          //calculate Budgets (USD) for (Summary)
+          if (row > 5) {
+            ws[cellRefForBudgetUsd] = {
               t: 'n',
-              f: '=' + partners.map(d => `'${d.acronym}'!${cellRef}+ `).join().replaceAll(',', '').slice(0, -2),
+              f: '=' + partners.map(d => `'${d.acronym}'!${cellRefForBudgetUsd}+ `).join().replaceAll(',', '').slice(0, -2),
+              z: "#,##0",
+              s: {
+                fill: { fgColor: { rgb: '454962' } },
+                font: { color: { rgb: 'ffffff' } },
+                alignment: {
+                  horizontal: 'center',
+                  vertical: 'center',
+                },
+              },
+            }
+          }
+
+          //calculate Budgets (USD) for project (Summary)
+          if (row > 5 && row <= this.actualWps.length + 6) {
+            ws[cellRefForBudgetUsdProject] = {
+              t: 'n',
+              f: '=' + partners.map(d => `'${d.acronym}'!${cellRefForBudgetUsdProject}+ `).join().replaceAll(',', '').slice(0, -2),
               z: "#,##0",
               s: {
                 fill: { fgColor: { rgb: '454962' } },
@@ -2079,47 +2191,42 @@ export class SubmissionService {
 
 
           //get  budget cellRef for each wp in Total Initiative && calculate percentage for Total Initiative (Summary)
-          if ((col == columnCount || col == columnCount - 1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
-            if (col == columnCount) {
-              budget_for_each_wp = cellRef;
-              cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
-              ws[cellRef] = {
-                t: 'n',
-                f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
-                z: "0.00%;[Red]-0.00%",
-                s: {
-                  fill: { fgColor: { rgb: '454962' } },
-                  font: { color: { rgb: 'ffffff' } },
-                  alignment: {
-                    horizontal: 'center',
-                    vertical: 'center',
-                  },
-                },
-              }
-            }
-          }
-        }
+          // if ((col == columnCount || col == columnCount - 1) && (row > 5 && row <= this.actualWps.length + 1 + 5)) {
+          //   if (col == columnCount) {
+          //     budget_for_each_wp = cellRef;
+          //     cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+          //     ws[cellRef] = {
+          //       t: 'n',
+          //       f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
+          //       z: "0.00%;[Red]-0.00%",
+          //       s: {
+          //         fill: { fgColor: { rgb: '454962' } },
+          //         font: { color: { rgb: 'ffffff' } },
+          //         alignment: {
+          //           horizontal: 'center',
+          //           vertical: 'center',
+          //         },
+          //       },
+          //     }
+          //   }
+          // }
+        // }
       }
 
 
 
 
       let wpBudgets;
-      let startRow = this.wps.length + 1 + 5;
+      let startRow = this.actualWps.length + 1 + 5;
       for (let wp of this.wps) {
         for (let row = 0; row <= rowCount; row++) {
-          for (let col = 0; col <= columnCount; col++) {
-            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-
-            if ((col == columnCount || col == columnCount - 1) && (row > startRow && row <= this.allData[wp.ost_wp.wp_official_code].length + 1 + startRow)) {
-              if (col == columnCount) {
-                const wpTotalBudgets = this.getWpTotalBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws)
+            let cellRef = XLSX.utils.encode_cell({ r: row, c: columnCount - 1 });
+            //calculate percentage for each AOW in summary
+            if ((row > startRow && row <= this.allData[wp.ost_wp.wp_official_code].length + 1 + startRow)) {
                 wpBudgets = cellRef;
-                cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
                 ws[cellRef] = {
-                  t: 'n',
-                  f: `=IFERROR(${wpBudgets}/${wpTotalBudgets}/100*100, 0)`,
-                  z: "0%",
+                  t: 's',
+                  v: "",
                   s: {
                     fill: { fgColor: { rgb: '454962' } },
                     font: { color: { rgb: 'ffffff' } },
@@ -2129,9 +2236,7 @@ export class SubmissionService {
                     },
                   },
                 }
-              }
             }
-          }
         }
         startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
       }
@@ -2167,7 +2272,7 @@ export class SubmissionService {
 
 
 
-      let lastRows = [this.wps.length + 6]
+      let lastRows = [this.actualWps.length + 6]
       for (let wp of this.wps) {
         lastRows.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
       }
@@ -2239,7 +2344,7 @@ export class SubmissionService {
         Header = this.getHeader(submission, partner.acronym, null);
 
       let { ConsolidatedDataForPartners } = this.getConsolidatedDataForPartners(
-        this.wps,
+        this.actualWps,
         this.period,
         partner.code
       );
@@ -2461,10 +2566,13 @@ export class SubmissionService {
       const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
       const rowCount = range.e.r;
       const col = range.e.c;
-      let startRow = this.wps.length + 2 + 5;
+      let startRow = this.actualWps.length + 2 + 5;
+      let startRowForProjects = this.actualWps.length + 2 + 5;
       let _row = 6;
-      let startRowForPartner = this.wps.length + 2 + 5;
-      for (let wp of this.wps) {
+      let _rowForProjects = 6;
+
+      let startRowForPartner = this.actualWps.length + 2 + 5;
+      for (let wp of this.actualWps) {
         //calculate total budget for each center (total center)
         arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
         const cellRef = XLSX.utils.encode_cell({ r: _row++, c: col });
@@ -2482,29 +2590,52 @@ export class SubmissionService {
           },
         }
         startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
+      }
 
 
+      for (let wp of this.actualWps) {
+        //calculate total budget for each center (total projects)
+        arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code + '-project'], startRow, ws); // when finish counting (startRow) in previuse step (this is the total number of object alldata (not project))
+        const cellRef = XLSX.utils.encode_cell({ r: _rowForProjects++, c: col - 1 });
+        ws[cellRef] = {
+          t: 'n',
+          f: '=' + arrayOfCellRefWpBudgets,
+          z: "#,##0",
+          s: {
+            fill: { fgColor: { rgb: '454962' } },
+            font: { color: { rgb: 'ffffff' } },
+            alignment: {
+              horizontal: 'center',
+              vertical: 'center',
+            },
+          },
+        }
+        startRow += this.allData[wp.ost_wp.wp_official_code + '-project'].length + 1;
+      }
 
+      for (let wp of this.wps) {
         //calculate percentage  for each wp (partner)
         for (let row = startRowForPartner; row <= rowCount; row++) {
           const cellRefPercentageForPartner = XLSX.utils.encode_cell({ r: row, c: col - 1 });
           const cellRefBudgetForPartner = XLSX.utils.encode_cell({ r: row, c: col });
           const wpTotalBudgets = this.getWpTotalBudgetsForPartner(this.allData[wp.ost_wp.wp_official_code], startRowForPartner, ws)
           const sumFormula = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRowForPartner, ws);
-          ws[cellRefPercentageForPartner] = {
-            t: 'n',
-            f: `=IFERROR(${cellRefBudgetForPartner}/${wpTotalBudgets}/100*100, 0)`, 
-            z: "0%",
-            s: {
-              fill: { fgColor: { rgb: '454962' } },
-              font: { color: { rgb: 'ffffff' } },
-              alignment: {
-                horizontal: 'center',
-                vertical: 'center',
-              },
-            },
-          }
+          //all cell for calculate percentage  for each wp (partner)
+          // ws[cellRefPercentageForPartner] = {
+          //   t: 'n',
+          //   f: `=IFERROR(${cellRefBudgetForPartner}/${wpTotalBudgets}/100*100, 0)`, 
+          //   z: "0%",
+          //   s: {
+          //     fill: { fgColor: { rgb: '454922' } },
+          //     font: { color: { rgb: 'ffffff' } },
+          //     alignment: {
+          //       horizontal: 'center',
+          //       vertical: 'center',
+          //     },
+          //   },
+          // }
 
+          //wpTotalBudgets for each aow in partners
           ws[wpTotalBudgets] = {
             t: 'n',
             f: '=' + sumFormula,
@@ -2522,8 +2653,9 @@ export class SubmissionService {
         startRowForPartner += this.allData[wp.ost_wp.wp_official_code].length + 1;
       }
 
-
       let wpBudgetsTotalCenter = [];
+      let wpBudgetsTotalCenterForProject = [];
+
       let wpBudgetTotalCenter;
       let totalCenter;
 
@@ -2531,7 +2663,7 @@ export class SubmissionService {
       for (let row = 0; row <= rowCount; row++) {
         let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
         //get Total center budget (cellRef)
-        if (row == this.wps.length + 1 + 5) {
+        if (row == this.actualWps.length + 1 + 5) {
           totalCenter = cellRef
         }
       }
@@ -2545,12 +2677,12 @@ export class SubmissionService {
       for (let row = 0; row <= rowCount; row++) {
         let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
 
-        if (row > 5 && row <= this.wps.length + 5) {
+        if (row > 5 && row <= this.actualWps.length + 5) {
           wpBudgetsTotalCenter.push(cellRef);
         }
 
         //calculate total center budget(total center)
-        if (row == this.wps.length + 1 + 5) {
+        if (row == this.actualWps.length + 1 + 5) {
           // totalCenter = cellRef;
           ws[cellRef] = {
             t: 'n',
@@ -2567,7 +2699,7 @@ export class SubmissionService {
           }
         }
 
-        if (row > 5 && row <= this.wps.length + 1 + 5) {
+        if (row > 5 && row <= this.actualWps.length + 1 + 5) {
           wpBudgetTotalCenter = cellRef
         }
 
@@ -2575,13 +2707,50 @@ export class SubmissionService {
 
 
         //calculate percentage partner
-        if ((col - 1) && (row > 5 && row <= this.wps.length + 1 + 5)) {
-          wpBudgetTotalCenter = cellRef;
-          cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+        // if ((col - 1) && (row > 5 && row <= this.actualWps.length + 1 + 5)) {
+        //   wpBudgetTotalCenter = cellRef;
+        //   cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+        //   ws[cellRef] = {
+        //     t: 'n',
+        //     f: `=${wpBudgetTotalCenter}/${totalCenter}/100*100`,
+        //     z: "0.00%;[Red]-0.00%",
+        //     s: {
+        //       fill: { fgColor: { rgb: '454972' } },
+        //       font: { color: { rgb: 'ffffff' } },
+        //       alignment: {
+        //         horizontal: 'center',
+        //         vertical: 'center',
+        //       },
+        //     },
+        //   }
+        // }
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+      for (let row = 0; row <= rowCount; row++) {
+        let cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
+
+        if (row > 5 && row <= this.actualWps.length + 5) {
+          wpBudgetsTotalCenterForProject.push(cellRef);
+        }
+
+        //calculate total center budget(total center)
+        if (row == this.actualWps.length + 1 + 5) {
+          // totalCenter = cellRef;
           ws[cellRef] = {
             t: 'n',
-            f: `=${wpBudgetTotalCenter}/${totalCenter}/100*100`,
-            z: "0.00%;[Red]-0.00%",
+            f: '=' + wpBudgetsTotalCenterForProject.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2),
+            z: "#,##0",
             s: {
               fill: { fgColor: { rgb: '454962' } },
               font: { color: { rgb: 'ffffff' } },
@@ -2592,7 +2761,12 @@ export class SubmissionService {
             },
           }
         }
+
+        if (row > 5 && row <= this.actualWps.length + 1 + 5) {
+          wpBudgetTotalCenter = cellRef
+        }
       }
+
 
 
 
@@ -2600,37 +2774,42 @@ export class SubmissionService {
   
 
       /*generate formula for checks period in (partners)*/
+      /*generate formula for checks period for each aow in (partners)*/
+
       let startPeriodColumn = 3;
       let endPeriodColumn = startPeriodColumn + this.period.length;
-      let startPeriodRows = 5 + this.wps.length + 2;
-      for (let wp of this.wps) {
+      let startPeriodRows = 5 + this.actualWps.length + 2;
+      for (let wp of this.actualWps) {
         for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
           let arr: string[] = [];
           for (let row = startPeriodRows; row < startPeriodRows + this.allData[wp.ost_wp.wp_official_code].length; row++) {
             let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
             arr.push(cellRef);
           }
-          let ci = arr[arr.length - 1].split('');
-          ci.shift();
-          const i = +ci.join('');
-          let cellRef = XLSX.utils.encode_cell({
-            c: col,
-            r: i
-          });
-
-          let formula = arr.map(d => `${d}="X"`).join();
-          ws[cellRef] = {
-            t: 'n',
-            f: `=IF(OR(${formula}),"X","")`,
-            s: {
-              fill: { fgColor: { rgb: '454962' } },
-              font: { color: { rgb: 'ffffff' } },
-              alignment: {
-                horizontal: 'center',
-                vertical: 'center',
+          // if(arr.length){
+            let ci = arr[arr.length - 1].split('');
+            ci.shift();
+            const i = +ci.join('');
+            let cellRef = XLSX.utils.encode_cell({
+              c: col,
+              r: i
+            });
+  
+            let formula = arr.map(d => `${d}="X"`).join();
+            ws[cellRef] = {
+              t: 'n',
+              f: `=IF(OR(${formula}),"X","")`,
+              s: {
+                fill: { fgColor: { rgb: '454962' } },
+                font: { color: { rgb: 'ffffff' } },
+                alignment: {
+                  horizontal: 'center',
+                  vertical: 'center',
+                },
               },
-            },
-          }
+            }
+          // }
+    
         }
         startPeriodRows += this.allData[wp.ost_wp.wp_official_code].length + 1;
       }
@@ -2641,8 +2820,8 @@ export class SubmissionService {
 
 
 
-      let lastRowsPartners = [this.wps.length + 6]
-      for (let wp of this.wps) {
+      let lastRowsPartners = [this.actualWps.length + 6]
+      for (let wp of this.actualWps) {
         lastRowsPartners.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
       }
   
@@ -2656,7 +2835,7 @@ export class SubmissionService {
 
 
         let i = 0;
-        for (let row = 6; row < this.wps.length + 6; row++) {
+        for (let row = 6; row < this.actualWps.length + 6; row++) {
           for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
             let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
             let cellRefrows = XLSX.utils.encode_cell({ r: newValuesLastRowsPartners[i], c: col });
@@ -2683,10 +2862,10 @@ export class SubmissionService {
 
 
 
-
+ /*generate formula for checks period for summary in (partners)*/
       for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
         let arr: string[] = [];
-        for (let row = 6; row < this.wps.length + 6; row++) {
+        for (let row = 6; row < this.actualWps.length + 6; row++) {
           let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           arr.push(cellRef);
         }
@@ -2752,6 +2931,7 @@ export class SubmissionService {
     //   summary_data: allData,
     //   lockupArray: lockupArray,
     //   partners: partnersData,
+    //   wps: this.wps
     // };
   }
 
@@ -2780,9 +2960,13 @@ export class SubmissionService {
         );
       });
     });
-    this.summaryBudgetsAllTotal = Object.values(
-      this.summaryBudgetsTotal,
-    ).reduce((a: any, b: any) => a + b);
+    this.summaryBudgetsProjectsTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => key.includes('-project'))
+    .reduce((sum, [_, value]: any) => sum + value, 0);
+
+    this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => !key.includes('-project'))
+    .reduce((sum, [_, value]: any) => sum + value, 0);
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
       if (this.summaryBudgetsTotal[wp_id]) {
@@ -2935,61 +3119,69 @@ export class SubmissionService {
       return this.phase?.show_eoi ? category == "EOI" : false;
   }
 
-  getDataForWp(
+  async getDataForWp(
     id: string,
     partner_code: any | null = null,
-    official_code: any  = null,
-    ost_wp_acronym: string
+    official_code: any = null,
+    ost_wp_acronym: string,
+    wp_category: string
   ) {
     let wp_data;
-    const wp = ['melia', 'projects'];
-
-    // if(!wp.includes(official_code)) {
+    if(wp_category != 'Projects') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
-            (d.category == 'OUTPUT' ||
-              d.category == 'OUTCOME' ||
-              d.category == 'EOI' ||
-              d.category == 'Cross Cutting' ||
-              d.category == 'IPSR'||
-              d.category == "Melia" ) &&
+            (d.category == "OUTPUT" ||
+              d.category == "OUTCOME" ||
+              this.checkEOI(d.category) ||
+              d.category == "Cross Cutting" ||
+              d.category == "IPSR" ||
+              d.category == "Melia"
+            ) &&
             (d.group == id ||
-              d?.parent_id == id ||
+              (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
+              // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
               ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
               d.wp_id == official_code ||
-              (official_code == 'CROSS' && this.checkEOI(d.category)))
+              (official_code == "CROSS" && this.checkEOI(d.category))
+            )
           );
         else
           return (
-            ((d.category == 'OUTPUT' ||
-              d.category == 'OUTCOME' ||
-              d.category == 'EOI' ||
-              d.category == 'IPSR' ||
-              d.category == 'Cross Cutting'||
-              d.category == "Melia" ) &&
-              (d.group == id ||
-              d?.parent_id == id ||
+            ((d.category == "OUTPUT" ||
+              d.category == "OUTCOME" ||
+              this.checkEOI(d.category) ||
+              d.category == "Cross Cutting" ||
+              d.category == "IPSR" ||
+              d.category == "Melia" 
+            ) &&
+              (d.group == id || (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects')  ||
+              // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
               ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
-              d.wp_id == official_code)) ||
-            (official_code == 'CROSS' && this.checkEOI(d.category))
+                d.wp_id == official_code)) ||
+            (official_code == "CROSS" && this.checkEOI(d.category))
           );
       });
-    // }  else if(official_code == "projects") {
-    //   const projects = this.results.flatMap((item: any) => item.projects?.map((project: any) => ({ ...project })) || []);
-  
-    //   const uniqueProjects = [];
+    }  else if(wp_category == 'Projects') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "Project") &&
+            (
+              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+            )
+          );
+        else
+        return (
+          (d.category == "Project") &&
+          (
+            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+          )
+        );
+      });
+    }
+ 
 
-    //   const set = new Set();
-
-    //   for (const project of projects) {
-    //     if (!set.has(project.id)) {
-    //       set.add(project.id);
-    //       uniqueProjects.push(project);
-    //     }
-    //   }
-    //   wp_data = uniqueProjects
-    // }
 
 
     wp_data.sort(this.compare);
@@ -3066,7 +3258,7 @@ export class SubmissionService {
   }
 
   finalPeriodVal(period_id: any) {
-    return this.wps
+    return this.actualWps
       .map(
         (wp: any) =>
           this.perValuesSammary[wp.ost_wp.wp_official_code][period_id],
@@ -3075,7 +3267,7 @@ export class SubmissionService {
   }
 
   finalPeriodValForPartner(partner_code: number, period_id: any) {
-    return this.wps.map((wp: any) =>
+    return this.actualWps.map((wp: any) =>
       this.perValuesSammaryForPartner[partner_code][wp.ost_wp.wp_official_code][period_id]
     ).reduce((a: any, b: any) => a || b)
   }
@@ -3099,7 +3291,7 @@ export class SubmissionService {
   }
   phase: any;
   initiative_data: any = {};
-
+  actualWps:any;
 
   setvaluesCurrent(valuesToSet: any, perValuesToSet: any, noBudget: any) {
     if (valuesToSet != null)
@@ -3291,8 +3483,18 @@ export class SubmissionService {
       let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
       arrayBudgets.push(cellRef)
     }
-
+    if (arrayBudgets.length === 0) {
+      return '0';
+    }
     return arrayBudgets.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2)
+  }
+
+  getTotalBudgetForEachPartnerProject(budgets: { [key: string]: any }) {
+    return Object.entries(budgets)
+    .filter(([key]) => key.includes("-project"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
   getCategory(category: string) {
     switch (category) {
