@@ -1866,62 +1866,46 @@ export class SubmissionService {
 
 
 
-    // const aows = this.wps.filter(item => /^AOW\d{2}/.test(item.title)).sort((a, b) => {
-    //   const numA = parseInt(a.title.match(/^AOW(\d{2})/)[1]);
-    //   const numB = parseInt(b.title.match(/^AOW(\d{2})/)[1]);
-    //   return numA - numB;
-    // });
+    //sort WPS
+    const aows = this.wps.filter(item => /^AOW\d{2}/.test(item.title)).sort((a, b) => {
+      const numA = parseInt(a.title.match(/^AOW(\d{2})/)[1]);
+      const numB = parseInt(b.title.match(/^AOW(\d{2})/)[1]);
+      return numA - numB;
+    });
     
-    // const projects = this.wps.filter(item => /^SP02-AOW\d{2}-project$/.test(item.title));
-    // const crossProject = this.wps.find(item => item.title === "CROSS-project");
-    // const totalItem = this.wps.find(item => item.title === "Total");
+    const firstProject = this.wps.find(item => /^(SP\d{2})-AOW\d{2}-project$/.test(item.title));
+    const spCode = firstProject ? firstProject.title.match(/^(SP\d{2})/)[1] : 'SP02';
     
-    // const sorted = [];
+    const projects = this.wps.filter(item =>
+      new RegExp(`^${spCode}-AOW\\d{2}-project$`).test(item.title)
+    );
+    const crossProject = this.wps.find(item => item.title === "CROSS-project");
+    const totalItem = this.wps.find(item => item.title === "Total");
     
-    // aows.forEach(aow => {
-    //   const number = aow.title.match(/^AOW(\d{2})/)[1];
-    //   sorted.push(aow);
+    const sorted = [];
     
-    //   // Insert CROSS-project after AOW00
-    //   if (number === "00" && crossProject) {
-    //     sorted.push(crossProject);
-    //   }
+    aows.forEach(aow => {
+      const number = aow.title.match(/^AOW(\d{2})/)[1];
+      sorted.push(aow);
     
-    //   const relatedProject = projects.find(p => p.title.includes(`AOW${number}`));
-    //   if (relatedProject) {
-    //     sorted.push(relatedProject);
-    //   }
-    // });
+      if (number === "00" && crossProject) {
+        sorted.push(crossProject);
+      }
     
-    // if (totalItem) {
-    //   sorted.push(totalItem);
-    // }
+      const relatedProject = projects.find(p => p.title.includes(`AOW${number}`));
+      if (relatedProject) {
+        sorted.push(relatedProject);
+      }
+    });
+    
+    if (totalItem) {
+      sorted.push(totalItem);
+    }
 
-    // this.wps = sorted;
+    this.wps = sorted;
 
     let { lockupArray } = this.getConsolidatedData(this.wps, this.period);
 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
 
 
 
@@ -2567,50 +2551,47 @@ export class SubmissionService {
       const rowCount = range.e.r;
       const col = range.e.c;
       let startRow = this.actualWps.length + 2 + 5;
-      let startRowForProjects = this.actualWps.length + 2 + 5;
       let _row = 6;
       let _rowForProjects = 6;
-
+      let cellRef;
       let startRowForPartner = this.actualWps.length + 2 + 5;
-      for (let wp of this.actualWps) {
+      for (let wp of this.wps) {
         //calculate total budget for each center (total center)
-        arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
-        const cellRef = XLSX.utils.encode_cell({ r: _row++, c: col });
-        ws[cellRef] = {
-          t: 'n',
-          f: '=' + arrayOfCellRefWpBudgets,
-          z: "#,##0",
-          s: {
-            fill: { fgColor: { rgb: '454962' } },
-            font: { color: { rgb: 'ffffff' } },
-            alignment: {
-              horizontal: 'center',
-              vertical: 'center',
+        if(wp.category != "Projects") {
+          arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
+          cellRef = XLSX.utils.encode_cell({ r: _row++, c: col });
+          ws[cellRef] = {
+            t: 'n',
+            f: '=' + arrayOfCellRefWpBudgets,
+            z: "#,##0",
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
             },
-          },
-        }
-        startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
-      }
-
-
-      for (let wp of this.actualWps) {
-        //calculate total budget for each center (total projects)
-        arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code + '-project'], startRow, ws); // when finish counting (startRow) in previuse step (this is the total number of object alldata (not project))
-        const cellRef = XLSX.utils.encode_cell({ r: _rowForProjects++, c: col - 1 });
-        ws[cellRef] = {
-          t: 'n',
-          f: '=' + arrayOfCellRefWpBudgets,
-          z: "#,##0",
-          s: {
-            fill: { fgColor: { rgb: '454962' } },
-            font: { color: { rgb: 'ffffff' } },
-            alignment: {
-              horizontal: 'center',
-              vertical: 'center',
+          }
+          startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
+        } else  if(wp.category == "Projects") {
+          arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
+          cellRef = XLSX.utils.encode_cell({ r: _rowForProjects++, c: col - 1 });
+          ws[cellRef] = {
+            t: 'n',
+            f: '=' + arrayOfCellRefWpBudgets,
+            z: "#,##0",
+            s: {
+              fill: { fgColor: { rgb: '454962' } },
+              font: { color: { rgb: 'ffffff' } },
+              alignment: {
+                horizontal: 'center',
+                vertical: 'center',
+              },
             },
-          },
+          }
+          startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
         }
-        startRow += this.allData[wp.ost_wp.wp_official_code + '-project'].length + 1;
       }
 
       for (let wp of this.wps) {
@@ -2702,28 +2683,6 @@ export class SubmissionService {
         if (row > 5 && row <= this.actualWps.length + 1 + 5) {
           wpBudgetTotalCenter = cellRef
         }
-
-
-
-
-        //calculate percentage partner
-        // if ((col - 1) && (row > 5 && row <= this.actualWps.length + 1 + 5)) {
-        //   wpBudgetTotalCenter = cellRef;
-        //   cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
-        //   ws[cellRef] = {
-        //     t: 'n',
-        //     f: `=${wpBudgetTotalCenter}/${totalCenter}/100*100`,
-        //     z: "0.00%;[Red]-0.00%",
-        //     s: {
-        //       fill: { fgColor: { rgb: '454972' } },
-        //       font: { color: { rgb: 'ffffff' } },
-        //       alignment: {
-        //         horizontal: 'center',
-        //         vertical: 'center',
-        //       },
-        //     },
-        //   }
-        // }
       }
 
 
@@ -2744,7 +2703,7 @@ export class SubmissionService {
           wpBudgetsTotalCenterForProject.push(cellRef);
         }
 
-        //calculate total center budget(total center)
+        //calculate total center budget(total center) (for projects)
         if (row == this.actualWps.length + 1 + 5) {
           // totalCenter = cellRef;
           ws[cellRef] = {
@@ -2779,14 +2738,14 @@ export class SubmissionService {
       let startPeriodColumn = 3;
       let endPeriodColumn = startPeriodColumn + this.period.length;
       let startPeriodRows = 5 + this.actualWps.length + 2;
-      for (let wp of this.actualWps) {
+      for (let wp of this.wps) {
         for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
           let arr: string[] = [];
           for (let row = startPeriodRows; row < startPeriodRows + this.allData[wp.ost_wp.wp_official_code].length; row++) {
             let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
             arr.push(cellRef);
           }
-          // if(arr.length){
+          if(arr.length){
             let ci = arr[arr.length - 1].split('');
             ci.shift();
             const i = +ci.join('');
@@ -2808,7 +2767,7 @@ export class SubmissionService {
                 },
               },
             }
-          // }
+          }
     
         }
         startPeriodRows += this.allData[wp.ost_wp.wp_official_code].length + 1;
@@ -2819,26 +2778,32 @@ export class SubmissionService {
 
 
 
+        let x = this.actualWps.length + 6;
+        let lastRowsPartners = [x];
 
-      let lastRowsPartners = [this.actualWps.length + 6]
-      for (let wp of this.actualWps) {
-        lastRowsPartners.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
-      }
-  
-  
-      let newValuesLastRowsPartners = lastRowsPartners.map((curr, i, array) => {
-        return array[i] += array[i - 1] ? array[i - 1] : 0
-      })
-      newValuesLastRowsPartners.shift(); // remove row total center 
-  
-  
+        for (let wp of this.wps) {
+          const wpCode = wp.ost_wp.wp_official_code;
+          const dataList = this.allData[wpCode];
 
+          if (Array.isArray(dataList)) {
+            x += dataList.length + 1;
+
+            if (wp.category !== "Projects") {
+              lastRowsPartners.push(x);
+            }
+          }
+        }
+
+      
+      // Remove the first item (row total center)
+      lastRowsPartners.shift();
+      
 
         let i = 0;
         for (let row = 6; row < this.actualWps.length + 6; row++) {
           for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
             let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-            let cellRefrows = XLSX.utils.encode_cell({ r: newValuesLastRowsPartners[i], c: col });
+            let cellRefrows = XLSX.utils.encode_cell({ r: lastRowsPartners[i], c: col });
 
 
             ws[cellRef] = {
@@ -2863,7 +2828,7 @@ export class SubmissionService {
 
 
  /*generate formula for checks period for summary in (partners)*/
-      for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+      for (let col = startPeriodColumn; col < endPeriodColumn; col++) { 
         let arr: string[] = [];
         for (let row = 6; row < this.actualWps.length + 6; row++) {
           let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
@@ -2891,13 +2856,7 @@ export class SubmissionService {
               },
             },
           }
-      }
-
-        
-
-
-
-
+      } 
       /*generate formula for checks period in (partners)*/
 
 
