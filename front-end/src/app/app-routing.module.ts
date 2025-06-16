@@ -91,27 +91,27 @@ const routes: Routes = [
   },
 
   {
-    path: "initiative/:id/:code/submission",
+    path: "program/:id/:code/submission",
     component: SubmissionComponent,
     canActivate: [AuthGuard],
   },
   {
-    path: "initiative/:id/:code/submission/center",
+    path: "program/:id/:code/submission/center",
     component: SubmissionComponent,
     canActivate: [AuthGuard],
   },
   {
-    path: "initiative/:id/:code/submited-versions",
+    path: "program/:id/:code/submited-versions",
     component: SubmitedVersionsComponent,
     canActivate: [AuthGuard],
   },
   {
-    path: "initiative/:id/:code/submited-versions/:id",
+    path: "program/:id/:code/submited-versions/:id",
     component: SubmitedVersionComponent,
     canActivate: [AuthGuard],
   },
   {
-    path: "initiative/:id/:code/team-members",
+    path: "program/:id/:code/team-members",
     component: TeamMembersComponent,
     canActivate: [AuthGuard],
   },
