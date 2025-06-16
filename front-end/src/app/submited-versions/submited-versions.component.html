@@ -135,7 +135,7 @@
                   ></mat-icon>
                 </button>
 
-                <!-- <button
+                <button
                   *ngIf="row.status == 'Approved'"
                   class="team-members-icon-table"
                   matTooltip="Download"
@@ -147,9 +147,9 @@
                     style="color: #403f3f"
                     >picture_as_pdf</mat-icon
                   >
-                </button> -->
+                </button>
 
-                <!-- <button
+                <button
                   *ngIf="row.status == 'Approved'"
                   class="team-members-icon-table"
                   matTooltip="Download"
@@ -172,7 +172,7 @@
                       />
                     </svg>
                   </mat-icon>
-                </button> -->
+                </button>
                 <mat-icon
                   *ngIf="isAllowedToAccessChat"
                   class="user-management-table__icon"
@@ -196,13 +196,6 @@
             *matRowDef="let row; columns: displayedColumns"
             [ngClass]="{ last: this.dataSource.data[0] == row }"
           ></tr>
-
-          <!-- Row shown when there is no matching data. -->
-          <!-- <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="4">
-            No data matching the filter "{{ input.value }}"
-          </td>
-        </tr> -->
         </table>
         <div class="glossary-content-container user-management-paginator-box">
           <mat-paginator
@@ -218,7 +211,7 @@
   </div>
 </div>
 
-<div class="margin" style="margin-top: 30000px" *ngIf="toPdf">
+<div class="margin" style="margin-top: 30000px" *ngIf="toPdf && !initiative_data.synchronized">
   <div
     class="PDF"
     #pdfcontent
@@ -739,6 +732,894 @@
                 </div>
                 <p class="error">
                   {{ errors[partner.code][wp.ost_wp.wp_official_code] }}
+                </p>
+              </mat-card-content>
+            </mat-card>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="margin" style="margin-top: 30000px" *ngIf="toPdf && initiative_data.synchronized">
+  <div
+    class="PDF"
+    #pdfcontent
+    id="pdfcontent"
+    style="font-family: Balsamiq-Sans, serif; letter-spacing: 0.01px"
+  >
+    <div class="container-mat-tab">
+      <mat-card>
+
+        <div class="risk-report-title-box">
+          <h1 class="risk-report-title-box__title">
+            One CGIAR Programs Plan of Results and Budget Template
+          </h1>
+        </div>
+
+        <div class="form-container-4">
+          <form class="search-4">
+            <div>
+              <mat-card-subtitle class="card-title-3 m-b-t"
+                >{{ initiative_data.official_code }} ‐
+                {{ initiative_data.name }}</mat-card-subtitle
+              >
+            </div>
+
+            <div>
+              <mat-card-subtitle class="card-title-3 m-b-t">
+                <span class="card-title-3 m-b-t"
+                  >Version ID ({{ submission_data?.id }}) - Created At ({{
+                    submission_data?.created_at | date
+                  }})</span
+                >
+              </mat-card-subtitle>
+            </div>
+
+            <div class="card-title-3 m-b-t">
+              {{ this.submission_data?.phase.name }}
+            </div>
+          </form>
+        </div>
+      </mat-card>
+      <mat-card *ngIf="loading">
+        <mat-card-title>Loading</mat-card-title>
+        <mat-card-subtitle>Preparing Items</mat-card-subtitle>
+      </mat-card>
+
+      <div *ngIf="!loading">
+        <!-- <mat-tab label="Summary"> -->
+        <mat-card>
+          <mat-card-title class="card-title-table">Consolidated</mat-card-title>
+          <mat-card-content>
+            <div class="table-box mat-elevation-z8">
+              <table>
+                <tr>
+                  <th>Results</th>
+                  <ng-container *ngFor="let item of period">
+                    <th>{{ item.year }} - {{ item.quarter }}</th>
+                  </ng-container>
+
+                  <!-- <th>Percentage %</th> -->
+                  <th>Budget (USD)</th>
+                  <th>W3 Baratialar Project (USD)</th>
+                </tr>
+                <ng-container *ngFor="let wp of actualWps">
+                  <tr>
+                    <td class="wp-title">{{ wp.title }}</td>
+                    <ng-container *ngFor="let item of period">
+                      <td>
+                        <span
+                          class="icon-X"
+                          *ngIf="
+                            perValuesSammary[wp.ost_wp.wp_official_code][
+                              item.id
+                            ] == true && toPdf
+                          "
+                        >
+                          X
+                        </span>
+                        <mat-icon
+                          class="icon-sub-table"
+                          *ngIf="
+                            perValuesSammary[wp.ost_wp.wp_official_code][
+                              item.id
+                            ] == true && !toPdf
+                          "
+                          >close</mat-icon
+                        >
+                      </td>
+                    </ng-container>
+                    <!-- <td>
+                      {{
+                        sammaryTotalConsolidated[wp.ost_wp.wp_official_code]
+                          | number : "1.2-2"
+                      }}%
+                    </td> -->
+                    <td>
+                      {{
+                        roundNumber(
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                        ) | number 
+                      }}
+                    </td>
+                    <td>
+                      {{
+                        roundNumber(
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
+                        ) | number
+                      }}
+                    </td>
+                  </tr>
+                </ng-container>
+                <tr class="total">
+                  <td><span class="subtotal">Total</span></td>
+                  <ng-container *ngFor="let item of period">
+                    <td>
+                      <span
+                        class="icon-X-2"
+                        color="primary"
+                        *ngIf="finalPeriodVal(item.id) && toPdf"
+                      >
+                        X
+                      </span>
+                      <mat-icon
+                        class="icon-sub-table-2"
+                        color="primary"
+                        *ngIf="finalPeriodVal(item.id) && !toPdf"
+                        >close</mat-icon
+                      >
+                    </td>
+                  </ng-container>
+                  <!-- <td
+                    style="
+                      font-family: Balsamiq-Sans, serif;
+                      letter-spacing: 0.01px;
+                    "
+                  >
+                    {{ wpsTotalSum | number : "1.2-2" }}%
+                  </td> -->
+                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number  }}</td>
+                  <td>{{ roundNumber(summaryBudgetsProjectsTotal) | number }}</td>
+                </tr>
+              </table>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <ng-container *ngFor="let wp of actualWps">
+        <!--  pool funded -->
+
+          <div class="flex-box-2">
+            <mat-card *ngIf="allData[wp.ost_wp.wp_official_code]">
+              <mat-card-title class="card-title-table">{{
+                wp.title
+              }}</mat-card-title>
+                <span class="sub-title">Pool Funded</span>
+              <mat-card-content>
+                <div class="table-box-2 mat-elevation-z8">
+                  <table>
+                    <tr>
+                      <th *ngIf="wp.id == 'melia'">Study Title</th>
+                      <th *ngIf="wp.id != 'melia'">WP/Results</th>
+                      <ng-container *ngIf="wp.id != 'projects'">
+                        <th *ngIf="wp.id == 'melia'">Study Type</th>
+                        <th *ngIf="wp.id != 'melia'">Type</th>
+                      </ng-container>
+                      <ng-container *ngFor="let item of period">
+                        <th>{{ item.year }} - {{ item.quarter }}</th>
+                      </ng-container>
+                      <!-- <th >Percentage %</th> -->
+                      <th >Budget</th>
+                    </tr>
+                    <ng-container
+                      *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
+                    >
+                      <tr>
+                        <td class="wp-title">
+                          <ng-container
+                            *ngIf="item?.initiativeMelia?.meliaType?.name"
+                          >
+                            {{ item?.initiativeMelia?.meliaType.name }}
+                          </ng-container>
+                          <ng-container
+                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
+                            {{
+                              item?.ipsr?.id
+                                ? item?.ipsr.title + " (" + item.value + ")"
+                                : item.title
+                            }}
+                          </ng-container>
+                          <ng-container *ngIf="wp.id == 'projects'">
+                            {{item.name}}
+                          </ng-container>
+                        </td>
+                        <td *ngIf="wp.id != 'projects'">{{getCategory(item.category)}}</td>
+                        <ng-container *ngFor="let per of period">
+                          <td>
+                            <!-- to be checked -->
+                            <span
+                              class="icon-X"
+                              *ngIf="
+                                perAllValues[wp.ost_wp.wp_official_code][
+                                  item.id
+                                ][per.id] == true && toPdf
+                              "
+                            >
+                              X
+                            </span>
+                            <mat-icon
+                              class="icon-sub-table"
+                              *ngIf="
+                                perAllValues[wp.ost_wp.wp_official_code][
+                                  item.id
+                                ][per.id] == true && !toPdf
+                              "
+                              >close</mat-icon
+                            >
+                          </td>
+                        </ng-container>
+                        <!-- <td >
+                          {{
+                            toggleSummaryValues[wp.ost_wp.wp_official_code]
+                              ? sammary[wp.ost_wp.wp_official_code][item.id]
+                              : roundNumber(
+                                  sammary[wp.ost_wp.wp_official_code][item.id]
+                                )
+                          }}%
+                        </td> -->
+                        <td >
+                          {{
+                            toggleSummaryValues[wp.ost_wp.wp_official_code]
+                              ? summaryBudgets[wp.ost_wp.wp_official_code][
+                                  item.id
+                                ]
+                              : roundNumber(
+                                  summaryBudgets[wp.ost_wp.wp_official_code][
+                                    item.id
+                                  ]
+                                ) | number 
+                          }}
+                        </td>
+                      </tr>
+                    </ng-container>
+                    <tr class="total">
+                      <td [attr.colspan]="(wp.id == 'projects') ? 1 : 2">
+                        <span class="subtotal">Subtotal</span>
+                      </td>
+                      <ng-container *ngFor="let per of period">
+                        <td>
+                          <span
+                            class="icon-X-2"
+                            color="primary"
+                            *ngIf="
+                              finalItemPeriodVal(
+                                wp.ost_wp.wp_official_code,
+                                per.id
+                              ) && toPdf
+                            "
+                          >
+                            X
+                          </span>
+                          <mat-icon
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              finalItemPeriodVal(
+                                wp.ost_wp.wp_official_code,
+                                per.id
+                              ) && !toPdf
+                            "
+                            >close</mat-icon
+                          >
+                        </td>
+                      </ng-container>
+
+                      <!-- <td >
+                        {{
+                          toggleSummaryValues[wp.ost_wp.wp_official_code]
+                            ? sammaryTotal[wp.ost_wp.wp_official_code]
+                            : roundNumber(
+                                sammaryTotal[wp.ost_wp.wp_official_code]
+                              )
+                        }}%
+                      </td> -->
+
+                      <td >
+                        {{
+                          toggleSummaryValues[wp.ost_wp.wp_official_code]
+                            ? summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                            : roundNumber(
+                                summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                              ) | number 
+                        }}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+
+
+
+      <!--  w3-Bilateral Projects -->
+          <div class="flex-box-2">
+            <mat-card *ngIf="allData[wp.ost_wp.wp_official_code + '-project']">
+              <mat-card-title class="card-title-table">w3-Bilateral Projects</mat-card-title>
+              <mat-card-content>
+                <div class="table-box-2 mat-elevation-z8">
+                  <table>
+                    <tr>
+                      <th *ngIf="wp.id == 'melia'">Study Title</th>
+                      <th *ngIf="wp.id != 'melia'">WP/Results</th>
+                      <ng-container *ngIf="wp.id != 'projects'">
+                        <th *ngIf="wp.id == 'melia'">Study Type</th>
+                        <th *ngIf="wp.id != 'melia'">Type</th>
+                      </ng-container>
+                      <ng-container *ngFor="let item of period">
+                        <th>{{ item.year }} - {{ item.quarter }}</th>
+                      </ng-container>
+                      <!-- <th >Percentage %</th> -->
+                      <th >Budget</th>
+                    </tr>
+                    <ng-container
+                      *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-project']"
+                    >
+                      <tr>
+                        <td class="wp-title">
+                          <ng-container
+                            *ngIf="item?.initiativeMelia?.meliaType?.name"
+                          >
+                            {{ item?.initiativeMelia?.meliaType.name }}
+                          </ng-container>
+                          <ng-container
+                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
+                            {{
+                              item?.ipsr?.id
+                                ? item?.ipsr.title + " (" + item.value + ")"
+                                : item.title
+                            }}
+                          </ng-container>
+                          <ng-container *ngIf="wp.id == 'projects'">
+                            {{item.name}}
+                          </ng-container>
+                        </td>
+                        <td *ngIf="wp.id != 'projects'">{{getCategory(item.category)}}</td>
+                        <ng-container *ngFor="let per of period">
+                          <td>
+                            <!-- to be checked -->
+                            <span
+                              class="icon-X"
+                              *ngIf="
+                                perAllValues[wp.ost_wp.wp_official_code + '-project'][
+                                  item.id
+                                ][per.id] == true && toPdf
+                              "
+                            >
+                              X
+                            </span>
+                            <mat-icon
+                              class="icon-sub-table"
+                              *ngIf="
+                                perAllValues[wp.ost_wp.wp_official_code + '-project'][
+                                  item.id
+                                ][per.id] == true && !toPdf
+                              "
+                              >close</mat-icon
+                            >
+                          </td>
+                        </ng-container>
+                        <!-- <td >
+                          {{
+                            toggleSummaryValues[wp.ost_wp.wp_official_code]
+                              ? sammary[wp.ost_wp.wp_official_code][item.id]
+                              : roundNumber(
+                                  sammary[wp.ost_wp.wp_official_code][item.id]
+                                )
+                          }}%
+                        </td> -->
+                        <td >
+                          {{
+                            toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
+                              ? summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
+                                  item.id
+                                ]
+                              : roundNumber(
+                                  summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
+                                    item.id
+                                  ]
+                                ) | number 
+                          }}
+                        </td>
+                      </tr>
+                    </ng-container>
+                    <tr class="total">
+                      <td [attr.colspan]="(wp.id == 'projects') ? 1 : 2">
+                        <span class="subtotal">Subtotal</span>
+                      </td>
+                      <ng-container *ngFor="let per of period">
+                        <td>
+                          <span
+                            class="icon-X-2"
+                            color="primary"
+                            *ngIf="
+                              finalItemPeriodVal(
+                                wp.ost_wp.wp_official_code + '-project',
+                                per.id
+                              ) && toPdf
+                            "
+                          >
+                            X
+                          </span>
+                          <mat-icon
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              finalItemPeriodVal(
+                                wp.ost_wp.wp_official_code + '-project',
+                                per.id
+                              ) && !toPdf
+                            "
+                            >close</mat-icon
+                          >
+                        </td>
+                      </ng-container>
+
+                      <!-- <td >
+                        {{
+                          toggleSummaryValues[wp.ost_wp.wp_official_code]
+                            ? sammaryTotal[wp.ost_wp.wp_official_code]
+                            : roundNumber(
+                                sammaryTotal[wp.ost_wp.wp_official_code]
+                              )
+                        }}%
+                      </td> -->
+
+                      <td >
+                        {{
+                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
+                            ? summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
+                            : roundNumber(
+                                summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
+                              ) | number 
+                        }}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </ng-container>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- </mat-tab> -->
+        <ng-container
+          *ngFor="let partner of partners | sort : 'asc' : 'acronym'"
+        >
+          <mat-card-subtitle class="acronymtext m-b-t"
+            >{{ partner?.name }} <span>-</span>
+            {{ partner?.acronym }}</mat-card-subtitle
+          >
+
+
+        <mat-card>
+          <mat-card-title class="card-title-table">
+            Consolidated
+          </mat-card-title>
+
+          <mat-card-content>
+            <div class="table-box mat-elevation-z8">
+              <table>
+                <tr>
+                  <th>Results</th>
+                  <ng-container *ngFor="let item of period">
+                    <th>{{ item.year }} - {{ item.quarter }}</th>
+                  </ng-container>
+
+                  <!-- <th>Budget Percentage</th> -->
+                  <th>Budget (USD)</th>
+                  <th>W3 Baratialar Project (USD)</th>
+                </tr>
+                <ng-container *ngFor="let wp of actualWps">
+                  <tr>
+                    <td class="wp-title">{{ wp.title }}</td>
+                    <ng-container *ngFor="let item of period">
+                      <td>
+                        <span
+                          class="icon-sub-table-2"
+                          color="primary"
+                          *ngIf="
+                          perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][
+                              item.id
+                            ] == true
+                          "
+                          >X</span
+                        >
+                      </td>
+                    </ng-container>
+                    <!-- <td>
+                      {{ getPercentageForeachPartnerWp(wp_budgets[partner.code],
+                        wp_budgets[partner.code][
+                       wp.ost_wp.wp_official_code]) || 0 | number : "1.2-2"}}%
+                    </td> -->
+                    <td>
+                      {{
+                        roundNumber(wp_budgets[partner.code][
+                        wp.ost_wp.wp_official_code]) | number
+                      }}
+                    </td>
+                    <td>
+                      {{
+                        roundNumber(
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code + '-project']
+                        ) | number
+                      }}
+                    </td>
+                  </tr>
+                </ng-container>
+                <tr class="total">
+                  <td><div class="subtotal">Total</div></td>
+                  <ng-container *ngFor="let item of period">
+                    <td>
+                      <span
+                        class="icon-sub-table-2"
+                        color="primary"
+                        *ngIf="finalPeriodValForPartner(partner.code , item.id)"
+                        >X</span
+                      >
+                    </td>
+                  </ng-container>
+                  <!-- <td>
+                    {{ getTotalPercentageForEachPartner(wp_budgets[partner.code]) || 0 | number : "1.2-2" }}%
+                  </td> -->
+                  <td>
+                    {{getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
+                  </td>
+                  <td>
+                    {{ getTotalBudgetForEachPartnerProject(wp_budgets[partner.code]) }}
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+
+          <ng-container *ngFor="let wp of actualWps">
+            <mat-card
+              *ngIf="
+                partnersData[partner.code] &&
+                partnersData[partner.code][wp.ost_wp.wp_official_code]
+              "
+            >
+              <mat-card-title class="card-title-table">{{
+                wp.title
+              }}</mat-card-title>
+              <span class="sub-title">Pool Funded</span>
+              <mat-card-content>
+                <div class="table-box-2 mat-elevation-z8">
+                  <table
+                    [ngClass]="{
+                      error: errors[partner.code][wp.ost_wp.wp_official_code]
+                    }"
+                  >
+                    <tr>
+                      <th *ngIf="wp.id == 'melia'">Study Title</th>
+                      <th  *ngIf="wp.id != 'melia'">WP/Results</th>
+                      <ng-container *ngIf="wp.id != 'projects'">
+                        <th *ngIf="wp.id == 'melia'">Study Type</th>
+                        <th *ngIf="wp.id != 'melia'">Type</th>
+                      </ng-container>
+                      <ng-container *ngFor="let item of period">
+                        <th>{{ item.year }} - {{ item.quarter }}</th>
+                      </ng-container>
+                      <!-- <th >Percentage %</th> -->
+                      <th >Budget</th>
+                    </tr>
+
+                    <ng-container
+                      *ngFor="
+                        let item of partnersData[partner.code][
+                          wp.ost_wp.wp_official_code
+                        ]
+                      "
+                    >
+                      <tr>
+                        <td class="wp-title">
+                          <ng-container
+                            *ngIf="item?.initiativeMelia?.meliaType?.name"
+                          >
+                            {{ item?.initiativeMelia?.meliaType.name }}
+                          </ng-container>
+                          <ng-container
+                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
+                            {{
+                              item?.ipsr?.id
+                                ? item?.ipsr.title + " (" + item.value + ")"
+                                : item.title
+                            }}
+                          </ng-container>
+                          <ng-container  *ngIf="wp.id == 'projects'">
+                            {{item.name}}
+                          </ng-container>
+                        </td>
+                        <td *ngIf="wp.id != 'projects'">{{ getCategory(item.category) }}</td>
+                        <ng-container *ngFor="let per of period">
+                          <td>
+                            <span
+                              class="icon-X"
+                              *ngIf="
+                                perValues[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id][per.id] == true && toPdf
+                              "
+                            >
+                              X
+                            </span>
+                            <mat-icon
+                              class="icon-sub-table"
+                              *ngIf="
+                                perValues[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id][per.id] == true && !toPdf
+                              "
+                              >close</mat-icon
+                            >
+                          </td>
+                        </ng-container>
+                        <!-- <td >
+                          {{
+                            toggleValues[partner.code][
+                              wp.ost_wp.wp_official_code
+                            ]
+                              ? values[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id]
+                              : displayValues[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id]
+                          }}%
+                        </td> -->
+                        <td >
+                          {{
+                            toggleValues[partner.code][
+                              wp.ost_wp.wp_official_code
+                            ]
+                              ? budgetValues[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id]
+                              : displayBudgetValues[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id] | number 
+                          }}
+                        </td>
+                      </tr>
+                    </ng-container>
+                    <tr class="total">
+                      <td [attr.colspan]="(wp.id == 'projects') ? 1 : 2">
+                        <span class="subtotal">Subtotal</span>
+                      </td>
+                      <ng-container *ngFor="let per of period">
+                        <td>
+                          <span
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              finalCenterItemPeriodVal(
+                                partner.code,
+                                wp.ost_wp.wp_official_code,
+                                per.id
+                              )
+                            "
+                            >X</span
+                          >
+                        </td>
+                      </ng-container>
+                      <!-- <td >
+                        {{ 
+                          toggleValues[partner.code][wp.ost_wp.wp_official_code]
+                            ? totals[partner.code][wp.ost_wp.wp_official_code]
+                            : roundNumber(
+                                totals[partner.code][wp.ost_wp.wp_official_code]
+                              )
+                        }}%
+                      </td> -->
+                      <td >
+                        {{ 
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code] | number 
+                        }}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <p class="error">
+                  {{ errors[partner.code][wp.ost_wp.wp_official_code] }}
+                </p>
+              </mat-card-content>
+            </mat-card>
+
+
+            <mat-card
+              *ngIf="
+                partnersData[partner.code] &&
+                partnersData[partner.code][wp.ost_wp.wp_official_code + '-project']
+              "
+            >
+              <mat-card-title class="card-title-table">w3-Bilateral Projects
+              </mat-card-title>
+              <mat-card-content>
+                <div class="table-box-2 mat-elevation-z8">
+                  <table
+                    [ngClass]="{
+                      error: errors[partner.code][wp.ost_wp.wp_official_code + '-project']
+                    }"
+                  >
+                    <tr>
+                      <th *ngIf="wp.id == 'melia'">Study Title</th>
+                      <th  *ngIf="wp.id != 'melia'">WP/Results</th>
+                      <ng-container *ngIf="wp.id != 'projects'">
+                        <th *ngIf="wp.id == 'melia'">Study Type</th>
+                        <th *ngIf="wp.id != 'melia'">Type</th>
+                      </ng-container>
+                      <ng-container *ngFor="let item of period">
+                        <th>{{ item.year }} - {{ item.quarter }}</th>
+                      </ng-container>
+                      <!-- <th >Percentage %</th> -->
+                      <th >Budget</th>
+                    </tr>
+
+                    <ng-container
+                      *ngFor="
+                        let item of partnersData[partner.code][
+                          wp.ost_wp.wp_official_code + '-project'
+                        ]
+                      "
+                    >
+                      <tr>
+                        <td class="wp-title">
+                          <ng-container
+                            *ngIf="item?.initiativeMelia?.meliaType?.name"
+                          >
+                            {{ item?.initiativeMelia?.meliaType.name }}
+                          </ng-container>
+                          <ng-container
+                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
+                            {{
+                              item?.ipsr?.id
+                                ? item?.ipsr.title + " (" + item.value + ")"
+                                : item.title
+                            }}
+                          </ng-container>
+                          <ng-container  *ngIf="wp.id == 'projects'">
+                            {{item.name}}
+                          </ng-container>
+                        </td>
+                        <td *ngIf="wp.id != 'projects'">{{ getCategory(item.category) }}</td>
+                        <ng-container *ngFor="let per of period">
+                          <td>
+                            <span
+                              class="icon-X"
+                              *ngIf="
+                                perValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-project'
+                                ][item.id][per.id] == true && toPdf
+                              "
+                            >
+                              X
+                            </span>
+                            <mat-icon
+                              class="icon-sub-table"
+                              *ngIf="
+                                perValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-project'
+                                ][item.id][per.id] == true && !toPdf
+                              "
+                              >close</mat-icon
+                            >
+                          </td>
+                        </ng-container>
+                        <!-- <td >
+                          {{
+                            toggleValues[partner.code][
+                              wp.ost_wp.wp_official_code
+                            ]
+                              ? values[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id]
+                              : displayValues[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ][item.id]
+                          }}%
+                        </td> -->
+                        <td >
+                          {{
+                            toggleValues[partner.code][
+                              wp.ost_wp.wp_official_code + '-project'
+                            ]
+                              ? budgetValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-project'
+                                ][item.id]
+                              : displayBudgetValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-project'
+                                ][item.id] | number 
+                          }}
+                        </td>
+                      </tr>
+                    </ng-container>
+                    <tr class="total">
+                      <td [attr.colspan]="(wp.id == 'projects') ? 1 : 2">
+                        <span class="subtotal">Subtotal</span>
+                      </td>
+                      <ng-container *ngFor="let per of period">
+                        <td>
+                          <span
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              finalCenterItemPeriodVal(
+                                partner.code,
+                                wp.ost_wp.wp_official_code + '-project',
+                                per.id
+                              )
+                            "
+                            >X</span
+                          >
+                        </td>
+                      </ng-container>
+                      <!-- <td >
+                        {{ 
+                          toggleValues[partner.code][wp.ost_wp.wp_official_code]
+                            ? totals[partner.code][wp.ost_wp.wp_official_code]
+                            : roundNumber(
+                                totals[partner.code][wp.ost_wp.wp_official_code]
+                              )
+                        }}%
+                      </td> -->
+                      <td >
+                        {{ 
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code + '-project'] | number 
+                        }}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <p class="error">
+                  {{ errors[partner.code][wp.ost_wp.wp_official_code + '-project'] }}
                 </p>
               </mat-card-content>
             </mat-card>
