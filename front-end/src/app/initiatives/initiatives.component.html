@@ -89,7 +89,7 @@
                     matTooltip="Submit your center activites"
                     matTooltipPosition="above"
                     *ngIf="isContributor(row.roles) && user.role == 'user'"
-                    routerLink="initiative/{{ row['id'] }}/{{
+                    routerLink="program/{{ row['id'] }}/{{
                       row['official_code']
                     }}/submission"
                     mat-icon-button
@@ -118,7 +118,7 @@
      matTooltip="Manage Initiative MELIA"
      matTooltipPosition="above"
      *ngIf="isLeader(row.roles) || isCoordinator(row.roles)"
-     routerLink="initiative/{{ row['id'] }}/{{
+     routerLink="program/{{ row['id'] }}/{{
        row['official_code']
      }}/melia"
      mat-icon-button
@@ -136,7 +136,7 @@
        matTooltip="Complete the PORB"
        matTooltipPosition="above"
        *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles)"
-       routerLink="initiative/{{ row['id'] }}/{{
+       routerLink="program/{{ row['id'] }}/{{
          row['official_code']
        }}/submission"
        mat-icon-button
@@ -151,7 +151,7 @@
                   matTooltip="Manage Initiative Team"
                   matTooltipPosition="above"
                   *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles) || isContributor(row.roles)"
-                  routerLink="initiative/{{ row['id'] }}/{{
+                  routerLink="program/{{ row['id'] }}/{{
                     row['official_code']
                   }}/team-members"
                   mat-icon-button
@@ -164,7 +164,7 @@
                   class="color-icons-table-action"
                   matTooltip="View Submited versions"
                   matTooltipPosition="above"
-                  routerLink="initiative/{{ row['id'] }}/{{
+                  routerLink="program/{{ row['id'] }}/{{
                     row['official_code']
                   }}/submited-versions"
                   mat-icon-button
