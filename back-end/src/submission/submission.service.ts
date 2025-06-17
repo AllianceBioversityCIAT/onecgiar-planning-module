@@ -1467,7 +1467,7 @@ export class SubmissionService {
           },
         },
         {
-          v: 'Budget (USD)',
+          v: 'Pooled Funded (USD)',
           s: {
             fill: { fgColor: { rgb: '3d425e' } },
             font: { color: { rgb: 'ffffff' } },
