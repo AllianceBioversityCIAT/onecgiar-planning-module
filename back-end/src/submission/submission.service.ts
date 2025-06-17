@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResultPeriodValues } from 'src/entities/resultPeriodValues.entity';
-import { In, IsNull, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { Result } from 'src/entities/result.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
 import { Organization } from 'src/entities/organization.entity';
@@ -971,10 +971,20 @@ export class SubmissionService {
   }
 
   async getWpsBudgets(initiative_id: number, phaseId: any) {
-    const wpBudgets = await this.wpBudgetRepository.find({
-      where: { initiative_id, submission_id: IsNull(), phase: { id: phaseId } },
-      relations: ['workPackage'],
-    });
+    const initiative = await this.initService.findOne(initiative_id);
+
+    let wpBudgets;
+
+    if(initiative.synchronized)
+      wpBudgets = await this.wpBudgetRepository.find({
+        where: { initiative_id, submission_id: IsNull(), phase: { id: phaseId } , wp_id: Not(99998)},
+        relations: ['workPackage'],
+      });
+    else
+      wpBudgets = await this.wpBudgetRepository.find({
+        where: { initiative_id, submission_id: IsNull(), phase: { id: phaseId } },
+        relations: ['workPackage'],
+      });
 
     let data = {};
     wpBudgets.forEach((element) => {
