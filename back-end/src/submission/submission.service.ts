@@ -3150,7 +3150,34 @@ export class SubmissionService {
       });
     }
  
-
+    if (ost_wp_acronym === 'AOW00') {
+      const meliaMap = new Map<string, any>();
+      const nonMeliaItems: any[] = [];
+    
+      for (const item of wp_data) {
+        if (item.category !== 'Melia') {
+          nonMeliaItems.push(item);
+          continue;
+        }
+    
+        const key = `${item.id}`;
+    
+        if (!meliaMap.has(key)) {
+          meliaMap.set(key, {
+            ...item,
+            results: item.results ?? '',
+          });
+        } else {
+          const existing = meliaMap.get(key);
+          if (item.results && !existing.results.includes(item.results)) {
+            existing.results += `, ${item.results}`;
+          }
+        }
+      }
+    
+      wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
+    }
+    
 
 
     wp_data.sort(this.compare);
