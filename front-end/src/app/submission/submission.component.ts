@@ -238,7 +238,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         phaseId: this.phase.id,
       });
 
-      this.refreshValues(partner_code, wp_id);
+      // this.refreshValues(partner_code, wp_id);
 
       if (result)
         this.socket.emit("setDataBudget", {
@@ -1350,7 +1350,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.socket.on("setDataBudget-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, budget } = data;
       this.wp_budgets[partner_code][wp_id] = budget;
-      this.refreshValues(partner_code, wp_id);
+      // this.refreshValues(partner_code, wp_id);
     });
     this.socket.on("statusOfCenter", (data: any) => {
       if (this.params.id == data.initiative_id) {
@@ -1399,7 +1399,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               await this.InitData();
               this.toastrService.success("Submission is canceled");
               this.router.navigate([
-                "initiative",
+                "program",
                 this.initiative_data.id,
                 this.initiative_data.official_code,
                 "submited-versions",
@@ -1786,7 +1786,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
                 this.toastrService.success("Data Submitted successfully");
                 this.router.navigate([
-                  "initiative",
+                  "program",
                   this.initiative_data.id,
                   this.initiative_data.official_code,
                   "submited-versions",
@@ -1853,6 +1853,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     let wpChecked = false;
     let message = "";
     let hasBudget = false;
+    let total: any = Object.values(this.budgetValues[partner_code][wp_id]).reduce((sum: any, val: any) => sum + val, 0);
     if (!this.partnersData[partner_code][wp_id]) {
       return {
         valid: valid,
@@ -1893,14 +1894,19 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     } else if (
       wpChecked &&
       hasBudget &&
-      Math.round(this.totals[partner_code][wp_id]) != 100
+      (Math.round(total) !== 0 &&  Number(this.wp_budgets[partner_code][wp_id]) !== 0)
     ) {
       valid = false;
-      if (this.totals[partner_code][wp_id] > 100)
-        this.toggleValues[partner_code][wp_id] = true;
-      this.errors[partner_code][wp_id] =
-        "Results budget must be equal total budget";
-      message = "The subtotal of all percentages should equal 100%";
+      if ( Math.round(total) !== Number(this.wp_budgets[partner_code][wp_id])) {
+        this.errors[partner_code][wp_id] =
+          "Results budget must be equal total budget";
+        message = "The subtotal of all percentages should equal 100%";
+      } else {
+        valid = true;
+        this.errors[partner_code][wp_id] = null;
+        message = '';
+      }
+       
     } else if (
       this.totals[partner_code][wp_id] > 0 &&
       !+this.wp_budgets[partner_code][wp_id]
