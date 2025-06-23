@@ -25,6 +25,7 @@ import { PhasesService } from "src/app/services/phases.service";
 import { ChatComponent } from "../share/chat/chat/chat.component";
 import { InitiativesService } from "../services/initiatives.service";
 import { ChatSocket } from "../share/chat/module/chat-socket";
+import html2canvas from 'html2canvas';
 
 /**
  * @title Data table with sorting, pagination, and filtering.
@@ -965,6 +966,9 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
     });
     setTimeout(() => {
       doc.html(content, {
+        x: 10,
+        y: 10,
+        autoPaging: 'text',
         callback: (doc: any) => {
           doc.save("Planning-" + this.officalCode + ".pdf");
           this.toPdf = false;
