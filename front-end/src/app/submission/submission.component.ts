@@ -25,6 +25,7 @@ import { filter, from, iif, of, switchMap, tap } from "rxjs";
 import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
 import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
+import { UserService } from "../services/user.service";
 
 @Component({
   selector: "app-submission",
@@ -51,6 +52,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private constantsService: ConstantService,
     private initiativeService: InitiativesService,
     private toster: ToastrService,
+    private userService: UserService,
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -1124,8 +1126,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.savedValues.no_budget
     );
     const tab = this.activatedRoute.snapshot.queryParamMap.get("tab");
-    if (tab) this.selectedTabIndex = Number(tab);
-    else this.selectedTabIndex = 0;
+    if (tab && this.initiative_data.is_valid && this.initUser?.role != 'MELIA Focal Point')
+      this.selectedTabIndex = Number(tab);
+    else 
+      this.selectedTabIndex = 0;
     this.title2.setTitle("Complete the PORB");
     this.meta.updateTag({
       name: "description",
@@ -1197,7 +1201,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.dialog.closeAll();
   }
 
-
+  user_info: any;
+  my_roles: any;
   async ngOnInit() {
     this.socket.on('connect_error', this.handelDisconnect);
     this.socket.on('disconnect', this.handelDisconnect);
@@ -1205,6 +1210,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.user = this.AuthService.getLoggedInUser();
     this.params = this.activatedRoute?.snapshot.params;
     this.phase = await this.phasesService.getActivePhase();
+    this.user_info = this.userService.getLogedInUser();
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -1212,6 +1218,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
+    this.my_roles = this.InitiativeUsers.filter(
+      (d: any) => d?.user?.id == this?.user_info?.id
+    ).map((d: any) => d.role);
+    console.log(this.initiative_data)
     this.InitiativeUsers.map((d: any) => {
       if (d.role == "Leader") this.leaders.push(d.user);
     });
@@ -1235,6 +1245,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         roles[0].role == ROLES.LEAD ||
         roles[0].role == ROLES.COORDINATOR ||
         roles[0].role == ROLES.CoLeader ||
+        roles[0].role == ROLES.MELIA_Focal_Point ||
         this.user.role == "admin"
       ) {
         this.partners = partners;
@@ -1360,6 +1371,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     this.socket.on("submissionStatus", (data: any) => {
       this.initStatus = data.initStatus
+      this.initiative_data = data.initiative_data;
+    });
+
+    this.socket.on("markPORBAsValid", (data: any) => {
       this.initiative_data = data.initiative_data;
     });
 
@@ -1963,5 +1978,53 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       default:
         return category;
     }
+  }
+  canSubmitPORB() {
+    return (
+      this.user_info.role == "admin" ||
+      this.my_roles?.includes(ROLES.LEAD) ||
+      this.my_roles?.includes(ROLES.COORDINATOR) ||
+      this.my_roles?.includes(ROLES.CoLeader)
+    );
+  }
+  canMarkAsValid() {
+    return (
+      this.user_info.role == "admin" ||
+      this.my_roles?.includes(ROLES.LEAD) ||
+      this.my_roles?.includes(ROLES.COORDINATOR) ||
+      this.my_roles?.includes(ROLES.CoLeader) ||
+      this.my_roles?.includes(ROLES.MELIA_Focal_Point)
+    );
+  }
+  markAsValid() {
+    this.dialog
+    .open(DeleteConfirmDialogComponent, {
+      data: {
+        title: "Mark this PORB as valid",
+        message: `Are you sure you want to Mark this PORB as valid ?`,
+      },
+    })
+    .afterClosed()
+    .subscribe(async (dialogResult) => {
+      if (dialogResult == true) {
+        await this.submissionService.markAsValid(
+          this.initiative_data.id,
+          { is_valid: true, initiative_id: this.initiative_data.id }
+        ).then(
+          async () => {
+            this.initiative_data = await this.submissionService.getInitiative(
+              this.params.id
+            );
+            this.socket.emit('markPORBAsValid', {
+              initiative_data: this.initiative_data
+            });
+            await this.InitData();
+            this.toastrService.success("PORB marked as valid");
+          }, (error) => {
+            this.toster.error('Connection Error', undefined, { disableTimeOut: true });
+          }
+        );
+      }
+    });
   }
 }

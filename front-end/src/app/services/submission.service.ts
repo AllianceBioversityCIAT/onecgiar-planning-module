@@ -61,6 +61,12 @@ export class SubmissionService {
     );
   }
 
+  async markAsValid(id: number, data: any) {
+    return firstValueFrom(
+      this.http.patch(environment.api_url+'/submission/validatePORB/' + id, data).pipe(map((d: any) => d))
+    );
+  }
+
 
   async getToc(id: any) {
     return firstValueFrom(

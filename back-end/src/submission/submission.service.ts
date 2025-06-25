@@ -3410,6 +3410,26 @@ export class SubmissionService {
     );
   }
 
+  async markPORBAsValid(id, data, user) {
+    const initiative = await this.initService.findOne(id);
+
+    initiative.is_valid = true;
+    await this.initiativeRepository.save(initiative).then(
+      async () => {
+        const history = this.historyRepository.create();
+        history.resource_property = `Mark this PORB as valid`;
+        history.user_id = user.id;
+        history.initiative_id = data.initiative_id;
+        await this.historyRepository.save(history);
+        await this.initiativeRepository.update(data.initiative_id, {
+          latest_history_id: history.id
+        });
+      }, (error) => {
+        console.log(error)
+      }
+    );
+  }
+
   async getTocSubmissionData(id: number) {
     return await firstValueFrom(
       this.httpService

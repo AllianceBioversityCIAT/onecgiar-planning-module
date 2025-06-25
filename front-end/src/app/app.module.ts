@@ -102,6 +102,7 @@ import { SubmittedVersionComponent } from './archive/submitted-version/submitted
 import { TeamMemberComponent } from './archive/team-member/team-member.component';
 import { TableComponent } from './archive/table/table.component';
 import { VersionComponent } from './archive/version/version.component';
+import { GrantedAccessPipePipe } from './team-members/granted-access-pipe.pipe';
 
 
 @NgModule({
@@ -164,6 +165,7 @@ import { VersionComponent } from './archive/version/version.component';
     TeamMemberComponent,
     TableComponent,
     VersionComponent,
+    GrantedAccessPipePipe,
   ],
   imports: [
     BrowserModule,

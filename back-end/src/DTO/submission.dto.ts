@@ -294,6 +294,12 @@ export class updateLatestSubmitionStatus {
   status: string;
 }
 
+export class markPORBAsValid {
+  @ApiProperty()
+  is_valid: boolean;
+  initiative_id: number;
+}
+
 
 
 export class  save_result_values_req {

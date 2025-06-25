@@ -124,6 +124,13 @@ export class InitiativesComponent implements OnInit {
     return this.user.role == "admin" || false;
   }
 
+  isMELIAFocalPoint(roles: any) {
+    const roles_ = roles.filter((d: any) => d.user_id == this.user.id);
+    if (roles_.length)
+      return roles_.map((d: any) => d.role)[0] == ROLES.MELIA_Focal_Point || false;
+    else return false;
+  }
+
   isCoordinator(roles: any) {
     const roles_ = roles.filter((d: any) => d.user_id == this.user.id);
     if (roles_.length)

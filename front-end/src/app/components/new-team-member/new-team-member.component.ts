@@ -20,6 +20,7 @@ export enum ROLES {
   COORDINATOR = "Coordinator",
   CONTRIBUTOR = "Contributor",
   CoLeader = "Co-leader",
+  MELIA_Focal_Point = "MELIA Focal Point"
 }
 
 @Component({
@@ -49,6 +50,7 @@ export class NewTeamMemberComponent implements OnInit {
     { value: ROLES.CoLeader, viewValue: ROLES.CoLeader },
     { value: ROLES.COORDINATOR, viewValue: ROLES.COORDINATOR },
     { value: ROLES.CONTRIBUTOR, viewValue: ROLES.CONTRIBUTOR },
+    { value: ROLES.MELIA_Focal_Point, viewValue: ROLES.MELIA_Focal_Point }
   ];
   private atLeastOneValidator = () => {
     return (controlGroup: any) => {

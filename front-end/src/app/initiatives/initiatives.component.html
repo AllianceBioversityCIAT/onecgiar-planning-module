@@ -135,7 +135,7 @@
        class="color-icons-table-action"
        matTooltip="Complete the PORB"
        matTooltipPosition="above"
-       *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles)"
+       *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles) || isMELIAFocalPoint(row.roles)"
        routerLink="program/{{ row['id'] }}/{{
          row['official_code']
        }}/submission"
