@@ -782,22 +782,24 @@ export class SubmissionService {
         history.resource_property = value ? 'Checked result as no budget assigned' : 'unchecked result as no budget assigned';
         history.old_value = value == true ? 'False' : 'True';
         history.new_value = value == true ? 'True' : 'False';
-      } else if (key == 'value') {
-        if (oldResult.value == 0 && newValues.value != 0) {
-          history.resource_property = 'Add percentage';
-          history.old_value = null;
-          history.new_value = newValues.value.toString() + '%';
-        } else if (oldResult.value != 0 && newValues.value != 0) {
-          history.resource_property = 'Edit percentage';
-          history.old_value = oldResult.value.toString() + '%';
-          history.new_value = newValues.value.toString() + '%';
-        } else {
-          history.resource_property = 'Remove percentage';
-          history.old_value = oldResult.value.toString() + '%';
-          history.new_value = null;
-        }
+      }
+      //  else if (key == 'value') {
+      //   if (oldResult.value == 0 && newValues.value != 0) {
+      //     history.resource_property = 'Add percentage';
+      //     history.old_value = null;
+      //     history.new_value = newValues.value.toString() + '%';
+      //   } else if (oldResult.value != 0 && newValues.value != 0) {
+      //     history.resource_property = 'Edit percentage';
+      //     history.old_value = oldResult.value.toString() + '%';
+      //     history.new_value = newValues.value.toString() + '%';
+      //   } else {
+      //     history.resource_property = 'Remove percentage';
+      //     history.old_value = oldResult.value.toString() + '%';
+      //     history.new_value = null;
+      //   }
 
-      } else if (key == 'budget') {
+      // }
+       else if (key == 'budget') {
         if (oldResult.budget == '0' && newValues.budget != '0') {
           history.resource_property = 'Add budget';
           history.old_value = null;
@@ -841,7 +843,11 @@ export class SubmissionService {
   }
 
   getDifference(a, b) {
-    return Object.fromEntries(Object.entries(b).filter(([key, val]) => key in a && a[key] !== val));
+    return Object.fromEntries(
+      Object.entries(b).filter(([key, val]) =>
+        key !== 'value' && key in a && a[key] !== val
+      )
+    );
   }
 
   formatWithThousandsSeparator(num) {
@@ -964,6 +970,26 @@ export class SubmissionService {
       );;
     }
 
+
+    let resultsForThisBudget = await this.resultRepository.find({
+      where :{
+        initiative_id: initiativeId,
+        organization_code: partner_code,
+        submission_id: IsNull(),
+        wp_id: workPackageObject.wp_id,
+        phase_id: phaseId
+      }
+    });
+
+    const updatedResults = resultsForThisBudget.map(result => {
+      const percentage = (Number(result.budget) / budget) * 100;
+
+      result.value = +percentage;
+      return result;
+    });
+    await this.resultRepository.save(updatedResults);
+
+
     await this.initiativeRepository.update(initiativeId, {
       last_update_at: new Date(),
     });
@@ -1000,7 +1026,7 @@ export class SubmissionService {
 
   async getSubmissionBudgets(submission_id: number, phaseId: any) {
     const wpBudgets = await this.wpBudgetRepository.find({
-      where: { submission_id, phase_id: phaseId },
+      where: { submission_id, phase_id: phaseId, wp_id: Not(99998) },
       relations: ['workPackage'],
     });
 
@@ -3150,7 +3176,34 @@ export class SubmissionService {
       });
     }
  
-
+    if (ost_wp_acronym === 'AOW00') {
+      const meliaMap = new Map<string, any>();
+      const nonMeliaItems: any[] = [];
+    
+      for (const item of wp_data) {
+        if (item.category !== 'Melia') {
+          nonMeliaItems.push(item);
+          continue;
+        }
+    
+        const key = `${item.id}`;
+    
+        if (!meliaMap.has(key)) {
+          meliaMap.set(key, {
+            ...item,
+            results: item.results ?? '',
+          });
+        } else {
+          const existing = meliaMap.get(key);
+          if (item.results && !existing.results.includes(item.results)) {
+            existing.results += `, ${item.results}`;
+          }
+        }
+      }
+    
+      wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
+    }
+    
 
 
     wp_data.sort(this.compare);
@@ -3345,6 +3398,26 @@ export class SubmissionService {
       async () => {
         const history = this.historyRepository.create();
         history.resource_property = `Cancel submit for version Id: ${id}`;
+        history.user_id = user.id;
+        history.initiative_id = data.initiative_id;
+        await this.historyRepository.save(history);
+        await this.initiativeRepository.update(data.initiative_id, {
+          latest_history_id: history.id
+        });
+      }, (error) => {
+        console.log(error)
+      }
+    );
+  }
+
+  async markPORBAsValid(id, data, user) {
+    const initiative = await this.initService.findOne(id);
+
+    initiative.is_valid = true;
+    await this.initiativeRepository.save(initiative).then(
+      async () => {
+        const history = this.historyRepository.create();
+        history.resource_property = `Mark this PORB as valid`;
         history.user_id = user.id;
         history.initiative_id = data.initiative_id;
         await this.historyRepository.save(history);

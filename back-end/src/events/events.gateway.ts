@@ -53,6 +53,12 @@ export class EventsGateway implements OnModuleInit {
     this.server.emit('submissionStatus', data);
   }
 
+  @SubscribeMessage('markPORBAsValid')
+  markPORBAsValid(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    this.server.emit('markPORBAsValid', data);
+  }
+
+
   @SubscribeMessage('changeSubmissionStatus')
   changeSubmissionStatus(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     this.server.emit('changeSubmissionStatus', data);

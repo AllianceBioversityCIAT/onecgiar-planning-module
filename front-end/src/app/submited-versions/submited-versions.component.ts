@@ -25,6 +25,7 @@ import { PhasesService } from "src/app/services/phases.service";
 import { ChatComponent } from "../share/chat/chat/chat.component";
 import { InitiativesService } from "../services/initiatives.service";
 import { ChatSocket } from "../share/chat/module/chat-socket";
+import html2canvas from 'html2canvas';
 
 /**
  * @title Data table with sorting, pagination, and filtering.
@@ -908,7 +909,33 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
       });
     }
  
-
+    if (ost_wp_acronym === 'AOW00') {
+      const meliaMap = new Map<string, any>();
+      const nonMeliaItems: any[] = [];
+    
+      for (const item of wp_data) {
+        if (item.category !== 'Melia') {
+          nonMeliaItems.push(item);
+          continue;
+        }
+    
+        const key = `${item.id}`;
+    
+        if (!meliaMap.has(key)) {
+          meliaMap.set(key, {
+            ...item,
+            results: item.results ?? '',
+          });
+        } else {
+          const existing = meliaMap.get(key);
+          if (item.results && !existing.results.includes(item.results)) {
+            existing.results += `, ${item.results}`;
+          }
+        }
+      }
+    
+      wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
+    }
 
 
     wp_data.sort(this.compare);
@@ -939,6 +966,9 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
     });
     setTimeout(() => {
       doc.html(content, {
+        x: 10,
+        y: 10,
+        autoPaging: 'text',
         callback: (doc: any) => {
           doc.save("Planning-" + this.officalCode + ".pdf");
           this.toPdf = false;

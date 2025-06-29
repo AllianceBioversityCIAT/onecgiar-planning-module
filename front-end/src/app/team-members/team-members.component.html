@@ -125,7 +125,7 @@
           <ng-container matColumnDef="organizations">
             <th mat-header-cell *matHeaderCellDef>Granted access</th>
             <td mat-cell *matCellDef="let element">
-              {{ join(element.organizations) || "Full access" }}
+              {{ element.organizations | grantedAccessPipe:element.role  }}
             </td>
           </ng-container>
 

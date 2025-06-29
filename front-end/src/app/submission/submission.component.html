@@ -2058,7 +2058,9 @@
                   *ngIf="
                     !this.isCenter &&
                     initStatus != 'Pending' &&
-                    initStatus != 'Approved'
+                    initStatus != 'Approved' && 
+                    initiative_data.is_valid &&
+                    canSubmitPORB()
                   "
                   class="risk-report-button-box__btn--4 btn--white-2"
                   mat-raised-button
@@ -2068,6 +2070,21 @@
                 >
                   Submit
                 </button>
+
+
+                <button
+                  *ngIf="
+                    !this.isCenter &&
+                    !initiative_data.is_valid &&
+                    canMarkAsValid()
+                  "
+                  class="risk-report-button-box__btn--4 btn--white-2"
+                  mat-raised-button
+                  (click)="markAsValid()"
+                >
+                  Mark this PORB as valid
+                </button>
+
 
                 <button
                   *ngIf="!this.isCenter && initStatus == 'Pending'"
@@ -2240,11 +2257,13 @@
                   'show-d-4':
                     wp.id == 'IPSR' &&
                     user.role == 'user' &&
-                    initUser?.role === 'Contributor',
+                    initUser?.role === 'Contributor' ||
+                    initUser?.role === 'MELIA Focal Point',
                   'show-d-5':
                     (wp.id == 'CROSS' || wp.ost_wp.acronym == 'AOW00') &&
                     user.role == 'user' &&
-                    initUser?.role === 'Contributor'
+                    initUser?.role === 'Contributor' ||
+                    initUser?.role === 'MELIA Focal Point',
                 }"
                 >Show decimals</mat-slide-toggle>
               </div>
@@ -2258,16 +2277,17 @@
                     *ngIf="
                       wp.ost_wp.acronym == 'AOW00' &&
                       initUser?.role != 'Contributor' &&
+                      initUser?.role != 'MELIA Focal Point' &&
                       user.role == 'user'
                     "
                     type="button"
                     (click)="addCross()"
                     [disabled]="
-                      initStatus == 'Pending' || initStatus == 'Approved'
+                      initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
                     "
                     [ngClass]="{
                       disabled:
-                        initStatus == 'Pending' || initStatus == 'Approved'
+                        initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
                     }"
                   >
                     <mat-icon class="create-risk">
@@ -2294,11 +2314,11 @@
                     type="button"
                     (click)="addCross()"
                     [disabled]="
-                      initStatus == 'Pending' || initStatus == 'Approved'
+                      initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
                     "
                     [ngClass]="{
                       disabled:
-                        initStatus == 'Pending' || initStatus == 'Approved'
+                        initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
                     }"
                   >
                     <mat-icon class="create-risk">
@@ -2356,19 +2376,19 @@
                             <div class="box">
                               <button
                                 *ngIf="
-                                  initUser?.role != 'Contributor' &&
+                                  canSubmitPORB() &&
                                   user.role == 'user'
                                 "
                                 mat-icon-button
                                 [matMenuTriggerFor]="menu"
                                 [disabled]="
                                   initStatus == 'Pending' ||
-                                  initStatus == 'Approved'
+                                  initStatus == 'Approved'|| !initiative_data.is_valid
                                 "
                                 [ngClass]="{
                                   disabled:
                                     initStatus == 'Pending' ||
-                                    initStatus == 'Approved'
+                                    initStatus == 'Approved'|| !initiative_data.is_valid
                                 }"
                               >
                                 <mat-icon class="icon-sub-table-2"
@@ -2382,12 +2402,12 @@
                                 [matMenuTriggerFor]="menu"
                                 [disabled]="
                                   initStatus == 'Pending' ||
-                                  initStatus == 'Approved'
+                                  initStatus == 'Approved'|| !initiative_data.is_valid
                                 "
                                 [ngClass]="{
                                   disabled:
                                     initStatus == 'Pending' ||
-                                    initStatus == 'Approved'
+                                    initStatus == 'Approved'|| !initiative_data.is_valid
                                 }"
                               >
                                 <mat-icon class="icon-sub-table-2"
@@ -3180,6 +3200,7 @@
       <mat-tab
         *ngFor="let partner of partners | sort : 'asc' : 'acronym'"
         label="{{ partner.name }}"
+        [disabled]="!initiative_data.is_valid || initUser?.role == 'MELIA Focal Point'"
       >
         <ng-template mat-tab-label>
           <span style="margin-right: 10px">{{
