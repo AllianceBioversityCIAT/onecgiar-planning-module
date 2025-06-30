@@ -2258,12 +2258,14 @@
                     wp.id == 'IPSR' &&
                     user.role == 'user' &&
                     initUser?.role === 'Contributor' ||
-                    initUser?.role === 'MELIA Focal Point',
+                    initUser?.role === 'MELIA Focal Point'||
+                    initUser?.role === 'Financial Focal Point',
                   'show-d-5':
                     (wp.id == 'CROSS' || wp.ost_wp.acronym == 'AOW00') &&
                     user.role == 'user' &&
                     initUser?.role === 'Contributor' ||
-                    initUser?.role === 'MELIA Focal Point',
+                    initUser?.role === 'MELIA Focal Point'||
+                    initUser?.role === 'Financial Focal Point',
                 }"
                 >Show decimals</mat-slide-toggle>
               </div>
@@ -2278,6 +2280,7 @@
                       wp.ost_wp.acronym == 'AOW00' &&
                       initUser?.role != 'Contributor' &&
                       initUser?.role != 'MELIA Focal Point' &&
+                      initUser?.role != 'Financial Focal Point' &&
                       user.role == 'user'
                     "
                     type="button"
@@ -3209,6 +3212,9 @@
           <mat-icon *ngIf="partnersStatus[partner.code]"
             >check_circle_outline</mat-icon
           >
+          <mat-icon *ngIf="partnersValidate[partner.code]"
+            >check_circle_outline</mat-icon
+          >
           <mat-icon *ngIf="centerHasError[partner.code]" style="color: red"
             >error_outline</mat-icon
           >
@@ -3271,7 +3277,7 @@
 
               <div class="risk-report-button-box" style="height: 37px">
                 <app-center-status
-                  *ngIf="initStatus != 'Approved' && partner.canEdit"
+                  *ngIf="initStatus != 'Approved' && partner.canEdit && initUser?.role != 'Financial Focal Point'"
                   (change)="partnerStatusChange($event, partner.code)"
                   [status]="!checkComplete(partner.code)"
                   [initiative_id]="initiative_data.id"
@@ -3284,6 +3290,20 @@
                 >
                   >
                 </app-center-status>
+              </div>
+              <div class="risk-report-button-box" style="height: 37px">
+                <app-center-validate
+                  *ngIf="initUser?.role == 'Financial Focal Point'"
+                  [is_valid]="!this.partnersValidate[partner.code]"
+                  [initiative_id]="initiative_data.id"
+                  [organization_code]="partner.code"
+                  [phase_id]="phase.id"
+                  [organization]="organizationSelected"
+                  [socket]="socket"
+                  [isDisabled]="!this.partnersStatus[partner.code]"
+                >
+                  >
+                </app-center-validate>
               </div>
             </div>
           </div>
@@ -3482,7 +3502,8 @@
                         [disabled]="
                           partnersStatus[partner.code] ||
                           initStatus == 'Pending' ||
-                          initStatus == 'Approved'
+                          initStatus == 'Approved' ||
+                          initUser?.role === 'Financial Focal Point'
                         "
                         (click)="
                           checkAll(partner.code, wp.ost_wp.wp_official_code, true, false)
@@ -3491,7 +3512,8 @@
                           disabled:
                             partnersStatus[partner.code] ||
                               initStatus == 'Pending' ||
-                              initStatus == 'Approved'
+                              initStatus == 'Approved' ||
+                              initUser?.role === 'Financial Focal Point'
                         }"
                       >
                         Check all
@@ -3502,7 +3524,8 @@
                         [disabled]="
                           partnersStatus[partner.code] ||
                           initStatus == 'Pending' ||
-                          initStatus == 'Approved'
+                          initStatus == 'Approved' ||
+                          initUser?.role === 'Financial Focal Point'
                         "
                         (click)="
                           checkAll(partner.code, wp.ost_wp.wp_official_code, false, false)
@@ -3511,7 +3534,8 @@
                           disabled:
                             partnersStatus[partner.code] ||
                             initStatus == 'Pending' ||
-                            initStatus == 'Approved'
+                            initStatus == 'Approved' ||
+                            initUser?.role === 'Financial Focal Point'
                         }"
                       >
                         Clear all
@@ -3637,7 +3661,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
                               "
                               [(ngModel)]="
                                 perValues[partner.code][
@@ -3947,7 +3972,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
                               "
                               (keyup)="
                                 changeCalc(
@@ -3987,7 +4013,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
                               "
                               (keyup)="
                                 changeCalc(
@@ -4123,7 +4150,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
                               "
                               matInput
                               [(ngModel)]="
@@ -4188,7 +4216,8 @@
                         [disabled]="
                           partnersStatus[partner.code] ||
                           initStatus == 'Pending' ||
-                          initStatus == 'Approved'
+                          initStatus == 'Approved'||
+                          initUser?.role === 'Financial Focal Point'
                         "
                         (click)="
                           checkAll(partner.code, wp.ost_wp.wp_official_code + '-project', true, true)
@@ -4197,7 +4226,8 @@
                           disabled:
                             partnersStatus[partner.code] ||
                               initStatus == 'Pending' ||
-                              initStatus == 'Approved'
+                              initStatus == 'Approved' ||
+                              initUser?.role === 'Financial Focal Point'
                         }"
                       >
                         Check all
@@ -4208,7 +4238,8 @@
                         [disabled]="
                           partnersStatus[partner.code] ||
                           initStatus == 'Pending' ||
-                          initStatus == 'Approved'
+                          initStatus == 'Approved' ||
+                          initUser?.role === 'Financial Focal Point'
                         "
                         (click)="
                           checkAll(partner.code, wp.ost_wp.wp_official_code+ '-project', false, true)
@@ -4217,7 +4248,8 @@
                           disabled:
                             partnersStatus[partner.code] ||
                             initStatus == 'Pending' ||
-                            initStatus == 'Approved'
+                            initStatus == 'Approved'||
+                            initUser?.role === 'Financial Focal Point'
                         }"
                       >
                         Clear all
@@ -4337,7 +4369,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
                               "
                               [(ngModel)]="
                                 perValues[partner.code][
@@ -4647,7 +4680,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
                               "
                               (keyup)="
                                 changeCalc(
@@ -4687,7 +4721,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
                               "
                               (keyup)="
                                 changeCalc(
@@ -4823,7 +4858,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
                               "
                               matInput
                               [(ngModel)]="

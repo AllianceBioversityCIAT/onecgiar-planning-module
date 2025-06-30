@@ -162,6 +162,10 @@ export class EmailService {
               // Collaborating Initiative for MELIA studies/activities
               body += this.createBodyForPORBCollaboratingInitiativeMELIA(init, otherInitiative, meliaStudy)
               break;
+            case 9:
+              // PORB validated
+              body += this.createBodyForPORBValidated(init, organization, userRoleDoAction)
+              break;
           }
     
           const emailBody = this.emailTemplate(body);
@@ -283,6 +287,22 @@ export class EmailService {
       return `
     	<p style="font-weight: 200">
         PORB ${organization.acronym} was <span style="font-weight: bold;">completed</span> by ${userRoleDoAction[0].role} ${userRoleDoAction[0].full_name} <span style="font-weight: bold;">${init.official_code}</span>
+      </p>
+    `
+    } 
+  }
+
+  createBodyForPORBValidated(init, organization, userRoleDoAction) {
+    if(userRoleDoAction[0].user) {
+      return `
+    	<p style="font-weight: 200">
+        PORB ${organization.acronym} was <span style="font-weight: bold;">validated</span> by ${userRoleDoAction[0].role} ${userRoleDoAction[0].user.full_name} <span style="font-weight: bold;">${init.official_code}</span>
+      </p>
+    `
+    } else {
+      return `
+    	<p style="font-weight: 200">
+        PORB ${organization.acronym} was <span style="font-weight: bold;">validated</span> by ${userRoleDoAction[0].role} ${userRoleDoAction[0].full_name} <span style="font-weight: bold;">${init.official_code}</span>
       </p>
     `
     } 

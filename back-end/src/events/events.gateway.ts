@@ -33,6 +33,11 @@ export class EventsGateway implements OnModuleInit {
     this.server.emit('statusOfCenter', data);
   }
 
+  @SubscribeMessage('validateOfCenter')
+  validateCenter(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    this.server.emit('validateOfCenter', data);
+  }
+
   @SubscribeMessage('setDataValues')
   setDataValue(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     this.server.emit('setDataValues-' + data.id, data);

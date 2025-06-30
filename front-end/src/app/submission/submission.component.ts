@@ -93,6 +93,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   toggleSummaryValues: any = {};
   noValuesAssigned: any = {};
   partnersStatus: any = {};
+  partnersValidate: any = {};
   centerHasError: any = {};
   itemHasError: any = {};
   tocSubmissionData: any;
@@ -340,6 +341,18 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             d.organization_code == organization_code &&
             d.phase_id == this.phase.id
         )[0]?.status == 1
+      );
+    } else return false;
+  }
+
+  checkValidateCenter(organization_code: number) {
+    if (this.initiative_data.center_status) {
+      return (
+        this.initiative_data.center_status.filter(
+          (d: any) =>
+            d.organization_code == organization_code &&
+            d.phase_id == this.phase.id
+        )[0]?.is_valid == 1
       );
     } else return false;
   }
@@ -776,6 +789,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.errors = {};
     this.noValuesAssigned = {};
     this.partnersStatus = {};
+    this.partnersValidate = {};
     this.centerHasError = {};
     this.itemHasError = {};
 
@@ -925,6 +939,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     for (let partner of this.partners) {
       this.partnersStatus[partner.code] = this.checkComplete(partner.code);
+      this.partnersValidate[partner.code] = this.checkValidateCenter(partner.code);
       if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
       if (!this.budgetValues[partner.code])
         this.budgetValues[partner.code] = {};
@@ -1246,6 +1261,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         roles[0].role == ROLES.COORDINATOR ||
         roles[0].role == ROLES.CoLeader ||
         roles[0].role == ROLES.MELIA_Focal_Point ||
+        roles[0].role == ROLES.Financial_Focal_Point ||
         this.user.role == "admin"
       ) {
         this.partners = partners;
@@ -1366,6 +1382,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.socket.on("statusOfCenter", (data: any) => {
       if (this.params.id == data.initiative_id) {
         this.partnersStatus[data.organization_code] = !data.status;
+        this.partnersValidate[data.organization_code] = !data.is_valid;
+      }
+      
+    });
+    this.socket.on("validateOfCenter", (data: any) => {
+      if (this.params.id == data.initiative_id) {
+        this.partnersValidate[data.organization_code] = !data.is_valid;
       }
     });
 
@@ -1767,17 +1790,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
   async submit() {
     let messages = "Are you sure you want to submit?";
-    let incompleteCenters = this.incompleteCenters().sort();
-    if (incompleteCenters.length) {
-      messages = incompleteCenters.length > 1 ? "Centers" : "Center(s)";
-      messages += "  are incomplete:";
+    let invalidCenters = this.invalidCenters().sort(); 
+    if (invalidCenters.length) {
+      messages = invalidCenters.length > 1 ? "Centers" : "Center(s)";
+      messages += "  are invalid:";
     }
     this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
           title: "Submit",
           message2: messages,
-          f: incompleteCenters,
+          f: invalidCenters,
           k: `Are you sure you want to submit?`,
           svg: `../../assets/shared-image/apply.png`,
         },
@@ -1824,6 +1847,16 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       }
     });
     return incompleteCenters;
+  }
+
+  invalidCenters() {
+    let invalidCenters: any = [];
+    this.partners.forEach((partner: any) => {
+      if (!this.partnersValidate[partner.code]) {
+        invalidCenters.push(partner.acronym);
+      }
+    });
+    return invalidCenters;
   }
 
   validate() {

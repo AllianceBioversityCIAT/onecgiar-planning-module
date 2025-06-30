@@ -9,20 +9,21 @@ import { HeaderService } from 'src/app/header.service';
 import { AppSocket } from 'src/app/socket.service';
 
 @Component({
-  selector: 'app-center-status',
-  templateUrl: './center-status.component.html',
-  styleUrls: ['./center-status.component.scss'],
+  selector: 'app-center-validate',
+  templateUrl: './center-validate.component.html',
+  styleUrls: ['./center-validate.component.scss']
 })
-export class CenterStatusComponent implements OnInit {
+export class CenterValidateComponent {
   @Input('organization_code') organization_code: string;
   @Input('initiative_id') initiative_id: number;
   @Input('phase_id') phase_id: number;
-  @Input('status') status: boolean;
+  @Input('is_valid') is_valid: boolean;
   @Input('organization') organization: any;
   @Input('isDisabled') isDisabled: any;
   @Output() change = new EventEmitter<any>();
   @Output() clicked = new EventEmitter<any>();
   @Input('socket') socket: AppSocket;
+
   constructor(
     private submissionService: SubmissionService,
     public dialog: MatDialog,
@@ -38,16 +39,17 @@ export class CenterStatusComponent implements OnInit {
   }
 
   loading = true;
-  a: any;
+
   async ngOnInit(): Promise<void> {
     this.loading = true;
-    this.socket.on('statusOfCenter', (data: any) => {
+    console.log(this.is_valid)
+    this.socket.on('validateOfCenter', (data: any) => {
       if (
         this.initiative_id == data.initiative_id &&
         this.phase_id == data.phase_id &&
         this.organization_code == data.organization_code
       ) {
-        this.status = data.status;
+        this.is_valid = data.is_valid;
       }
     });
   }
@@ -58,47 +60,45 @@ export class CenterStatusComponent implements OnInit {
         data: {
           title: 'Mark as Complete',
           message: `Are you sure you want to Mark it as ${
-            this.status ? '' : 'In'
-          }complete?`,
+            this.is_valid ? '' : 'In'
+          }valid?`,
           svg: `../../../../assets/shared-image/${
-            this.status ? 'checked-center.png' : 'uncompleted.png'
+            this.is_valid ? 'checked-center.png' : 'uncompleted.png'
           }`,
         },
       })
       .afterClosed()
       .subscribe(async (dialogResult) => {
         if (dialogResult == true) {
-          if (this.status) this.clicked.emit();
+          if (this.is_valid) this.clicked.emit();
 
           const valid = this.centerStatusService.validPartner.getValue();
-          if (!this.status || (this.status && valid)) {
-            let result = await this.submissionService.markStatus(
+          if (!this.is_valid || (this.is_valid && valid)) {
+            let result = await this.submissionService.markValidate(
               this.organization_code,
               +this.initiative_id,
               this.phase_id,
-              !!this.status,
+              !!this.is_valid,
               this.organization
             );
-            if (this.status === false) {
-              this.toast.success('mark as incompleted');
-              this.socket.emit('statusOfCenter', {
+            if (this.is_valid === false) {
+              this.toast.success('mark as invalid');
+              this.socket.emit('validateOfCenter', {
                 organization_code: this.organization_code,
                 initiative_id: this.initiative_id,
                 phase_id: this.phase_id,
-                status: true,
-                is_valid: true
+                is_valid: true,
               });
             } else {
-              this.toast.success('marked as completed');
-              this.socket.emit('statusOfCenter', {
+              this.toast.success('marked as valid');
+              this.socket.emit('validateOfCenter', {
                 organization_code: this.organization_code,
                 initiative_id: this.initiative_id,
                 phase_id: this.phase_id,
-                status: false,
-                is_valid: true
+                is_valid: false,
               });
             }
-            if (result) this.change.emit(!!this.status);
+            if (result) this.change.emit(!!this.is_valid);
           }
         }
       });
