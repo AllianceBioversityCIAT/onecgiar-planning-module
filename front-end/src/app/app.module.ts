@@ -103,6 +103,7 @@ import { TeamMemberComponent } from './archive/team-member/team-member.component
 import { TableComponent } from './archive/table/table.component';
 import { VersionComponent } from './archive/version/version.component';
 import { GrantedAccessPipePipe } from './team-members/granted-access-pipe.pipe';
+import { CenterValidateComponent } from './submission/center-validate/center-validate.component';
 
 
 @NgModule({
@@ -166,6 +167,7 @@ import { GrantedAccessPipePipe } from './team-members/granted-access-pipe.pipe';
     TableComponent,
     VersionComponent,
     GrantedAccessPipePipe,
+    CenterValidateComponent,
   ],
   imports: [
     BrowserModule,

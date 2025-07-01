@@ -35,4 +35,7 @@ export class CenterStatus {
   @Column()
   status: boolean;
 
+  @Column({type: 'bool', default: false})
+  is_valid: boolean;
+
 }

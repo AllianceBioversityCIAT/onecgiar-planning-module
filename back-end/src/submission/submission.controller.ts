@@ -69,6 +69,18 @@ export class SubmissionController {
     return this.submissionService.updateCenterStatus(data, req.user);
   }
 
+  @Patch('center/validate')
+  @ApiBearerAuth()
+  @ApiBody({ type: updateCenterStatusReq })
+  @ApiCreatedResponse({
+    description: '',
+    type: updateCenterStatusRes,
+  })
+  @ApiBearerAuth()
+  updateCenterValidate(@Body() data, @Request() req) {
+    return this.submissionService.updateCenterValidate(data, req.user);
+  }
+
   @Patch('cancellastsubmission/:id')
   @ApiBearerAuth()
   @ApiBody({ type: updateLatestSubmitionStatus })

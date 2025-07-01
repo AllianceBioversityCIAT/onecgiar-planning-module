@@ -29,6 +29,26 @@ export class SubmissionService {
     ).catch((e) => false);
   }
 
+  markValidate(
+    organization_code: string,
+    initiative_id: number,
+    phase_id: number,
+    is_valid: boolean,
+    organization: any
+  ) {
+    return firstValueFrom(
+      this.http
+        .patch(environment.api_url+'/submission/center/validate', {
+          organization_code,
+          initiative_id,
+          phase_id,
+          is_valid,
+          organization
+        })
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
 
   async excel(id: any) {
     const data = await firstValueFrom(

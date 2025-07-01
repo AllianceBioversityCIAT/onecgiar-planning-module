@@ -1,0 +1,14 @@
+<div>
+  <div>
+    <button
+      class="risk-report-button-box__btn--4 btn--white-2"
+      mat-raised-button
+      (click)="complete()"
+      type="button"
+      [disabled]="isDisabled"
+      [ngClass]="isDisabled ? 'disabled' : 'btn'"
+    >
+      Mark center as {{ is_valid ? "" : "In" }}valid
+    </button>
+  </div>
+</div>

@@ -131,6 +131,13 @@ export class InitiativesComponent implements OnInit {
     else return false;
   }
 
+  isFinancialFocalPoint(roles: any) {
+    const roles_ = roles.filter((d: any) => d.user_id == this.user.id);
+    if (roles_.length)
+      return roles_.map((d: any) => d.role)[0] == ROLES.Financial_Focal_Point || false;
+    else return false;
+  }
+
   isCoordinator(roles: any) {
     const roles_ = roles.filter((d: any) => d.user_id == this.user.id);
     if (roles_.length)

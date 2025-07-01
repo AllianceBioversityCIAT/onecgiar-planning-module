@@ -98,6 +98,8 @@ export class SubmissionService {
     center_status.organization_code = organization_code;
     center_status.phase_id = phase_id;
     center_status.status = status;
+    if(status == false) 
+      center_status.is_valid = status;
     await this.centerStatusRepo.save(center_status).then(
       async (data) => {
         if (data.status) {
@@ -136,7 +138,75 @@ export class SubmissionService {
           }
         }
         const history = this.historyRepository.create();
-        history.resource_property = data.status ? 'Mark as complete' : 'Mark as uncomplete';
+        history.resource_property = data.status ? 'Mark as complete' : 'Mark as incomplete';
+        history.user_id = reqUser.id;
+        history.initiative_id = data.initiative_id;
+        history.organization_id = organization_code;
+        await this.historyRepository.save(history);
+        await this.initiativeRepository.update(initiative_id, {
+          latest_history_id: history.id
+        });
+      }, (error) => {
+        console.error(error)
+      }
+    );
+
+    return { message: 'Data Saved' };
+  }
+  async updateCenterValidate(data, reqUser) {
+    const { initiative_id, organization_code, phase_id, is_valid, organization } = data;
+
+    let center_status: CenterStatus;
+    center_status = await this.centerStatusRepo.findOneBy({
+      initiative_id,
+      organization_code,
+      phase_id,
+    });
+
+
+    center_status.initiative_id = initiative_id;
+    center_status.organization_code = organization_code;
+    center_status.phase_id = phase_id;
+    center_status.is_valid = is_valid;
+    await this.centerStatusRepo.save(center_status).then(
+      async (data) => {
+        if (data.is_valid) {
+          const init = await this.initiativeRepository.findOne({
+            where: {
+              id: initiative_id
+            },
+            relations: ['roles', 'roles.user', 'roles.organizations']
+          });
+
+          const usersRole = [];
+          init.roles.filter(d => {
+            if (d.role == 'Leader' || d.role == 'Coordinator') {
+              usersRole.push(d);
+            } else if (d.role == 'Contributor') {
+              d.organizations.filter(x => {
+                if (x.code == data.organization_code) {
+                  usersRole.push(d)
+                }
+              });
+
+            }
+          });
+          const users = usersRole.map(d => d.user);
+
+          // when user is in team member
+          const userRoleDoAction = init.roles.filter(d => d.user_id == reqUser.id);
+
+          for (let user of users) {
+            if (userRoleDoAction.length) {
+              this.emailService.sendEmailTobyVarabel(user, 9, init, null, null, organization, userRoleDoAction, null, null)
+            } else {
+              // when admin mark as complete
+              this.emailService.sendEmailTobyVarabel(user, 9, init, null, null, organization, [reqUser], null, null)
+            }
+          }
+        }
+        const history = this.historyRepository.create();
+        history.resource_property = data.is_valid ? 'Mark as valid' : 'Mark as invalid';
         history.user_id = reqUser.id;
         history.initiative_id = data.initiative_id;
         history.organization_id = organization_code;
