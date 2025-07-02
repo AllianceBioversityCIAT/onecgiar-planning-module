@@ -246,7 +246,8 @@ export class SubmissionController {
                 if (items.projects?.length) {
                   items.projects = items.projects.map((proj: any) => proj.id);
                 }
-    
+                if (items.indicators?.length)  items.indicators  = items.indicators.map((i: any) => i);
+
     
               return items;
             });
@@ -287,7 +288,7 @@ export class SubmissionController {
               if (melia?.related_node_id) {
                 melia.id = melia.related_node_id;
               } else {
-                console.warn(`Melia with missing related_node_id:`, melia);
+                // console.warn(`Melia with missing related_node_id:`, melia);
               }
             }
 
@@ -319,8 +320,38 @@ export class SubmissionController {
             }
 
             const newProjects = Array.from(projectMap.values());
+
+
+
+            const indicatorMap = new Map<string, any>();
+
+            
+            for (const data of filteredData) {
+              if (data.category == 'OUTPUT'){
+                for (const indicator of data.indicators) {
+                  const key = `${indicator.id}_${data.group}`;
+                    const location =
+                    indicator.location === 'regional'
+                      ? `Region: ${indicator.region.map(r => r.name).join(', ')}`
+                      : indicator.location === 'country'
+                        ? `Country: ${indicator.country.map(c => c.name).join(', ')}`
+                        : 'Global';
+                    indicatorMap.set(key, {
+                      ...indicator,
+                      id: indicator.id,
+                      location: location,
+                      parent_id: data.group,
+                      results: data.title,
+                      category: 'Geographic-Scope',
+                     
+                    });
+                }
+              }
+            }
+  
+            const newIndicators = Array.from(indicatorMap.values());
     
-            return [...newMelias, ...newProjects, ...filteredData ]; 
+            return [...newMelias, ...newProjects, ...filteredData, ...newIndicators ]; 
           }),
           catchError((error: AxiosError) => {
             console.error(error);

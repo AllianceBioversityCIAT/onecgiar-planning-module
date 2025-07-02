@@ -3160,6 +3160,195 @@
 
                 </table>
               </div>
+
+
+
+              <div class="sub-head">
+                <span class="sub-title">Geographic Scope</span>
+              </div>
+              <div class="table-box-1 mat-elevation-z8 w3-project-table">
+                 
+                <table>
+                  <tr>
+                    <th>Actions</th>
+                    <th>Results</th>
+                      <th>Type</th>
+                      <th>Strategic Geographic Scope</th>
+                  </tr>
+
+
+
+
+
+
+                  
+
+                  <ng-container
+                    *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-Geographic-Scope']"
+                  >
+                    <ng-container  *ngIf="item.category == 'Geographic-Scope'">
+                    <tr>
+                      <td class="f-c-Geographic-Scope">
+                          <figure
+                            matTooltip="For any changes use ToC tool"
+                            matTooltipPosition="below"
+                            class="toc-img-center"
+                          >
+                            <img
+                              class="toc-img-size"
+                              src="../../assets/shared-image/toc-5.png"
+                              alt="Photo of toc"
+                            />
+                          </figure>
+                          <button
+                          style="
+                            background: none;
+                            border: none;
+                            position: relative;
+                            top: -0.4rem;
+                          "
+                          (click)="item.isExpand = !item.isExpand"
+                        >
+                          <i
+                            *ngIf="!item.isExpand"
+                            class="bi-chevron-right"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="10"
+                              viewBox="0 0 16 10"
+                              fill="none"
+                            >
+                              <path
+                                d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
+                                fill="#0f212f"
+                              />
+                            </svg>
+                          </i>
+                          <i *ngIf="item.isExpand" class="bi-chevron-up">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="10"
+                              viewBox="0 0 16 10"
+                              fill="none"
+                            >
+                              <path
+                                d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
+                                fill="#0f212f"
+                              />
+                            </svg>
+                          </i>
+                        </button>
+                      </td>
+                      <td class="wp-title box-center">
+                       {{item.location}}
+                      </td>
+                      
+                      <td (click)="item.isExpand = !item.isExpand">
+                        {{ getCategory(item.category) }}
+                      </td>
+                      <ng-container *ngFor="let per of period | slice:0:1">
+                        <td (click)="item.isExpand = !item.isExpand">
+                          <mat-icon
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              perAllValues[wp.ost_wp.wp_official_code + '-Geographic-Scope'][
+                                item.id
+                              ][per.id] == true
+                            "
+                            >close</mat-icon
+                          >
+                        </td>
+                      </ng-container>
+                      <!-- <ng-container>
+                        <td (click)="item.isExpand = !item.isExpand">
+                          <mat-icon
+                            class="icon-sub-table-2"
+                            color="primary"
+                            >close</mat-icon>
+                        </td>
+                      </ng-container> -->
+                    </tr>
+
+                    <ng-container *ngIf="item.isExpand">
+                      <tr>
+                        <td colspan="12" style="padding: 0.5rem">
+                          <table class="table table-sm">
+                            <thead>
+                              <tr>
+                                <th
+                                  style="background: none; text-align: left; color: #0f212f;"
+                                >
+                                  Results:
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr style="background: none;">
+                                <td
+                                  style="
+                                    background: none;
+                                    border: none;
+                                    text-align: left;
+                                    font-size: 1.3rem;
+                                    color: #0f212f;
+                                    padding: 0.7rem;
+                                  "
+                                >
+                                  {{ item?.results }}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </ng-container>
+
+             
+
+
+                    </ng-container>
+                  </ng-container>
+                  <!-- <tr class="total">
+                    <td [attr.colspan]="(wp.id == 'IPSR' || wp.id == 'projects') ? 2 : 3">
+                      <div class="subtotal">Subtotal</div>
+                    </td>
+                    <ng-container *ngFor="let per of period">
+                      <td>
+                        <mat-icon
+                          class="icon-sub-table-2"
+                          color="primary"
+                          *ngIf="
+                            finalItemPeriodVal(
+                              wp.ost_wp.wp_official_code + '-project',
+                              per.id
+                            )
+                          "
+                          >close</mat-icon
+                        >
+                      </td>
+                    </ng-container>
+                    <td>
+                      {{
+                        toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
+                          ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
+                            | number)
+                          : (roundNumber(
+                              summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
+                            ) | number)
+                      }}
+                    </td>
+                  </tr> -->
+
+
+
+
+
+                </table>
+              </div>
               </mat-card-content>
             </mat-card>
           </mat-tab>
@@ -3684,261 +3873,7 @@
                           </td>
                         </ng-container>
   
-                        <!-- <td>
-                          <div class="flex-icon-checkbox">
-                            <mat-form-field
-                              class="form-dialog-content__field"
-                              floatLabel="always"
-                              hideRequiredMarker
-                              appearance="outline"
-                              class="per"
-                              *ngIf="
-                                item.category != 'EOI' &&
-                                item.category != 'OUTCOME'
-                              "
-                            >
-                              <input
-                                *ngIf="
-                                  toggleValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ]
-                                "
-                                [disabled]="
-                                  (perValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] | inQue) ||
-                                  noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] ||
-                                  partnersStatus[partner.code] ||
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved' ||
-                                  !partner?.canEdit
-                                "
-                                (keyup)="
-                                  changeCalc(
-                                    partner.code,
-                                    wp.ost_wp.wp_official_code,
-                                    item.id,
-                                    item?.ipsr?.id
-                                      ? item?.ipsr.title
-                                      : item.title,
-                                    'percent',
-                                    false
-                                  )
-                                "
-                                [ngModel]="
-                                  haveTrue[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] &&
-                                  !values[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] &&
-                                  !noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id]
-                                    ? null
-                                    : values[partner.code][
-                                        wp.ost_wp.wp_official_code
-                                      ][item.id]
-                                "
-                                (ngModelChange)="
-                                  haveTrue[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] &&
-                                  !values[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] &&
-                                  !noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id]
-                                    ? (values[partner.code][
-                                        wp.ost_wp.wp_official_code
-                                      ][item.id] = $event)
-                                    : (values[partner.code][
-                                        wp.ost_wp.wp_official_code
-                                      ][item.id] = $event)
-                                "
-                                matInput
-                              />
-                              <input
-                                *ngIf="
-                                  !toggleValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ]
-                                "
-                                [disabled]="
-                                  (perValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] | inQue) ||
-                                  noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] ||
-                                  partnersStatus[partner.code] ||
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved' ||
-                                  !partner?.canEdit
-                                "
-                                (keyup)="
-                                  changeCalc(
-                                    partner.code,
-                                    wp.ost_wp.wp_official_code,
-                                    item.id,
-                                    item?.ipsr?.id
-                                      ? item?.ipsr.title
-                                      : item.title,
-                                    'percent',
-                                    false
-                                  )
-                                "
-                                [ngModel]="
-                                  haveTrue[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] &&
-                                  !displayValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] &&
-                                  !noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id]
-                                    ? null
-                                    : displayValues[partner.code][
-                                        wp.ost_wp.wp_official_code
-                                      ][item.id]
-                                "
-                                (ngModelChange)="
-                                  haveTrue[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] &&
-                                  !displayValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] &&
-                                  !noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id]
-                                    ? (displayValues[partner.code][
-                                        wp.ost_wp.wp_official_code
-                                      ][item.id] = $event)
-                                    : (displayValues[partner.code][
-                                        wp.ost_wp.wp_official_code
-                                      ][item.id] = $event)
-                                "
-                                matInput
-                              />
-                              <mat-icon matSuffix>%</mat-icon>
-                            </mat-form-field>
-  
-                            <mat-icon
-                              *ngIf="
-                                !(
-                                  perValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] | inQue
-                                ) &&
-                                item.category != 'EOI' &&
-                                item.category != 'OUTCOME' &&
-                                !values[partner.code][wp.ost_wp.wp_official_code][
-                                  item.id
-                                ]
-                              "
-                              class="cc"
-                              [matTooltip]="
-                                !(
-                                  perValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] | inQue
-                                ) &&
-                                item.category != 'EOI' &&
-                                item.category != 'OUTCOME' &&
-                                !values[partner.code][wp.ost_wp.wp_official_code][
-                                  item.id
-                                ]
-                                  ? 'You can mark this result as no budget assigned click to more info'
-                                  : ''
-                              "
-                              matTooltipPosition="left"
-                              [satPopoverAnchor]="popoverCheckbox"
-                              (click)="popoverCheckbox.toggle()"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 20 20"
-                                fill="none"
-                              >
-                                <g clip-path="url(#clip0_14774_17883)">
-                                  <circle cx="10" cy="10" r="9" fill="white" />
-                                  <path
-                                    d="M0 10C0 7.34784 1.05357 4.8043 2.92893 2.92893C4.8043 1.05357 7.34784 0 10 0C12.6522 0 15.1957 1.05357 17.0711 2.92893C18.9464 4.8043 20 7.34784 20 10C20 12.6522 18.9464 15.1957 17.0711 17.0711C15.1957 18.9464 12.6522 20 10 20C7.34784 20 4.8043 18.9464 2.92893 17.0711C1.05357 15.1957 0 12.6522 0 10ZM10 1.875C7.84512 1.875 5.77849 2.73102 4.25476 4.25476C2.73102 5.77849 1.875 7.84512 1.875 10C1.875 12.1549 2.73102 14.2215 4.25476 15.7452C5.77849 17.269 7.84512 18.125 10 18.125C12.1549 18.125 14.2215 17.269 15.7452 15.7452C17.269 14.2215 18.125 12.1549 18.125 10C18.125 7.84512 17.269 5.77849 15.7452 4.25476C14.2215 2.73102 12.1549 1.875 10 1.875ZM8.125 9.6875C8.125 9.43886 8.22377 9.2004 8.39959 9.02459C8.5754 8.84877 8.81386 8.75 9.0625 8.75H10.3125C10.5611 8.75 10.7996 8.84877 10.9754 9.02459C11.1512 9.2004 11.25 9.43886 11.25 9.6875V13.125H11.5625C11.8111 13.125 12.0496 13.2238 12.2254 13.3996C12.4012 13.5754 12.5 13.8139 12.5 14.0625C12.5 14.3111 12.4012 14.5496 12.2254 14.7254C12.0496 14.9012 11.8111 15 11.5625 15H9.0625C8.81386 15 8.5754 14.9012 8.39959 14.7254C8.22377 14.5496 8.125 14.3111 8.125 14.0625C8.125 13.8139 8.22377 13.5754 8.39959 13.3996C8.5754 13.2238 8.81386 13.125 9.0625 13.125H9.375V10.625H9.0625C8.81386 10.625 8.5754 10.5262 8.39959 10.3504C8.22377 10.1746 8.125 9.93614 8.125 9.6875ZM10 7.5C9.66848 7.5 9.35054 7.3683 9.11612 7.13388C8.8817 6.89946 8.75 6.58152 8.75 6.25C8.75 5.91848 8.8817 5.60054 9.11612 5.36612C9.35054 5.1317 9.66848 5 10 5C10.3315 5 10.6495 5.1317 10.8839 5.36612C11.1183 5.60054 11.25 5.91848 11.25 6.25C11.25 6.58152 11.1183 6.89946 10.8839 7.13388C10.6495 7.3683 10.3315 7.5 10 7.5Z"
-                                    fill="#5569dd"
-                                  />
-                                </g>
-                                <defs>
-                                  <clipPath id="clip0_14774_17883">
-                                    <rect width="20" height="20" fill="white" />
-                                  </clipPath>
-                                </defs>
-                              </svg>
-                            </mat-icon>
-                          </div>
-  
-                          <sat-popover #popoverCheckbox hasBackdrop>
-                            <div
-                              class="popover"
-                              *ngIf="
-                                !(
-                                  perValues[partner.code][
-                                    wp.ost_wp.wp_official_code
-                                  ][item.id] | inQue
-                                ) &&
-                                item.category != 'EOI' &&
-                                item.category != 'OUTCOME' &&
-                                !values[partner.code][wp.ost_wp.wp_official_code][
-                                  item.id
-                                ]
-                              "
-                            >
-                              <div class="popover__head">
-                                <h3 class="popover__h3">No budget</h3>
-                                <mat-icon
-                                  class="popover__icon"
-                                  (click)="popoverCheckbox.close()"
-                                  >close</mat-icon
-                                >
-                              </div>
-                              <p class="popover__text">
-                                You can mark this result as no budget assigned
-                                <span>
-                                  <mat-checkbox
-                                    [disabled]="
-                                      partnersStatus[partner.code] ||
-                                      initStatus == 'Pending' ||
-                                      initStatus == 'Approved' ||
-                                      !partner?.canEdit
-                                    "
-                                    [(ngModel)]="
-                                      noValuesAssigned[partner.code][
-                                        wp.ost_wp.wp_official_code
-                                      ][item.id]
-                                    "
-                                    (change)="
-                                      toggleNoValues(
-                                        partner.code,
-                                        wp.ost_wp.wp_official_code,
-                                        item.id,
-                                        item?.ipsr?.id
-                                          ? item?.ipsr.title
-                                          : item.title
-                                      )
-                                    "
-                                    matTooltip="No budget assigned"
-                                  ></mat-checkbox
-                                ></span>
-                              </p>
-                            </div>
-                          </sat-popover>
-                        </td> -->
+                        
   
                         <td>
                           <mat-form-field
@@ -4392,262 +4327,7 @@
                           </td>
                         </ng-container>
   
-                        <!-- <td>
-                          <div class="flex-icon-checkbox">
-                            <mat-form-field
-                              class="form-dialog-content__field"
-                              floatLabel="always"
-                              hideRequiredMarker
-                              appearance="outline"
-                              class="per"
-                              *ngIf="
-                                item.category != 'EOI' &&
-                                item.category != 'OUTCOME'
-                              "
-                            >
-                              <input
-                                *ngIf="
-                                  toggleValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ]
-                                "
-                                [disabled]="
-                                  (perValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] | inQue) ||
-                                  noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] ||
-                                  partnersStatus[partner.code] ||
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved' ||
-                                  !partner?.canEdit
-                                "
-                                (keyup)="
-                                  changeCalc(
-                                    partner.code,
-                                    wp.ost_wp.wp_official_code + '-project',
-                                    item.id,
-                                    item?.ipsr?.id
-                                      ? item?.ipsr.title
-                                      : item.title,
-                                    'percent',
-                                    false
-                                  )
-                                "
-                                [ngModel]="
-                                  haveTrue[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] &&
-                                  !values[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] &&
-                                  !noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id]
-                                    ? null
-                                    : values[partner.code][
-                                        wp.ost_wp.wp_official_code + '-project'
-                                      ][item.id]
-                                "
-                                (ngModelChange)="
-                                  haveTrue[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] &&
-                                  !values[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] &&
-                                  !noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id]
-                                    ? (values[partner.code][
-                                        wp.ost_wp.wp_official_code + '-project'
-                                      ][item.id] = $event)
-                                    : (values[partner.code][
-                                        wp.ost_wp.wp_official_code + '-project'
-                                      ][item.id] = $event)
-                                "
-                                matInput
-                              />
-                              <input
-                                *ngIf="
-                                  !toggleValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ]
-                                "
-                                [disabled]="
-                                  (perValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] | inQue) ||
-                                  noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] ||
-                                  partnersStatus[partner.code] ||
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved' ||
-                                  !partner?.canEdit
-                                "
-                                (keyup)="
-                                  changeCalc(
-                                    partner.code,
-                                    wp.ost_wp.wp_official_code + '-project',
-                                    item.id,
-                                    item?.ipsr?.id
-                                      ? item?.ipsr.title
-                                      : item.title,
-                                    'percent',
-                                    false
-                                  )
-                                "
-                                [ngModel]="
-                                  haveTrue[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] &&
-                                  !displayValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] &&
-                                  !noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id]
-                                    ? null
-                                    : displayValues[partner.code][
-                                        wp.ost_wp.wp_official_code + '-project'
-                                      ][item.id]
-                                "
-                                (ngModelChange)="
-                                  haveTrue[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] &&
-                                  !displayValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] &&
-                                  !noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id]
-                                    ? (displayValues[partner.code][
-                                        wp.ost_wp.wp_official_code + '-project'
-                                      ][item.id] = $event)
-                                    : (displayValues[partner.code][
-                                        wp.ost_wp.wp_official_code + '-project'
-                                      ][item.id] = $event)
-                                "
-                                matInput
-                              />
-                              <mat-icon matSuffix>%</mat-icon>
-                            </mat-form-field>
-  
-                            <mat-icon
-                              *ngIf="
-                                !(
-                                  perValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] | inQue
-                                ) &&
-                                item.category != 'EOI' &&
-                                item.category != 'OUTCOME' &&
-                                !values[partner.code][wp.ost_wp.wp_official_code + '-project'][
-                                  item.id
-                                ]
-                              "
-                              class="cc"
-                              [matTooltip]="
-                                !(
-                                  perValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] | inQue
-                                ) &&
-                                item.category != 'EOI' &&
-                                item.category != 'OUTCOME' &&
-                                !values[partner.code][wp.ost_wp.wp_official_code + '-project'][
-                                  item.id
-                                ]
-                                  ? 'You can mark this result as no budget assigned click to more info'
-                                  : ''
-                              "
-                              matTooltipPosition="left"
-                              [satPopoverAnchor]="popoverCheckbox"
-                              (click)="popoverCheckbox.toggle()"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 20 20"
-                                fill="none"
-                              >
-                                <g clip-path="url(#clip0_14774_17883)">
-                                  <circle cx="10" cy="10" r="9" fill="white" />
-                                  <path
-                                    d="M0 10C0 7.34784 1.05357 4.8043 2.92893 2.92893C4.8043 1.05357 7.34784 0 10 0C12.6522 0 15.1957 1.05357 17.0711 2.92893C18.9464 4.8043 20 7.34784 20 10C20 12.6522 18.9464 15.1957 17.0711 17.0711C15.1957 18.9464 12.6522 20 10 20C7.34784 20 4.8043 18.9464 2.92893 17.0711C1.05357 15.1957 0 12.6522 0 10ZM10 1.875C7.84512 1.875 5.77849 2.73102 4.25476 4.25476C2.73102 5.77849 1.875 7.84512 1.875 10C1.875 12.1549 2.73102 14.2215 4.25476 15.7452C5.77849 17.269 7.84512 18.125 10 18.125C12.1549 18.125 14.2215 17.269 15.7452 15.7452C17.269 14.2215 18.125 12.1549 18.125 10C18.125 7.84512 17.269 5.77849 15.7452 4.25476C14.2215 2.73102 12.1549 1.875 10 1.875ZM8.125 9.6875C8.125 9.43886 8.22377 9.2004 8.39959 9.02459C8.5754 8.84877 8.81386 8.75 9.0625 8.75H10.3125C10.5611 8.75 10.7996 8.84877 10.9754 9.02459C11.1512 9.2004 11.25 9.43886 11.25 9.6875V13.125H11.5625C11.8111 13.125 12.0496 13.2238 12.2254 13.3996C12.4012 13.5754 12.5 13.8139 12.5 14.0625C12.5 14.3111 12.4012 14.5496 12.2254 14.7254C12.0496 14.9012 11.8111 15 11.5625 15H9.0625C8.81386 15 8.5754 14.9012 8.39959 14.7254C8.22377 14.5496 8.125 14.3111 8.125 14.0625C8.125 13.8139 8.22377 13.5754 8.39959 13.3996C8.5754 13.2238 8.81386 13.125 9.0625 13.125H9.375V10.625H9.0625C8.81386 10.625 8.5754 10.5262 8.39959 10.3504C8.22377 10.1746 8.125 9.93614 8.125 9.6875ZM10 7.5C9.66848 7.5 9.35054 7.3683 9.11612 7.13388C8.8817 6.89946 8.75 6.58152 8.75 6.25C8.75 5.91848 8.8817 5.60054 9.11612 5.36612C9.35054 5.1317 9.66848 5 10 5C10.3315 5 10.6495 5.1317 10.8839 5.36612C11.1183 5.60054 11.25 5.91848 11.25 6.25C11.25 6.58152 11.1183 6.89946 10.8839 7.13388C10.6495 7.3683 10.3315 7.5 10 7.5Z"
-                                    fill="#5569dd"
-                                  />
-                                </g>
-                                <defs>
-                                  <clipPath id="clip0_14774_17883">
-                                    <rect width="20" height="20" fill="white" />
-                                  </clipPath>
-                                </defs>
-                              </svg>
-                            </mat-icon>
-                          </div>
-  
-                          <sat-popover #popoverCheckbox hasBackdrop>
-                            <div
-                              class="popover"
-                              *ngIf="
-                                !(
-                                  perValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ][item.id] | inQue
-                                ) &&
-                                item.category != 'EOI' &&
-                                item.category != 'OUTCOME' &&
-                                !values[partner.code][wp.ost_wp.wp_official_code + '-project'][
-                                  item.id
-                                ]
-                              "
-                            >
-                              <div class="popover__head">
-                                <h3 class="popover__h3">No budget</h3>
-                                <mat-icon
-                                  class="popover__icon"
-                                  (click)="popoverCheckbox.close()"
-                                  >close</mat-icon
-                                >
-                              </div>
-                              <p class="popover__text">
-                                You can mark this result as no budget assigned
-                                <span>
-                                  <mat-checkbox
-                                    [disabled]="
-                                      partnersStatus[partner.code] ||
-                                      initStatus == 'Pending' ||
-                                      initStatus == 'Approved' ||
-                                      !partner?.canEdit
-                                    "
-                                    [(ngModel)]="
-                                      noValuesAssigned[partner.code][
-                                        wp.ost_wp.wp_official_code
-                                      ][item.id]
-                                    "
-                                    (change)="
-                                      toggleNoValues(
-                                        partner.code,
-                                        wp.ost_wp.wp_official_code,
-                                        item.id,
-                                        item?.ipsr?.id
-                                          ? item?.ipsr.title
-                                          : item.title
-                                      )
-                                    "
-                                    matTooltip="No budget assigned"
-                                  ></mat-checkbox
-                                ></span>
-                              </p>
-                            </div>
-                          </sat-popover>
-                        </td> -->
-  
+                     
                         <td>
                           <mat-form-field
                             class="form-dialog-content__field"
@@ -4832,15 +4512,7 @@
                       <td [colSpan]="wp.id == 'projects' ? period.length + 1 :  period.length + 2">
                         <div class="subtotal">Subtotal</div>
                       </td>
-                      <!-- <td>
-                        {{
-                          toggleValues[partner.code][wp.ost_wp.wp_official_code + '-project']
-                            ? totals[partner.code][wp.ost_wp.wp_official_code + '-project']
-                            : roundNumber(
-                                totals[partner.code][wp.ost_wp.wp_official_code + '-project']
-                              )
-                        }}%
-                      </td> -->
+                  
                       <td>
                         <div class="form">
                           <mat-form-field
@@ -4887,6 +4559,237 @@
                   {{ errors[partner.code][wp.ost_wp.wp_official_code + '-project'] }}
                 </p>
 
+
+                <div class="sub-head-w3">
+                  <span class="sub-title-w3">Geographic Scope</span>
+                  <div class="btns-sec-w3">
+                    <div class="btns-w3">
+                      <button
+                        class="check-btn-w3"
+                        *ngIf="partner?.canEdit"
+                        [disabled]="
+                          partnersStatus[partner.code] ||
+                          initStatus == 'Pending' ||
+                          initStatus == 'Approved'||
+                          initUser?.role === 'Financial Focal Point'
+                        "
+                        (click)="
+                          checkAll(partner.code, wp.ost_wp.wp_official_code + '-Geographic-Scope', true, true)
+                        "
+                        [ngClass]="{
+                          disabled:
+                            partnersStatus[partner.code] ||
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved' ||
+                              initUser?.role === 'Financial Focal Point'
+                        }"
+                      >
+                        Check all
+                      </button>
+                      <button
+                        class="check-btn-clear-w3"
+                        *ngIf="partner?.canEdit"
+                        [disabled]="
+                          partnersStatus[partner.code] ||
+                          initStatus == 'Pending' ||
+                          initStatus == 'Approved' ||
+                          initUser?.role === 'Financial Focal Point'
+                        "
+                        (click)="
+                          checkAll(partner.code, wp.ost_wp.wp_official_code+ '-Geographic-Scope', false, true)
+                        "
+                        [ngClass]="{
+                          disabled:
+                            partnersStatus[partner.code] ||
+                            initStatus == 'Pending' ||
+                            initStatus == 'Approved'||
+                            initUser?.role === 'Financial Focal Point'
+                        }"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+    
+                
+                  </div>
+                </div>    
+
+                <div class="table-box-2 mat-elevation-z8">
+                  <table>
+                    <tr>
+                      <th>Results</th>
+                        <th>Type</th>
+                        <th>Strategic Geographic Scope</th>
+                    </tr>
+  
+                    <ng-container
+                      *ngFor="
+                        let item of partnersData[partner.code][
+                          wp.ost_wp.wp_official_code + '-Geographic-Scope'
+                        ]
+                      "
+                    >
+                      <tr>
+                        <td class="wp-title">
+                            {{item.location}}
+  
+  
+                            <button
+                              style="background: none; border: none; float: right"
+                              (click)="item.isExpand = !item.isExpand"
+                            >
+                              <i *ngIf="!item.isExpand" class="bi-chevron-right">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="10"
+                                  viewBox="0 0 16 10"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
+                                    fill="#0f212f"
+                                  />
+                                </svg>
+                              </i>
+                              <i *ngIf="item.isExpand" class="bi-chevron-up">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="10"
+                                  viewBox="0 0 16 10"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
+                                    fill="#0f212f"
+                                  />
+                                </svg>
+                              </i>
+                            </button>
+  
+  
+                        
+                        </td>
+  
+                        <td (click)="item.isExpand = !item.isExpand">
+                          {{ getCategory(item.category) }}
+                        </td>
+                        <ng-container *ngFor="let per of period | slice:0:1">
+                          <td>
+                            <mat-checkbox
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              [(ngModel)]="
+                                perValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-Geographic-Scope'
+                                ][item.id][per.id]
+                              "
+                              (change)="
+                                changeEnable(
+                                  partner.code,
+                                  wp.ost_wp.wp_official_code + '-Geographic-Scope',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  per.id,
+                                  item.category,
+                                  $event
+                                )
+                              "
+                            ></mat-checkbox>
+                          </td>
+                        </ng-container>
+                      </tr>
+  
+                      
+  
+                      <ng-container *ngIf="item.isExpand">
+                        <tr>
+                          <td colspan="12" style="padding: 0.5rem">
+                            <table class="table table-sm">
+                              <thead>
+                                <tr>
+                                  <th
+                                    style="background: none; text-align: left; color: #0f212f;"
+                                  >
+                                    Results:
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr style="background: none;">
+                                  <td
+                                    style="
+                                      background: none;
+                                      border: none;
+                                      text-align: left;
+                                      font-size: 1.3rem;
+                                      color: #0f212f;
+                                      padding: 0.7rem;
+                                    "
+                                  >
+                                    {{ item?.results }}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </ng-container>
+                      
+                  </ng-container>
+                    <!-- <tr class="total">
+                      <td [colSpan]="wp.id == 'projects' ? period.length + 1 :  period.length + 2">
+                        <div class="subtotal">Subtotal</div>
+                      </td>
+                  
+                      <td>
+                        <div class="form">
+                          <mat-form-field
+                            class="form-dialog-content__field"
+                            floatLabel="always"
+                            hideRequiredMarker
+                            appearance="outline"
+                            class="budget"
+                          >
+                            <input
+                              mask="separator.2"
+                              thousandSeparator=","
+                              placeholder="Total Budget"
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              matInput
+                              [(ngModel)]="
+                                wp_budgets[partner.code][
+                                  wp.ost_wp.wp_official_code + '-project'
+                                ]
+                              "
+                              (keyup)="
+                                wpBudgetChange(
+                                  partner.code,
+                                  wp.ost_wp.wp_official_code + '-project',
+                                  wp_budgets[partner.code][
+                                    wp.ost_wp.wp_official_code + '-project'
+                                  ]
+                                )
+                              "
+                            />
+                          </mat-form-field>
+                        </div>
+                      </td>
+                    </tr> -->
+                  </table>
+                </div>
 
 
               </mat-card-content>
