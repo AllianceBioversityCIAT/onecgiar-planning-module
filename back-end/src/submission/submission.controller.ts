@@ -248,6 +248,8 @@ export class SubmissionController {
                 }
                 if (items.indicators?.length)  items.indicators  = items.indicators.map((i: any) => i);
 
+                if (items.partners?.length)  items.partners  = items.partners.map((p: any) => p);
+
     
               return items;
             });
@@ -324,7 +326,7 @@ export class SubmissionController {
 
 
             const indicatorMap = new Map<string, any>();
-
+            const partnersMap = new Map<string, any>();
             
             for (const data of filteredData) {
               if (data.category == 'OUTPUT'){
@@ -346,12 +348,38 @@ export class SubmissionController {
                      
                     });
                 }
+                for (const partner of data.partners ?? []) {
+                  const key = partner.code;            
+                  const title = data.title?.trim();
+                
+                  if (partnersMap.has(key)) {
+                    const existing = partnersMap.get(key);
+                
+                    const titleSet = new Set(
+                      existing.results.split(',').map(t => t.trim()).filter(Boolean)
+                    );
+                    titleSet.add(title);
+                    existing.results = Array.from(titleSet).join(', ');
+                  }
+                
+                  else {
+                    partnersMap.set(key, {
+                      ...partner,
+                      id: partner.id ?? partner.code,
+                      parent_id: data.group,
+                      results: title,
+                      category: 'partners',
+                    });
+                  }
+                }
               }
             }
   
             const newIndicators = Array.from(indicatorMap.values());
+            const newPartners = Array.from(partnersMap.values());
+
     
-            return [...newMelias, ...newProjects, ...filteredData, ...newIndicators ]; 
+            return [...newMelias, ...newProjects, ...filteredData, ...newIndicators, ...newPartners ]; 
           }),
           catchError((error: AxiosError) => {
             console.error(error);

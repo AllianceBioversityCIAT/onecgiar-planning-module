@@ -101,7 +101,9 @@
 //   right: -83px;
 //   top: -15px;
 // }
-
+.none {
+  visibility: hidden;
+}
 .table-box-5 {
   width: 100%;
   overflow: auto;
@@ -2705,6 +2707,79 @@ pre {
     }
   }
 }
+.table-box-3 {
+  width: 100%;
+  overflow: auto;
+  margin-top: 40px;
+  th,
+  td {
+    padding: 0.6rem;
+    text-align: left;
+  }
+
+  
+
+  td:nth-child(1) {
+    text-align: left;
+    width: 100%;
+
+  }
+
+  td:nth-child(2) {
+    text-align: center;
+    width: 75%;
+  }
+  td:nth-child(3) {
+    text-align: center;
+    width: 15%;
+  }
+
+ 
+
+  td {
+    border: 1px solid #b9b9b9b5;
+
+    color: #0f212f;
+    text-align: center;
+    font-family: "Poppins", sans-serif !important;
+    font-size: 1.3rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 114.5%;
+    white-space: normal !important;
+  }
+
+  th {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 1.4rem;
+    font-weight: 500;
+    line-height: 130%; /* 1.56rem */
+    color: #ffffff;
+    letter-spacing: 0em;
+    text-align: center;
+    background: linear-gradient(to right, #2a2e45, #212537);
+    font-style: normal;
+  }
+
+
+
+  @media only screen and (max-width: 48em) {
+    th,
+    td {
+      padding: 1.6rem;
+    }
+  }
+
+  @media only screen and (max-width: 34em) {
+    th {
+      font-size: 1.6rem;
+    }
+
+    th {
+      padding: 1.4rem;
+    }
+  }
+}
 
 ::ng-deep.mat-mdc-menu-content {
   margin: 0;
@@ -3217,6 +3292,7 @@ pre {
   height: 40px;
   width: 100%;
   margin-bottom: -15px;
+  margin-top: 15px;
 
   .sub-title-w3 {
     position: relative;

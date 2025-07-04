@@ -2748,6 +2748,7 @@
 
                   </table>
                 </div>
+                <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
 
                 <div class="sub-head">
                   <span class="sub-title">w3-Bilateral Projects</span>
@@ -2757,7 +2758,7 @@
                 <table>
                   <tr>
                     <th *ngIf="!(wp.id == 'IPSR')">Actions</th>
-                    <th>Results</th>
+                    <th>Projects</th>
                     <ng-container *ngIf="wp.id != 'projects'">
                       <th *ngIf="wp.id == 'melia'">Study Type</th>
                       <th *ngIf="wp.id != 'melia'">Type</th>
@@ -3160,9 +3161,9 @@
 
                 </table>
               </div>
+              </ng-container>
 
-
-
+            <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-Geographic-Scope'].length">
               <div class="sub-head">
                 <span class="sub-title">Geographic Scope</span>
               </div>
@@ -3171,8 +3172,8 @@
                 <table>
                   <tr>
                     <th>Actions</th>
-                    <th>Results</th>
-                      <th>Type</th>
+                    <th>Scope</th>
+                      <th>High Level Output</th>
                       <th>Strategic Geographic Scope</th>
                   </tr>
 
@@ -3200,54 +3201,13 @@
                               alt="Photo of toc"
                             />
                           </figure>
-                          <button
-                          style="
-                            background: none;
-                            border: none;
-                            position: relative;
-                            top: -0.4rem;
-                          "
-                          (click)="item.isExpand = !item.isExpand"
-                        >
-                          <i
-                            *ngIf="!item.isExpand"
-                            class="bi-chevron-right"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="10"
-                              viewBox="0 0 16 10"
-                              fill="none"
-                            >
-                              <path
-                                d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                fill="#0f212f"
-                              />
-                            </svg>
-                          </i>
-                          <i *ngIf="item.isExpand" class="bi-chevron-up">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="10"
-                              viewBox="0 0 16 10"
-                              fill="none"
-                            >
-                              <path
-                                d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                fill="#0f212f"
-                              />
-                            </svg>
-                          </i>
-                        </button>
                       </td>
                       <td class="wp-title box-center">
                        {{item.location}}
                       </td>
                       
-                      <td (click)="item.isExpand = !item.isExpand">
-                        {{ getCategory(item.category) }}
+                      <td>
+                        {{ item.results}}
                       </td>
                       <ng-container *ngFor="let per of period | slice:0:1">
                         <td (click)="item.isExpand = !item.isExpand">
@@ -3263,49 +3223,9 @@
                           >
                         </td>
                       </ng-container>
-                      <!-- <ng-container>
-                        <td (click)="item.isExpand = !item.isExpand">
-                          <mat-icon
-                            class="icon-sub-table-2"
-                            color="primary"
-                            >close</mat-icon>
-                        </td>
-                      </ng-container> -->
-                    </tr>
+                  </tr>
 
-                    <ng-container *ngIf="item.isExpand">
-                      <tr>
-                        <td colspan="12" style="padding: 0.5rem">
-                          <table class="table table-sm">
-                            <thead>
-                              <tr>
-                                <th
-                                  style="background: none; text-align: left; color: #0f212f;"
-                                >
-                                  Results:
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr style="background: none;">
-                                <td
-                                  style="
-                                    background: none;
-                                    border: none;
-                                    text-align: left;
-                                    font-size: 1.3rem;
-                                    color: #0f212f;
-                                    padding: 0.7rem;
-                                  "
-                                >
-                                  {{ item?.results }}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </td>
-                      </tr>
-                    </ng-container>
+                    
 
              
 
@@ -3349,6 +3269,142 @@
 
                 </table>
               </div>
+            </ng-container>
+
+            
+
+            <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length">
+              <div class="sub-head">
+                <span class="sub-title">partners</span>
+              </div>
+              <div class="table-box-3 mat-elevation-z8 w3-project-table">
+                 
+                <table>
+                  <tr>
+                      <th>Actions</th>
+                      <th>Partner</th>
+                      <th>Strategic Partner</th>
+                  </tr>
+                  <ng-container
+                    *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-partners']"
+                  >
+                    <tr>
+                      <td class="f-c-Geographic-Scope">
+                          <figure
+                            matTooltip="For any changes use ToC tool"
+                            matTooltipPosition="below"
+                            class="toc-img-center"
+                          >
+                            <img
+                              class="toc-img-size"
+                              src="../../assets/shared-image/toc-5.png"
+                              alt="Photo of toc"
+                            />
+                          </figure>
+                          <button
+                          style="
+                            background: none;
+                            border: none;
+                            position: relative;
+                            top: -0.4rem;
+                          "
+                          (click)="item.isExpand = !item.isExpand"
+                          *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                        >
+                          <i
+                            *ngIf="!item.isExpand"
+                            class="bi-chevron-right"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="10"
+                              viewBox="0 0 16 10"
+                              fill="none"
+                            >
+                              <path
+                                d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
+                                fill="#0f212f"
+                              />
+                            </svg>
+                          </i>
+                          <i *ngIf="item.isExpand" class="bi-chevron-up">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="10"
+                              viewBox="0 0 16 10"
+                              fill="none"
+                            >
+                              <path
+                                d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
+                                fill="#0f212f"
+                              />
+                            </svg>
+                          </i>
+                        </button>
+                      </td>
+                      <td class="wp-title box-center">
+                       {{item.name}}
+                      </td>
+                      
+                      <ng-container *ngFor="let per of period | slice:0:1">
+                        <td (click)="item.isExpand = !item.isExpand">
+                          <mat-icon
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              perAllValues[wp.ost_wp.wp_official_code + '-partners'][
+                                item.id
+                              ][per.id] == true
+                            "
+                            >close</mat-icon
+                          >
+                        </td>
+                      </ng-container>
+                  </tr>
+
+                  <ng-container *ngIf="item.isExpand">
+                    <tr>
+                      <td colspan="12" style="padding: 0.5rem">
+                        <table class="table table-sm">
+                          <thead>
+                            <tr>
+                              <th
+                                style="background: none; text-align: left; color: #0f212f;"
+                              >
+                              High Level Output:
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr style="background: none;">
+                              <td
+                                style="
+                                  background: none;
+                                  border: none;
+                                  text-align: left;
+                                  font-size: 1.3rem;
+                                  color: #0f212f;
+                                  padding: 0.7rem;
+                                "
+                              >
+                                {{ item?.results }}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </ng-container>
+
+             
+
+
+                  </ng-container>
+                </table>
+              </div>
+            </ng-container>
               </mat-card-content>
             </mat-card>
           </mat-tab>
@@ -4140,6 +4196,7 @@
 
 
 
+                <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
 
                 <div class="sub-head-w3">
                   <span class="sub-title-w3">w3-Bilateral Projects</span>
@@ -4210,7 +4267,7 @@
                     }"
                   >
                     <tr>
-                      <th>Results</th>
+                      <th>Projects</th>
                       <ng-container *ngIf="wp.id != 'projects'">
                         <th *ngIf="wp.id == 'melia'">Study Type</th>
                         <th *ngIf="wp.id != 'melia'">Type</th>
@@ -4558,7 +4615,8 @@
                 <p class="error">
                   {{ errors[partner.code][wp.ost_wp.wp_official_code + '-project'] }}
                 </p>
-
+                </ng-container>
+              <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-Geographic-Scope'].length">
 
                 <div class="sub-head-w3">
                   <span class="sub-title-w3">Geographic Scope</span>
@@ -4617,8 +4675,8 @@
                 <div class="table-box-2 mat-elevation-z8">
                   <table>
                     <tr>
-                      <th>Results</th>
-                        <th>Type</th>
+                      <th>Scope</th>
+                        <th>High Level Output</th>
                         <th>Strategic Geographic Scope</th>
                     </tr>
   
@@ -4632,48 +4690,10 @@
                       <tr>
                         <td class="wp-title">
                             {{item.location}}
-  
-  
-                            <button
-                              style="background: none; border: none; float: right"
-                              (click)="item.isExpand = !item.isExpand"
-                            >
-                              <i *ngIf="!item.isExpand" class="bi-chevron-right">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                              <i *ngIf="item.isExpand" class="bi-chevron-up">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                            </button>
-  
-  
-                        
                         </td>
   
-                        <td (click)="item.isExpand = !item.isExpand">
-                          {{ getCategory(item.category) }}
+                        <td>
+                          {{ item.results }}
                         </td>
                         <ng-container *ngFor="let per of period | slice:0:1">
                           <td>
@@ -4707,40 +4727,6 @@
                       </tr>
   
                       
-  
-                      <ng-container *ngIf="item.isExpand">
-                        <tr>
-                          <td colspan="12" style="padding: 0.5rem">
-                            <table class="table table-sm">
-                              <thead>
-                                <tr>
-                                  <th
-                                    style="background: none; text-align: left; color: #0f212f;"
-                                  >
-                                    Results:
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr style="background: none;">
-                                  <td
-                                    style="
-                                      background: none;
-                                      border: none;
-                                      text-align: left;
-                                      font-size: 1.3rem;
-                                      color: #0f212f;
-                                      padding: 0.7rem;
-                                    "
-                                  >
-                                    {{ item?.results }}
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </td>
-                        </tr>
-                      </ng-container>
                       
                   </ng-container>
                     <!-- <tr class="total">
@@ -4790,7 +4776,199 @@
                     </tr> -->
                   </table>
                 </div>
+              </ng-container>
 
+              
+
+              <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length">
+                <div class="sub-head-w3">
+                  <span class="sub-title-w3">Partners</span>
+                  <div class="btns-sec-w3">
+                    <div class="btns-w3">
+                      <button
+                        class="check-btn-w3"
+                        *ngIf="partner?.canEdit"
+                        [disabled]="
+                          partnersStatus[partner.code] ||
+                          initStatus == 'Pending' ||
+                          initStatus == 'Approved'||
+                          initUser?.role === 'Financial Focal Point'
+                        "
+                        (click)="
+                          checkAll(partner.code, wp.ost_wp.wp_official_code + '-partners', true, true)
+                        "
+                        [ngClass]="{
+                          disabled:
+                            partnersStatus[partner.code] ||
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved' ||
+                              initUser?.role === 'Financial Focal Point'
+                        }"
+                      >
+                        Check all
+                      </button>
+                      <button
+                        class="check-btn-clear-w3"
+                        *ngIf="partner?.canEdit"
+                        [disabled]="
+                          partnersStatus[partner.code] ||
+                          initStatus == 'Pending' ||
+                          initStatus == 'Approved' ||
+                          initUser?.role === 'Financial Focal Point'
+                        "
+                        (click)="
+                          checkAll(partner.code, wp.ost_wp.wp_official_code+ '-partners', false, true)
+                        "
+                        [ngClass]="{
+                          disabled:
+                            partnersStatus[partner.code] ||
+                            initStatus == 'Pending' ||
+                            initStatus == 'Approved'||
+                            initUser?.role === 'Financial Focal Point'
+                        }"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+    
+                
+                  </div>
+                </div>    
+                
+
+                <div class="table-box-3 mat-elevation-z8">
+                  <table>
+                    <tr>
+                      <th>partners</th>
+                        <th>Strategic Partner</th>
+                    </tr>
+  
+                    <ng-container
+                      *ngFor="
+                        let item of partnersData[partner.code][
+                          wp.ost_wp.wp_official_code + '-partners'
+                        ]
+                      "
+                    >
+                      <tr>
+                        <td class="wp-title">
+                            {{item.name}}
+
+                            <button
+                            style="
+                              background: none;
+                              border: none;
+                              position: relative;
+                            "
+                            (click)="item.isExpand = !item.isExpand"
+                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
+                          >
+                            <i
+                              *ngIf="!item.isExpand"
+                              class="bi-chevron-right"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="10"
+                                viewBox="0 0 16 10"
+                                fill="none"
+                              >
+                                <path
+                                  d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
+                                  fill="#0f212f"
+                                />
+                              </svg>
+                            </i>
+                            <i *ngIf="item.isExpand" class="bi-chevron-up">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="10"
+                                viewBox="0 0 16 10"
+                                fill="none"
+                              >
+                                <path
+                                  d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
+                                  fill="#0f212f"
+                                />
+                              </svg>
+                            </i>
+                          </button>
+                        </td>
+  
+                        <ng-container *ngFor="let per of period | slice:0:1">
+                          <td>
+                            <mat-checkbox
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              [(ngModel)]="
+                                perValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-partners'
+                                ][item.id][per.id]
+                              "
+                              (change)="
+                                changeEnable(
+                                  partner.code,
+                                  wp.ost_wp.wp_official_code + '-partners',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  per.id,
+                                  item.category,
+                                  $event
+                                )
+                              "
+                            ></mat-checkbox>
+                          </td>
+                        </ng-container>
+                      </tr>
+
+                      <ng-container *ngIf="item.isExpand">
+                        <tr>
+                          <td colspan="12" style="padding: 0.5rem">
+                            <table class="table table-sm">
+                              <thead>
+                                <tr>
+                                  <th
+                                    style="background: none; text-align: left; color: #0f212f;"
+                                  >
+                                  High Level Output:
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr style="background: none;">
+                                  <td
+                                    style="
+                                      background: none;
+                                      border: none;
+                                      text-align: left;
+                                      font-size: 1.3rem;
+                                      color: #0f212f;
+                                      padding: 0.7rem;
+                                    "
+                                  >
+                                    {{ item?.results }}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </ng-container>
+  
+                      
+                      
+                  </ng-container>
+                    
+                  </table>
+                </div>
+              </ng-container>
 
               </mat-card-content>
 
