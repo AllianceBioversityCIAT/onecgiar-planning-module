@@ -365,7 +365,7 @@ export class SubmissionController {
                   else {
                     partnersMap.set(key, {
                       ...partner,
-                      id: partner.id ?? partner.code,
+                      id: partner.code,
                       parent_id: data.group,
                       results: title,
                       category: 'partners',

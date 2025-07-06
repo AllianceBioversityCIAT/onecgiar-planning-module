@@ -1968,7 +1968,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       };
     }
     this.partnersData[partner_code][wp_id].forEach((item: any) => {
-      if (item.category != "EOI" && item.category != "OUTCOME" && item.category != "Geographic-Scope") {
+      if (item.category != "EOI" && item.category != "OUTCOME" && item.category != "Geographic-Scope" && item.category != "partners") {
         let perChecked = Object.values(
           this.perValues[partner_code][wp_id][item.id]
         ).reduce((a: any, b: any) => a || b);
