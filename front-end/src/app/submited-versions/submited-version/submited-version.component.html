@@ -834,7 +834,7 @@
 
 
             <div class="flex-box-2">
-              <mat-card *ngIf="allData[wp.ost_wp.wp_official_code + '-project']">
+              <mat-card *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
                 <div class="head">
                   <mat-card-title class="card-title-table">w3-Bilateral Projects
                   </mat-card-title>
@@ -859,7 +859,7 @@
                     <table>
                       <tr>
                         <th *ngIf="wp.id == 'melia'">Study Title</th>
-                        <th *ngIf="wp.id != 'melia'">WP/Results</th>
+                        <th *ngIf="wp.id != 'melia'">Projects</th>
                         <ng-container *ngIf="wp.id != 'projects'">
                           <th *ngIf="wp.id == 'melia'">Study Type</th>
                           <th *ngIf="wp.id != 'melia'">Type</th>
@@ -971,6 +971,128 @@
                           }}
                         </td>
                       </tr>
+                    </table>
+                  </div>
+                </mat-card-content>
+
+              </mat-card>
+            </div>
+
+            <div class="flex-box-2">
+              <mat-card *ngIf="allData[wp.ost_wp.wp_official_code + '-Geographic-Scope'].length">
+                <div class="head">
+                  <mat-card-title class="card-title-table">Geographic Scope
+                  </mat-card-title>
+                </div>
+
+
+                <mat-card-content>
+                  <div class="table-box mat-elevation-z8">
+                    <table>
+                      <tr>
+                        <th>Scope</th>
+                          <th>High Level Output</th>
+                          <th>Strategic Geographic Scope</th>
+                      </tr>
+                      <ng-container
+                        *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-Geographic-Scope']"
+                      >
+                        <tr>
+                          <td class="wp-title">
+                              {{item.location}}
+                          </td>
+                          <td>{{ item.results}}</td>
+                          <ng-container *ngFor="let per of period | slice:0:1">
+                            <td>
+                              <mat-icon
+                                class="icon-sub-table"
+                                *ngIf="
+                                  perAllValues[wp.ost_wp.wp_official_code + '-Geographic-Scope'][
+                                    item.id
+                                  ][per.id] == true
+                                "
+                                >close</mat-icon
+                              >
+                            </td>
+                          </ng-container>
+                        </tr>
+                      </ng-container>
+                      <!-- <tr class="total">
+                        <td [attr.colspan]="(wp.id == 'projects') ? 1 : 2">
+                          <span class="subtotal">Subtotal</span>
+                        </td>
+                        <ng-container *ngFor="let per of period">
+                          <td>
+                            <mat-icon
+                              class="icon-sub-table-2"
+                              color="primary"
+                              *ngIf="
+                                finalItemPeriodVal(
+                                  wp.ost_wp.wp_official_code + '-project',
+                                  per.id
+                                )
+                              "
+                              >close</mat-icon
+                            >
+                          </td>
+                        </ng-container>
+  
+                        <td>
+                          {{
+                            toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
+                              ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project'] | number) 
+                              : roundNumber(
+                                  summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
+                                ) | number 
+                          }}
+                        </td>
+                      </tr> -->
+                    </table>
+                  </div>
+                </mat-card-content>
+
+              </mat-card>
+            </div>
+
+            <div class="flex-box-2">
+              <mat-card *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length">
+                <div class="head">
+                  <mat-card-title class="card-title-table">Partners
+                  </mat-card-title>
+                </div>
+
+
+                <mat-card-content>
+                  <div class="table-box mat-elevation-z8">
+                    <table>
+                      <tr>
+                        <th>Partner</th>
+                          <th>High Level Output</th>
+                          <th>Strategic Partner</th>
+                      </tr>
+                      <ng-container
+                        *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-partners']"
+                      >
+                        <tr>
+                          <td class="wp-title">
+                              {{item.name}}
+                          </td>
+                          <td>{{ item.results}}</td>
+                          <ng-container *ngFor="let per of period | slice:0:1">
+                            <td>
+                              <mat-icon
+                                class="icon-sub-table"
+                                *ngIf="
+                                  perAllValues[wp.ost_wp.wp_official_code + '-partners'][
+                                    item.id
+                                  ][per.id] == true
+                                "
+                                >close</mat-icon
+                              >
+                            </td>
+                          </ng-container>
+                        </tr>
+                      </ng-container>
                     </table>
                   </div>
                 </mat-card-content>
@@ -1335,7 +1457,7 @@
             >
               <tr>
                 <th *ngIf="wp.id == 'melia'">Study Title</th>
-                <th *ngIf="wp.id != 'melia'">WP/Results</th>
+                <th *ngIf="wp.id != 'melia'">Projects</th>
                 <ng-container *ngIf="wp.id != 'projects'">
                   <th *ngIf="wp.id == 'melia'">Study Type</th>
                   <th *ngIf="wp.id != 'melia'">Type</th>
@@ -1453,6 +1575,145 @@
           </p>
         </mat-card-content>
       </mat-card>
+
+
+
+
+      <mat-card
+      *ngIf="
+        partnersData[partner.code] &&
+        partnersData[partner.code][wp.ost_wp.wp_official_code + '-Geographic-Scope']
+      "
+    >
+    <div class="head">
+      <mat-card-title class="card-title-table">Geographic Scope
+      </mat-card-title>
+    </div>
+
+
+    
+      <mat-card-content>
+        <div class="table-box mat-elevation-z8">
+          <table>
+            <tr>
+              <th>Scope</th>
+                <th>High Level Output</th>
+                <th>Strategic Geographic Scope</th>
+            </tr>
+
+
+            <ng-container
+              *ngFor="
+                let item of partnersData[partner.code][
+                  wp.ost_wp.wp_official_code + '-Geographic-Scope'
+                ]
+              "
+            >
+              <tr>
+                <td class="wp-title">
+                    {{item.location}}
+                </td>
+                <td>{{ item.results }}</td>
+                <ng-container *ngFor="let per of period | slice:0:1">
+                  <td>
+                    <mat-icon
+                      class="icon-sub-table"
+                      *ngIf="
+                        perValues[partner.code][
+                          wp.ost_wp.wp_official_code + '-Geographic-Scope'
+                        ][item.id][per.id] == true
+                      "
+                      >close</mat-icon
+                    >
+                  </td>
+                </ng-container>
+              </tr>
+            </ng-container>
+            <!-- <tr class="total">
+              <td [attr.colspan]="(wp.id == 'projects') ? 1 : 2">
+                <span class="subtotal">Subtotal</span>
+              </td>
+
+              <ng-container *ngFor="let per of period">
+                <td>
+                  <mat-icon
+                    class="icon-sub-table-2"
+                    color="primary"
+                    *ngIf="
+                      finalCenterItemPeriodVal(
+                        partner.code,
+                        wp.ost_wp.wp_official_code + '-project',
+                        per.id
+                      )
+                    "
+                    >close</mat-icon
+                  >
+                </td>
+              </ng-container>
+              <td>
+                {{ wp_budgets[partner.code][wp.ost_wp.wp_official_code + '-project'] | number  }}
+              </td>
+            </tr> -->
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+
+    <mat-card
+    *ngIf="
+      partnersData[partner.code] &&
+      partnersData[partner.code][wp.ost_wp.wp_official_code + '-partners']
+    "
+  >
+  <div class="head">
+    <mat-card-title class="card-title-table">Partners
+    </mat-card-title>
+  </div>
+
+
+  
+    <mat-card-content>
+      <div class="table-box mat-elevation-z8">
+        <table>
+          <tr>
+            <th>Partner</th>
+              <th>High Level Output</th>
+              <th>Strategic Partner</th>
+          </tr>
+
+
+          <ng-container
+            *ngFor="
+              let item of partnersData[partner.code][
+                wp.ost_wp.wp_official_code + '-partners'
+              ]
+            "
+          >
+            <tr>
+              <td class="wp-title">
+                  {{item.name}}
+              </td>
+              <td>{{ item.results }}</td>
+              <ng-container *ngFor="let per of period | slice:0:1">
+                <td>
+                  <mat-icon
+                    class="icon-sub-table"
+                    *ngIf="
+                      perValues[partner.code][
+                        wp.ost_wp.wp_official_code + '-partners'
+                      ][item.id][per.id] == true
+                    "
+                    >close</mat-icon
+                  >
+                </td>
+              </ng-container>
+            </tr>
+          </ng-container>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
         </mat-tab>
       </mat-tab-group>
       </mat-tab>

@@ -246,7 +246,10 @@ export class SubmissionController {
                 if (items.projects?.length) {
                   items.projects = items.projects.map((proj: any) => proj.id);
                 }
-    
+                if (items.indicators?.length)  items.indicators  = items.indicators.map((i: any) => i);
+
+                if (items.partners?.length)  items.partners  = items.partners.map((p: any) => p);
+
     
               return items;
             });
@@ -287,7 +290,7 @@ export class SubmissionController {
               if (melia?.related_node_id) {
                 melia.id = melia.related_node_id;
               } else {
-                console.warn(`Melia with missing related_node_id:`, melia);
+                // console.warn(`Melia with missing related_node_id:`, melia);
               }
             }
 
@@ -319,8 +322,64 @@ export class SubmissionController {
             }
 
             const newProjects = Array.from(projectMap.values());
+
+
+
+            const indicatorMap = new Map<string, any>();
+            const partnersMap = new Map<string, any>();
+            
+            for (const data of filteredData) {
+              if (data.category == 'OUTPUT'){
+                for (const indicator of data.indicators) {
+                  const key = `${indicator.id}_${data.group}`;
+                    const location =
+                    indicator.location === 'regional'
+                      ? `Region: ${indicator.region.map(r => r.name).join(', ')}`
+                      : indicator.location === 'country'
+                        ? `Country: ${indicator.country.map(c => c.name).join(', ')}`
+                        : 'Global';
+                    indicatorMap.set(key, {
+                      ...indicator,
+                      id: indicator.id,
+                      location: location,
+                      parent_id: data.group,
+                      results: data.title,
+                      category: 'Geographic-Scope',
+                     
+                    });
+                }
+                for (const partner of data.partners ?? []) {
+                  const key = partner.code;            
+                  const title = data.title?.trim();
+                
+                  if (partnersMap.has(key)) {
+                    const existing = partnersMap.get(key);
+                
+                    const titleSet = new Set(
+                      existing.results.split(',').map(t => t.trim()).filter(Boolean)
+                    );
+                    titleSet.add(title);
+                    existing.results = Array.from(titleSet).join(', ');
+                  }
+                
+                  else {
+                    partnersMap.set(key, {
+                      ...partner,
+                      id: partner.code,
+                      parent_id: data.group,
+                      results: title,
+                      category: 'partners',
+                    });
+                  }
+                }
+              }
+            }
+  
+            const newIndicators = Array.from(indicatorMap.values());
+            const newPartners = Array.from(partnersMap.values());
+
     
-            return [...newMelias, ...newProjects, ...filteredData ]; 
+            return [...newMelias, ...newProjects, ...filteredData, ...newIndicators, ...newPartners ]; 
           }),
           catchError((error: AxiosError) => {
             console.error(error);

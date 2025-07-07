@@ -6,6 +6,12 @@
   position: relative;
   bottom: -6px;
 }
+.f-c-Geographic-Scope {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  height: 77px;
+}
 .sub-title {
   bottom: -25px;
   position: relative;
@@ -96,7 +102,9 @@
 //   right: -83px;
 //   top: -15px;
 // }
-
+.none {
+  visibility: hidden;
+}
 .table-box-5 {
   width: 100%;
   overflow: auto;
@@ -2519,7 +2527,7 @@ pre {
 
   td:nth-child(2) {
     text-align: center;
-    max-width: 400px;
+    max-width: 600px;
   }
 
   // th:nth-child(3) {
@@ -2682,6 +2690,80 @@ pre {
   //   /* box-shadow: 0px 10px 13px -6px rgba(0, 0, 0, 0.2), 0px 20px 31px 3px rgba(0, 0, 0, 0.14), 0px 8px 38px 7px rgba(0, 0, 0, 0.12); */
   //   box-shadow: 2px 4px 8px #0f212f;
   // }
+
+  @media only screen and (max-width: 48em) {
+    th,
+    td {
+      padding: 1.6rem;
+    }
+  }
+
+  @media only screen and (max-width: 34em) {
+    th {
+      font-size: 1.6rem;
+    }
+
+    th {
+      padding: 1.4rem;
+    }
+  }
+}
+.table-box-3 {
+  width: 100%;
+  overflow: auto;
+  margin-top: 40px;
+  th,
+  td {
+    padding: 0.6rem;
+    text-align: left;
+  }
+
+  
+
+  td:nth-child(1) {
+    text-align: left;
+  }
+
+  td:nth-child(2) {
+    text-align: center;
+    width: 50%;
+  }
+  td:nth-child(3) {
+    text-align: center;
+    width: 30%;
+  }
+  td:nth-child(4) {
+    text-align: center;
+    width: 10%;
+  }
+ 
+
+  td {
+    border: 1px solid #b9b9b9b5;
+
+    color: #0f212f;
+    text-align: center;
+    font-family: "Poppins", sans-serif !important;
+    font-size: 1.3rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 114.5%;
+    white-space: normal !important;
+  }
+
+  th {
+    font-family: "Poppins", sans-serif !important;
+    font-size: 1.4rem;
+    font-weight: 500;
+    line-height: 130%; /* 1.56rem */
+    color: #ffffff;
+    letter-spacing: 0em;
+    text-align: center;
+    background: linear-gradient(to right, #2a2e45, #212537);
+    font-style: normal;
+  }
+
+
 
   @media only screen and (max-width: 48em) {
     th,
@@ -3212,6 +3294,7 @@ pre {
   height: 40px;
   width: 100%;
   margin-bottom: -15px;
+  margin-top: 15px;
 
   .sub-title-w3 {
     position: relative;

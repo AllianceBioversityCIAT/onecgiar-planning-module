@@ -491,9 +491,8 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
         ost_wp: { wp_official_code: "IPSR" },
       });
     }
-    
+    let w3Projects = [];
     if(this.initiative_data.synchronized){
-      let w3Projects = [];
       for (let wp of this.wps) {
         w3Projects.push({
           id: wp.id, // actual wp id 
@@ -502,8 +501,36 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
           ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-project' },
         });
       }
-      this.wps = [...this.wps, ...w3Projects];
     }
+
+    let geographicScope = [];
+    if(this.initiative_data.synchronized){
+      
+      for (let wp of this.wps) {
+        geographicScope.push({
+          id: wp.id,
+          title: wp.ost_wp.wp_official_code + "-Geographic Scope",
+          category: "Geographic-Scope",
+          ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + "-Geographic-Scope" },
+        });
+      }
+    }
+
+    let partners = [];
+    if(this.initiative_data.synchronized){
+      
+      for (let wp of this.wps) {
+        partners.push({
+          id: wp.id,
+          title: wp.ost_wp.wp_official_code + "-partners",
+          category: "partners",
+          ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + "-partners" },
+        });
+      }
+    }
+
+    this.wps = [...this.wps, ...w3Projects ,...geographicScope, ...partners];
+
     for (let partner of this.partners) {
       if (!this.budgetValues[partner.code])
         this.budgetValues[partner.code] = {};
@@ -855,7 +882,7 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
     wp_category: string
   ) {
     let wp_data;
-    if(wp_category != 'Projects') {
+    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -904,6 +931,40 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
           (d.category == "Project") &&
           (
             (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+          )
+        );
+      });
+    } else if(wp_category == 'Geographic-Scope') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "Geographic-Scope") &&
+            (
+              (d?.parent_id == id && d.category == 'Geographic-Scope' && wp_category == 'Geographic-Scope')
+            )
+          );
+        else
+        return (
+          (d.category == "Geographic-Scope") &&
+          (
+            (d?.parent_id == id && d.category == 'Geographic-Scope' && wp_category == 'Geographic-Scope')
+          )
+        );
+      });
+    } else if(wp_category == 'partners') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "partners") &&
+            (
+              (d?.parent_id == id && d.category == 'partners' && wp_category == 'partners')
+            )
+          );
+        else
+        return (
+          (d.category == "partners") &&
+          (
+            (d?.parent_id == id && d.category == 'partners' && wp_category == 'partners')
           )
         );
       });
@@ -1013,6 +1074,8 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
         return "2030 Outcome";
       case "Melia":
         return "MELIA Studies";
+      case "Geographic-Scope":
+        return "Geographic Scope";
       default:
         return category;
     }
