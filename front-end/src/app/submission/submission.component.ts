@@ -999,7 +999,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.itemHasError[partner.code][wp.ost_wp.wp_official_code] = {};
 
         const result = await this.getDataForWp(
-          wp.id,
+          wp.id, 
           partner.code,
           wp.ost_wp.wp_official_code,
           wp.ost_wp.acronym,
