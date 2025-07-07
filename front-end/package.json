@@ -34,7 +34,7 @@
     "moment": "^2.30.1",
     "ngx-json-viewer": "^3.2.1",
     "ngx-mask": "^15.2.3",
-    "ngx-socket-io": "^4.4.0",
+    "ngx-socket-io": "4.4.0",
     "ngx-timeago": "^2.0.0",
     "ngx-toastr": "^15.2.2",
     "rxjs": "~7.8.0",
