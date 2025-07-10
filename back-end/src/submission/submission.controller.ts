@@ -403,7 +403,7 @@ export class SubmissionController {
   @Get('excel/:id')
   @ApiBearerAuth()
   async excel(@Param('id') id) {
-    return await this.submissionService.generateExcel(id, null, null, null);
+    return await this.submissionService.generateExcel(id, null, null, null,true);
   }
   @Get('excelCurrent/:id')
   @ApiBearerAuth()
@@ -415,6 +415,7 @@ export class SubmissionController {
       initId,
       toc_data,
       null,
+      true
     );
   }
   @Post('excelCurrentCenter')
@@ -427,6 +428,7 @@ export class SubmissionController {
       data.initId,
       toc_data,
       data.organization,
+      false
     );
   }
 }

@@ -1302,6 +1302,45 @@ export class SubmissionService {
     return newArray;
   }
 
+  async getAllDataForGeoAndPartner(wps: any[], period: any[], partners: any[], organization: any, submissionId: any) {
+    let data;
+    let newArray = [];
+
+    if (organization)
+      partners = partners.filter((d: any) => d.code == organization.code);
+    partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()));
+    for (const partner of partners) {
+      for (const wp of wps) {
+          data = await Promise.all(this.allData[wp.ost_wp.wp_official_code].map(async (d: any) => {
+            let obj: any = {};
+            obj['id'] = d.id;
+            if(d.category == 'partners')
+              obj['Partner'] = d.name;
+            else
+              obj['Scope'] = d.location;
+            obj['Type'] = this.getCategory(d.category);
+            obj['High Level Output'] = d.results;
+            for (const per of period) {
+              obj['Centers'] =
+                // this.perAllValues[wp.ost_wp.wp_official_code][obj.id][per.id] ==
+                //   true
+                //   ? 'X'
+                //   : '';
+                this.perValues[partner?.code][wp?.ost_wp?.wp_official_code][
+                  obj?.id
+                ][per?.id] == true
+                  ? await this.getPartners(String(d.id), submissionId)
+                  : '';
+            }
+            return obj;
+          }));
+          newArray.push(data);
+      }
+    }
+    return newArray;
+    
+  }
+
   getPartnersData(wps: any[], period: any[], partners: any[], organization: any) {
     let data;
     let newArray = [];
@@ -1419,6 +1458,53 @@ export class SubmissionService {
   loading = false;
   params: any;
   ipsr_value_data: any;
+  getHeaderGeoAndPartner(submission, title, initiative, type) {
+    const main =
+    submission
+      ? `${submission.initiative.official_code} - ${submission.initiative.name}`
+      : `${initiative.official_code} - ${initiative.name}`;
+
+    const white = { color: { rgb: 'ffffff' } };
+    const centerWrap = { horizontal: 'center', vertical: 'center', wrapText: true };
+
+    const blk   = { fill: { fgColor: { rgb: '04030f' } }, font: white, alignment: centerWrap };
+    const dark  = { fill: { fgColor: { rgb: '2a2e45' } }, font: white, alignment: centerWrap };
+    const light = { fill: { fgColor: { rgb: '3d425e' } }, font: white, alignment: centerWrap };
+
+    if(type == 'partner') {
+      return [
+        [{ v: main,  s: blk }, null, null, null, null, null, null],
+  
+        [{ v: title, s: dark }, null, null, null, null, null, null],
+  
+        [
+          { v: 'Partner',                                    s: light }, null, 
+          { v: 'Type',                                               s: light }, 
+          { v: 'High Level Output',                                  s: light }, 
+          { v: 'Centers',     s: light } 
+        ],
+  
+        [null, null, null, null, null, null, null],
+      ];
+    } else {
+      return [
+        [{ v: main,  s: blk }, null, null, null, null, null, null],
+  
+        [{ v: title, s: dark }, null, null, null, null, null, null],
+  
+        [
+          { v: 'Scope',                                    s: light }, null, 
+          { v: 'Type',                                               s: light }, 
+          { v: 'High Level Output',                                  s: light }, 
+          { v: 'Centers',     s: light } 
+        ],
+  
+        [null, null, null, null, null, null, null],
+      ];
+    }
+ 
+  }
+
 
   getHeader(submission, title, initiative) {
     let period_ = [];
@@ -1591,7 +1677,9 @@ export class SubmissionService {
   noValuesAssigned: any = {};
   submission_data: any;
   InitiativeId: any;
-  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any) {
+  GeographicScopeWp:any;
+  partnersWp: any;
+  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any, showGeographicScope: boolean) {
     this.perValues = {};
     this.perValuesSammary = {};
     this.perValuesSammaryForPartner = {};
@@ -1600,6 +1688,8 @@ export class SubmissionService {
     this.sammaryTotalConsolidated = {};
     this.data = [];
     this.wps = [];
+    this.GeographicScopeWp = [];
+    this.partnersWp = [];
     this.actualWps = [];
     this.wpsTotalSum = 0;
     this.partnersData = {};
@@ -1735,9 +1825,9 @@ export class SubmissionService {
           category: 'IPSR',
           ost_wp: { wp_official_code: 'IPSR' },
         });
-
+        let w3Projects = [];
         if(this.initiative_data.synchronized){
-          let w3Projects = [];
+          
           for (let wp of this.wps) {
             w3Projects.push({
               id: wp.id, // actual wp id 
@@ -1746,8 +1836,30 @@ export class SubmissionService {
               ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-project' },
             });
           }
-          this.wps = [...this.wps, ...w3Projects];
         }
+
+        let geographicScope = [];
+        let partnersWps = [];
+
+        if(this.initiative_data.synchronized){
+          for (let wp of this.actualWps) {
+            geographicScope.push({
+              id: wp.id,
+              title: wp.ost_wp.wp_official_code + "-Geographic Scope",
+              category: "Geographic-Scope",
+              ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + "-Geographic-Scope" },
+            });
+
+            partnersWps.push({
+              id: wp.id,
+              title: wp.ost_wp.wp_official_code + "-partners",
+              category: "partners",
+              ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + "-partners" },
+            });
+          }
+        }
+        this.wps = [...this.wps, ...w3Projects, ...geographicScope, ...partnersWps];
+
     if (partners.length < 1)
       partners = await this.organizationRepository.find();
 
@@ -1970,6 +2082,10 @@ export class SubmissionService {
       this.period,
     );
 
+    this.GeographicScopeWp = this.wps.filter((d: any) => d.category == 'Geographic-Scope');
+    this.partnersWp = this.wps.filter((d: any) => d.category == 'partners');
+
+    this.wps = this.wps.filter((d: any) => d.category == 'WP' || d.category == 'Projects');
 
 
     //sort WPS
@@ -2013,9 +2129,20 @@ export class SubmissionService {
     let { lockupArray } = this.getConsolidatedData(this.wps, this.period);
 
 
-
-
+    let allDataGeo;
+    let allDataPartner;
     const allData = this.getAllData(this.wps, this.period);
+    if (!organization){
+      allDataGeo = await this.getAllDataForGeoAndPartner(this.GeographicScopeWp, [this.period[0]], partners, null, submissionId);
+      allDataPartner = await this.getAllDataForGeoAndPartner(this.partnersWp, [this.period[0]], partners, null, submissionId);
+    }
+    else {
+      allDataGeo = await this.getAllDataForGeoAndPartner(this.GeographicScopeWp, [this.period[0]], partners, organization, submissionId);
+      allDataPartner = await this.getAllDataForGeoAndPartner(this.partnersWp, [this.period[0]], partners, null, submissionId);
+    }
+    const lockupArrayForGeo = this.GeographicScopeWp.map((d:any) => d.ost_wp.wp_official_code);
+    const lockupArrayForPartner = this.partnersWp.map((d:any) => d.ost_wp.wp_official_code);
+
     let partnersData;
     if (!organization)
       partnersData = this.getPartnersData(this.wps, this.period, partners, null);
@@ -2972,6 +3099,215 @@ export class SubmissionService {
       indexPartner++;
     }
 
+    let ArrayOfArraysForGeo = [
+      ...this.getHeaderGeoAndPartner(submission, 'Geographic Scope', this.initiative_data, 'Geographic Scope')
+    ];
+    for (let data of allDataGeo) {
+      data?.forEach((object) => {
+        delete object['id'];
+      });
+    }
+    const merges2 = [];
+    merges2.push(
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+    
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
+          
+            { s: { r: 2, c: 0 }, e: { r: 3, c: 1 } },
+          
+            { s: { r: 2, c: 2 }, e: { r: 3, c: 2 } },
+          
+            { s: { r: 2, c: 3 }, e: { r: 3, c: 3 } },
+          
+            { s: { r: 2, c: 4 }, e: { r: 3, c: 4 } },
+    )
+    const ALIGN_CENTER = {
+      horizontal: 'center',
+      vertical: 'center',
+      wrapText: true,
+    };
+    
+    const baseFill = { fgColor: { rgb: 'ffffff' } };
+    const baseFont = { color: { rgb: '000000' } };
+    
+    const headerStyle = {
+      alignment: ALIGN_CENTER,
+      fill: { fgColor: { rgb: '454962' } },
+      font: { color: { rgb: 'ffffff' } },
+    };
+    
+   
+    
+    const lightCenter = {
+      alignment: ALIGN_CENTER,
+      fill: baseFill,
+      font: baseFont,
+      wrapText: true,
+
+    };
+    
+  
+    const geoMap = new Map<string, any[]>();
+    lockupArrayForGeo.forEach((label, idx) => {
+      geoMap.set(label, allDataGeo[idx] ?? []);
+    });
+
+    for (let [label, block] of geoMap) {
+      const startRow = ArrayOfArraysForGeo.length;
+      
+      const filteredBlock = (block.length ? block : [null]).filter(
+        (b: any) => b && b.Centers && b.Centers.trim() !== ''
+      );
+
+
+      (filteredBlock.length ? filteredBlock : [null]).forEach((rec, idx) => {
+        if (rec === null) {
+          ArrayOfArraysForGeo.push([
+            {
+              v: label,
+              s: {
+                fill: { fgColor: { rgb: '454962' } },
+                font: { color: { rgb: 'ffffff' } },
+                alignment: {
+                  horizontal: 'center',
+                  vertical: 'center',
+                  wrapText: true,
+                },
+              },
+            },
+          ]);
+          return;
+        }
+    
+        const values = Object.values(rec ?? []);
+        ArrayOfArraysForGeo.push([
+          { v: label, s: headerStyle },
+          ...values.map((d, colIdx) => {
+    
+            return {
+              v: d,
+              s: lightCenter,
+            };
+          }),
+        ]);
+      });
+    
+      const endRow = ArrayOfArraysForGeo.length - 1;
+    
+      merges2.push({ s: { c: 0, r: startRow }, e: { c: 0, r: endRow } });
+    }
+
+    const wsGeo = XLSX.utils.aoa_to_sheet(ArrayOfArraysForGeo);
+    wsGeo['!rows'] = new Array(ArrayOfArraysForGeo.length).fill({ hpt: 22 });   
+    wsGeo['!merges'] = merges2;
+    wsGeo['!cols'] = [
+      { wch: 28 }, // A
+      { wch: 60 }, // B
+      { wch: 18 }, // C
+      { wch: 60 }, // D
+      { wch: 30 }, // E
+      { wch: 45 }, // F
+      { wch: 15 }, // G
+    ];    
+
+
+
+
+
+
+
+    let ArrayOfArraysForPartner = [
+      ...this.getHeaderGeoAndPartner(submission, 'Partners', this.initiative_data, 'partner')
+    ];
+    for (let data of allDataPartner) {
+      data?.forEach((object) => {
+        delete object['id'];
+      });
+    }
+    const merges3 = [];
+    merges3.push(
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+    
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
+          
+            { s: { r: 2, c: 0 }, e: { r: 3, c: 1 } },
+          
+            { s: { r: 2, c: 2 }, e: { r: 3, c: 2 } },
+          
+            { s: { r: 2, c: 3 }, e: { r: 3, c: 3 } },
+          
+            { s: { r: 2, c: 4 }, e: { r: 3, c: 4 } },
+    )
+   
+    
+  
+    const partnerMap = new Map<string, any[]>();
+    lockupArrayForPartner.forEach((label, idx) => {
+      partnerMap.set(label, allDataPartner[idx] ?? []);
+    });
+
+    for (let [label, block] of partnerMap) {
+      const startRow = ArrayOfArraysForPartner.length;
+      
+      const filteredBlock = (block.length ? block : [null]).filter(
+        (b: any) => b && b.Centers && b.Centers.trim() !== ''
+      );
+
+
+      (filteredBlock.length ? filteredBlock : [null]).forEach((rec, idx) => {
+        if (rec === null) {
+          ArrayOfArraysForPartner.push([
+            {
+              v: label,
+              s: {
+                fill: { fgColor: { rgb: '454962' } },
+                font: { color: { rgb: 'ffffff' } },
+                alignment: {
+                  horizontal: 'center',
+                  vertical: 'center',
+                  wrapText: true,
+                },
+              },
+            },
+          ]);
+          return;
+        }
+    
+        const values = Object.values(rec ?? []);
+        ArrayOfArraysForPartner.push([
+          { v: label, s: headerStyle },
+          ...values.map((d, colIdx) => {
+    
+            return {
+              v: d,
+              s: lightCenter,
+            };
+          }),
+        ]);
+      });
+    
+      const endRow = ArrayOfArraysForPartner.length - 1;
+    
+      merges3.push({ s: { c: 0, r: startRow }, e: { c: 0, r: endRow } });
+    }
+
+    const wsPartner = XLSX.utils.aoa_to_sheet(ArrayOfArraysForPartner);
+    wsPartner['!rows'] = new Array(ArrayOfArraysForPartner.length).fill({ hpt: 22 });   
+    wsPartner['!merges'] = merges3;
+    wsPartner['!cols'] = [
+      { wch: 28 }, // A
+      { wch: 60 }, // B
+      { wch: 18 }, // C
+      { wch: 60 }, // D
+      { wch: 30 }, // E
+      { wch: 45 }, // F
+      { wch: 15 }, // G
+    ];    
+    if(showGeographicScope){
+      XLSX.utils.book_append_sheet(wb, wsGeo, 'Geographic Scope');
+      XLSX.utils.book_append_sheet(wb, wsPartner, 'Partners');
+    }
+
     await XLSX.writeFile(
       wb,
       join(process.cwd(), 'generated_files', file_name),
@@ -3192,7 +3528,7 @@ export class SubmissionService {
     wp_category: string
   ) {
     let wp_data;
-    if(wp_category != 'Projects') {
+    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -3241,6 +3577,40 @@ export class SubmissionService {
           (d.category == "Project") &&
           (
             (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+          )
+        );
+      });
+    } else if(wp_category == 'Geographic-Scope') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "Geographic-Scope") &&
+            (
+              (d?.parent_id == id && d.category == 'Geographic-Scope' && wp_category == 'Geographic-Scope')
+            )
+          );
+        else
+        return (
+          (d.category == "Geographic-Scope") &&
+          (
+            (d?.parent_id == id && d.category == 'Geographic-Scope' && wp_category == 'Geographic-Scope')
+          )
+        );
+      });
+    } else if(wp_category == 'partners') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "partners") &&
+            (
+              (d?.parent_id == id && d.category == 'partners' && wp_category == 'partners')
+            )
+          );
+        else
+        return (
+          (d.category == "partners") &&
+          (
+            (d?.parent_id == id && d.category == 'partners' && wp_category == 'partners')
           )
         );
       });
@@ -3622,4 +3992,25 @@ export class SubmissionService {
         return category;
     }
   }
+  async getPartners(resultId: any, submissionId: any) {
+    const query = this.resultRepository
+      .createQueryBuilder('r')
+      .leftJoinAndSelect('r.organization', 'org')
+      .leftJoinAndSelect('r.values', 'rv')
+      .where('r.result_uuid = :resultId', { resultId })
+      .andWhere('rv.value = :isTrue', { isTrue: true });
+  
+    if (submissionId !== null && submissionId !== undefined) {
+      query.andWhere('r.submission_id = :submissionId', { submissionId });
+    } else {
+      query.andWhere('r.submission_id IS NULL');
+    }
+  
+    const result = await query.distinct().getMany();
+  
+    const out = result.map(r => r.organization?.acronym).join(', ');
+  
+    return out;
+  }
+
 }
