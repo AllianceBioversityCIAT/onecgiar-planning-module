@@ -1302,44 +1302,58 @@ export class SubmissionService {
     return newArray;
   }
 
-  async getAllDataForGeoAndPartner(wps: any[], period: any[], partners: any[], organization: any, submissionId: any) {
-    let data;
-    let newArray = [];
-
-    if (organization)
-      partners = partners.filter((d: any) => d.code == organization.code);
-    partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()));
-    for (const partner of partners) {
-      for (const wp of wps) {
-          data = await Promise.all(this.allData[wp.ost_wp.wp_official_code].map(async (d: any) => {
-            let obj: any = {};
-            obj['id'] = d.id;
-            if(d.category == 'partners')
-              obj['Partner'] = d.name;
-            else
-              obj['Scope'] = d.location;
-            obj['Type'] = this.getCategory(d.category);
-            obj['High Level Output'] = d.results;
+  async getAllDataForGeoAndPartner(
+    wps: any[],
+    period: any[],
+    partners: any[],
+    submissionId: any
+  ) {
+    const newArray: any[][] = Array(wps.length).fill(null).map(() => []);
+  
+    for (let i = 0; i < wps.length; i++) {
+      const wp = wps[i];
+      const wpCode = wp?.ost_wp?.wp_official_code;
+      const dataList = this.allData[wpCode] ?? [];
+  
+      const data = await Promise.all(
+        dataList.map(async (d: any) => {
+          let obj: any = {};
+          obj['id'] = d.id;
+          if(d.category == 'partners')
+            obj['Partner'] = d.name;
+          else
+            obj['Scope'] = d.location;
+          obj['Type'] = this.getCategory(d.category);
+          obj['High Level Output'] = d.results;
+  
+          const centerSet = new Set<string>();
+  
+          for (const partner of partners) {
             for (const per of period) {
-              obj['Centers'] =
-                // this.perAllValues[wp.ost_wp.wp_official_code][obj.id][per.id] ==
-                //   true
-                //   ? 'X'
-                //   : '';
-                this.perValues[partner?.code][wp?.ost_wp?.wp_official_code][
-                  obj?.id
-                ][per?.id] == true
-                  ? await this.getPartners(String(d.id), submissionId)
-                  : '';
+              const hasCenter =
+                this.perValues?.[partner?.code]?.[wpCode]?.[d.id]?.[per.id] === true;
+  
+              if (hasCenter) {
+                const partnerCenters = await this.getPartners(String(d.id), submissionId);
+                if (partnerCenters) {
+                  partnerCenters.split(',').forEach(c => centerSet.add(c.trim()));
+                }
+              }
             }
-            return obj;
-          }));
-          newArray.push(data);
-      }
+          }
+  
+          obj['Centers'] = Array.from(centerSet).join(', ');
+  
+          return obj;
+        })
+      );
+  
+      newArray[i].push(...data);
     }
+  
     return newArray;
-    
   }
+  
 
   getPartnersData(wps: any[], period: any[], partners: any[], organization: any) {
     let data;
@@ -2129,17 +2143,9 @@ export class SubmissionService {
     let { lockupArray } = this.getConsolidatedData(this.wps, this.period);
 
 
-    let allDataGeo;
-    let allDataPartner;
     const allData = this.getAllData(this.wps, this.period);
-    if (!organization){
-      allDataGeo = await this.getAllDataForGeoAndPartner(this.GeographicScopeWp, [this.period[0]], partners, null, submissionId);
-      allDataPartner = await this.getAllDataForGeoAndPartner(this.partnersWp, [this.period[0]], partners, null, submissionId);
-    }
-    else {
-      allDataGeo = await this.getAllDataForGeoAndPartner(this.GeographicScopeWp, [this.period[0]], partners, organization, submissionId);
-      allDataPartner = await this.getAllDataForGeoAndPartner(this.partnersWp, [this.period[0]], partners, null, submissionId);
-    }
+    let allDataGeo = await this.getAllDataForGeoAndPartner(this.GeographicScopeWp, [this.period[0]], partners, submissionId);
+    let allDataPartner = await this.getAllDataForGeoAndPartner(this.partnersWp, [this.period[0]], partners, submissionId);
     const lockupArrayForGeo = this.GeographicScopeWp.map((d:any) => d.ost_wp.wp_official_code);
     const lockupArrayForPartner = this.partnersWp.map((d:any) => d.ost_wp.wp_official_code);
 
@@ -3149,14 +3155,14 @@ export class SubmissionService {
   
     const geoMap = new Map<string, any[]>();
     lockupArrayForGeo.forEach((label, idx) => {
-      geoMap.set(label, allDataGeo[idx] ?? []);
+      geoMap.set(label, allDataGeo[idx]);
     });
 
     for (let [label, block] of geoMap) {
       const startRow = ArrayOfArraysForGeo.length;
       
-      const filteredBlock = (block.length ? block : [null]).filter(
-        (b: any) => b && b.Centers && b.Centers.trim() !== ''
+      let filteredBlock = (block.length ? block : [null]).filter(
+        (b: any) => b && b.Centers
       );
 
 
