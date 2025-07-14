@@ -3,6 +3,18 @@
 @import "../../sass/abstracts/variables";
 @import "../../sass/components/button";
 
+.new-btns {
+  border: solid 1px gray;
+  padding: 0 10px;
+  border-radius: 10px;
+  color: #2a2e45 !important;
+  font-weight: 500 !important;
+}
+.submit-btn {
+  background-color: #5569dd !important;
+  color: white !important;
+
+}
 .search {
   flex: 0 0 40%;
 

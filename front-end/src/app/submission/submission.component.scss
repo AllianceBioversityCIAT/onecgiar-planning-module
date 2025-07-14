@@ -21,7 +21,21 @@
   font-weight: 500;
   letter-spacing: 0.0125em;
 }
-.init-status {
+
+.rejected {
+  font-weight: bold;
+  color: #d00416;
+}
+.approved {
+  font-weight: bold;
+  color: #38df7b;
+}
+.draft {
+  font-weight: bold;
+  color: #fdc82f;
+}
+
+.Submitted {
   font-weight: bold;
   color: #5569dd;
 }
@@ -1070,7 +1084,7 @@ mat-tab-group {
   transition: all 0.2s;
   position: relative;
   top: 8.9rem;
-  left: -19rem;
+  left: -15rem;
 }
 
 .show-d-3 {
@@ -3348,4 +3362,23 @@ pre {
       }
     }
   }
+}
+
+.new-btns {
+  border: solid 1px gray;
+  padding: 0 10px;
+  border-radius: 10px;
+  color: #2a2e45 !important;
+  font-weight: 500 !important;
+}
+
+
+::ng-deep .mdc-tab {
+  font-weight: 600;
+}
+
+.submit-btn {
+  background-color: #5569dd !important;
+  color: white !important;
+
 }
