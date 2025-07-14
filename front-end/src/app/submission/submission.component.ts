@@ -2121,4 +2121,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  getStatus() {
+    return  this.initiative_data.last_submitted_at != null &&
+    this.initiative_data.last_update_at ==
+    this.initiative_data.last_submitted_at
+      ? this.initiative_data?.latest_submission
+        ? this.initiative_data?.latest_submission?.status ==
+          "Pending"
+          ? "Submitted"
+          : this.initiative_data?.latest_submission?.status
+        : "Draft"
+      : "Draft"
+  }
 }

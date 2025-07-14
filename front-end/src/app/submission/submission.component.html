@@ -2005,9 +2005,9 @@
             
 
             <div class="risk-report-btn-box">
-              <div class="risk-report-button-box">
+              <div>
                 <button
-                  class="risk-report-button-box__btn btn--white"
+                  class="new-btns"
                   mat-raised-button
                   (click)="openHistoryDialog(this.initiative_data.id)"
                 >
@@ -2015,10 +2015,10 @@
                 </button>
               </div>
 
-              <div class="risk-report-button-box">
+              <div>
                 <button
                   *ngIf="!this.isCenter"
-                  class="risk-report-button-box__btn btn--white"
+                  class="new-btns"
                   mat-raised-button
                   (click)="excel()"
                 >
@@ -2028,9 +2028,9 @@
 
               
 
-              <div class="risk-report-button-box">
+              <div>
                 <button
-                  class="risk-report-button-box__btn btn--white"
+                  class="new-btns"
                   mat-raised-button
                   routerLink="/program/{{ initiative_data.id }}/{{
                     initiative_data.official_code
@@ -2040,9 +2040,9 @@
                 </button>
               </div>
 
-              <div class="risk-report-button-box">
+              <div>
                 <button
-                  class="risk-report-button-box__btn btn--white"
+                  class="new-btns"
                   mat-raised-button
                   routerLink="/program/{{ initiative_data.id }}/{{
                     initiative_data.official_code
@@ -2053,7 +2053,7 @@
               </div>
 
           
-              <div class="risk-report-button-box">
+              <div>
                 <button
                   *ngIf="
                     !this.isCenter &&
@@ -2062,7 +2062,7 @@
                     initiative_data.is_valid &&
                     canSubmitPORB()
                   "
-                  class="risk-report-button-box__btn--4 btn--white-2"
+                  class="new-btns submit-btn"
                   mat-raised-button
                   (click)="submit()"
                   [disabled]="canSubmit.value == 0"
@@ -2078,7 +2078,7 @@
                     !initiative_data.is_valid &&
                     canMarkAsValid()
                   "
-                  class="risk-report-button-box__btn--4 btn--white-2"
+                  class="new-btns submit-btn"
                   mat-raised-button
                   (click)="markAsValid()"
                 >
@@ -2088,7 +2088,7 @@
 
                 <button
                   *ngIf="!this.isCenter && initStatus == 'Pending'"
-                  class="risk-report-button-box__btn--4 btn--white-2"
+                  class="new-btns submit-btn"
                   mat-raised-button
                   (click)="cancelLastSubmission()"
                   [disabled]="
@@ -2118,22 +2118,21 @@
               <div class="card-title-3 m-b-t">
                 Toc version ID: {{ this.tocSubmissionData.version }}
               </div>
-              <div class="init-status">
+              <div [ngClass]="{
+                'approved': getStatus() === 'Approved',
+                'rejected': getStatus() === 'Rejected',
+                'draft': getStatus() === 'Draft',
+                'Submitted': getStatus() === 'Submitted',
+                'Pending': getStatus() === 'Draft',
+
+              }">
                 <span> PORB is</span>
-                <span class="text-s-c-linear">
-                  {{
-                    initiative_data.last_submitted_at != null &&
-                    initiative_data.last_update_at ==
-                      initiative_data.last_submitted_at
-                      ? initiative_data?.latest_submission
-                        ? initiative_data?.latest_submission?.status ==
-                          "Pending"
-                          ? "Submitted"
-                          : initiative_data?.latest_submission?.status
-                        : "Draft"
-                      : "Draft"
-                  }}
-                </span>
+                <span
+                class="text-s-c-linear"
+                
+              >
+                {{ getStatus() }}
+              </span>
               </div>
             </form>
           </div>
@@ -2272,9 +2271,9 @@
        
               <div class="wp-actions flex-box">
 
-                <div class="risk-report-button-box">
+                <div>
                   <button
-                    class="risk-report-button-box__btn--4 btn--white-2"
+                    class="new-btns submit-btn"
                     mat-raised-button
                     *ngIf="
                       wp.ost_wp.acronym == 'AOW00' &&
@@ -2293,7 +2292,7 @@
                         initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
                     }"
                   >
-                    <mat-icon class="create-risk">
+                    <!-- <mat-icon class="create-risk">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="13"
@@ -2306,12 +2305,12 @@
                           fill="white"
                         />
                       </svg>
-                    </mat-icon>
+                    </mat-icon> -->
                     Cross-Cutting
                   </button>
 
                   <button
-                    class="risk-report-button-box__btn--4 btn--white-2"
+                    class="new-btns submit-btn"
                     mat-raised-button
                     *ngIf="wp.ost_wp.acronym == 'AOW00' && user.role == 'admin'"
                     type="button"
@@ -2324,7 +2323,7 @@
                         initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
                     }"
                   >
-                    <mat-icon class="create-risk">
+                    <!-- <mat-icon class="create-risk">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="13"
@@ -2337,7 +2336,7 @@
                           fill="white"
                         />
                       </svg>
-                    </mat-icon>
+                    </mat-icon> -->
                     Cross-Cutting
                   </button>
                 </div>
@@ -3402,7 +3401,7 @@
               <div class="risk-report-button-box">
                 <button
                   *ngIf="!this.isCenter"
-                  class="risk-report-button-box__btn btn--white"
+                  class="new-btns"
                   mat-raised-button
                   (click)="openHistoryDialog(this.initiative_data.id)"
                 >
@@ -3412,7 +3411,7 @@
               <div class="risk-report-button-box">
                 <button
                   *ngIf="!this.isCenter"
-                  class="risk-report-button-box__btn btn--white"
+                  class="new-btns"
                   mat-raised-button
                   (click)="excelCenters()"
                 >
@@ -3422,7 +3421,7 @@
               <div class="risk-report-button-box">
                 <button
                   *ngIf="!this.isCenter"
-                  class="risk-report-button-box__btn btn--white"
+                  class="new-btns"
                   mat-raised-button
                   routerLink="/program/{{ initiative_data.id }}/{{
                     initiative_data.official_code
@@ -3435,7 +3434,7 @@
               <div class="risk-report-button-box">
                 <button
                   *ngIf="!this.isCenter"
-                  class="risk-report-button-box__btn btn--white"
+                  class="new-btns"
                   mat-raised-button
                   routerLink="/program/{{ initiative_data.id }}/{{
                     initiative_data.official_code
@@ -3491,22 +3490,21 @@
               <div class="card-title-3 m-b-t">
                 Toc version ID: {{ this.tocSubmissionData.version }}
               </div>
-              <div class="init-status">
+              <div [ngClass]="{
+                'approved': getStatus() === 'Approved',
+                'rejected': getStatus() === 'Rejected',
+                'draft': getStatus() === 'Draft',
+                'Submitted': getStatus() === 'Submitted',
+                'Pending': getStatus() === 'Draft',
+
+              }">
                 <span> PORB is</span>
-                <span class="text-s-c-linear">
-                  {{
-                    initiative_data.last_submitted_at != null &&
-                    initiative_data.last_update_at ==
-                      initiative_data.last_submitted_at
-                      ? initiative_data?.latest_submission
-                        ? initiative_data?.latest_submission?.status ==
-                          "Pending"
-                          ? "Submitted"
-                          : initiative_data?.latest_submission?.status
-                        : "Draft"
-                      : "Draft"
-                  }}
-                </span>
+                <span
+                class="text-s-c-linear"
+                
+              >
+                {{ getStatus() }}
+              </span>
               </div>
             </form>
           </div>
