@@ -26,6 +26,7 @@ import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
 import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
 import { UserService } from "../services/user.service";
+import { QualitativeIndicatorsComponent } from "./qualitative-indicators/qualitative-indicators.component";
 
 @Component({
   selector: "app-submission",
@@ -89,6 +90,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   totals: any = {};
   errors: any = {};
   period: Array<any> = [];
+  indicatorTypes: Array<any> = [];
+  highLevelOutputIndicatorTypes: Array<any> = [];
+  outcomeIndicatorTypes: Array<any> = [];
   toggleValues: any = {};
   toggleSummaryValues: any = {};
   noValuesAssigned: any = {};
@@ -331,6 +335,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   perValuesSammary: any = {};
   perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
+  perAllValuesIndicator: any = {};
+
   sammaryTotal: any = {};
   sammaryTotalConsolidated: any = {};
   checkComplete(organization_code: number) {
@@ -713,6 +719,25 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       }
 
     }
+
+    for (let wp of this.wps) {
+      if(wp.category == 'WP' || wp.category == 'Projects')
+        if(this.allData[wp.ost_wp.wp_official_code]) {
+          this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
+            this.indicatorTypes.forEach((type) => {
+              if (!this.perAllValuesIndicator[wp.ost_wp.wp_official_code])
+                this.perAllValuesIndicator[wp.ost_wp.wp_official_code] = {};
+              if (!this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id])
+                this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id] = {};
+              this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id][type] =
+                0;
+            });
+          });
+        }
+
+    }
+    // console.log(this.perAllValuesIndicator)
+
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
         this.perValuesSammary[wp.ost_wp.wp_official_code][per.id] = false;
@@ -922,6 +947,28 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         category: "IPSR",
         ost_wp: { wp_official_code: "IPSR" },
       });
+      let melias = [];
+      if(this.initiative_data.synchronized){
+        for (let wp of this.wps) {
+          melias.push({
+            id: wp.id, // actual wp id 
+            title: wp.ost_wp.wp_official_code + '-melia',
+            category: "melia",
+            ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-melia', acronym: wp.ost_wp.wp_official_code },
+          });
+        }
+      }
+      let crossCutting = [];
+      if(this.initiative_data.synchronized){
+        for (let wp of this.wps) {
+          crossCutting.push({
+            id: 'Cross-Cutting', 
+            title: wp.ost_wp.wp_official_code + '-Cross-Cutting',
+            category: "Cross Cutting",
+            ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-Cross-Cutting' },
+          });
+        }
+      }
       let w3Projects = [];
       if(this.initiative_data.synchronized){
         for (let wp of this.wps) {
@@ -959,7 +1006,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         }
       }
   
-      this.wps = [...this.wps, ...w3Projects ,...geographicScope, ...partners];
+      this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partners];
 
       
     for (let partner of this.partners) {
@@ -1329,6 +1376,26 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.InitData();
 
     this.period = await this.submissionService.getPeriods(this.phase.id);
+    this.indicatorTypes = [
+      'Number of Policy (Policy Change)',
+      'Innovation Use',
+      'custom-OUTCOME',
+      'Number of knowledge products',
+      'Number of innovations (innovation development)',
+      'Number of people trained (capacity sharing for development)',
+      'custom-OUTPUT'
+    ]
+    this.highLevelOutputIndicatorTypes = [
+      'Number of knowledge products',
+      'Number of innovations (innovation development)',
+      'Number of people trained (capacity sharing for development)',
+      'custom-OUTPUT'
+    ]
+    this.outcomeIndicatorTypes = [
+      'Number of Policy (Policy Change)',
+      'Innovation Use',
+      'custom-OUTCOME'
+    ]
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
@@ -1562,6 +1629,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       });
     this.sammaryCalc();
     this.allvalueChange();
+    this.setIndecatorValues();
   }
 
   checkEOI(category: any) {
@@ -1575,23 +1643,25 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     wp_category: string
   ) {
     let wp_data;
-    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners') {
+    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
             (d.category == "OUTPUT" ||
               d.category == "OUTCOME" ||
               this.checkEOI(d.category) ||
-              d.category == "Cross Cutting" ||
-              d.category == "IPSR" ||
-              d.category == "Melia"
+              // d.category == "Cross Cutting" ||
+              d.category == "IPSR" 
+              // d.category == "Melia"
             ) &&
             (d.group == id ||
               (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
               // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
-              ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
-              d.wp_id == official_code ||
-              (official_code == "CROSS" && this.checkEOI(d.category))
+              ((this.checkEOI(d.category) || d.category == "OUTCOME" && !d.group) && ost_wp_acronym == 'AOW00') ||
+
+              // ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+              d.wp_id == official_code 
+              // (official_code == "CROSS" && this.checkEOI(d.category))
             )
           );
         else
@@ -1599,15 +1669,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             ((d.category == "OUTPUT" ||
               d.category == "OUTCOME" ||
               this.checkEOI(d.category) ||
-              d.category == "Cross Cutting" ||
-              d.category == "IPSR" ||
-              d.category == "Melia" 
+              // d.category == "Cross Cutting" ||
+              d.category == "IPSR" 
+              // d.category == "Melia" 
             ) &&
               (d.group == id || (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects')  ||
               // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
-              ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
-                d.wp_id == official_code)) ||
-            (official_code == "CROSS" && this.checkEOI(d.category))
+              ((this.checkEOI(d.category) || d.category == "OUTCOME" && !d.group) && ost_wp_acronym == 'AOW00') ||
+
+              // ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+                d.wp_id == official_code)) 
+            // (official_code == "CROSS" && this.checkEOI(d.category))
           );
       });
     }  else if(wp_category == 'Projects') {
@@ -1616,18 +1688,49 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           return (
             (d.category == "Project") &&
             (
-              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') || (!d?.parent_id && d.category == 'Project' && official_code == 'CROSS-project')
             )
           );
         else
         return (
           (d.category == "Project") &&
           (
-            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') || (!d?.parent_id && d.category == 'Project' && official_code == 'CROSS-project')
           )
         );
       });
-    } else if(wp_category == 'Geographic-Scope') {
+    } 
+    else if(wp_category == 'melia') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "Melia") &&
+            (
+              (d?.parent_id == id) || ( (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')  && ost_wp_acronym == 'CROSS') 
+            )
+          );
+        else
+        return (
+          (d.category == "Melia") &&
+          (
+            (d?.parent_id == id) || ( (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')  && ost_wp_acronym == 'CROSS') 
+          )
+        );
+      });
+    } 
+     else if(wp_category == 'Cross Cutting') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+              (d.category == "Cross Cutting" && official_code == 'CROSS-Cross-Cutting')
+          );
+        else
+        return (
+          (d.category == "Cross Cutting" && official_code == 'CROSS-Cross-Cutting')
+        );
+      });
+    } 
+    else if(wp_category == 'Geographic-Scope') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -2133,5 +2236,62 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           : this.initiative_data?.latest_submission?.status
         : "Draft"
       : "Draft"
+  }
+
+
+
+  qualitativeIndicatorsDialog(data: any []) {
+    this.dialog.open(QualitativeIndicatorsComponent, {
+      data: data,
+      panelClass: 'dialog-fit-content'
+    })
+  }
+
+
+  showSubQualitativeIndicators(data: any[]) {
+    if (!data || !data.length) return '';
+    const text = data.map((d: any) => d.measure_of_success_maximum).join('')
+    return text.length > 10 ? text.substring(0, 30) + '...' : text;
+  }
+
+ 
+  setIndecatorValues() {
+    for (const wp of this.wps) {
+      if (wp.category === 'WP' || wp.category === 'Projects') {
+        const group = wp.ost_wp?.wp_official_code;
+        if (!group) continue;
+  
+        const allData = this.allData[group];
+        if (!Array.isArray(allData)) continue;
+  
+        if (!this.perAllValuesIndicator[group]) {
+          this.perAllValuesIndicator[group] = {};
+        }
+  
+        for (let data of allData) {
+          const dataId = data.id;
+          const indicatorValues = data.pooled_funded_indicator_values || {};
+  
+          if (!this.perAllValuesIndicator[group][dataId]) {
+            this.perAllValuesIndicator[group][dataId] = {};
+          }
+  
+          for (let key of this.indicatorTypes) {
+            this.perAllValuesIndicator[group][dataId][key] = indicatorValues[key] ?? 0;
+          }
+        }
+      }
+    }
+  }
+  getTotalIndValues(data: any, type: string) {
+    if(data) {
+      let sum = Object.values(data).reduce((sum, item: any) => {
+        return sum + (item[type] || 0);
+      }, 0);
+      return sum;
+    } else {
+      return 0
+    }
+  
   }
 }

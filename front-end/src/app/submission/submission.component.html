@@ -2242,34 +2242,20 @@
                   [id]="isFirst ? '15' : isLast ? '16' : '2'"
                 ></app-popover>
               </mat-card-title>
+              <mat-card-content>
               <div class="sub-head">
-                <span class="sub-title">Pooled Funded</span>
+                <span class="sub-title">Pooled Funded/High Level Output	</span>
                 <mat-slide-toggle
+                class="show-d-2"
                 [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code]"
                 (toggleChange)="
                   toggleSummaryActualValues(wp.ost_wp.wp_official_code)
                 "
-                [ngClass]="{
-                  'show-d': wp.id != 'CROSS' && wp.ost_wp.acronym != 'AOW00' && wp.id != 'IPSR',
-                  'show-d-2': wp.id == 'CROSS' || wp.ost_wp.acronym == 'AOW00',
-                  'show-d-3': wp.id == 'IPSR',
-                  'show-d-4':
-                    wp.id == 'IPSR' &&
-                    user.role == 'user' &&
-                    initUser?.role === 'Contributor' ||
-                    initUser?.role === 'MELIA Focal Point'||
-                    initUser?.role === 'Financial Focal Point',
-                  'show-d-5':
-                    (wp.id == 'CROSS' || wp.ost_wp.acronym == 'AOW00') &&
-                    user.role == 'user' &&
-                    initUser?.role === 'Contributor' ||
-                    initUser?.role === 'MELIA Focal Point'||
-                    initUser?.role === 'Financial Focal Point',
-                }"
+               
                 >Show decimals</mat-slide-toggle>
               </div>
        
-              <div class="wp-actions flex-box">
+              <!-- <div class="wp-actions flex-box">
 
                 <div>
                   <button
@@ -2292,20 +2278,6 @@
                         initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
                     }"
                   >
-                    <!-- <mat-icon class="create-risk">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="13"
-                        height="13"
-                        viewBox="0 0 13 13"
-                        fill="none"
-                      >
-                        <path
-                          d="M11.5556 0H1.44444C0.642778 0 0 0.65 0 1.44444V11.5556C0 12.35 0.642778 13 1.44444 13H11.5556C12.35 13 13 12.35 13 11.5556V1.44444C13 0.65 12.35 0 11.5556 0ZM11.5556 11.5556H1.44444V1.44444H11.5556V11.5556ZM5.77778 10.1111H7.22222V7.22222H10.1111V5.77778H7.22222V2.88889H5.77778V5.77778H2.88889V7.22222H5.77778V10.1111Z"
-                          fill="white"
-                        />
-                      </svg>
-                    </mat-icon> -->
                     Cross-Cutting
                   </button>
 
@@ -2323,39 +2295,21 @@
                         initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
                     }"
                   >
-                    <!-- <mat-icon class="create-risk">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="13"
-                        height="13"
-                        viewBox="0 0 13 13"
-                        fill="none"
-                      >
-                        <path
-                          d="M11.5556 0H1.44444C0.642778 0 0 0.65 0 1.44444V11.5556C0 12.35 0.642778 13 1.44444 13H11.5556C12.35 13 13 12.35 13 11.5556V1.44444C13 0.65 12.35 0 11.5556 0ZM11.5556 11.5556H1.44444V1.44444H11.5556V11.5556ZM5.77778 10.1111H7.22222V7.22222H10.1111V5.77778H7.22222V2.88889H5.77778V5.77778H2.88889V7.22222H5.77778V10.1111Z"
-                          fill="white"
-                        />
-                      </svg>
-                    </mat-icon> -->
                     Cross-Cutting
                   </button>
                 </div>
-              </div>
+              </div> -->
 
-              <mat-card-content>
+              
                 <div class="table-box-1 mat-elevation-z8">
                   <table>
                     <tr>
-                      <th *ngIf="!(wp.id == 'IPSR')">Actions</th>
-                      <th>Results</th>
-                      <ng-container *ngIf="wp.id != 'projects'">
-                        <th *ngIf="wp.id == 'melia'">Study Type</th>
-                        <th *ngIf="wp.id != 'melia'">Type</th>
-                      </ng-container>
-                      <ng-container *ngFor="let item of period">
-                        <th>{{ item.year }} - {{ item.quarter }}</th>
-                      </ng-container>
-                      <!-- <th>Budget Percentage</th> -->
+                      <th>Actions</th>
+                      <th>High Level Output	Title</th>
+                      <th>Knowledge product</th>
+                      <th>Innovation Development</th>
+                      <th>Capacity Sharing</th>
+                      <th>Others outputs</th>
                       <th>Pooled Funded (USD)</th>
                     </tr>
 
@@ -2369,7 +2323,7 @@
                     <ng-container
                       *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
                     >
-                      <ng-container  *ngIf="item.category !== 'Project'">
+                      <ng-container  *ngIf="item.category == 'OUTPUT'">
                       <tr>
                         <td *ngIf="!(wp.id == 'IPSR')">
                           <ng-container
@@ -2575,11 +2529,15 @@
                             </ng-container>
                           </ng-container>
                         </td>
+
                         
-                        <td (click)="item.isExpand = !item.isExpand" *ngIf="wp.id != 'projects'">
-                          {{ getCategory(item.category) }}
-                        </td>
-                        <ng-container *ngFor="let per of period">
+                        <ng-container *ngFor="let type of highLevelOutputIndicatorTypes">
+                          <td>
+                            {{  perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item.id]?.[type] }}
+                          </td>
+                        </ng-container>
+                       
+                        <!-- <ng-container *ngFor="let per of period">
                           <td (click)="item.isExpand = !item.isExpand">
                             <mat-icon
                               class="icon-sub-table-2"
@@ -2592,16 +2550,7 @@
                               >close</mat-icon
                             >
                           </td>
-                        </ng-container>
-                        <!-- <td (click)="item.isExpand = !item.isExpand">
-                          {{
-                            toggleSummaryValues[wp.ost_wp.wp_official_code]
-                              ? sammary[wp.ost_wp.wp_official_code][item.id]
-                              : roundNumber(
-                                  sammary[wp.ost_wp.wp_official_code][item.id]
-                                )
-                          }}%
-                        </td> -->
+                        </ng-container> -->
                         <td (click)="item.isExpand = !item.isExpand">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
@@ -2706,33 +2655,16 @@
                       </ng-container>
                     </ng-container>
                     <tr class="total">
-                      <td [attr.colspan]="(wp.id == 'IPSR' || wp.id == 'projects') ? 2 : 3">
+                      <td [attr.colspan]="2">
                         <div class="subtotal">Subtotal</div>
                       </td>
-                      <ng-container *ngFor="let per of period">
-                        <td>
-                          <mat-icon
-                            class="icon-sub-table-2"
-                            color="primary"
-                            *ngIf="
-                              finalItemPeriodVal(
-                                wp.ost_wp.wp_official_code,
-                                per.id
-                              )
-                            "
-                            >close</mat-icon
-                          >
-                        </td>
-                      </ng-container>
-                      <!-- <td>
-                        {{
-                          toggleSummaryValues[wp.ost_wp.wp_official_code]
-                            ? sammaryTotal[wp.ost_wp.wp_official_code]
-                            : roundNumber(
-                                sammaryTotal[wp.ost_wp.wp_official_code]
-                              )
-                        }}%
-                      </td> -->
+
+                     <ng-container *ngFor="let type of highLevelOutputIndicatorTypes">
+                      <td>
+                        {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
+                      </td>
+                     </ng-container>
+
                       <td>
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
@@ -2747,155 +2679,33 @@
 
                   </table>
                 </div>
-                <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
 
-                <div class="sub-head">
-                  <span class="sub-title">w3-Bilateral Projects</span>
-                </div>
-                <div class="table-box-1 mat-elevation-z8 w3-project-table">
-                 
+
+
+
+
+              <div class="sub-head">
+                <span class="sub-title">Pooled Funded/Outcome</span>
+              </div>
+
+              <div class="table-box-1 mat-elevation-z8">
                 <table>
                   <tr>
-                    <th *ngIf="!(wp.id == 'IPSR')">Actions</th>
-                    <th>Projects</th>
-                    <ng-container *ngIf="wp.id != 'projects'">
-                      <th *ngIf="wp.id == 'melia'">Study Type</th>
-                      <th *ngIf="wp.id != 'melia'">Type</th>
-                    </ng-container>
-                    <ng-container *ngFor="let item of period">
-                      <th>{{ item.year }} - {{ item.quarter }}</th>
-                    </ng-container>
-                    <!-- <th>Budget Percentage</th> -->
-                    <th>W3 Baratialar Project (USD)</th>
+                    <th>Actions</th>
+                    <th>Outcome title</th>
+                    <th>Policy change</th>
+                    <th>Innovation Use</th>
+                    <th>Other Outcomes</th>
+                    <th>Qualititative Indicator (Max)</th>
                   </tr>
 
-
-
-
-
-
-
                   <ng-container
-                    *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-project']"
+                    *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
                   >
-                    <ng-container  *ngIf="item.category == 'Project'">
+                    <ng-container  *ngIf="item.category == 'OUTCOME' || item.category == 'EOI'">
                     <tr>
-                      <td *ngIf="!(wp.id == 'IPSR')">
-                        <ng-container
-                          *ngIf="item.category == 'Cross Cutting'"
-                        >
-                          <div class="box">
-                            <button
-                              *ngIf="
-                                initUser?.role != 'Contributor' &&
-                                user.role == 'user'
-                              "
-                              mat-icon-button
-                              [matMenuTriggerFor]="menu"
-                              [disabled]="
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved'
-                              "
-                              [ngClass]="{
-                                disabled:
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved'
-                              }"
-                            >
-                              <mat-icon class="icon-sub-table-2"
-                                >more_vert</mat-icon
-                              >
-                            </button>
-
-                            <button
-                              *ngIf="user.role == 'admin'"
-                              mat-icon-button
-                              [matMenuTriggerFor]="menu"
-                              [disabled]="
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved'
-                              "
-                              [ngClass]="{
-                                disabled:
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved'
-                              }"
-                            >
-                              <mat-icon class="icon-sub-table-2"
-                                >more_vert</mat-icon
-                              >
-                            </button>
-
-                            <button
-                              style="
-                                background: none;
-                                border: none;
-                                position: relative;
-                                top: -0.4rem;
-                              "
-                              (click)="item.isExpand = !item.isExpand"
-                              *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                            >
-                              <i
-                                *ngIf="!item.isExpand"
-                                class="bi-chevron-right"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                              <i *ngIf="item.isExpand" class="bi-chevron-up">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                            </button>
-                            <mat-menu #menu="matMenu">
-                              <button
-                                (click)="editCross(item.id)"
-                                mat-menu-item
-                              >
-                                <mat-icon class="icon-sub-table-2"
-                                  >edit</mat-icon
-                                >
-                                Edit
-                              </button>
-                              <button
-                                (click)="deleteCross(item.id)"
-                                mat-menu-item
-                              >
-                                <mat-icon class="icon-sub-table-2"
-                                  >delete</mat-icon
-                                >
-                                Delete
-                              </button>
-                            </mat-menu>
-                          </div>
-                        </ng-container>
-                        <ng-container
-                          *ngIf="
-                            item.category != 'Cross Cutting' &&
-                            item.category != 'Melia'
-                          "
-                        >
+                      <td>
+                   
                           <figure
                             matTooltip="For any changes use ToC tool"
                             matTooltipPosition="below"
@@ -2907,7 +2717,140 @@
                               alt="Photo of toc"
                             />
                           </figure>
-                        </ng-container>
+                      </td>
+                      <td class="wp-title box-center">
+                          {{
+                           item.title
+                          }}
+
+                      </td>
+
+                      <ng-container *ngFor="let type of outcomeIndicatorTypes">
+                        <td>{{ item.category == 'OUTCOME' ? perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item.id]?.[type] : '-' }}</td>
+                      </ng-container>
+
+                      <td *ngIf="showSubQualitativeIndicators(item?.qualitative_indicators) != ''" (click)="qualitativeIndicatorsDialog(item?.qualitative_indicators)" title="More Info" class="pointer">
+                        {{ showSubQualitativeIndicators(item?.qualitative_indicators) }}
+
+                      </td>
+                      <td *ngIf="showSubQualitativeIndicators(item?.qualitative_indicators) == ''">
+                        {{ '' }}
+                      </td>
+                      <!-- <ng-container *ngFor="let per of period">
+                        <td (click)="item.isExpand = !item.isExpand">
+                          <mat-icon
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              perAllValues[wp.ost_wp.wp_official_code][
+                                item.id
+                              ][per.id] == true
+                            "
+                            >close</mat-icon
+                          >
+                        </td>
+                      </ng-container> -->
+                      <!-- <td (click)="item.isExpand = !item.isExpand">
+                        {{
+                          toggleSummaryValues[wp.ost_wp.wp_official_code]
+                            ? (summaryBudgets[wp.ost_wp.wp_official_code][
+                                item.id
+                              ] | number)
+                            : (roundNumber(
+                                summaryBudgets[wp.ost_wp.wp_official_code][
+                                  item.id
+                                ]
+                              ) | number)
+                        }}
+                      </td> -->
+                    </tr>
+
+
+
+                   
+                    
+
+
+                    </ng-container>
+                  </ng-container>
+                  <tr class="total">
+                    <td [attr.colspan]="2">
+                      <div class="subtotal">Subtotal</div>
+                    </td>
+
+                    <ng-container *ngFor="let type of outcomeIndicatorTypes">
+                      <td>
+                        {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
+                      </td>
+                    </ng-container>
+                      <td>
+                        {{ '-' }}
+                      </td>
+                      
+
+                    <!-- <td>
+                      {{
+                        toggleSummaryValues[wp.ost_wp.wp_official_code]
+                          ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                            | number)
+                          : (roundNumber(
+                              summaryBudgetsTotal[wp.ost_wp.wp_official_code]
+                            ) | number)
+                      }}
+                    </td> -->
+                  </tr>
+
+                </table>
+              </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-melia'].length">
+
+                <div class="sub-head">
+                  <span class="sub-title">Melia Study</span>
+                  <mat-slide-toggle
+                  class="show-d-2"
+                  [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code  + '-melia']"
+                  (toggleChange)="
+                    toggleSummaryActualValues(wp.ost_wp.wp_official_code  + '-melia')
+                  "
+                  >Show decimals</mat-slide-toggle>
+                </div>
+                <div class="table-box-1 mat-elevation-z8 w3-project-table">
+                 
+                <table>
+                  <tr>
+                    <th>Actions</th>
+                    <th>MELIA study title</th>
+                    <th>Supported outcome</th>
+                    <th>Pooled Funded (USD)</th>
+                  </tr>
+
+
+
+
+
+
+
+                  <ng-container
+                    *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-melia']"
+                  >
+                    <tr>
+                      <td *ngIf="!(wp.id == 'IPSR')">
                         <ng-container
                         *ngIf="
                           item.category == 'Melia'
@@ -2925,100 +2868,138 @@
                             alt="Photo of toc"
                           />
                         </figure>
-                        <button
-                        style="
-                          background: none;
-                          border: none;
-                          position: relative;
-                        "
-                        (click)="item.isExpand = !item.isExpand"
-                        *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                      >
-                        <i
-                          *ngIf="!item.isExpand"
-                          class="bi-chevron-right"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="10"
-                            viewBox="0 0 16 10"
-                            fill="none"
-                          >
-                            <path
-                              d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                              fill="#0f212f"
-                            />
-                          </svg>
-                        </i>
-                        <i *ngIf="item.isExpand" class="bi-chevron-up">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="10"
-                            viewBox="0 0 16 10"
-                            fill="none"
-                          >
-                            <path
-                              d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                              fill="#0f212f"
-                            />
-                          </svg>
-                        </i>
-                      </button>
                     </div>
                       </ng-container>
-                      </td>
-                      <td class="wp-title box-center">
-                        <ng-container
+                      <ng-container
+                      *ngIf="item.category == 'Cross Cutting'"
+                    >
+                      <div class="box">
+                        <button
+                          *ngIf="
+                            canSubmitPORB() &&
+                            user.role == 'user'
+                          "
+                          mat-icon-button
+                          [matMenuTriggerFor]="menu"
+                          [disabled]="
+                            initStatus == 'Pending' ||
+                            initStatus == 'Approved'|| !initiative_data.is_valid
+                          "
+                          [ngClass]="{
+                            disabled:
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved'|| !initiative_data.is_valid
+                          }"
+                        >
+                          <mat-icon class="icon-sub-table-2"
+                            >more_vert</mat-icon
+                          >
+                        </button>
+
+                        <button
+                          *ngIf="user.role == 'admin'"
+                          mat-icon-button
+                          [matMenuTriggerFor]="menu"
+                          [disabled]="
+                            initStatus == 'Pending' ||
+                            initStatus == 'Approved'|| !initiative_data.is_valid
+                          "
+                          [ngClass]="{
+                            disabled:
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved'|| !initiative_data.is_valid
+                          }"
+                        >
+                          <mat-icon class="icon-sub-table-2"
+                            >more_vert</mat-icon
+                          >
+                        </button>
+
+                        <button
+                          style="
+                            background: none;
+                            border: none;
+                            position: relative;
+                            top: -0.4rem;
+                          "
+                          (click)="item.isExpand = !item.isExpand"
                           *ngIf="!item?.initiativeMelia?.meliaType?.name"
                         >
+                          <i
+                            *ngIf="!item.isExpand"
+                            class="bi-chevron-right"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="10"
+                              viewBox="0 0 16 10"
+                              fill="none"
+                            >
+                              <path
+                                d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
+                                fill="#0f212f"
+                              />
+                            </svg>
+                          </i>
+                          <i *ngIf="item.isExpand" class="bi-chevron-up">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="10"
+                              viewBox="0 0 16 10"
+                              fill="none"
+                            >
+                              <path
+                                d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
+                                fill="#0f212f"
+                              />
+                            </svg>
+                          </i>
+                        </button>
+                        <mat-menu #menu="matMenu">
+                          <button
+                            (click)="editCross(item.id)"
+                            mat-menu-item
+                          >
+                            <mat-icon class="icon-sub-table-2"
+                              >edit</mat-icon
+                            >
+                            Edit
+                          </button>
+                          <button
+                            (click)="deleteCross(item.id)"
+                            mat-menu-item
+                          >
+                            <mat-icon class="icon-sub-table-2"
+                              >delete</mat-icon
+                            >
+                            Delete
+                          </button>
+                        </mat-menu>
+                      </div>
+                    </ng-container>
+                      </td>
+                      <td class="wp-title box-center">
                           {{
-                            item?.ipsr?.id
-                              ? item?.ipsr.title + " (" + item.value + ")"
-                              : item.title
+                            item.title
                           }}
-
-                          <ng-container *ngIf="wp.id == 'projects'">
-                          {{item.name}}
-                          </ng-container>
-                        </ng-container>
                       </td>
                       
-                      <td (click)="item.isExpand = !item.isExpand" *ngIf="wp.id != 'projects'">
-                        {{ getCategory(item.category) }}
-                      </td>
-                      <ng-container *ngFor="let per of period">
-                        <td (click)="item.isExpand = !item.isExpand">
-                          <mat-icon
-                            class="icon-sub-table-2"
-                            color="primary"
-                            *ngIf="
-                              perAllValues[wp.ost_wp.wp_official_code + '-project'][
-                                item.id
-                              ][per.id] == true
-                            "
-                            >close</mat-icon
-                          >
+                     
+                     
+                      <td>
+                        {{ item?.results}}
                         </td>
-                      </ng-container>
-                      <!-- <td (click)="item.isExpand = !item.isExpand">
-                        {{
-                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
-                            ? sammary[wp.ost_wp.wp_official_code + '-project'][item.id]
-                            : roundNumber(
-                                sammary[wp.ost_wp.wp_official_code + '-project'][item.id]
-                              )
-                        }}%
-                      </td> -->
+                        
                       <td (click)="item.isExpand = !item.isExpand">
                         {{
-                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
-                            ? (summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
+                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-melia']
+                            ? (summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][
                                 item.id
                               ] | number)
                             : (roundNumber(
-                                summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
+                                summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][
                                   item.id
                                 ]
                               ) | number)
@@ -3076,49 +3057,15 @@
                       </tr>
                     </ng-container>
 
-                    <ng-container *ngIf="item?.category === 'Melia' && item.isExpand">
-                      <tr>
-                        <td colspan="12" style="padding: 0.5rem">
-                          <table class="table table-sm">
-                            <thead>
-                              <tr>
-                                <th
-                                  style="background: none; text-align: left; color: #0f212f;"
-                                >
-                                  Results:
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr style="background: none;">
-                                <td
-                                  style="
-                                    background: none;
-                                    border: none;
-                                    text-align: left;
-                                    font-size: 1.3rem;
-                                    color: #0f212f;
-                                    padding: 0.7rem;
-                                  "
-                                >
-                                  {{ item?.results }}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </td>
-                      </tr>
-                    </ng-container>
                     
 
 
-                    </ng-container>
                   </ng-container>
                   <tr class="total">
-                    <td [attr.colspan]="(wp.id == 'IPSR' || wp.id == 'projects') ? 2 : 3">
+                    <td [attr.colspan]="3">
                       <div class="subtotal">Subtotal</div>
                     </td>
-                    <ng-container *ngFor="let per of period">
+                    <!-- <ng-container *ngFor="let per of period">
                       <td>
                         <mat-icon
                           class="icon-sub-table-2"
@@ -3132,16 +3079,406 @@
                           >close</mat-icon
                         >
                       </td>
-                    </ng-container>
-                    <!-- <td>
+                    </ng-container> -->
+                    <td>
                       {{
-                        toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
-                          ? sammaryTotal[wp.ost_wp.wp_official_code + '-project']
-                          : roundNumber(
-                              sammaryTotal[wp.ost_wp.wp_official_code + '-project']
+                        toggleSummaryValues[wp.ost_wp.wp_official_code + '-melia']
+                          ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia']
+                            | number)
+                          : (roundNumber(
+                              summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia']
+                            ) | number)
+                      }}
+                    </td>
+                  </tr>
+
+
+
+
+
+                </table>
+              </div>
+              </ng-container>
+
+
+
+
+
+
+              <ng-container *ngIf="wp.ost_wp.acronym == 'AOW00'">
+
+                <div class="sub-head">
+                  <span class="sub-title">Cross-Cutting</span>
+                  <div class="content">
+                    <mat-slide-toggle
+                    class="show-d-1"
+                    [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code  + '-Cross-Cutting']"
+                    (toggleChange)="
+                      toggleSummaryActualValues(wp.ost_wp.wp_official_code  + '-Cross-Cutting')
+                    "
+                    
+                    >Show decimals</mat-slide-toggle>
+                    <div class="wp-actions flex-box">
+
+                      <div>
+                        <button
+                          class="new-btns submit-btn"
+                          mat-raised-button
+                          *ngIf="
+                            wp.ost_wp.acronym == 'AOW00' &&
+                            initUser?.role != 'Contributor' &&
+                            initUser?.role != 'MELIA Focal Point' &&
+                            initUser?.role != 'Financial Focal Point' &&
+                            user.role == 'user'
+                          "
+                          type="button"
+                          (click)="addCross()"
+                          [disabled]="
+                            initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
+                          "
+                          [ngClass]="{
+                            disabled:
+                              initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
+                          }"
+                        >
+                          Cross-Cutting
+                        </button>
+      
+                        <button
+                          class="new-btns submit-btn"
+                          mat-raised-button
+                          *ngIf="wp.ost_wp.acronym == 'AOW00' && user.role == 'admin'"
+                          type="button"
+                          (click)="addCross()"
+                          [disabled]="
+                            initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
+                          "
+                          [ngClass]="{
+                            disabled:
+                              initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
+                          }"
+                        >
+                          Cross-Cutting
+                        </button>
+                      </div>
+                    </div> 
+                  </div>
+                </div>
+               
+                <div class="table-box-1 mat-elevation-z8 w3-project-table">
+                 
+                <table>
+                  <tr>
+                    <th>Actions</th>
+                    <th>Cross-Cutting</th>
+                    <th>Description</th>
+                    <th>Pooled Funded (USD)</th>
+                  </tr>
+
+
+
+
+
+
+
+                  <ng-container
+                    *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-Cross-Cutting']"
+                  >
+                    <tr>
+                      <td>
+                      <div class="box">
+                        <button
+                          *ngIf="
+                            canSubmitPORB() &&
+                            user.role == 'user'
+                          "
+                          mat-icon-button
+                          [matMenuTriggerFor]="menu"
+                          [disabled]="
+                            initStatus == 'Pending' ||
+                            initStatus == 'Approved'|| !initiative_data.is_valid
+                          "
+                          [ngClass]="{
+                            disabled:
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved'|| !initiative_data.is_valid
+                          }"
+                        >
+                          <mat-icon class="icon-sub-table-2"
+                            >more_vert</mat-icon
+                          >
+                        </button>
+
+                        <button
+                          *ngIf="user.role == 'admin'"
+                          mat-icon-button
+                          [matMenuTriggerFor]="menu"
+                          [disabled]="
+                            initStatus == 'Pending' ||
+                            initStatus == 'Approved'|| !initiative_data.is_valid
+                          "
+                          [ngClass]="{
+                            disabled:
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved'|| !initiative_data.is_valid
+                          }"
+                        >
+                          <mat-icon class="icon-sub-table-2"
+                            >more_vert</mat-icon
+                          >
+                        </button>
+
+                        <mat-menu #menu="matMenu">
+                          <button
+                            (click)="editCross(item.id)"
+                            mat-menu-item
+                          >
+                            <mat-icon class="icon-sub-table-2"
+                              >edit</mat-icon
+                            >
+                            Edit
+                          </button>
+                          <button
+                            (click)="deleteCross(item.id)"
+                            mat-menu-item
+                          >
+                            <mat-icon class="icon-sub-table-2"
+                              >delete</mat-icon
+                            >
+                            Delete
+                          </button>
+                        </mat-menu>
+                      </div>
+                      </td>
+                      <td class="wp-title box-center">
+                          {{
+                            item.title
+                          }}
+                      </td>
+                      
+                     
+                     
+                      <td>
+                        {{ item?.description}}
+                        </td>
+                        
+                      <td (click)="item.isExpand = !item.isExpand">
+                        {{
+                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                            ? (summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][
+                                item.id
+                              ] | number)
+                            : (roundNumber(
+                                summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][
+                                  item.id
+                                ]
+                              ) | number)
+                        }}
+                      </td>
+                    </tr>
+
+
+                    
+
+
+                  </ng-container>
+                  <tr class="total">
+                    <td [attr.colspan]="3">
+                      <div class="subtotal">Subtotal</div>
+                    </td>
+                    <!-- <ng-container *ngFor="let per of period">
+                      <td>
+                        <mat-icon
+                          class="icon-sub-table-2"
+                          color="primary"
+                          *ngIf="
+                            finalItemPeriodVal(
+                              wp.ost_wp.wp_official_code + '-project',
+                              per.id
                             )
-                      }}%
-                    </td> -->
+                          "
+                          >close</mat-icon
+                        >
+                      </td>
+                    </ng-container> -->
+                    <td>
+                      {{
+                        toggleSummaryValues[wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                          ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                            | number)
+                          : (roundNumber(
+                              summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                            ) | number)
+                      }}
+                    </td>
+                  </tr>
+
+
+
+
+
+                </table>
+              </div>
+
+            </ng-container>
+
+
+
+
+
+
+                <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
+
+                <div class="sub-head">
+                  <span class="sub-title">w3-Bilateral Projects</span>
+                  <mat-slide-toggle
+                  [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code  + '-project']"
+                  (toggleChange)="
+                    toggleSummaryActualValues(wp.ost_wp.wp_official_code  + '-project')
+                  "
+                  [ngClass]="{
+                    'show-d': wp.id != 'CROSS' && wp.ost_wp.acronym != 'AOW00' && wp.id != 'IPSR',
+                    'show-d-2': wp.id == 'CROSS' || wp.ost_wp.acronym == 'AOW00',
+                    'show-d-3': wp.id == 'IPSR',
+                    'show-d-4':
+                      wp.id == 'IPSR' &&
+                      user.role == 'user' &&
+                      initUser?.role === 'Contributor' ||
+                      initUser?.role === 'MELIA Focal Point'||
+                      initUser?.role === 'Financial Focal Point',
+                    'show-d-5':
+                      (wp.id == 'CROSS' || wp.ost_wp.acronym == 'AOW00') &&
+                      user.role == 'user' &&
+                      initUser?.role === 'Contributor' ||
+                      initUser?.role === 'MELIA Focal Point'||
+                      initUser?.role === 'Financial Focal Point',
+                  }"
+                  >Show decimals</mat-slide-toggle>
+                </div>
+                <div class="table-box-1 mat-elevation-z8 w3-project-table">
+                 
+                <table>
+                  <tr>
+                    <th>Actions</th>
+                    <th>Project title</th>
+                    
+                    <!-- <th>Policy change</th>
+                    <th>Innovation Use</th>
+                    <th>Other Outcomes</th>
+                    <th>Qualititative Indicator (Max)</th>
+                    <th>Knowledge product</th>
+                    <th>Innovation Development</th>
+                    <th>Capacity Sharing</th>
+                    <th>Others outputs</th> -->
+                    <th>W3 Baratialar Project (USD)</th>
+                  </tr>
+
+
+
+
+
+
+
+                  <ng-container
+                    *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-project']"
+                  >
+                    <ng-container  *ngIf="item.category == 'Project'">
+                    <tr>
+                      <td *ngIf="!(wp.id == 'IPSR')">
+                          <figure
+                            matTooltip="For any changes use ToC tool"
+                            matTooltipPosition="below"
+                            class="toc-img-center"
+                          >
+                            <img
+                              class="toc-img-size"
+                              src="../../assets/shared-image/toc-5.png"
+                              alt="Photo of toc"
+                            />
+                          </figure>
+                      </td>
+                      <td class="wp-title box-center">
+                          {{item.name}}
+                      </td>
+                      
+                      <!-- <ng-container *ngFor="let per of period">
+                        <td (click)="item.isExpand = !item.isExpand">
+                          <mat-icon
+                            class="icon-sub-table-2"
+                            color="primary"
+                            *ngIf="
+                              perAllValues[wp.ost_wp.wp_official_code + '-project'][
+                                item.id
+                              ][per.id] == true
+                            "
+                            >close</mat-icon
+                          >
+                        </td>
+                      </ng-container> -->
+                      <!-- <td>
+                        {{ item?.projects_indicator_values?.['Number of Policy (Policy Change)'] ?? null }}
+                        </td>
+                        <td>
+                          {{ item?.projects_indicator_values?.['Innovation Use'] ?? null }}
+                        </td>
+                        <td>
+                          {{ item?.projects_indicator_values?.['custom-OUTCOME'] ?? null }}
+                        </td>
+                        <td> -->
+                          <!-- {{ item?.projects_indicator_values?.['Number of innovations (innovation development)'] ?? null }} -->
+                        <!-- </td>
+                        <td>
+                          {{ item?.projects_indicator_values?.['Number of knowledge products'] ?? null }}
+                        </td>
+                        <td>
+                          {{ item?.projects_indicator_values?.['Number of innovations (innovation development)'] ?? null }}
+                        </td>
+                        <td>
+                          {{ item?.projects_indicator_values?.['Number of people trained (capacity sharing for development)'] ?? null }}
+                        </td>
+                        <td>
+                          {{ item?.projects_indicator_values?.['custom-OUTPUT'] ?? null }}
+                        </td> -->
+                      <td (click)="item.isExpand = !item.isExpand">
+                        {{
+                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
+                            ? (summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
+                                item.id
+                              ] | number)
+                            : (roundNumber(
+                                summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
+                                  item.id
+                                ]
+                              ) | number)
+                        }}
+                      </td>
+                    </tr>
+
+
+                    
+
+
+                    </ng-container>
+                  </ng-container>
+                  <tr class="total">
+                    <td [attr.colspan]="2">
+                      <div class="subtotal">Subtotal</div>
+                    </td>
+                    <!-- <ng-container *ngFor="let per of period">
+                      <td>
+                        <mat-icon
+                          class="icon-sub-table-2"
+                          color="primary"
+                          *ngIf="
+                            finalItemPeriodVal(
+                              wp.ost_wp.wp_official_code + '-project',
+                              per.id
+                            )
+                          "
+                          >close</mat-icon
+                        >
+                      </td>
+                    </ng-container> -->
                     <td>
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
@@ -3171,8 +3508,8 @@
                 <table>
                   <tr>
                     <th>Actions</th>
-                    <th>Scope</th>
-                      <th>High Level Output</th>
+                    <th>Geographic Scope</th>
+                      <th>High level output title</th>
                       <th>Strategic Geographic Scope</th>
                   </tr>
 
@@ -3282,8 +3619,8 @@
                   <tr>
                       <th>Actions</th>
                       <th>Partner</th>
-                      <th>High Level Output</th>
-                      <th>Strategic Partner</th>
+                      <th>High level output title</th>
+                      <th>Contracted Partners</th>
                   </tr>
                   <ng-container
                     *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-partners']"
@@ -3660,10 +3997,10 @@
 
                   
                   <div class="sub-head">
-                    <span class="sub-title sub-title-2">Pooled Funded</span>
+                    <span class="sub-title sub-title-2">Pooled Funded/High Level Output</span>
                   
                   <div class="btns-sec">
-                    <div class="btns">
+                    <!-- <div class="btns">
                       <button
                         class="check-btn"
                         *ngIf="partner?.canEdit"
@@ -3708,7 +4045,7 @@
                       >
                         Clear all
                       </button>
-                    </div>
+                    </div> -->
     
                     <mat-slide-toggle
                       [(ngModel)]="
@@ -3735,15 +4072,14 @@
                     }"
                   >
                     <tr>
-                      <th>Results</th>
-                      <ng-container *ngIf="wp.id != 'projects'">
-                        <th *ngIf="wp.id == 'melia'">Study Type</th>
-                        <th *ngIf="wp.id != 'melia'">Type</th>
-                      </ng-container>
-                      <ng-container *ngFor="let item of period">
+                      <th>High level output title</th>
+                      <!-- <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
-                      </ng-container>
-                      <!-- <th class="per">Budget Percentage</th>  -->
+                      </ng-container> -->
+                      <th>Knowledge product</th>
+                      <th>Innovation Development</th>
+                      <th>Capacity Sharing</th>
+                      <th>Others outputs</th>
                       <th class="budget">Pooled Funded (USD)</th> 
                     </tr>
   
@@ -3754,7 +4090,7 @@
                         ]
                       "
                     >
-                    <ng-container *ngIf="item.category !== 'Project'">
+                    <ng-container *ngIf="item.category == 'OUTPUT'">
                       <tr
                         [ngClass]="{
                           itemHasError:
@@ -3764,65 +4100,18 @@
                         }"
                       >
                         <td class="wp-title">
-                          <ng-container
-                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                          >
                             {{
-                              item?.ipsr?.id
-                                ? item?.ipsr.title + " (" + item.value + ")"
-                                : item.title
+                            item.title
                             }}
-                          </ng-container>
-                          <ng-container  *ngIf="wp.id == 'projects'">
-                            {{item.name}}
-                          </ng-container>
-  
-                          <ng-container *ngIf="item?.category == 'Cross Cutting' || item?.category == 'Melia'">
-  
-                            <button
-                              style="background: none; border: none; float: right"
-                              (click)="item.isExpand = !item.isExpand"
-                              *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                            >
-                              <i *ngIf="!item.isExpand" class="bi-chevron-right">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                              <i *ngIf="item.isExpand" class="bi-chevron-up">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                            </button>
-                          </ng-container>
-  
-  
-                        
                         </td>
+
   
-                        <td (click)="item.isExpand = !item.isExpand" *ngIf="wp.id != 'projects'">
-                          {{ getCategory(item.category) }}
-                        </td>
-                        <ng-container *ngFor="let per of period">
+                        <ng-container *ngFor="let type of highLevelOutputIndicatorTypes">
+                          <td>
+                            {{  perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item.id]?.[type] }}
+                          </td>
+                        </ng-container>
+                        <!-- <ng-container *ngFor="let per of period">
                           <td>
                             <mat-checkbox
                               [disabled]="
@@ -3850,7 +4139,7 @@
                               "
                             ></mat-checkbox>
                           </td>
-                        </ng-container>
+                        </ng-container> -->
   
                         
   
@@ -3950,92 +4239,11 @@
                           </mat-form-field>
                         </td>
                       </tr>
-  
-                      <ng-container *ngIf="item.category == 'Cross Cutting'">
-                        <tr *ngIf="item.isExpand">
-                          <td colspan="12" style="padding: 0.5rem">
-                            <table class="table table-sm">
-                              <thead>
-                                <th
-                                  style="
-                                    background: none;
-                                    text-align: left;
-                                    color: #0f212f;
-                                  "
-                                >
-                                  Description:
-                                </th>
-                              </thead>
-                              <tbody>
-                                <tr
-                                  style="background: none"
-                                  *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                                >
-                                  <td
-                                    style="
-                                      background: none;
-                                      border: none;
-                                      text-align: left;
-                                      background-color: none;
-                                      font-size: 1.3rem;
-                                      color: #0f212f;
-                                      padding: 0.7rem;
-                                    "
-                                  >
-                                    {{
-                                      item?.ipsr?.id
-                                        ? item?.ipsr.title +
-                                          " (" +
-                                          item.value +
-                                          ")"
-                                        : item.description
-                                    }}
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </td>
-                        </tr>
-                      </ng-container>
-  
-                      <ng-container *ngIf="item?.category === 'Melia' && item.isExpand">
-                        <tr>
-                          <td colspan="12" style="padding: 0.5rem">
-                            <table class="table table-sm">
-                              <thead>
-                                <tr>
-                                  <th
-                                    style="background: none; text-align: left; color: #0f212f;"
-                                  >
-                                    Results:
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr style="background: none;">
-                                  <td
-                                    style="
-                                      background: none;
-                                      border: none;
-                                      text-align: left;
-                                      font-size: 1.3rem;
-                                      color: #0f212f;
-                                      padding: 0.7rem;
-                                    "
-                                  >
-                                    {{ item?.results }}
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </td>
-                        </tr>
-                      </ng-container>
                       
                     </ng-container>
                   </ng-container>
                     <tr class="total">
-                      <td [colSpan]="wp.id == 'projects' ? period.length + 1 :  period.length + 2">
+                      <td [colSpan]="1">
                         <div class="subtotal">Subtotal</div>
                       </td>
                       <!-- <td>
@@ -4047,6 +4255,11 @@
                               )
                         }}%
                       </td> -->
+                      <ng-container *ngFor="let type of highLevelOutputIndicatorTypes">
+                        <td>
+                          {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
+                        </td>
+                       </ng-container>
                       <td>
                         <div class="form">
                           <mat-form-field
@@ -4095,6 +4308,155 @@
 
 
 
+                <div class="sub-head">
+                  <span class="sub-title">Pooled Funded/Outcomes</span>
+              </div>
+
+              <div class="table-box-2 mat-elevation-z8">
+                <table
+                >
+                  <tr>
+                    <th>Outcome title</th>
+                    <!-- <ng-container *ngFor="let item of period">
+                      <th>{{ item.year }} - {{ item.quarter }}</th>
+                    </ng-container> -->
+                    <th>Policy change</th>
+                    <th>Innovation Use</th>
+                    <th>Other Outcomes</th>
+                    <th>Qualititative Indicator (Max)</th>
+                  </tr>
+
+                  <ng-container
+                    *ngFor="
+                      let item of partnersData[partner.code][
+                        wp.ost_wp.wp_official_code
+                      ]
+                    "
+                  >
+                    <tr
+                      [ngClass]="{
+                        itemHasError:
+                          itemHasError[partner.code][
+                            wp.ost_wp.wp_official_code
+                          ][item.id]
+                      }"
+                    >
+                      <td class="wp-title">
+                          {{
+                          item.title
+                          }}
+                      </td>
+
+
+                      <ng-container *ngFor="let type of outcomeIndicatorTypes">
+                        <td>
+                          {{  perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item.id]?.[type] }}
+                        </td>
+                      </ng-container>
+                      <td *ngIf="showSubQualitativeIndicators(item?.qualitative_indicators) != ''" (click)="qualitativeIndicatorsDialog(item?.qualitative_indicators)" title="More Info" class="pointer">
+                        {{ showSubQualitativeIndicators(item?.qualitative_indicators) }}
+
+                      </td>
+                      <td *ngIf="showSubQualitativeIndicators(item?.qualitative_indicators) == ''">
+                        {{ '' }}
+                      </td>
+                      <!-- <ng-container *ngFor="let per of period">
+                        <td>
+                          <mat-checkbox
+                            [disabled]="
+                              partnersStatus[partner.code] ||
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved' ||
+                              !partner?.canEdit ||
+                              initUser?.role === 'Financial Focal Point'
+                            "
+                            [(ngModel)]="
+                              perValues[partner.code][
+                                wp.ost_wp.wp_official_code
+                              ][item.id][per.id]
+                            "
+                            (change)="
+                              changeEnable(
+                                partner.code,
+                                wp.ost_wp.wp_official_code,
+                                item.id,
+                                item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                per.id,
+                                item.category,
+                                $event
+                              )
+                            "
+                          ></mat-checkbox>
+                        </td>
+                      </ng-container> -->
+
+                    
+                    </tr>
+                    
+                </ng-container>
+                  <tr class="total">
+                    <td [colSpan]="1">
+                      <div class="subtotal">Subtotal</div>
+                    </td>
+                    <!-- <td>
+                      {{
+                        toggleValues[partner.code][wp.ost_wp.wp_official_code]
+                          ? totals[partner.code][wp.ost_wp.wp_official_code]
+                          : roundNumber(
+                              totals[partner.code][wp.ost_wp.wp_official_code]
+                            )
+                      }}%
+                    </td> -->
+                    <ng-container *ngFor="let type of outcomeIndicatorTypes">
+                      <td>
+                        {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
+                      </td>
+                     </ng-container>
+                     <td>
+                      {{ '-' }}
+                    </td>
+                    <!-- <td>
+                      <div class="form">
+                        <mat-form-field
+                          class="form-dialog-content__field"
+                          floatLabel="always"
+                          hideRequiredMarker
+                          appearance="outline"
+                          class="budget"
+                        >
+                          <input
+                            mask="separator.2"
+                            thousandSeparator=","
+                            placeholder="Total Budget"
+                            [disabled]="
+                              partnersStatus[partner.code] ||
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved' ||
+                              !partner?.canEdit ||
+                              initUser?.role === 'Financial Focal Point'
+                            "
+                            matInput
+                            [(ngModel)]="
+                              wp_budgets[partner.code][
+                                wp.ost_wp.wp_official_code
+                              ]
+                            "
+                            (keyup)="
+                              wpBudgetChange(
+                                partner.code,
+                                wp.ost_wp.wp_official_code,
+                                wp_budgets[partner.code][
+                                  wp.ost_wp.wp_official_code
+                                ]
+                              )
+                            "
+                          />
+                        </mat-form-field>
+                      </div>
+                    </td> -->
+                  </tr>
+                </table>
+              </div>
 
 
 
@@ -4105,6 +4467,529 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+
+
+
+              <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-melia'].length">
+
+                <div class="sub-head-w3">
+                  <span class="sub-title-w3">MELIA Study</span>
+                    <mat-slide-toggle
+                      [(ngModel)]="
+                        toggleValues[partner.code][wp.ost_wp.wp_official_code + '-melia']
+                      "
+                      (toggleChange)="
+                        toggleActualValues(partner.code, wp.ost_wp.wp_official_code + '-melia')
+                      "
+                      class="show-d-1"
+                      >Show decimals</mat-slide-toggle
+                    >
+                </div>
+                <div class="table-box-2 mat-elevation-z8">
+                  <table
+                    [ngClass]="{
+                      error: errors[partner.code][wp.ost_wp.wp_official_code + '-melia']
+                    }"
+                  >
+                    <tr>
+                      <th>MELIA study title</th>
+                      <th>Supported outcome</th>
+                      <!-- <ng-container *ngFor="let item of period">
+                        <th>{{ item.year }} - {{ item.quarter }}</th>
+                      </ng-container> -->
+                      <!-- <th class="per">Budget Percentage</th>  -->
+                      <th class="budget">Pooled Funded (USD)</th> 
+                    </tr>
+  
+                    <ng-container
+                      *ngFor="
+                        let item of partnersData[partner.code][
+                          wp.ost_wp.wp_official_code + '-melia'
+                        ]
+                      "
+                    >
+                    <!-- <ng-container *ngIf="item.category == 'melia'"> -->
+                      <tr
+                        [ngClass]="{
+                          itemHasError:
+                            itemHasError[partner.code][
+                              wp.ost_wp.wp_official_code + '-melia'
+                            ][item.id]
+                        }"
+                      >
+                        <td class="wp-title">
+                            {{
+                             item.title
+                            }}                        
+                        </td>
+  
+                        <td>
+                          {{ item.results }}
+                        </td>
+                        <!-- <ng-container *ngFor="let per of period">
+                          <td>
+                            <mat-checkbox
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              [(ngModel)]="
+                                perValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-project'
+                                ][item.id][per.id]
+                              "
+                              (change)="
+                                changeEnable(
+                                  partner.code,
+                                  wp.ost_wp.wp_official_code + '-project',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  per.id,
+                                  item.category,
+                                  $event
+                                )
+                              "
+                            ></mat-checkbox>
+                          </td>
+                        </ng-container> -->
+  
+                     
+                        <td>
+                          <mat-form-field
+                            class="form-dialog-content__field"
+                            floatLabel="always"
+                            hideRequiredMarker
+                            appearance="outline"
+                            class="budget"
+                            *ngIf="
+                              item.category != 'EOI' && item.category != 'OUTCOME'
+                            "
+                          >
+                            <input
+                              mask="separator.2"
+                              thousandSeparator=","
+                              *ngIf="
+                                toggleValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ]
+                              "
+                              [disabled]="
+                                (perValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ][item.id] | inQue) ||
+                                !+wp_budgets[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ] ||
+                                noValuesAssigned[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ][item.id] ||
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              (keyup)="
+                                changeCalc(
+                                  partner.code,
+                                  wp.ost_wp.wp_official_code + '-melia',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  'budget',
+                                  false
+                                )
+                              "
+                              [(ngModel)]="
+                                budgetValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ][item.id]
+                              "
+                              matInput
+                            />
+                            <input
+                              mask="separator.2"
+                              thousandSeparator=","
+                              *ngIf="
+                                !toggleValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ]
+                              "
+                              [disabled]="
+                                (perValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ][item.id] | inQue) ||
+                                !+wp_budgets[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ] ||
+                                noValuesAssigned[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ][item.id] ||
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              (keyup)="
+                                changeCalc(
+                                  partner.code,
+                                  wp.ost_wp.wp_official_code + '-melia',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  'budget',
+                                  false
+                                )
+                              "
+                              [(ngModel)]="
+                                displayBudgetValues[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ][item.id]
+                              "
+                              matInput
+                            />
+                          </mat-form-field>
+                        </td>
+                      </tr>
+  
+  
+                      
+                    <!-- </ng-container> -->
+                  </ng-container>
+                    <tr class="total">
+                      <td [colSpan]="2">
+                        <div class="subtotal">Subtotal</div>
+                      </td>
+                  
+                      <td>
+                        <div class="form">
+                          <mat-form-field
+                            class="form-dialog-content__field"
+                            floatLabel="always"
+                            hideRequiredMarker
+                            appearance="outline"
+                            class="budget"
+                          >
+                            <input
+                              mask="separator.2"
+                              thousandSeparator=","
+                              placeholder="Total Budget"
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              matInput
+                              [(ngModel)]="
+                                wp_budgets[partner.code][
+                                  wp.ost_wp.wp_official_code + '-melia'
+                                ]
+                              "
+                              (keyup)="
+                                wpBudgetChange(
+                                  partner.code,
+                                  wp.ost_wp.wp_official_code + '-melia',
+                                  wp_budgets[partner.code][
+                                    wp.ost_wp.wp_official_code + '-melia'
+                                  ]
+                                )
+                              "
+                            />
+                          </mat-form-field>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <p class="error">
+                  {{ errors[partner.code][wp.ost_wp.wp_official_code + '-melia'] }}
+                </p>
+                </ng-container>
+
+
+
+
+
+
+
+
+                <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-Cross-Cutting'].length">
+
+                  <div class="sub-head-w3">
+                    <span class="sub-title-w3">Cross-Cutting</span>
+                      <mat-slide-toggle
+                        [(ngModel)]="
+                          toggleValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                        "
+                        (toggleChange)="
+                          toggleActualValues(partner.code, wp.ost_wp.wp_official_code + '-Cross-Cutting')
+                        "
+                        class="show-d-1"
+                        >Show decimals</mat-slide-toggle
+                      >
+                  </div>
+                  <div class="table-box-2 mat-elevation-z8">
+                    <table
+                      [ngClass]="{
+                        error: errors[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                      }"
+                    >
+                      <tr>
+                        <th>Cross-Cutting</th>
+                        <th>Description</th>
+                        <!-- <ng-container *ngFor="let item of period">
+                          <th>{{ item.year }} - {{ item.quarter }}</th>
+                        </ng-container> -->
+                        <!-- <th class="per">Budget Percentage</th>  -->
+                        <th class="budget">Pooled Funded (USD)</th> 
+                      </tr>
+    
+                      <ng-container
+                        *ngFor="
+                          let item of partnersData[partner.code][
+                            wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                          ]
+                        "
+                      >
+                        <tr
+                          [ngClass]="{
+                            itemHasError:
+                              itemHasError[partner.code][
+                                wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                              ][item.id]
+                          }"
+                        >
+                          <td class="wp-title">
+                              {{
+                               item.title
+                              }}                        
+                          </td>
+    
+                          <td>
+                            {{ item.description }}
+                          </td>
+                          <!-- <ng-container *ngFor="let per of period">
+                            <td>
+                              <mat-checkbox
+                                [disabled]="
+                                  partnersStatus[partner.code] ||
+                                  initStatus == 'Pending' ||
+                                  initStatus == 'Approved' ||
+                                  !partner?.canEdit ||
+                                  initUser?.role === 'Financial Focal Point'
+                                "
+                                [(ngModel)]="
+                                  perValues[partner.code][
+                                    wp.ost_wp.wp_official_code + '-project'
+                                  ][item.id][per.id]
+                                "
+                                (change)="
+                                  changeEnable(
+                                    partner.code,
+                                    wp.ost_wp.wp_official_code + '-project',
+                                    item.id,
+                                    item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                    per.id,
+                                    item.category,
+                                    $event
+                                  )
+                                "
+                              ></mat-checkbox>
+                            </td>
+                          </ng-container> -->
+    
+                       
+                          <td>
+                            <mat-form-field
+                              class="form-dialog-content__field"
+                              floatLabel="always"
+                              hideRequiredMarker
+                              appearance="outline"
+                              class="budget"
+                              *ngIf="
+                                item.category != 'EOI' && item.category != 'OUTCOME'
+                              "
+                            >
+                              <input
+                                mask="separator.2"
+                                thousandSeparator=","
+                                *ngIf="
+                                  toggleValues[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ]
+                                "
+                                [disabled]="
+                                  (perValues[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ][item.id] | inQue) ||
+                                  !+wp_budgets[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ] ||
+                                  noValuesAssigned[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ][item.id] ||
+                                  partnersStatus[partner.code] ||
+                                  initStatus == 'Pending' ||
+                                  initStatus == 'Approved' ||
+                                  !partner?.canEdit ||
+                                  initUser?.role === 'Financial Focal Point'
+                                "
+                                (keyup)="
+                                  changeCalc(
+                                    partner.code,
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting',
+                                    item.id,
+                                    item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                    'budget',
+                                    false
+                                  )
+                                "
+                                [(ngModel)]="
+                                  budgetValues[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ][item.id]
+                                "
+                                matInput
+                              />
+                              <input
+                                mask="separator.2"
+                                thousandSeparator=","
+                                *ngIf="
+                                  !toggleValues[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ]
+                                "
+                                [disabled]="
+                                  (perValues[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ][item.id] | inQue) ||
+                                  !+wp_budgets[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ] ||
+                                  noValuesAssigned[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ][item.id] ||
+                                  partnersStatus[partner.code] ||
+                                  initStatus == 'Pending' ||
+                                  initStatus == 'Approved' ||
+                                  !partner?.canEdit ||
+                                  initUser?.role === 'Financial Focal Point'
+                                "
+                                (keyup)="
+                                  changeCalc(
+                                    partner.code,
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting',
+                                    item.id,
+                                    item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                    'budget',
+                                    false
+                                  )
+                                "
+                                [(ngModel)]="
+                                  displayBudgetValues[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ][item.id]
+                                "
+                                matInput
+                              />
+                            </mat-form-field>
+                          </td>
+                        </tr>
+    
+    
+                        
+                      <!-- </ng-container> -->
+                    </ng-container>
+                      <tr class="total">
+                        <td [colSpan]="2">
+                          <div class="subtotal">Subtotal</div>
+                        </td>
+                    
+                        <td>
+                          <div class="form">
+                            <mat-form-field
+                              class="form-dialog-content__field"
+                              floatLabel="always"
+                              hideRequiredMarker
+                              appearance="outline"
+                              class="budget"
+                            >
+                              <input
+                                mask="separator.2"
+                                thousandSeparator=","
+                                placeholder="Total Budget"
+                                [disabled]="
+                                  partnersStatus[partner.code] ||
+                                  initStatus == 'Pending' ||
+                                  initStatus == 'Approved' ||
+                                  !partner?.canEdit ||
+                                  initUser?.role === 'Financial Focal Point'
+                                "
+                                matInput
+                                [(ngModel)]="
+                                  wp_budgets[partner.code][
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                  ]
+                                "
+                                (keyup)="
+                                  wpBudgetChange(
+                                    partner.code,
+                                    wp.ost_wp.wp_official_code + '-Cross-Cutting',
+                                    wp_budgets[partner.code][
+                                      wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                                    ]
+                                  )
+                                "
+                              />
+                            </mat-form-field>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                  <p class="error">
+                    {{ errors[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'] }}
+                  </p>
+                  </ng-container>
 
 
 
@@ -4124,7 +5009,7 @@
                 <div class="sub-head-w3">
                   <span class="sub-title-w3">w3-Bilateral Projects</span>
                   <div class="btns-sec-w3">
-                    <div class="btns-w3">
+                    <!-- <div class="btns-w3">
                       <button
                         class="check-btn-w3"
                         *ngIf="partner?.canEdit"
@@ -4169,7 +5054,7 @@
                       >
                         Clear all
                       </button>
-                    </div>
+                    </div> -->
     
                     <mat-slide-toggle
                       [(ngModel)]="
@@ -4190,14 +5075,10 @@
                     }"
                   >
                     <tr>
-                      <th>Projects</th>
-                      <ng-container *ngIf="wp.id != 'projects'">
-                        <th *ngIf="wp.id == 'melia'">Study Type</th>
-                        <th *ngIf="wp.id != 'melia'">Type</th>
-                      </ng-container>
-                      <ng-container *ngFor="let item of period">
+                      <th>Project title</th>
+                      <!-- <ng-container *ngFor="let item of period">
                         <th>{{ item.year }} - {{ item.quarter }}</th>
-                      </ng-container>
+                      </ng-container> -->
                       <!-- <th class="per">Budget Percentage</th>  -->
                       <th class="budget">W3 Baratialar Project (USD)</th> 
                     </tr>
@@ -4219,65 +5100,11 @@
                         }"
                       >
                         <td class="wp-title">
-                          <ng-container
-                            *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                          >
-                            {{
-                              item?.ipsr?.id
-                                ? item?.ipsr.title + " (" + item.value + ")"
-                                : item.title
-                            }}
-                          </ng-container>
-                          <ng-container  *ngIf="wp.id == 'projects'">
-                            {{item.name}}
-                          </ng-container>
-  
-                          <ng-container *ngIf="item?.category == 'Cross Cutting' || item?.category == 'Melia'">
-  
-                            <button
-                              style="background: none; border: none; float: right"
-                              (click)="item.isExpand = !item.isExpand"
-                              *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                            >
-                              <i *ngIf="!item.isExpand" class="bi-chevron-right">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                              <i *ngIf="item.isExpand" class="bi-chevron-up">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="10"
-                                  viewBox="0 0 16 10"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                    fill="#0f212f"
-                                  />
-                                </svg>
-                              </i>
-                            </button>
-                          </ng-container>
-  
+                            {{item.name}}                        
+                        </td>
   
                         
-                        </td>
-  
-                        <td (click)="item.isExpand = !item.isExpand" *ngIf="wp.id != 'projects'">
-                          {{ getCategory(item.category) }}
-                        </td>
-                        <ng-container *ngFor="let per of period">
+                        <!-- <ng-container *ngFor="let per of period">
                           <td>
                             <mat-checkbox
                               [disabled]="
@@ -4305,7 +5132,7 @@
                               "
                             ></mat-checkbox>
                           </td>
-                        </ng-container>
+                        </ng-container> -->
   
                      
                         <td>
@@ -4405,91 +5232,14 @@
                         </td>
                       </tr>
   
-                      <ng-container *ngIf="item.category == 'Cross Cutting'">
-                        <tr *ngIf="item.isExpand">
-                          <td colspan="12" style="padding: 0.5rem">
-                            <table class="table table-sm">
-                              <thead>
-                                <th
-                                  style="
-                                    background: none;
-                                    text-align: left;
-                                    color: #0f212f;
-                                  "
-                                >
-                                  Description:
-                                </th>
-                              </thead>
-                              <tbody>
-                                <tr
-                                  style="background: none"
-                                  *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                                >
-                                  <td
-                                    style="
-                                      background: none;
-                                      border: none;
-                                      text-align: left;
-                                      background-color: none;
-                                      font-size: 1.3rem;
-                                      color: #0f212f;
-                                      padding: 0.7rem;
-                                    "
-                                  >
-                                    {{
-                                      item?.ipsr?.id
-                                        ? item?.ipsr.title +
-                                          " (" +
-                                          item.value +
-                                          ")"
-                                        : item.description
-                                    }}
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </td>
-                        </tr>
-                      </ng-container>
+                    
   
-                      <ng-container *ngIf="item?.category === 'Melia' && item.isExpand">
-                        <tr>
-                          <td colspan="12" style="padding: 0.5rem">
-                            <table class="table table-sm">
-                              <thead>
-                                <tr>
-                                  <th
-                                    style="background: none; text-align: left; color: #0f212f;"
-                                  >
-                                    Results:
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr style="background: none;">
-                                  <td
-                                    style="
-                                      background: none;
-                                      border: none;
-                                      text-align: left;
-                                      font-size: 1.3rem;
-                                      color: #0f212f;
-                                      padding: 0.7rem;
-                                    "
-                                  >
-                                    {{ item?.results }}
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </td>
-                        </tr>
-                      </ng-container>
+                     
                       
                     </ng-container>
                   </ng-container>
                     <tr class="total">
-                      <td [colSpan]="wp.id == 'projects' ? period.length + 1 :  period.length + 2">
+                      <td [colSpan]="1">
                         <div class="subtotal">Subtotal</div>
                       </td>
                   
@@ -4548,8 +5298,8 @@
                 <div class="table-box-2 mat-elevation-z8">
                   <table>
                     <tr>
-                      <th>Scope</th>
-                        <th>High Level Output</th>
+                      <th>Geographic Scope</th>
+                        <th>High level output title</th>
                         <th>Strategic Geographic Scope</th>
                     </tr>
   
@@ -4618,8 +5368,8 @@
                   <table>
                     <tr>
                         <th>partners</th>
-                        <th>High Level Output</th>
-                        <th>Strategic Partner</th>
+                        <th>High level output title</th>
+                        <th>Contracted Partners</th>
                     </tr>
   
                     <ng-container

@@ -6,6 +6,9 @@
   position: relative;
   bottom: -6px;
 }
+.pointer {
+  cursor: pointer;
+}
 .f-c-Geographic-Scope {
   display: flex;
   align-items: center;
@@ -981,7 +984,7 @@ mat-tab-group {
     font-family: "Poppins", sans-serif !important;
     white-space: normal !important;
     max-width: 89rem;
-    margin: -1rem 0 -6rem 0;
+    margin: -1rem 0 -5rem 0;
     padding: 0 1.4rem;
     color: #0f212f;
     /* text-align: center; */
@@ -1083,8 +1086,8 @@ mat-tab-group {
   letter-spacing: 0.2rem;
   transition: all 0.2s;
   position: relative;
-  top: 8.9rem;
-  left: -15rem;
+  top: 6.9rem;
+  // left: -15rem;
 }
 
 .show-d-3 {
@@ -3273,6 +3276,7 @@ pre {
   align-items: center;
   justify-content: space-between;
   margin-top: 8px;
+  margin-bottom: 30px;
 
     width: 100%;
   .sub-title {
@@ -3283,6 +3287,13 @@ pre {
     line-height: 32px;
     font-weight: 500;
     letter-spacing: 0.0125em;
+  }
+  .content {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    position: relative;
+    bottom: -36px;
   }
 }
 
@@ -3297,8 +3308,9 @@ pre {
 
 .btns-sec {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     width: 350px;
+    flex-direction: column;
 }
 
 .sub-head-w3 {
@@ -3324,6 +3336,7 @@ pre {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-direction: row-reverse;
     width: 320px;
     .btns-w3 {
       display: flex;

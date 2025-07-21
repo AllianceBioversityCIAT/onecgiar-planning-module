@@ -251,6 +251,52 @@ export class SubmissionController {
                 if (items.partners?.length)  items.partners  = items.partners.map((p: any) => p);
 
     
+                if (items.indicators?.length && (items.category == 'OUTPUT' || items.category == 'OUTCOME')) {
+                  const sumPooledFundedByType: Record<string, number> = {};
+                  const sumProjectByType: Record<string, any> = {};
+
+                  for (const indicator of items.indicators) {
+                    if (!indicator?.type?.toc_id || !indicator.target?.length) continue;
+    
+                    let indicatorType = indicator.type.value;
+    
+                    for (const target of indicator.target) {
+                      if (!target?.date || !target?.value) continue;
+                      if (target?.project?.id == 'Pooled funded') {
+                        const date = new Date(target.date);
+                        if (date.getFullYear() === 2026) {
+                          const value = parseFloat(target.value);
+                          if (!isNaN(value)) {
+                            if(indicatorType == 'custom')
+                              indicatorType = indicatorType + '-' + items.category;
+                            sumPooledFundedByType[indicatorType] = (sumPooledFundedByType[indicatorType] || 0) + value;
+                          }
+                        }
+                      } else {
+                        //for project 
+                        const date = new Date(target.date);
+                        if (date.getFullYear() === 2026) {
+                          const value = parseFloat(target.value);
+                          if (!isNaN(value)) {
+                            if (!sumProjectByType[target.project.id]) {
+                              sumProjectByType[target.project.id] = {};
+                            }
+                            if(indicatorType == 'custom')
+                              indicatorType = indicatorType + '-' + items.category;
+                            sumProjectByType[target.project.id][indicatorType] = (sumProjectByType[target.project.id][indicatorType] || 0) + value;
+                          }
+                        }
+                      }
+                    }
+                  }
+    
+                  items.pooled_funded_indicator_values = sumPooledFundedByType;
+                  items.projects_indicator_values = sumProjectByType;
+
+                }
+
+              
+
               return items;
             });
 
@@ -313,6 +359,7 @@ export class SubmissionController {
                       parent_id: data.group,
                       results: data.title,
                       category: 'Project',
+                      projects_indicator_values: data.projects_indicator_values?.[project.id],
                       title: project.name,
                       ...project,
                     });
