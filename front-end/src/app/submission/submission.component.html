@@ -2092,11 +2092,11 @@
                   mat-raised-button
                   (click)="cancelLastSubmission()"
                   [disabled]="
-                    initUser?.role == 'Contributor' && user?.role == 'user'
+                    (initUser?.role == 'Contributor' || initUser?.role == 'Financial Focal Point' || initUser?.role == 'MELIA Focal Point') && user?.role == 'user'
                   "
                   [ngClass]="{
                     disabled:
-                      initUser?.role == 'Contributor' && user?.role == 'user'
+                    (initUser?.role == 'Contributor' || initUser?.role == 'Financial Focal Point' || initUser?.role == 'MELIA Focal Point') && user?.role == 'user'
                   }"
                 >
                   Cancel Submission
@@ -2162,9 +2162,19 @@
               <table>
                 <tr>
                   <th>Results</th>
-                  <ng-container *ngFor="let item of period">
+                  <!-- <ng-container *ngFor="let item of period">
                     <th>{{ item.year }} - {{ item.quarter }}</th>
-                  </ng-container>
+                  </ng-container> -->
+                  <th>Policy change</th>
+                  <th>Innovation Use</th>
+                  <th>Other Outcomes</th>
+                  <th>Knowledge product</th>
+                  <th>Innovation Development</th>
+                  <th>Capacity Sharing</th>
+                  <th>Others outputs</th>
+                  <th>MELIA Study</th>
+
+
 
                   <!-- <th>Budget Percentage</th> -->
                   <th>Pooled Funded (USD)</th>
@@ -2173,9 +2183,11 @@
                 <ng-container *ngFor="let wp of actualWps">
                   <tr>
                     <td class="wp-title">{{ wp.title }}</td>
-                    <ng-container *ngFor="let item of period">
+                    <ng-container *ngFor="let type of indicatorTypes">
                       <td>
-                        <mat-icon
+                        {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
+
+                        <!-- <mat-icon
                           class="icon-sub-table-2"
                           color="primary"
                           *ngIf="
@@ -2184,9 +2196,11 @@
                             ] == true
                           "
                           >close</mat-icon
-                        >
+                        > -->
                       </td>
                     </ng-container>
+                    <td>{{ allData[wp.ost_wp.wp_official_code + '-melia']?.length }}</td>
+
                     <!-- <td>
                       {{
                         sammaryTotalConsolidated[wp.ost_wp.wp_official_code]
@@ -2195,9 +2209,11 @@
                     </td> -->
                     <td>
                       {{
-                        roundNumber(
-                          summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                        ) | number
+                        roundNumbers([
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code],
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia'],
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                        ]) | number
                       }}
                     </td>
                     <td>
@@ -2211,16 +2227,20 @@
                 </ng-container>
                 <tr class="total">
                   <td><div class="subtotal">Total</div></td>
-                  <ng-container *ngFor="let item of period">
+                  <ng-container *ngFor="let type of indicatorTypes">
                     <td>
-                      <mat-icon
+                      {{ getTotalIndAllValues(perAllValuesIndicator, type) }}
+
+                      <!-- <mat-icon
                         class="icon-sub-table-2"
                         color="primary"
                         *ngIf="finalPeriodVal(item.id)"
                         >close</mat-icon
-                      >
+                      > -->
                     </td>
                   </ng-container>
+                  <td>{{ getAllMeliasLength() }}</td>
+
                   <!-- <td>{{ wpsTotalSum | number : "1.2-2" }}%</td> -->
                   <td>{{ roundNumber(summaryBudgetsAllTotal) | number }}</td>
                   <td>{{ roundNumber(summaryBudgetsProjectsTotal) | number }}</td>
@@ -3187,6 +3207,7 @@
                     <tr>
                       <td>
                       <div class="box">
+                        <ng-container *ngIf="!canSubmitPORB()">{{ 'N/A' }}</ng-container>
                         <button
                           *ngIf="
                             canSubmitPORB() &&
@@ -3882,9 +3903,18 @@
               <table>
                 <tr>
                   <th>Results</th>
-                  <ng-container *ngFor="let item of period">
+                  <!-- <ng-container *ngFor="let item of period">
                     <th>{{ item.year }} - {{ item.quarter }}</th>
-                  </ng-container>
+                  </ng-container> -->
+                  <th>Policy change</th>
+                  <th>Innovation Use</th>
+                  <th>Other Outcomes</th>
+                  <th>Knowledge product</th>
+                  <th>Innovation Development</th>
+                  <th>Capacity Sharing</th>
+                  <th>Others outputs</th>
+                  <th>MELIA Study</th>
+
 
                   <!-- <th>Budget Percentage</th> -->
                   <th>Pooled Funded (USD)</th>
@@ -3893,9 +3923,11 @@
                 <ng-container *ngFor="let wp of actualWps">
                   <tr>
                     <td class="wp-title">{{ wp.title }}</td>
-                    <ng-container *ngFor="let item of period">
+                    <ng-container *ngFor="let type of indicatorTypes">
                       <td>
-                        <mat-icon
+                        {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
+
+                        <!-- <mat-icon
                           class="icon-sub-table-2"
                           color="primary"
                           *ngIf="
@@ -3904,9 +3936,11 @@
                             ][item.id] == true
                           "
                           >close</mat-icon
-                        >
+                        > -->
                       </td>
                     </ng-container>
+                    <td>{{ allData[wp.ost_wp.wp_official_code + '-melia']?.length }}</td>
+
                     <!-- <td>
                       {{
                         getPercentageForeachPartnerWp(
@@ -3916,11 +3950,11 @@
                       }}%
                     </td> -->
                     <td>
-                      {{
-                        roundNumber(
-                          wp_budgets[partner.code][wp.ost_wp.wp_official_code]
-                        ) | number
-                      }}
+                      {{ roundNumbers([
+                        wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code],
+                        wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-melia'],
+                        wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-Cross-Cutting']
+                      ]) | number }}
                     </td>
                     <td>
                       {{
@@ -3933,16 +3967,20 @@
                 </ng-container>
                 <tr class="total">
                   <td><div class="subtotal">Total</div></td>
-                  <ng-container *ngFor="let item of period">
+                  <ng-container *ngFor="let type of indicatorTypes">
                     <td>
+                    {{ getTotalIndAllValues(perAllValuesIndicator, type) }}
+                      </td>
+                    <!-- <td>
                       <mat-icon
                         class="icon-sub-table-2"
                         color="primary"
                         *ngIf="finalPeriodValForPartner(partner.code, item.id)"
                         >close</mat-icon
                       >
-                    </td>
+                    </td> -->
                   </ng-container>
+                  <td>{{ getAllMeliasLength() }}</td>
                   <!-- <td>
                     {{
                       getTotalPercentageForEachPartner(
@@ -4163,15 +4201,9 @@
                                 ]
                               "
                               [disabled]="
-                                (perValues[partner.code][
-                                  wp.ost_wp.wp_official_code
-                                ][item.id] | inQue) ||
                                 !+wp_budgets[partner.code][
                                   wp.ost_wp.wp_official_code
                                 ] ||
-                                noValuesAssigned[partner.code][
-                                  wp.ost_wp.wp_official_code
-                                ][item.id] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4204,15 +4236,9 @@
                                 ]
                               "
                               [disabled]="
-                                (perValues[partner.code][
-                                  wp.ost_wp.wp_official_code
-                                ][item.id] | inQue) ||
                                 !+wp_budgets[partner.code][
                                   wp.ost_wp.wp_official_code
                                 ] ||
-                                noValuesAssigned[partner.code][
-                                  wp.ost_wp.wp_official_code
-                                ][item.id] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4333,6 +4359,8 @@
                       ]
                     "
                   >
+                  <ng-container *ngIf="item.category == 'OUTCOME' || item.category == 'EOI'">
+
                     <tr
                       [ngClass]="{
                         itemHasError:
@@ -4392,7 +4420,7 @@
 
                     
                     </tr>
-                    
+                    </ng-container>
                 </ng-container>
                   <tr class="total">
                     <td [colSpan]="1">
@@ -4612,15 +4640,9 @@
                                 ]
                               "
                               [disabled]="
-                                (perValues[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ][item.id] | inQue) ||
                                 !+wp_budgets[partner.code][
                                   wp.ost_wp.wp_official_code + '-melia'
                                 ] ||
-                                noValuesAssigned[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ][item.id] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4653,15 +4675,9 @@
                                 ]
                               "
                               [disabled]="
-                                (perValues[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ][item.id] | inQue) ||
                                 !+wp_budgets[partner.code][
                                   wp.ost_wp.wp_official_code + '-melia'
                                 ] ||
-                                noValuesAssigned[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ][item.id] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4858,15 +4874,9 @@
                                   ]
                                 "
                                 [disabled]="
-                                  (perValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ][item.id] | inQue) ||
                                   !+wp_budgets[partner.code][
                                     wp.ost_wp.wp_official_code + '-Cross-Cutting'
                                   ] ||
-                                  noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ][item.id] ||
                                   partnersStatus[partner.code] ||
                                   initStatus == 'Pending' ||
                                   initStatus == 'Approved' ||
@@ -4899,15 +4909,9 @@
                                   ]
                                 "
                                 [disabled]="
-                                  (perValues[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ][item.id] | inQue) ||
                                   !+wp_budgets[partner.code][
                                     wp.ost_wp.wp_official_code + '-Cross-Cutting'
                                   ] ||
-                                  noValuesAssigned[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ][item.id] ||
                                   partnersStatus[partner.code] ||
                                   initStatus == 'Pending' ||
                                   initStatus == 'Approved' ||
@@ -5155,15 +5159,9 @@
                                 ]
                               "
                               [disabled]="
-                                (perValues[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ][item.id] | inQue) ||
                                 !+wp_budgets[partner.code][
                                   wp.ost_wp.wp_official_code + '-project'
                                 ] ||
-                                noValuesAssigned[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ][item.id] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5196,15 +5194,9 @@
                                 ]
                               "
                               [disabled]="
-                                (perValues[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ][item.id] | inQue) ||
                                 !+wp_budgets[partner.code][
                                   wp.ost_wp.wp_official_code + '-project'
                                 ] ||
-                                noValuesAssigned[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ][item.id] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||

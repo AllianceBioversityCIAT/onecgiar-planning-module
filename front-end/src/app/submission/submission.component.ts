@@ -157,7 +157,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
   
   timeCalc: any;
-  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean) { 
+  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean) {
     if (this.timeCalc) clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
       let percentValue;
@@ -232,7 +232,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     );
     this.getInitStatus(this.initiative_data);
     // localStorage.setItem('initiatives', JSON.stringify(this.values));
-  }
+  } 
 
   budgetTime: any;
   async wpBudgetChange(partner_code: any, wp_id: any, budget: any) {
@@ -274,7 +274,11 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   roundNumber(value: number) {
     return Math.round(value);
   }
-
+  roundNumbers(values: number[]): number {
+    const sum = values.reduce((acc, val) => acc + (Number(val) || 0), 0);
+    return Math.round(sum);
+  }
+  
   toggleActualValues(partner_code: any, wp_official_code: any) {
     this.toggleValues[partner_code][wp_official_code] =
       !this.toggleValues[partner_code][wp_official_code];
@@ -425,7 +429,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     per_id: number,
     category: string,
     event: any
-  ) { 
+  ) {
     if (
       !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
         true
@@ -476,7 +480,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id
     );
     this.getInitStatus(this.initiative_data);
-  } 
+  }
 
   async checkAll(
     partner_code: any,
@@ -721,7 +725,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     }
 
     for (let wp of this.wps) {
-      if(wp.category == 'WP' || wp.category == 'Projects')
+      // if(wp.category == 'WP' || wp.category == 'Projects')
+      if(wp.category == 'WP')
         if(this.allData[wp.ost_wp.wp_official_code]) {
           this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
             this.indicatorTypes.forEach((type) => {
@@ -1630,6 +1635,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.sammaryCalc();
     this.allvalueChange();
     this.setIndecatorValues();
+    this.getAllMeliasLength()
   }
 
   checkEOI(category: any) {
@@ -1766,33 +1772,33 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       });
     }
  
-    if (ost_wp_acronym === 'AOW00') {
-      const meliaMap = new Map<string, any>();
-      const nonMeliaItems: any[] = [];
+    // if (ost_wp_acronym === 'AOW00') {
+    //   const meliaMap = new Map<string, any>();
+    //   const nonMeliaItems: any[] = [];
     
-      for (const item of wp_data) {
-        if (item.category !== 'Melia') {
-          nonMeliaItems.push(item);
-          continue;
-        }
+    //   for (const item of wp_data) {
+    //     if (item.category !== 'Melia') {
+    //       nonMeliaItems.push(item);
+    //       continue;
+    //     }
     
-        const key = `${item.id}`;
+    //     const key = `${item.id}`;
     
-        if (!meliaMap.has(key)) {
-          meliaMap.set(key, {
-            ...item,
-            results: item.results ?? '',
-          });
-        } else {
-          const existing = meliaMap.get(key);
-          if (item.results && !existing.results.includes(item.results)) {
-            existing.results += `, ${item.results}`;
-          }
-        }
-      }
+    //     if (!meliaMap.has(key)) {
+    //       meliaMap.set(key, {
+    //         ...item,
+    //         results: item.results ?? '',
+    //       });
+    //     } else {
+    //       const existing = meliaMap.get(key);
+    //       if (item.results && !existing.results.includes(item.results)) {
+    //         existing.results += `, ${item.results}`;
+    //       }
+    //     }
+    //   }
     
-      wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
-    }
+    //   wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
+    // }
     
 
 
@@ -2058,7 +2064,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     };
   }
 
-  validateWp(partner_code: any, wp_id: any) {
+  validateWp(partner_code: any, wp_id: any) { 
     let valid = true;
     let wpChecked = false;
     let message = "";
@@ -2070,27 +2076,27 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         message: message,
       };
     }
-    this.partnersData[partner_code][wp_id].forEach((item: any) => {
-      if (item.category != "EOI" && item.category != "OUTCOME" && item.category != "Geographic-Scope" && item.category != "partners") {
-        let perChecked = Object.values(
-          this.perValues[partner_code][wp_id][item.id]
-        ).reduce((a: any, b: any) => a || b);
-        if (perChecked && !this.noValuesAssigned[partner_code][wp_id][item.id]) {
-          hasBudget = true;
-        }
-        if (
-          perChecked &&
-          !+this.values[partner_code][wp_id][item.id] &&
-          !this.noValuesAssigned[partner_code][wp_id][item.id]
-        ) {
-          valid = false;
-          this.itemHasError[partner_code][wp_id][item.id] = true;
-        } else {
-          this.itemHasError[partner_code][wp_id][item.id] = false;
-        }
-        if (perChecked) wpChecked = true;
-      }
-    });
+    // this.partnersData[partner_code][wp_id].forEach((item: any) => {
+    //   if (item.category != "EOI" && item.category != "OUTCOME" && item.category != "Geographic-Scope" && item.category != "partners") {
+    //     let perChecked = Object.values(
+    //       this.perValues[partner_code][wp_id][item.id]
+    //     ).reduce((a: any, b: any) => a || b);
+    //     if (perChecked && !this.noValuesAssigned[partner_code][wp_id][item.id]) {
+    //       hasBudget = true;
+    //     }
+    //     if (
+    //       perChecked &&
+    //       !+this.values[partner_code][wp_id][item.id] &&
+    //       !this.noValuesAssigned[partner_code][wp_id][item.id]
+    //     ) {
+    //       valid = false;
+    //       this.itemHasError[partner_code][wp_id][item.id] = true;
+    //     } else {
+    //       this.itemHasError[partner_code][wp_id][item.id] = false;
+    //     }
+    //     if (perChecked) wpChecked = true;
+    //   }
+    // });
 
     this.errors[partner_code][wp_id] = null;
     if (
@@ -2102,8 +2108,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         "There is a work package with a budget not disaggregated";
       message = "There is a work package with a budget not disaggregated";
     } else if (
-      wpChecked &&
-      hasBudget &&
+      // wpChecked &&
+      // hasBudget &&
       (Math.round(total) !== 0 &&  Number(this.wp_budgets[partner_code][wp_id]) !== 0)
     ) {
       valid = false;
@@ -2134,7 +2140,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       valid: valid,
       message: message,
     };
-  }
+  } 
   async excel() {
     await this.submissionService.excelCurrent(this.params.id);
   }
@@ -2257,7 +2263,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
  
   setIndecatorValues() {
     for (const wp of this.wps) {
-      if (wp.category === 'WP' || wp.category === 'Projects') {
+      // if (wp.category === 'WP' || wp.category === 'Projects') {
+      if (wp.category === 'WP') {
         const group = wp.ost_wp?.wp_official_code;
         if (!group) continue;
   
@@ -2293,5 +2300,35 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       return 0
     }
   
+  }
+
+
+  getTotalIndAllValues(data: any, type: string): number {
+  if (!data) return 0;
+
+  let total = 0;
+
+  for (const uuid in data) {
+    const item = data[uuid];
+
+    total += item[type] || 0;
+
+    for (const key in item) {
+      const value = item[key];
+      if (typeof value === 'object' && value !== null && value[type] !== undefined) {
+        total += value[type] || 0;
+      }
+    }
+  }
+
+  return total;
+}
+
+  getAllMeliasLength() {
+    let total = 0;
+    for(let wp of this.actualWps) {
+      total += this.allData[wp.ost_wp.wp_official_code + '-melia']?.length
+    }
+    return total
   }
 }

@@ -797,7 +797,7 @@ export class SubmissionService {
   }
   async saveResultDataValue(id, data: any, user) {
     const initiativeId = id;
-
+    console.log(data)
     const {
       partner_code,
       wp_id,
@@ -841,62 +841,64 @@ export class SubmissionService {
       no_budget: no_budget,
     }
 
+    if(oldResult) {
+      const objDifference = this.getDifference(oldResult, newValues);
 
-    const objDifference = this.getDifference(oldResult, newValues);
-
-    Object.keys(objDifference).forEach(async key => {
-      const value = objDifference[key];
-      const history = this.historyRepository.create();
-
-      if (key == 'no_budget') {
-        history.resource_property = value ? 'Checked result as no budget assigned' : 'unchecked result as no budget assigned';
-        history.old_value = value == true ? 'False' : 'True';
-        history.new_value = value == true ? 'True' : 'False';
-      }
-      //  else if (key == 'value') {
-      //   if (oldResult.value == 0 && newValues.value != 0) {
-      //     history.resource_property = 'Add percentage';
-      //     history.old_value = null;
-      //     history.new_value = newValues.value.toString() + '%';
-      //   } else if (oldResult.value != 0 && newValues.value != 0) {
-      //     history.resource_property = 'Edit percentage';
-      //     history.old_value = oldResult.value.toString() + '%';
-      //     history.new_value = newValues.value.toString() + '%';
-      //   } else {
-      //     history.resource_property = 'Remove percentage';
-      //     history.old_value = oldResult.value.toString() + '%';
-      //     history.new_value = null;
-      //   }
-
-      // }
-       else if (key == 'budget') {
-        if (oldResult.budget == '0' && newValues.budget != '0') {
-          history.resource_property = 'Add budget';
-          history.old_value = null;
-          history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
-        } else if (oldResult.budget != '0' && newValues.budget != '0') {
-          history.resource_property = 'Edit budget';
-          history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
-          history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
-        } else {
-          history.resource_property = 'Remove budget';
-          history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
-          history.new_value = null;
+      Object.keys(objDifference).forEach(async key => {
+        const value = objDifference[key];
+        const history = this.historyRepository.create();
+  
+        if (key == 'no_budget') {
+          history.resource_property = value ? 'Checked result as no budget assigned' : 'unchecked result as no budget assigned';
+          history.old_value = value == true ? 'False' : 'True';
+          history.new_value = value == true ? 'True' : 'False';
         }
-
-      }
-      history.item_name = item_title;
-      history.user_id = user.id;
-      history.initiative_id = id;
-      history.organization_id = partner_code;
-      history.wp_id = workPackageObject.wp_id;
-
-      await this.historyRepository.save(history);
-      await this.initiativeRepository.update(initiativeId, {
-        latest_history_id: history.id
+        //  else if (key == 'value') {
+        //   if (oldResult.value == 0 && newValues.value != 0) {
+        //     history.resource_property = 'Add percentage';
+        //     history.old_value = null;
+        //     history.new_value = newValues.value.toString() + '%';
+        //   } else if (oldResult.value != 0 && newValues.value != 0) {
+        //     history.resource_property = 'Edit percentage';
+        //     history.old_value = oldResult.value.toString() + '%';
+        //     history.new_value = newValues.value.toString() + '%';
+        //   } else {
+        //     history.resource_property = 'Remove percentage';
+        //     history.old_value = oldResult.value.toString() + '%';
+        //     history.new_value = null;
+        //   }
+  
+        // }
+         else if (key == 'budget') {
+          if (oldResult.budget == '0' && newValues.budget != '0') {
+            history.resource_property = 'Add budget';
+            history.old_value = null;
+            history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
+          } else if (oldResult.budget != '0' && newValues.budget != '0') {
+            history.resource_property = 'Edit budget';
+            history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
+            history.new_value = newValues.budget == '' ? '0' : Number(newValues.budget).toString();
+          } else {
+            history.resource_property = 'Remove budget';
+            history.old_value = oldResult.budget == '' ? '0' : Number(oldResult.budget).toString();
+            history.new_value = null;
+          }
+  
+        }
+        history.item_name = item_title;
+        history.user_id = user.id;
+        history.initiative_id = id;
+        history.organization_id = partner_code;
+        history.wp_id = workPackageObject.wp_id;
+  
+        await this.historyRepository.save(history);
+        await this.initiativeRepository.update(initiativeId, {
+          latest_history_id: history.id
+        });
       });
-    });
-
+  
+    }
+    
 
     if (oldResult) {
       oldResult.value = percent_value;
@@ -904,7 +906,23 @@ export class SubmissionService {
       oldResult.no_budget = no_budget;
       oldResult.phase_id = phase_id
       await this.resultRepository.save(oldResult);
-    } else throw new NotFoundException();
+    } 
+    else {
+      const newResult = this.resultRepository.create();
+      newResult.budget = budget_value;
+      newResult.initiative = initiativeObject;
+
+      newResult.value = percent_value;
+      newResult.no_budget = no_budget;
+      newResult.phase_id = phase_id;
+      newResult.budget = budget_value;
+      newResult.result_uuid = item_id;
+      newResult.organization = organizationObject;
+      newResult.workPackage = workPackageObject;
+      await this.resultRepository.save(newResult);
+
+    }
+    // else throw new NotFoundException();
 
     await this.initiativeRepository.update(initiativeId, {
       last_update_at: new Date(),
@@ -931,7 +949,7 @@ export class SubmissionService {
     return parts.join(",");
   }
 
-  async saveWpBudget(initiativeId: number, data: any, user) {
+  async saveWpBudget(initiativeId: number, data: any, user) { 
     const { partner_code, wp_id, budget, phaseId } = data;
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
@@ -1050,21 +1068,23 @@ export class SubmissionService {
         phase_id: phaseId
       }
     });
-
-    const updatedResults = resultsForThisBudget.map(result => {
-      const percentage = (Number(result.budget) / budget) * 100;
-
-      result.value = +percentage;
-      return result;
-    });
-    await this.resultRepository.save(updatedResults);
-
+    if(budget) {
+      const updatedResults = resultsForThisBudget.map(result => {
+        const percentage = (Number(result.budget) / budget) * 100;
+  
+        result.value = +percentage;
+        return result;
+      });
+      await this.resultRepository.save(updatedResults);
+  
+    }
+   
 
     await this.initiativeRepository.update(initiativeId, {
       last_update_at: new Date(),
     });
     return { message: 'Data saved' };
-  }
+  } 
 
   async getWpsBudgets(initiative_id: number, phaseId: any) {
     const initiative = await this.initService.findOne(initiative_id);
