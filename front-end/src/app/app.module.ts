@@ -104,6 +104,7 @@ import { TableComponent } from './archive/table/table.component';
 import { VersionComponent } from './archive/version/version.component';
 import { GrantedAccessPipePipe } from './team-members/granted-access-pipe.pipe';
 import { CenterValidateComponent } from './submission/center-validate/center-validate.component';
+import { QualitativeIndicatorsComponent } from './submission/qualitative-indicators/qualitative-indicators.component';
 
 
 @NgModule({
@@ -168,6 +169,7 @@ import { CenterValidateComponent } from './submission/center-validate/center-val
     VersionComponent,
     GrantedAccessPipePipe,
     CenterValidateComponent,
+    QualitativeIndicatorsComponent,
   ],
   imports: [
     BrowserModule,

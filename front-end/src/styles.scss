@@ -44,3 +44,9 @@
 .ng-select.ng-select-multiple .ng-select-container .ng-value-container .ng-value {
   white-space: normal;
 }
+::ng-deep .dialog-fit-content .mat-dialog-container {
+  max-height: unset !important;
+  height: auto !important;
+  overflow: visible !important;
+  border-radius: 10px;
+}
