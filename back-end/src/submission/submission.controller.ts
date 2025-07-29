@@ -375,41 +375,57 @@ export class SubmissionController {
             const indicatorMap = new Map<string, any>();
             const partnersMap = new Map<string, any>();
             
+            
             for (const data of filteredData) {
-              if (data.category == 'OUTPUT'){
+              if (data.category === 'OUTPUT') {
                 for (const indicator of data.indicators) {
-                  const key = `${indicator.id}_${data.group}`;
-                    const location =
-                    indicator.location === 'regional'
-                      ? `Region: ${indicator.region.map(r => r.name).join(', ')}`
-                      : indicator.location === 'country'
-                        ? `Country: ${indicator.country.map(c => c.name).join(', ')}`
-                        : 'Global';
-                    indicatorMap.set(key, {
-                      ...indicator,
-                      id: indicator.id,
-                      location: location,
-                      parent_id: data.group,
-                      results: data.title,
-                      category: 'Geographic-Scope',
-                     
-                    });
-                }
-                for (const partner of data.partners ?? []) {
-                  const key = partner.code;            
+                  let costumeId = indicator.id;
+                  let location;
+                  if (indicator.location === 'regional') {
+                      const regionNames = [...(indicator.region ?? [])].map(r => r.name).sort();
+                      location = `Region: ${regionNames.join(', ')}`;
+                      costumeId = `R_${indicator.region.map((r: any) => r.um49Code).join('-')}`;
+                  } else if (indicator.location === 'country') {
+                      const countryNames = [...(indicator.country ?? [])].map(c => c.name).sort();
+                      location = `Country: ${countryNames.join(', ')}`;
+                      costumeId = `C_${indicator.country.map((r: any) => r.code).join('-')}`;
+                  } else if(indicator.location === 'global') {
+                      location = 'Global'
+                  }
+                  const key = `${location}_${data.group}`;
                   const title = data.title?.trim();
-                
-                  if (partnersMap.has(key)) {
-                    const existing = partnersMap.get(key);
-                
+            
+                  if (indicatorMap.has(key)) {
+                    const existing = indicatorMap.get(key);
                     const titleSet = new Set(
                       existing.results.split(',').map(t => t.trim()).filter(Boolean)
                     );
                     titleSet.add(title);
                     existing.results = Array.from(titleSet).join(', ');
+                  } else {
+                    indicatorMap.set(key, {
+                      ...indicator,
+                      id: costumeId,
+                      location: location,
+                      parent_id: data.group,
+                      results: title,
+                      category: 'Geographic-Scope',
+                    });
                   }
-                
-                  else {
+                }
+            
+                for (const partner of data.partners ?? []) {
+                  const key = `${partner.code}_${data.group}`;
+                  const title = data.title?.trim();
+            
+                  if (partnersMap.has(key)) {
+                    const existing = partnersMap.get(key);
+                    const titleSet = new Set(
+                      existing.results.split(',').map(t => t.trim()).filter(Boolean)
+                    );
+                    titleSet.add(title);
+                    existing.results = Array.from(titleSet).join(', ');
+                  } else {
                     partnersMap.set(key, {
                       ...partner,
                       id: partner.code,
