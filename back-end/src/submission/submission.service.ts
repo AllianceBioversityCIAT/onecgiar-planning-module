@@ -1164,8 +1164,48 @@ export class SubmissionService {
 
     return { ConsolidatedData, merges };
   }
+  getTotalIndValues(data: any, type: string) {
+    if(data) {
+      let sum = Object.values(data).reduce((sum, item: any) => {
+        return sum + (item[type] || 0);
+      }, 0);
+      return sum;
+    } else {
+      return 0
+    }
+  
+  }
 
-  getConsolidatedData(wps: any[], period: any[]) { 
+  getTotalIndAllValues(data: any, type: string): number {
+    if (!data) return 0;
+  
+    let total = 0;
+  
+    for (const uuid in data) {
+      const item = data[uuid];
+  
+      total += item[type] || 0;
+  
+      for (const key in item) {
+        const value = item[key];
+        if (typeof value === 'object' && value !== null && value[type] !== undefined) {
+          total += value[type] || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+
+  getAllMeliasLength() {
+    let total = 0;
+    for(let wp of this.actualWps) {
+      total += this.allData[wp.ost_wp.wp_official_code].filter((d: any) => d.category == "Melia").length;
+    }
+    return total
+  }
+
+  getConsolidatedData(wps: any[], indicatorsTypes: any[]) { 
     let ConsolidatedData = [];
     let lockupArray = [];
     wps.forEach((wp: any) => {
@@ -1173,12 +1213,10 @@ export class SubmissionService {
       obj['Results'] = wp.title;
       obj['Type'] = '';
       obj['wp_official_code'] = wp.ost_wp.wp_official_code;
-      period.forEach((per: any) => {
-        obj[per.year + '-' + per.quarter] =
-          this.perValuesSammary[obj.wp_official_code][per.id] == true
-            ? 'X'
-            : '';
+      indicatorsTypes.forEach((indicator: any) => {
+        obj[indicator] = this.getTotalIndValues(this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code], indicator);
       });
+      obj['Melias'] = this.allData[wp.ost_wp.wp_official_code].filter((d: any) => d.category == "Melia").length;
       // obj['Percentage'] = this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] + '%';
       obj['Percentage'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']));
       obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsTotal[wp.ost_wp.wp_official_code]));
@@ -1188,11 +1226,10 @@ export class SubmissionService {
     obj['Results'] = 'Total';
     obj['Type'] = '';
 
-    period.forEach((per: any) => {
-      obj[per.year + '-' + per.quarter] = this.finalPeriodVal(per.id)
-        ? 'X'
-        : '';
+    indicatorsTypes.forEach((indicator: any) => {
+      obj[indicator] = this.getTotalIndAllValues(this.perAllValuesIndicator, indicator);
     });
+    obj['Melias'] = this.getAllMeliasLength();
     // (obj['Percentage'] = this.roundNumber(this.wpsTotalSum) + '%'),
       (obj['Percentage'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsProjectsTotal))),
       (obj['Budgets'] = this.formatWithThousandsSeparator(this.roundNumber(this.summaryBudgetsAllTotal))),
@@ -1210,7 +1247,7 @@ export class SubmissionService {
 
 
 
-  getConsolidatedDataForPartners(wps: any[], period: any[], partner_code: number) {
+  getConsolidatedDataForPartners(wps: any[], indicatorsTypes: any[], partner_code: number) {
     let ConsolidatedDataForPartners = [];
     let lockupArrayForPartners = [];
 
@@ -1221,12 +1258,10 @@ export class SubmissionService {
       obj['Type'] = '';
       obj['wp_official_code'] = wp.ost_wp.wp_official_code;
 
-      period.forEach((per: any) => {
-        obj[per.year + '-' + per.quarter] =
-          this.perValuesSammaryForPartner[partner_code][obj.wp_official_code][per.id] == true
-            ? 'X'
-            : '';
+      indicatorsTypes.forEach((indicator: any) => {
+        obj[indicator] = this.getTotalIndValues(this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code], indicator);
       });
+      obj['Melias'] = this.allData[wp.ost_wp.wp_official_code].filter((d: any) => d.category == "Melia").length;
       // obj['Percentage'] = this.totals[partner_code][wp.ost_wp.wp_official_code] + '%';
       obj['Percentage'] = this.formatWithThousandsSeparator(this.roundNumber(this.wp_budgets[partner_code][
         wp.ost_wp.wp_official_code + '-project']));
@@ -1237,11 +1272,10 @@ export class SubmissionService {
     let obj: any = {};
     obj['Results'] = 'Total';
     obj['Type'] = '';
-    period.forEach((per: any) => {
-      obj[per.year + '-' + per.quarter] = this.finalPeriodValForPartner(partner_code, per.id)
-        ? 'X'
-        : '';
+    indicatorsTypes.forEach((indicator: any) => {
+      obj[indicator] = this.getTotalIndAllValues(this.perAllValuesIndicator, indicator);
     });
+    obj['Melias'] = this.getAllMeliasLength();
     (obj['Percentage'] = this.getTotalBudgetForEachPartnerProject(this.wp_budgets[partner_code])),
       (obj['Budgets'] = this.wp_budgets[partner_code]),
       ConsolidatedDataForPartners.push(obj)
@@ -1256,7 +1290,7 @@ export class SubmissionService {
     };
   }
 
-  getAllData(wps: any[], period: any[]) {
+  getAllData(wps: any[], indicatorTypes: any[]) {
     let data;
     let newArray = [];
 
@@ -1270,13 +1304,12 @@ export class SubmissionService {
             ? d?.ipsr.title + ' (' + d.value + ')'
             : d.title || d.name;
         obj['Type'] = this.getCategory(d.category);
-        period.forEach((per: any) => {
-          obj[per.year + '-' + per.quarter] =
-            this.perAllValues[wp.ost_wp.wp_official_code][obj.id][per.id] ==
-              true
-              ? 'X'
-              : '';
+        indicatorTypes.forEach((indicator: any) => {
+          obj[indicator] =
+            this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[obj.id][indicator] ?? '';
         });
+        obj['Melias'] = '';
+
         // obj['BudgetPercentage'] = this.toggleSummaryValues[
         //   wp.ost_wp.wp_official_code
         // ]
@@ -1294,14 +1327,11 @@ export class SubmissionService {
       let obj: any = {};
       obj['WP_Results'] = 'Subtotal';
       obj['Type'] = '';
-      period.forEach((per: any) => {
-        obj[per.year + '-' + per.quarter] = this.finalItemPeriodVal(
-          wp.ost_wp.wp_official_code,
-          per.id,
-        )
-          ? 'X'
-          : '';
+      indicatorTypes.forEach((indicator: any) => {
+        obj[indicator] = wp.category == 'WP' ? this.getTotalIndValues(this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code], indicator) : '';
       });
+      obj['Melias'] = '';
+
       // obj['BudgetPercentage'] = this.toggleSummaryValues[
       //   wp.ost_wp.wp_official_code
       // ]
@@ -1375,7 +1405,7 @@ export class SubmissionService {
   }
   
 
-  getPartnersData(wps: any[], period: any[], partners: any[], organization: any) {
+  getPartnersData(wps: any[], indicatorTypes: any[], partners: any[], organization: any) {
     let data;
     let newArray = [];
 
@@ -1396,14 +1426,12 @@ export class SubmissionService {
                 ? d?.ipsr.title + ' (' + d.value + ')'
                 : d.title || d.name;
             obj['Type'] = this.getCategory(d.category);
-            period.forEach((per: any) => {
-              obj[per?.year + '-' + per?.quarter] =
-                this.perValues[partner?.code][wp?.ost_wp?.wp_official_code][
-                  obj?.id
-                ][per?.id] == true
-                  ? 'X'
-                  : '';
+            indicatorTypes.forEach((indicator: any) => {
+              obj[indicator] =
+                this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[obj.id][indicator] ?? '';
             });
+            obj['Melias'] = '';
+
             // obj['Percentage'] = this.toggleValues[partner.code][
             //   wp.ost_wp.wp_official_code
             // ]
@@ -1431,14 +1459,11 @@ export class SubmissionService {
 
         obj['WP_Results'] = 'Subtotal';
         obj['Type'] = '';
-        period.forEach((per: any) => {
-          obj[per?.year + '-' + per?.quarter] = this.finalItemPeriodVal(
-            wp?.ost_wp.wp_official_code,
-            per?.id,
-          )
-            ? 'X'
-            : '';
+        indicatorTypes.forEach((indicator: any) => {
+          obj[indicator] = wp.category == 'WP' ? this.getTotalIndValues(this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code], indicator) : '';
         });
+        obj['Melias'] = '';
+
         // obj['Percentage'] = this.toggleValues[partner.code][
         //   wp.ost_wp.wp_official_code
         // ]
@@ -1486,6 +1511,11 @@ export class SubmissionService {
   perValuesSammary: any = {};
   perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
+  perAllValuesIndicator: any = {};
+  indicatorTypes: Array<any> = [];
+  indicatorTypesTitles: Array<any> = [];
+  highLevelOutputIndicatorTypes: Array<any> = [];
+  outcomeIndicatorTypes: Array<any> = [];
   sammaryTotal: any = {};
   sammaryTotalConsolidated: any = {};
   results: any;
@@ -1540,11 +1570,11 @@ export class SubmissionService {
   }
 
 
-  getHeader(submission, title, initiative) {
+  getHeader(submission, title, initiative) { 
     let period_ = [];
-    this.period.forEach((period) => {
+    this.indicatorTypesTitles.forEach((period) => {
       period_.push({
-        v: period.year + '-' + period.quarter,
+        v: period,
         s: {
           fill: { fgColor: { rgb: '3d425e' } },
           font: { color: { rgb: 'ffffff' } },
@@ -1605,10 +1635,10 @@ export class SubmissionService {
           },
         },
         'Work Packages (WP)/Results',
-        ...this.period.map((d, index) => {
+        ...this.indicatorTypesTitles.map((d, index) => {
           if (index == 0)
             return {
-              v: this.period[0].year,
+              v: '2026',
               s: {
                 fill: { fgColor: { rgb: '3d425e' } },
                 font: { color: { rgb: 'ffffff' } },
@@ -1637,7 +1667,7 @@ export class SubmissionService {
             },
           },
         },
-        ...this.period.map((d, index) => {
+        ...this.indicatorTypesTitles.map((d, index) => {
           return {
             v: 'Implementation Timeline',
             s: {
@@ -1669,7 +1699,7 @@ export class SubmissionService {
         'Work Packages (WP)/Results',
         'Work Packages (WP)/Results',
         'Type',
-        ...this.period.map((d, index) => {
+        ...this.indicatorTypesTitles.map((d, index) => {
           return 'Implementation Timeline';
         }),
         'Budget',
@@ -1706,7 +1736,7 @@ export class SubmissionService {
         },
       ],
     ];
-  }
+  } 
   savedValues: any = null;
   noValuesAssigned: any = {};
   submission_data: any;
@@ -1793,6 +1823,38 @@ export class SubmissionService {
       this.wp_budgets = await this.getWpsBudgets(initId, this.phase.id);
 
     }
+    this.indicatorTypesTitles = [
+      'Policy Change',
+      'Innovation Use',
+      'Other Outcomes',
+      'knowledge products',
+      'Innovation Development)',
+      'Capacity Sharing',
+      'Others outputs',
+      'Melias'
+    ];
+
+    this.indicatorTypes = [
+      'Number of Policy (Policy Change)',
+      'Innovation Use',
+      'custom-OUTCOME',
+      'Number of knowledge products',
+      'Number of innovations (innovation development)',
+      'Number of people trained (capacity sharing for development)',
+      'custom-OUTPUT'
+    ];
+
+    this.highLevelOutputIndicatorTypes = [
+      'Number of knowledge products',
+      'Number of innovations (innovation development)',
+      'Number of people trained (capacity sharing for development)',
+      'custom-OUTPUT'
+    ];
+    this.outcomeIndicatorTypes = [
+      'Number of Policy (Policy Change)',
+      'Innovation Use',
+      'custom-OUTCOME'
+    ];
 
     cross_data.map((d: any) => {
       d['category'] = 'Cross Cutting';
@@ -2113,7 +2175,7 @@ export class SubmissionService {
 
     const { ConsolidatedData } = this.getConsolidatedData(
       this.actualWps,
-      this.period,
+      this.indicatorTypes
     );
 
     this.GeographicScopeWp = this.wps.filter((d: any) => d.category == 'Geographic-Scope');
@@ -2160,10 +2222,10 @@ export class SubmissionService {
 
     this.wps = sorted;
 
-    let { lockupArray } = this.getConsolidatedData(this.wps, this.period);
+    let { lockupArray } = this.getConsolidatedData(this.wps, this.indicatorTypes);
 
 
-    const allData = this.getAllData(this.wps, this.period);
+    let allData = this.getAllData(this.wps, this.indicatorTypes);
     let allDataGeo = await this.getAllDataForGeoAndPartner(this.GeographicScopeWp, [this.period[0]], partners, submissionId);
     let allDataPartner = await this.getAllDataForGeoAndPartner(this.partnersWp, [this.period[0]], partners, submissionId);
     const lockupArrayForGeo = this.GeographicScopeWp.map((d:any) => d.ost_wp.wp_official_code);
@@ -2171,9 +2233,9 @@ export class SubmissionService {
 
     let partnersData;
     if (!organization)
-      partnersData = this.getPartnersData(this.wps, this.period, partners, null);
+      partnersData = this.getPartnersData(this.wps, this.indicatorTypes, partners, null);
     else
-      partnersData = this.getPartnersData(this.wps, this.period, partners, organization);
+      partnersData = this.getPartnersData(this.wps, this.indicatorTypes, partners, organization);
 
     const merges = [];
     const file_name = 'All-planning-.xlsx';
@@ -2186,11 +2248,11 @@ export class SubmissionService {
 
     merges.push({
       s: { c: 0, r: 0 },
-      e: { c: 3 + this.period.length + 1, r: 0 },
+      e: { c: 3 + this.indicatorTypesTitles.length + 1, r: 0 },
     });
     merges.push({
       s: { c: 0, r: 1 },
-      e: { c: 3 + this.period.length + 1, r: 1 },
+      e: { c: 3 + this.indicatorTypesTitles.length + 1, r: 1 },
     });
     merges.push({
       s: { c: 0, r: 2 },
@@ -2202,15 +2264,15 @@ export class SubmissionService {
     });
     merges.push({
       s: { c: 2, r: 2 },
-      e: { c: 4 + this.period.length, r: 2 },
+      e: { c: 4 + this.indicatorTypesTitles.length, r: 2 },
     });
     merges.push({
       s: { c: 3, r: 3 },
-      e: { c: 2 + this.period.length, r: 4 },
+      e: { c: 2 + this.indicatorTypesTitles.length, r: 4 },
     });
     merges.push({
-      s: { c: 2 + this.period.length + 1, r: 3 },
-      e: { c: 2 + this.period.length + 2, r: 4 },
+      s: { c: 2 + this.indicatorTypesTitles.length + 1, r: 3 },
+      e: { c: 2 + this.indicatorTypesTitles.length + 2, r: 4 },
     });
 
 
@@ -2293,6 +2355,10 @@ export class SubmissionService {
           delete object['id'];
         });
       }
+
+
+      allData = allData.map(group => this.sortByType(group));
+
       let rowStart = ArrayOfArrays.length;
       for (let i = 0; i < lockupArray.length - 1; i++) {
         ArrayOfArrays.push(
@@ -2322,7 +2388,7 @@ export class SubmissionService {
                   },
                 };
               else if (total_index == allData[i].length - 1)
-                return {
+                return { //subtotal
                   v: d,
                   s: {
                     fill: { fgColor: { rgb: '454962' } },
@@ -2343,6 +2409,27 @@ export class SubmissionService {
                       horizontal: 'center',
                       vertical: 'center',
                     },
+                  },
+                };
+              else if ((index > 1 && index <= this.indicatorTypesTitles.length + 1) && (d_.Type == "Cross Cutting" || d_.Type == "MELIA Studies") && total_index != allData[i].length - 1)
+                return {
+                  v: '',
+                  s: {
+                    fill: { fgColor: { rgb: '808080' } }
+                  },
+                };
+              else if ((index > 4 && index <= this.indicatorTypesTitles.length + 1) && (d_.Type == "Intermediate Outcome" || d_.Type == "2030 Outcome") && total_index != allData[i].length - 1)
+                return {
+                  v: '',
+                  s: {
+                    fill: { fgColor: { rgb: '808080' } }
+                  },
+                };
+              else if ((index > 1 && index <= this.highLevelOutputIndicatorTypes.length || index == this.indicatorTypesTitles.length + 1) && d_.Type == "High Level Output" && total_index != allData[i].length - 1)
+                return {
+                  v: '',
+                  s: {
+                    fill: { fgColor: { rgb: '808080' } }
                   },
                 };
               else
@@ -2489,67 +2576,67 @@ export class SubmissionService {
 
 
       /*generate formula for checks period in (summary)*/
-      let startPeriodColumn = 3;
-      let endPeriodColumn = startPeriodColumn + this.period.length;
-      let startPeriodRows = 6;
-      for (let row = startPeriodRows; row <= rowCount; row++) {
-        for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      // let startPeriodColumn = 3;
+      // let endPeriodColumn = startPeriodColumn + this.period.length;
+      // let startPeriodRows = 6;
+      // for (let row = startPeriodRows; row <= rowCount; row++) {
+      //   for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+      //     let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
 
-          let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
+      //     let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
 
-          ws[cellRef] = {
-            t: 'n',
-            f: `=IF(OR(${formula}),"X","")`,
-            s: {
-              alignment: {
-                horizontal: 'center',
-                vertical: 'center',
-              },
-            },
-          }
-        }
-      }
-
-
+      //     ws[cellRef] = {
+      //       t: 'n',
+      //       f: `=IF(OR(${formula}),"X","")`,
+      //       s: {
+      //         alignment: {
+      //           horizontal: 'center',
+      //           vertical: 'center',
+      //         },
+      //       },
+      //     }
+      //   }
+      // }
 
 
 
-      let lastRows = [this.actualWps.length + 6]
-      for (let wp of this.wps) {
-        lastRows.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
-      }
+
+
+      // let lastRows = [this.actualWps.length + 6]
+      // for (let wp of this.wps) {
+      //   lastRows.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
+      // }
 
 
 
-      let newValueslastRows = lastRows.map((curr, i, array) => {
-        return array[i] += array[i - 1] ? array[i - 1] : 0
-      })
+      // let newValueslastRows = lastRows.map((curr, i, array) => {
+      //   return array[i] += array[i - 1] ? array[i - 1] : 0
+      // })
 
 
-      for (let lastRowForeachWp of newValueslastRows) {
-        for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+      // for (let lastRowForeachWp of newValueslastRows) {
+      //   for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
 
-          let cellRef = XLSX.utils.encode_cell({ r: lastRowForeachWp, c: col });
+      //     let cellRef = XLSX.utils.encode_cell({ r: lastRowForeachWp, c: col });
 
-          let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
+      //     let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
 
-          ws[cellRef] = {
-            t: 'n',
-            f: `=IF(OR(${formula}),"X","")`,
-            s: {
-              fill: { fgColor: { rgb: '454962' } },
-              font: { color: { rgb: 'ffffff' } },
-              alignment: {
-                horizontal: 'center',
-                vertical: 'center',
-              },
-            },
-          }
+      //     ws[cellRef] = {
+      //       t: 'n',
+      //       f: `=IF(OR(${formula}),"X","")`,
+      //       s: {
+      //         fill: { fgColor: { rgb: '454962' } },
+      //         font: { color: { rgb: 'ffffff' } },
+      //         alignment: {
+      //           horizontal: 'center',
+      //           vertical: 'center',
+      //         },
+      //       },
+      //     }
 
 
-        }
-      }
+      //   }
+      // }
       /*generate formula for checks period in (summary)*/
 
       ws['!merges'] = merges;
@@ -2588,7 +2675,7 @@ export class SubmissionService {
 
       let { ConsolidatedDataForPartners } = this.getConsolidatedDataForPartners(
         this.actualWps,
-        this.period,
+        this.indicatorTypes,
         partner.code
       );
       ConsolidatedDataForPartners.forEach((object) => {
@@ -2681,6 +2768,7 @@ export class SubmissionService {
 
       let rowStart = ArrayOfArrays.length;
       for (let i = 0; i < lockupArray.length - 1; i++) {
+        partnersData[indexPartner][i] = this.sortByType(partnersData[indexPartner][i]);
         ArrayOfArrays?.push(
           ...partnersData[indexPartner][i]?.map((d_, total_index) => [
             {
@@ -2731,6 +2819,27 @@ export class SubmissionService {
                     },
                   },
                 };
+                else if ((index > 1 && index <= this.indicatorTypesTitles.length + 1) && (d_.Type == "Cross Cutting" || d_.Type == "MELIA Studies") && total_index != partnersData[indexPartner][i].length - 1)
+                  return {
+                    v: '',
+                    s: {
+                      fill: { fgColor: { rgb: '808080' } }
+                    },
+                  };
+                else if ((index > 4 && index <= this.indicatorTypesTitles.length + 1) && (d_.Type == "Intermediate Outcome" || d_.Type == "2030 Outcome") && total_index != partnersData[indexPartner][i].length - 1)
+                  return {
+                    v: '',
+                    s: {
+                      fill: { fgColor: { rgb: '808080' } }
+                    },
+                  };
+                else if ((index > 1 && index <= this.highLevelOutputIndicatorTypes.length || index == this.indicatorTypesTitles.length + 1) && d_.Type == "High Level Output" && total_index != partnersData[indexPartner][i].length - 1)
+                  return {
+                    v: '',
+                    s: {
+                      fill: { fgColor: { rgb: '808080' } }
+                    },
+                  };
               else {
                 return {
                   v: String(d),
@@ -2760,11 +2869,11 @@ export class SubmissionService {
 
       mergesPartners.push({
         s: { c: 0, r: 0 },
-        e: { c: 3 + this.period.length + 1, r: 0 },
+        e: { c: 3 + this.indicatorTypesTitles.length + 1, r: 0 },
       });
       mergesPartners.push({
         s: { c: 0, r: 1 },
-        e: { c: 3 + this.period.length + 1, r: 1 },
+        e: { c: 3 + this.indicatorTypesTitles.length + 1, r: 1 },
       });
       mergesPartners.push({
         s: { c: 0, r: 2 },
@@ -2776,15 +2885,15 @@ export class SubmissionService {
       });
       mergesPartners.push({
         s: { c: 2, r: 2 },
-        e: { c: 4 + this.period.length, r: 2 },
+        e: { c: 4 + this.indicatorTypesTitles.length, r: 2 },
       });
       mergesPartners.push({
         s: { c: 3, r: 3 },
-        e: { c: 2 + this.period.length, r: 4 },
+        e: { c: 2 + this.indicatorTypesTitles.length, r: 4 },
       });
       mergesPartners.push({
-        s: { c: 2 + this.period.length + 1, r: 3 },
-        e: { c: 2 + this.period.length + 2, r: 4 },
+        s: { c: 2 + this.indicatorTypesTitles.length + 1, r: 3 },
+        e: { c: 2 + this.indicatorTypesTitles.length + 2, r: 4 },
       });
 
       const ws = XLSX.utils.aoa_to_sheet(ArrayOfArrays);
@@ -2994,90 +3103,90 @@ export class SubmissionService {
       /*generate formula for checks period in (partners)*/
       /*generate formula for checks period for each aow in (partners)*/
 
-      let startPeriodColumn = 3;
-      let endPeriodColumn = startPeriodColumn + this.period.length;
-      let startPeriodRows = 5 + this.actualWps.length + 2;
-      for (let wp of this.wps) {
-        for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-          let arr: string[] = [];
-          for (let row = startPeriodRows; row < startPeriodRows + this.allData[wp.ost_wp.wp_official_code].length; row++) {
-            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-            arr.push(cellRef);
-          }
-          if(arr.length){
-            let ci = arr[arr.length - 1].split('');
-            ci.shift();
-            const i = +ci.join('');
-            let cellRef = XLSX.utils.encode_cell({
-              c: col,
-              r: i
-            });
+      // let startPeriodColumn = 3;
+      // let endPeriodColumn = startPeriodColumn + this.period.length;
+      // let startPeriodRows = 5 + this.actualWps.length + 2;
+      // for (let wp of this.wps) {
+      //   for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+      //     let arr: string[] = [];
+      //     for (let row = startPeriodRows; row < startPeriodRows + this.allData[wp.ost_wp.wp_official_code].length; row++) {
+      //       let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      //       arr.push(cellRef);
+      //     }
+      //     if(arr.length){
+      //       let ci = arr[arr.length - 1].split('');
+      //       ci.shift();
+      //       const i = +ci.join('');
+      //       let cellRef = XLSX.utils.encode_cell({
+      //         c: col,
+      //         r: i
+      //       });
   
-            let formula = arr.map(d => `${d}="X"`).join();
-            ws[cellRef] = {
-              t: 'n',
-              f: `=IF(OR(${formula}),"X","")`,
-              s: {
-                fill: { fgColor: { rgb: '454962' } },
-                font: { color: { rgb: 'ffffff' } },
-                alignment: {
-                  horizontal: 'center',
-                  vertical: 'center',
-                },
-              },
-            }
-          }
+      //       let formula = arr.map(d => `${d}="X"`).join();
+      //       ws[cellRef] = {
+      //         t: 'n',
+      //         f: `=IF(OR(${formula}),"X","")`,
+      //         s: {
+      //           fill: { fgColor: { rgb: '454962' } },
+      //           font: { color: { rgb: 'ffffff' } },
+      //           alignment: {
+      //             horizontal: 'center',
+      //             vertical: 'center',
+      //           },
+      //         },
+      //       }
+      //     }
     
-        }
-        startPeriodRows += this.allData[wp.ost_wp.wp_official_code].length + 1;
-      }
+      //   }
+      //   startPeriodRows += this.allData[wp.ost_wp.wp_official_code].length + 1;
+      // }
 
 
 
 
 
 
-        let x = this.actualWps.length + 6;
-        let lastRowsPartners = [x];
+      //   let x = this.actualWps.length + 6;
+      //   let lastRowsPartners = [x];
 
-        for (let wp of this.wps) {
-          const wpCode = wp.ost_wp.wp_official_code;
-          const dataList = this.allData[wpCode];
+      //   for (let wp of this.wps) {
+      //     const wpCode = wp.ost_wp.wp_official_code;
+      //     const dataList = this.allData[wpCode];
 
-          if (Array.isArray(dataList)) {
-            x += dataList.length + 1;
+      //     if (Array.isArray(dataList)) {
+      //       x += dataList.length + 1;
 
-            if (wp.category !== "Projects") {
-              lastRowsPartners.push(x);
-            }
-          }
-        }
+      //       if (wp.category !== "Projects") {
+      //         lastRowsPartners.push(x);
+      //       }
+      //     }
+      //   }
 
       
-      // Remove the first item (row total center)
-      lastRowsPartners.shift();
+      // // Remove the first item (row total center)
+      // lastRowsPartners.shift();
       
 
-        let i = 0;
-        for (let row = 6; row < this.actualWps.length + 6; row++) {
-          for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-            let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-            let cellRefrows = XLSX.utils.encode_cell({ r: lastRowsPartners[i], c: col });
+      //   let i = 0;
+      //   for (let row = 6; row < this.actualWps.length + 6; row++) {
+      //     for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
+      //       let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      //       let cellRefrows = XLSX.utils.encode_cell({ r: lastRowsPartners[i], c: col });
 
 
-            ws[cellRef] = {
-              t: 'n',
-              f: `=IF(OR(${cellRefrows}="X"),"X","")`,
-              s: {
-                alignment: {
-                  horizontal: 'center',
-                  vertical: 'center',
-                },
-              },
-            }
-          }
-          i++;
-        }
+      //       ws[cellRef] = {
+      //         t: 'n',
+      //         f: `=IF(OR(${cellRefrows}="X"),"X","")`,
+      //         s: {
+      //           alignment: {
+      //             horizontal: 'center',
+      //             vertical: 'center',
+      //           },
+      //         },
+      //       }
+      //     }
+      //     i++;
+      //   }
 
 
 
@@ -3087,35 +3196,35 @@ export class SubmissionService {
 
 
  /*generate formula for checks period for summary in (partners)*/
-      for (let col = startPeriodColumn; col < endPeriodColumn; col++) { 
-        let arr: string[] = [];
-        for (let row = 6; row < this.actualWps.length + 6; row++) {
-          let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          arr.push(cellRef);
-        }
+      // for (let col = startPeriodColumn; col < endPeriodColumn; col++) { 
+      //   let arr: string[] = [];
+      //   for (let row = 6; row < this.actualWps.length + 6; row++) {
+      //     let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      //     arr.push(cellRef);
+      //   }
 
-        let ci = arr[arr.length - 1].split('');
-        ci.shift();
+      //   let ci = arr[arr.length - 1].split('');
+      //   ci.shift();
 
-        const i = +ci.join('');
-        let cellRef = XLSX.utils.encode_cell({
-          c: col,
-          r: i
-        });
-        let formula = arr.map(d => `${d}="X"`).join();
-          ws[cellRef] = {
-            t: 'n',
-            f: `=IF(OR(${formula}),"X","")`,
-            s: {
-              fill: { fgColor: { rgb: '454962' } },
-              font: { color: { rgb: 'ffffff' } },
-              alignment: {
-                horizontal: 'center',
-                vertical: 'center',
-              },
-            },
-          }
-      } 
+      //   const i = +ci.join('');
+      //   let cellRef = XLSX.utils.encode_cell({
+      //     c: col,
+      //     r: i
+      //   });
+      //   let formula = arr.map(d => `${d}="X"`).join();
+      //     ws[cellRef] = {
+      //       t: 'n',
+      //       f: `=IF(OR(${formula}),"X","")`,
+      //       s: {
+      //         fill: { fgColor: { rgb: '454962' } },
+      //         font: { color: { rgb: 'ffffff' } },
+      //         alignment: {
+      //           horizontal: 'center',
+      //           vertical: 'center',
+      //         },
+      //       },
+      //     }
+      // } 
       /*generate formula for checks period in (partners)*/
 
 
@@ -3481,6 +3590,24 @@ export class SubmissionService {
         });
       }
     }
+
+    for (let wp of this.wps) {
+      if(wp.category == 'WP')
+        if(this.allData[wp.ost_wp.wp_official_code]) {
+          this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
+            this.indicatorTypes.forEach((type) => {
+              if (!this.perAllValuesIndicator[wp.ost_wp.wp_official_code])
+                this.perAllValuesIndicator[wp.ost_wp.wp_official_code] = {};
+              if (!this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id])
+                this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id] = {};
+              this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id][type] =
+                0;
+            });
+          });
+        }
+
+    }
+
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
         this.perValuesSammary[wp.ost_wp.wp_official_code][per.id] = false;
@@ -3735,6 +3862,8 @@ export class SubmissionService {
       });
     this.sammaryCalc();
     this.allvalueChange();
+    this.setIndecatorValues();
+
   }
 
   budgetValue(value: number, totalBudget: number) {
@@ -3850,6 +3979,8 @@ export class SubmissionService {
       });
     this.sammaryCalc();
     this.allvalueChange();
+    this.setIndecatorValues();
+
   }
 
   async updateLatestSubmitionStatus(id, data, user) {
@@ -4038,5 +4169,50 @@ export class SubmissionService {
   
     return out;
   }
+  setIndecatorValues() {
+    for (const wp of this.wps) {
+      if (wp.category === 'WP') {
+        const group = wp.ost_wp?.wp_official_code;
+        if (!group) continue;
+  
+        const allData = this.allData[group];
+        if (!Array.isArray(allData)) continue;
+  
+        if (!this.perAllValuesIndicator[group]) {
+          this.perAllValuesIndicator[group] = {};
+        }
+  
+        for (let data of allData) {
+          const dataId = data.id;
+          const indicatorValues = data.pooled_funded_indicator_values || {};
+  
+          if (!this.perAllValuesIndicator[group][dataId]) {
+            this.perAllValuesIndicator[group][dataId] = {};
+          }
+  
+          for (let key of this.indicatorTypes) {
+            this.perAllValuesIndicator[group][dataId][key] = indicatorValues[key] ?? 0;
+          }
+        }
+      }
+    }
+  }
 
-}
+  sortByType(rows: any[]) {
+    const mainRows = rows.filter(r => r.WP_Results !== 'Subtotal');
+    const subtotalRow = rows.find(r => r.WP_Results === 'Subtotal');
+    const typeOrder = {
+      'High Level Output': 1,
+      'Intermediate Outcome': 2,
+      '2030 Outcome': 3,
+      'Cross Cutting': 4,
+      'MELIA Studies': 5
+    };
+    mainRows.sort((a, b) => {
+      const orderA = typeOrder[a.Type] ?? 999;
+      const orderB = typeOrder[b.Type] ?? 999;
+      return orderA - orderB;
+    });
+  
+    return subtotalRow ? [...mainRows, subtotalRow] : mainRows;
+  }}
