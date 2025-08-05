@@ -8,6 +8,7 @@ import { ToastrService } from "ngx-toastr";
 import { PhasesService } from "src/app/services/phases.service";
 import { HeaderService } from "src/app/header.service";
 import { Meta, Title } from "@angular/platform-browser";
+import { QualitativeIndicatorsComponent } from "src/app/submission/qualitative-indicators/qualitative-indicators.component";
 
 @Component({
   selector: "app-submited-version",
@@ -66,6 +67,9 @@ export class SubmitedVersionComponent implements OnInit {
   toggleSummaryValues: any = {};
   errors: any = {};
   period: Array<any> = [];
+  indicatorTypes: Array<any> = [];
+  highLevelOutputIndicatorTypes: Array<any> = [];
+  outcomeIndicatorTypes: Array<any> = [];
   check(values: any, code: string, id: number, item_id: string) {
     if (values[code] && values[code][id] && values[code][id][item_id]) {
       return true;
@@ -121,6 +125,7 @@ export class SubmitedVersionComponent implements OnInit {
   }
 
   perValues: any = {};
+  perAllValuesIndicator: any = {};
   perValuesSammary: any = {};
   perValuesSammaryForPartner: any = {};
   perAllValues: any = {};
@@ -295,6 +300,23 @@ export class SubmitedVersionComponent implements OnInit {
         });
       }
     }
+    for (let wp of this.wps) {
+      // if(wp.category == 'WP' || wp.category == 'Projects')
+      if(wp.category == 'WP')
+        if(this.allData[wp.ost_wp.wp_official_code]) {
+          this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
+            this.indicatorTypes.forEach((type) => {
+              if (!this.perAllValuesIndicator[wp.ost_wp.wp_official_code])
+                this.perAllValuesIndicator[wp.ost_wp.wp_official_code] = {};
+              if (!this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id])
+                this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id] = {};
+              this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id][type] =
+                0;
+            });
+          });
+        }
+
+    }
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
         this.perValuesSammary[wp.ost_wp.wp_official_code][per.id] = false;
@@ -309,7 +331,6 @@ export class SubmitedVersionComponent implements OnInit {
       });
     });
 
-    //from here
     Object.keys(this.perValues).forEach((partner_code) => {
       Object.keys(this.perValues[partner_code]).forEach((wp_id) => {
         Object.keys(this.perValues[partner_code][wp_id]).forEach((item_id) => {
@@ -434,6 +455,28 @@ export class SubmitedVersionComponent implements OnInit {
           ost_wp: { wp_official_code: "IPSR" },
         });
       }
+      let melias = [];
+      if(this.initiative_data.synchronized){
+        for (let wp of this.wps) {
+          melias.push({
+            id: wp.id,
+            title: wp.ost_wp.wp_official_code + '-melia',
+            category: "melia",
+            ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-melia', acronym: wp.ost_wp.wp_official_code },
+          });
+        }
+      }
+      let crossCutting = [];
+      if(this.initiative_data.synchronized){
+        for (let wp of this.wps) {
+          crossCutting.push({
+            id: 'Cross-Cutting', 
+            title: wp.ost_wp.wp_official_code + '-Cross-Cutting',
+            category: "Cross Cutting",
+            ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-Cross-Cutting' },
+          });
+        }
+      }
       let w3Projects = [];
       if(this.initiative_data.synchronized){
         for (let wp of this.wps) {
@@ -473,7 +516,7 @@ export class SubmitedVersionComponent implements OnInit {
         }
       }
   
-      this.wps = [...this.wps, ...w3Projects ,...geographicScope, ...partners];
+      this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partners];
 
     for (let partner of this.partners) {
       if (!this.budgetValues[partner.code])
@@ -692,6 +735,26 @@ export class SubmitedVersionComponent implements OnInit {
     if (this.partners.length < 1) {
       this.partners = await this.submissionService.getOrganizations();
     }
+    this.indicatorTypes = [
+      'Number of Policy (Policy Change)',
+      'Innovation Use',
+      'custom-OUTCOME',
+      'Number of knowledge products',
+      'Number of innovations (innovation development)',
+      'Number of people trained (capacity sharing for development)',
+      'custom-OUTPUT'
+    ]
+    this.highLevelOutputIndicatorTypes = [
+      'Number of knowledge products',
+      'Number of innovations (innovation development)',
+      'Number of people trained (capacity sharing for development)',
+      'custom-OUTPUT'
+    ]
+    this.outcomeIndicatorTypes = [
+      'Number of Policy (Policy Change)',
+      'Innovation Use',
+      'custom-OUTCOME'
+    ]
 
     this.InitData();
     this.period = this.submission_data.phase.periods;
@@ -727,7 +790,10 @@ export class SubmitedVersionComponent implements OnInit {
   roundNumber(value: number) {
     return Math.round(value);
   }
-
+  roundNumbers(values: number[]): number {
+    const sum = values.reduce((acc, val) => acc + (Number(val) || 0), 0);
+    return Math.round(sum);
+  }
   finalPeriodVal(period_id: any) {
     return this.actualWps
       .map(
@@ -840,6 +906,8 @@ export class SubmitedVersionComponent implements OnInit {
 
     this.sammaryCalc();
     this.allvalueChange();
+    this.setIndecatorValues();
+    this.getAllMeliasLength()
   }
   checkEOI(category: any) {
     return this.submission_data.phase?.show_eoi ? category == "EOI" : false;
@@ -852,22 +920,25 @@ export class SubmitedVersionComponent implements OnInit {
     wp_category: string
   ) {
     let wp_data;
-
-    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners') {
+    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
             (d.category == "OUTPUT" ||
               d.category == "OUTCOME" ||
               this.checkEOI(d.category) ||
-              d.category == "Cross Cutting" ||
-              d.category == "IPSR" ||
-              d.category == "Melia" ) &&
+              // d.category == "Cross Cutting" ||
+              d.category == "IPSR" 
+              // d.category == "Melia"
+            ) &&
             (d.group == id ||
               (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
-              ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
-              d.wp_id == official_code ||
-              (official_code == "CROSS" && this.checkEOI(d.category))
+              // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
+              ((this.checkEOI(d.category) || d.category == "OUTCOME" && !d.group) && ost_wp_acronym == 'AOW00') ||
+
+              // ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+              d.wp_id == official_code 
+              // (official_code == "CROSS" && this.checkEOI(d.category))
             )
           );
         else
@@ -875,17 +946,17 @@ export class SubmitedVersionComponent implements OnInit {
             ((d.category == "OUTPUT" ||
               d.category == "OUTCOME" ||
               this.checkEOI(d.category) ||
-              d.category == "Cross Cutting" ||
-              d.category == "IPSR" ||
-              d.category == "Melia" ) &&
-              (
-                d.group == id ||
-                (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
-                ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
-                d.wp_id == official_code
-              )
-              ) ||
-            (official_code == "CROSS" && this.checkEOI(d.category))
+              // d.category == "Cross Cutting" ||
+              d.category == "IPSR" 
+              // d.category == "Melia" 
+            ) &&
+              (d.group == id || (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects')  ||
+              // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
+              ((this.checkEOI(d.category) || d.category == "OUTCOME" && !d.group) && ost_wp_acronym == 'AOW00') ||
+
+              // ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+                d.wp_id == official_code)) 
+            // (official_code == "CROSS" && this.checkEOI(d.category))
           );
       });
     }  else if(wp_category == 'Projects') {
@@ -894,18 +965,49 @@ export class SubmitedVersionComponent implements OnInit {
           return (
             (d.category == "Project") &&
             (
-              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') || (!d?.parent_id && d.category == 'Project' && official_code == 'CROSS-project')
             )
           );
         else
         return (
           (d.category == "Project") &&
           (
-            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') || (!d?.parent_id && d.category == 'Project' && official_code == 'CROSS-project')
           )
         );
       });
-    } else if(wp_category == 'Geographic-Scope') {
+    } 
+    else if(wp_category == 'melia') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "Melia") &&
+            (
+              (d?.parent_id == id) || ( (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')  && ost_wp_acronym == 'CROSS') 
+            )
+          );
+        else
+        return (
+          (d.category == "Melia") &&
+          (
+            (d?.parent_id == id) || ( (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')  && ost_wp_acronym == 'CROSS') 
+          )
+        );
+      });
+    } 
+     else if(wp_category == 'Cross Cutting') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+              (d.category == "Cross Cutting" && official_code == 'CROSS-Cross-Cutting')
+          );
+        else
+        return (
+          (d.category == "Cross Cutting" && official_code == 'CROSS-Cross-Cutting')
+        );
+      });
+    } 
+    else if(wp_category == 'Geographic-Scope') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -941,40 +1043,40 @@ export class SubmitedVersionComponent implements OnInit {
       });
     }
  
-    if (ost_wp_acronym === 'AOW00') {
-      const meliaMap = new Map<string, any>();
-      const nonMeliaItems: any[] = [];
+    // if (ost_wp_acronym === 'AOW00') {
+    //   const meliaMap = new Map<string, any>();
+    //   const nonMeliaItems: any[] = [];
     
-      for (const item of wp_data) {
-        if (item.category !== 'Melia') {
-          nonMeliaItems.push(item);
-          continue;
-        }
+    //   for (const item of wp_data) {
+    //     if (item.category !== 'Melia') {
+    //       nonMeliaItems.push(item);
+    //       continue;
+    //     }
     
-        const key = `${item.id}`;
+    //     const key = `${item.id}`;
     
-        if (!meliaMap.has(key)) {
-          meliaMap.set(key, {
-            ...item,
-            results: item.results ?? '',
-          });
-        } else {
-          const existing = meliaMap.get(key);
-          if (item.results && !existing.results.includes(item.results)) {
-            existing.results += `, ${item.results}`;
-          }
-        }
-      }
+    //     if (!meliaMap.has(key)) {
+    //       meliaMap.set(key, {
+    //         ...item,
+    //         results: item.results ?? '',
+    //       });
+    //     } else {
+    //       const existing = meliaMap.get(key);
+    //       if (item.results && !existing.results.includes(item.results)) {
+    //         existing.results += `, ${item.results}`;
+    //       }
+    //     }
+    //   }
     
-      wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
-    }
+    //   wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
+    // }
+    
 
 
     wp_data.sort(this.compare);
 
     return wp_data;
   }
-
   compare(a: any, b: any) {
     if (a.category == "OUTPUT" && b.category == "OUTCOME") return -1;
     if (b.category == "OUTPUT" && a.category == "OUTCOME") return 1;
@@ -995,5 +1097,90 @@ export class SubmitedVersionComponent implements OnInit {
       default:
         return category;
     }
+  }
+  qualitativeIndicatorsDialog(data: any []) {
+    this.dialog.open(QualitativeIndicatorsComponent, {
+      data: data,
+      panelClass: 'dialog-fit-content'
+    })
+  }
+
+
+  showSubQualitativeIndicators(data: any[]) {
+    if (!data || !data.length) return '';
+    const text = data.map((d: any) => d.measure_of_success_maximum).join('')
+    return text.length > 10 ? text.substring(0, 30) + '...' : text;
+  }
+
+ 
+  setIndecatorValues() {
+    for (const wp of this.wps) {
+      // if (wp.category === 'WP' || wp.category === 'Projects') {
+      if (wp.category === 'WP') {
+        const group = wp.ost_wp?.wp_official_code;
+        if (!group) continue;
+  
+        const allData = this.allData[group];
+        if (!Array.isArray(allData)) continue;
+  
+        if (!this.perAllValuesIndicator[group]) {
+          this.perAllValuesIndicator[group] = {};
+        }
+  
+        for (let data of allData) {
+          const dataId = data.id;
+          const indicatorValues = data.pooled_funded_indicator_values || {};
+  
+          if (!this.perAllValuesIndicator[group][dataId]) {
+            this.perAllValuesIndicator[group][dataId] = {};
+          }
+  
+          for (let key of this.indicatorTypes) {
+            this.perAllValuesIndicator[group][dataId][key] = indicatorValues[key] ?? 0;
+          }
+        }
+      }
+    }
+  }
+  getTotalIndValues(data: any, type: string) {
+    if(data) {
+      let sum = Object.values(data).reduce((sum, item: any) => {
+        return sum + (item[type] || 0);
+      }, 0);
+      return sum;
+    } else {
+      return 0
+    }
+  
+  }
+
+
+  getTotalIndAllValues(data: any, type: string): number {
+  if (!data) return 0;
+
+  let total = 0;
+
+  for (const uuid in data) {
+    const item = data[uuid];
+
+    total += item[type] || 0;
+
+    for (const key in item) {
+      const value = item[key];
+      if (typeof value === 'object' && value !== null && value[type] !== undefined) {
+        total += value[type] || 0;
+      }
+    }
+  }
+
+  return total;
+}
+
+  getAllMeliasLength() {
+    let total = 0;
+    for(let wp of this.actualWps) {
+      total += this.allData[wp.ost_wp.wp_official_code + '-melia']?.length
+    }
+    return total
   }
 }
