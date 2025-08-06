@@ -1403,7 +1403,10 @@ table {
     text-align: left;
     max-width: 400px;
   }
-
+  td:nth-child(2) {
+    text-align: center;
+    width: 300px;
+  }
   // th:nth-child(2) {
   //   width: 27rem;
   //   height: 3.5rem;
