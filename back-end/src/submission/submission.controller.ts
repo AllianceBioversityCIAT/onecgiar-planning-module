@@ -197,6 +197,16 @@ export class SubmissionController {
     return this.submissionService.getSaved(id, phaseId);
   }
 
+  @Get('save-indicator/:id/phaseId/:phaseId')
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    description: '',
+    type: getSaved,
+  })
+  async getSavedIndicator(@Param('id') id, @Param('phaseId') phaseId) {
+    return this.submissionService.getSavedIndicator(id, phaseId);
+  }
+
   @Get('initiative_id/:initiative_id')
   @ApiBearerAuth()
   @ApiCreatedResponse({
@@ -226,7 +236,7 @@ export class SubmissionController {
           map((dd: any) => {
             const melias = dd?.data?.melias ?? [];
             const projects = dd?.data?.projects ?? [];
-
+            let indicatorIds = [];
             const filteredData = dd.data?.data?.filter(
               (d) =>
                 ((d.category == 'WP' && !d.group) ||
@@ -250,16 +260,20 @@ export class SubmissionController {
 
                 if (items.partners?.length)  items.partners  = items.partners.map((p: any) => p);
 
-    
+                
                 if (items.indicators?.length && (items.category == 'OUTPUT' || items.category == 'OUTCOME')) {
                   const sumPooledFundedByType: Record<string, number> = {};
                   const sumProjectByType: Record<string, any> = {};
 
                   for (const indicator of items.indicators) {
-                    if (!indicator?.type?.toc_id || !indicator.target?.length) continue;
-    
+                    // if (!indicator?.type?.toc_id || !indicator.target?.length) continue;
+                    
                     let indicatorType = indicator.type.value;
     
+                    if(indicator.related_node_id){
+                      indicator.id = indicator.related_node_id
+                    }
+                    indicatorIds.push(indicator.id)
                     for (const target of indicator.target) {
                       if (!target?.date || !target?.value) continue;
                       if (target?.project?.id == 'Pooled funded') {
@@ -311,7 +325,7 @@ export class SubmissionController {
                 );
 
                 if (isLinked) {
-                  const key = `${melia.related_node_id}_${data.group}`;
+                  const key = `${melia.id}_${data.group}`;
                   if (meliaMap.has(key)) {
                     const existing = meliaMap.get(key);
                     if (!existing.results.includes(data.title)) {
@@ -319,7 +333,7 @@ export class SubmissionController {
                     }
                   } else {
                     meliaMap.set(key, {
-                      id: melia.related_node_id,
+                      id: melia.id,
                       parent_id: data.group,
                       results: data.title,
                       category: 'Melia',
@@ -442,7 +456,14 @@ export class SubmissionController {
             const newPartners = Array.from(partnersMap.values());
 
     
-            return [...newMelias, ...newProjects, ...filteredData, ...newIndicators, ...newPartners ]; 
+            return [
+              ...newMelias,
+              ...newProjects,
+              ...filteredData,
+              ...newIndicators,
+              ...newPartners,
+              { indicator_ids: { ...indicatorIds } }
+            ];
           }),
           catchError((error: AxiosError) => {
             console.error(error);
