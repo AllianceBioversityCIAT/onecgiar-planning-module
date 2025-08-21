@@ -2718,7 +2718,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
   return total;
 }
-
+ 
   getAllMeliasLength() {
     let total = 0;
     for(let wp of this.actualWps) {
