@@ -27,6 +27,7 @@ import { CustomMessageComponent } from "../custom-message/custom-message.compone
 import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
 import { UserService } from "../services/user.service";
 import { QualitativeIndicatorsComponent } from "./qualitative-indicators/qualitative-indicators.component";
+import * as moment from 'moment';
 
 @Component({
   selector: "app-submission",
@@ -81,12 +82,26 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   values: any = {};
   displayValues: any = {};
   summaryBudgets: any = {};
+  summaryBudgetsIndicator: any = {};
+  totalTargetsIndicator: any = {};
+
   summaryBudgetsTotal: any = {};
   summaryBudgetsAllTotal: any = 0;
   summaryBudgetsProjectsTotal: any = 0;
+  summaryBudgetsPartnerTotal: any = 0;
+  summaryBudgetsMeliaTotal: any = 0;
+
   wp_budgets: any = {};
   budgetValues: any = {};
   displayBudgetValues: any = {};
+  displayBudgetValuesItemIndicator: any = {};
+
+  displayBudgetValuesIndicator: any = {};
+  budgetValuesIndicatorPartner: any = {};
+  totalBudgetValuesIndicatorPartner: any = {};
+  budgetValuesIndicatorSummary: any = {};
+  totalBudgetValuesIndicatorSummary: any = {};
+
   totals: any = {};
   errors: any = {};
   period: Array<any> = [];
@@ -124,28 +139,70 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       return true;
     }
   }
+  checkForOutput(values: any, code: string, id: number, item: any) {
+    if (!values[code]) {
+      values[code] = {};
+      this.totals[code] = {};
+      this.errors[code] = {};
+    }
+  
+    if (!values[code][id]) {
+      values[code][id] = {};
+      this.totals[code][id] = 0;
+      this.errors[code][id] = null;
+    }
+  
+    if (!values[code][id][item.id]) {
+      values[code][id][item.id] = {};
+    }
+  
+    for (let indicator of item.indicators) {
+      if (!values[code][id][item.id][indicator.id]) {
+
+        values[code][id][item.id][indicator.id] = 0;
+      }
+    }
+    return true;
+  }
+  
   calclate(code: any, id: any) {
     if (this.totals[code] && this.totals[code][id])
       return this.totals[code][id];
   }
 
   getTotalBudgetForEachPartner(budgets: { [key: string]: any }) {
-    // return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
     return Object.entries(budgets)
-    .filter(([key]) => !key.includes("-project"))
-    .reduce((sum, [_, value]) => sum + Number(value), 0)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      .filter(([key]) => 
+        !key.includes('-project') &&
+        !key.toLowerCase().includes('melia') &&
+        !key.toLowerCase().includes('partners')
+      )
+      .reduce((sum, [, value]) => sum + Number(value || 0), 0)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
+  
   getTotalBudgetForEachPartnerProject(budgets: { [key: string]: any }) {
-    // return  Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b), 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");;
     return Object.entries(budgets)
     .filter(([key]) => key.includes("-project"))
     .reduce((sum, [_, value]) => sum + Number(value), 0)
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
-
+  getTotalBudgetForEachPartnerPartner(budgets: { [key: string]: any }) {
+    return Object.entries(budgets)
+    .filter(([key]) => key.includes("-partners"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  getTotalBudgetForEachPartnerMelia(budgets: { [key: string]: any }) {
+    return Object.entries(budgets)
+    .filter(([key]) => key.includes("-melia"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
   getTotalPercentageForEachPartner(budgets: any) {
     const totalBudgets: any = Object.values(budgets).reduce((a: any, b: any) => Number(a) + Number(b))
     return totalBudgets / totalBudgets * 100 
@@ -157,7 +214,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
   
   timeCalc: any;
-  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean) {
+  async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean, item_type: string | null = null, socket: boolean) {
     if (this.timeCalc) clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
       let percentValue;
@@ -213,6 +270,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           budget_value: budgetValue,
           no_budget: this.noValuesAssigned[partner_code][wp_id][item_id],
           phase_id: this.phase.id,
+          type: item_type
         }
       );
       if (result)
@@ -224,7 +282,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           value: percentValue,
           no_budget: this.noValuesAssigned[partner_code][wp_id][item_id],
         });
-      this.sammaryCalc();
+      // this.sammaryCalc();
       this.validateCenter(partner_code, false);
     }, 500);
     this.initiative_data = await this.submissionService.getInitiative(
@@ -234,8 +292,66 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     // localStorage.setItem('initiatives', JSON.stringify(this.values));
   } 
 
+  async changeCalcForIndicator(partner_code: any, wp_id: any, item_id: any, item_title: string, indicator_id: number, item_type: string, parent_title: string, indicator_type: string) {
+    if (this.timeCalc) clearTimeout(this.timeCalc);
+    this.timeCalc = setTimeout(async () => {
+      let percentValue = 0;
+      let budgetValue;
+      let subTotalBudgetIndicator = 0;
+      let totalWpBudget = 0;
+
+      
+     
+        budgetValue = this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id];
+       
+        
+        Object.values(this.displayBudgetValuesIndicator[partner_code][wp_id][item_id]).forEach(val => {
+          if (typeof val === "number") {
+            subTotalBudgetIndicator += val;
+          } 
+        });
+        this.displayBudgetValuesItemIndicator[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
+       
+
+        Object.values(this.displayBudgetValuesItemIndicator[partner_code][wp_id]).forEach(val => {
+          if (typeof val === "number") {
+            totalWpBudget += val;
+          } 
+        });
+        this.wp_budgets[partner_code][wp_id] = totalWpBudget;
+
+      const result = await this.submissionService.saveResultValue(
+        this.params.id,
+        {
+          partner_code: partner_code,
+          wp_id: wp_id,
+          item_id: indicator_id,
+          item_title: item_title,
+          percent_value: percentValue,
+          budget_value: budgetValue,
+          no_budget: this.noValuesAssigned[partner_code][wp_id][item_id],
+          phase_id: this.phase.id,
+          type: item_type,
+          parent_id: item_id,
+          indicator_type: indicator_type == 'custom' ? 'custom-OUTPUT' : indicator_type
+        }
+      );
+      if (result) {
+        this.socket.emit("setDataValueForIndicator", {
+          id: this.params.id,
+          partner_code,
+          wp_id,
+          item_id,
+          indicator_id,
+          budgetValue,
+          subTotalBudgetIndicator
+        });
+      }
+    }, 500);
+  } 
+
   budgetTime: any;
-  async wpBudgetChange(partner_code: any, wp_id: any, budget: any) {
+  async wpBudgetChange(partner_code: any, wp_id: any, budget: any, refresh: boolean) {
     if (this.budgetTime) clearTimeout(this.budgetTime);
     this.budgetTime = setTimeout(async () => {
       const result = await this.submissionService.saveWpBudget(this.params.id, {
@@ -254,12 +370,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           wp_id,
           budget,
         });
-      this.sammaryCalc();
-      this.validateCenter(partner_code, false);
-      this.initiative_data = await this.submissionService.getInitiative(
-        this.params.id
-      );
-      this.getInitStatus(this.initiative_data);
+        if(refresh){
+          this.sammaryCalc();
+          this.validateCenter(partner_code, false);
+          this.initiative_data = await this.submissionService.getInitiative(
+            this.params.id
+          );
+          this.getInitStatus(this.initiative_data);
+        }
     }, 1000);
   }
 
@@ -292,7 +410,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   async toggleNoValues(partner_code: any, wp_official_code: any, item_id: any, item_name: string) {
     this.values[partner_code][wp_official_code][item_id] = 0;
     this.displayValues[partner_code][wp_official_code][item_id] = 0;
-    this.changeCalc(partner_code, wp_official_code, item_id, item_name, "percent", true);
+    // this.changeCalc(partner_code, wp_official_code, item_id, item_name, "percent", true);
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -460,7 +578,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     ) {
       this.values[partner_code][wp_id][item_id] = 0;
       this.displayValues[partner_code][wp_id][item_id] = 0;
-      this.changeCalc(partner_code, wp_id, item_id, title, "percent", true);
+      // this.changeCalc(partner_code, wp_id, item_id, title, "percent", true);
     }
     if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (this.values[partner_code][wp_id][item_id] == 0 && this.displayValues[partner_code][wp_id][item_id] == 0)){
       this.values[partner_code][wp_id][item_id] = null;
@@ -609,6 +727,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     });
     this.summaryBudgets = {};
     this.summaryBudgetsTotal = {};
+    this.summaryBudgetsIndicator = {};
 
     Object.keys(this.budgetValues).forEach((partner_code) => {
       Object.keys(this.budgetValues[partner_code]).forEach((wp_id) => {
@@ -628,15 +747,53 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       });
     });
 
+    Object.keys(this.displayBudgetValuesIndicator).forEach((partner_code) => {
+      Object.keys(this.displayBudgetValuesIndicator[partner_code]).forEach((wp_id) => {
+        if (!this.summaryBudgetsIndicator[wp_id]) {
+          this.summaryBudgetsIndicator[wp_id] = {};
+        }
+    
+        Object.keys(this.displayBudgetValuesIndicator[partner_code][wp_id]).forEach((item_id) => {
+          if (!this.summaryBudgetsIndicator[wp_id][item_id]) {
+            this.summaryBudgetsIndicator[wp_id][item_id] = {};
+          }
+    
+          Object.keys(this.displayBudgetValuesIndicator[partner_code][wp_id][item_id]).forEach((indicator_id) => {
+            if (this.summaryBudgetsIndicator[wp_id][item_id][indicator_id] == null) {
+              this.summaryBudgetsIndicator[wp_id][item_id][indicator_id] = 0;
+            }
+    
+            const raw = this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id];
+            const value = Number(raw) || 0;
+    
+            this.summaryBudgetsIndicator[wp_id][item_id][indicator_id] += value;
+          });
+        });
+      });
+    });
+
 
 
     this.summaryBudgetsProjectsTotal = Object.entries(this.summaryBudgetsTotal)
     .filter(([key, _]) => key.includes('-project'))
     .reduce((sum, [_, value]: any) => sum + value, 0);
 
-    this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
-    .filter(([key, _]) => !key.includes('-project'))
+    this.summaryBudgetsPartnerTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => key.includes('-partners'))
     .reduce((sum, [_, value]: any) => sum + value, 0);
+
+    this.summaryBudgetsMeliaTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => key.includes('-melia'))
+    .reduce((sum, [_, value]: any) => sum + value, 0);
+
+    this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key]) => 
+      !key.includes('-project') &&
+      !key.toLowerCase().includes('melia') &&
+      !key.toLowerCase().includes('partners')
+    )
+    .reduce((sum, [, value]: any) => sum + value, 0);
+  
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
       Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
@@ -729,7 +886,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       if(wp.category == 'WP')
         if(this.allData[wp.ost_wp.wp_official_code]) {
           this.allData[wp.ost_wp.wp_official_code].forEach((item: any) => {
-            this.indicatorTypes.forEach((type) => {
+            this.highLevelOutputIndicatorTypes.forEach((type) => {
               if (!this.perAllValuesIndicator[wp.ost_wp.wp_official_code])
                 this.perAllValuesIndicator[wp.ost_wp.wp_official_code] = {};
               if (!this.perAllValuesIndicator[wp.ost_wp.wp_official_code][item.id])
@@ -741,7 +898,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         }
 
     }
-    // console.log(this.perAllValuesIndicator)
+    console.log(this.perAllValuesIndicator)
 
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
@@ -806,12 +963,20 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.partnersData = {};
     this.sammary = {};
     this.summaryBudgets = {};
+    this.summaryBudgetsIndicator = {};
+    this.totalTargetsIndicator = {};
+
     this.summaryBudgetsTotal = {};
     this.wp_budgets = {};
     this.toggleValues = {};
     this.budgetValues = {};
     this.budgetValues = {};
     this.displayBudgetValues = {};
+    this.displayBudgetValuesItemIndicator = {};
+
+    this.displayBudgetValuesIndicator = {};
+    this.budgetValuesIndicatorPartner = {};
+    this.budgetValuesIndicatorSummary = {};
     this.allData = {};
     this.values = {};
     this.displayValues = {};
@@ -1022,6 +1187,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.budgetValues[partner.code] = {};
       if (!this.displayBudgetValues[partner.code])
         this.displayBudgetValues[partner.code] = {};
+      if (!this.displayBudgetValuesItemIndicator[partner.code])
+        this.displayBudgetValuesItemIndicator[partner.code] = {};
+      if (!this.displayBudgetValuesIndicator[partner.code])
+        this.displayBudgetValuesIndicator[partner.code] = {};
+      if (!this.budgetValuesIndicatorPartner[partner.code])
+        this.budgetValuesIndicatorPartner[partner.code] = {};
       if (!this.toggleValues[partner.code])
         this.toggleValues[partner.code] = {};
       if (!this.noValuesAssigned[partner.code])
@@ -1041,10 +1212,24 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         if (!this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code])
           this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code] =
             {};
+        if (!this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code])
+          this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code] =
+            {};
+        if (!this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code])
+          this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code] =
+            {};
+        if (!this.budgetValuesIndicatorPartner[partner.code][wp.ost_wp.wp_official_code])
+          this.budgetValuesIndicatorPartner[partner.code][wp.ost_wp.wp_official_code] = {};
+        for(let type of this.highLevelOutputIndicatorTypes) {
+          if (!this.budgetValuesIndicatorPartner[partner.code][wp.ost_wp.wp_official_code][type])
+            this.budgetValuesIndicatorPartner[partner.code][wp.ost_wp.wp_official_code] = 0;
+        }
         if (!this.noValuesAssigned[partner.code][wp.ost_wp.wp_official_code])
           this.noValuesAssigned[partner.code][wp.ost_wp.wp_official_code] = {};
         if (!this.summaryBudgets[wp.ost_wp.wp_official_code])
           this.summaryBudgets[wp.ost_wp.wp_official_code] = {};
+        if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code])
+          this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code] = {};
         if (!this.summaryBudgetsTotal[wp.ost_wp.wp_official_code])
           this.summaryBudgetsTotal[wp.ost_wp.wp_official_code] = 0;
         if (!this.itemHasError[partner.code][wp.ost_wp.wp_official_code])
@@ -1082,7 +1267,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         });
 
         result.forEach((item: any) => {
-          if (item.category != "OUTCOME") {
+          if (item.category !== "OUTCOME" && item.category !== "OUTPUT") {
             this.check(
               this.values,
               partner.code,
@@ -1095,7 +1280,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               wp.ost_wp.wp_official_code,
               item.id
             );
-          } else if(item.category == "OUTCOME" && !item.group) {
+          } else if(item.category === "OUTCOME" && !item.group) {
             this.check(
               this.values,
               partner.code,
@@ -1109,11 +1294,36 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               item.id
             );
           }
+          else if(item.category === "OUTPUT") {
+            this.checkForOutput(
+              this.values,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item
+            );
+            this.checkForOutput(
+              this.displayValues,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item
+            );
+          }
           this.budgetValues[partner.code][wp.ost_wp.wp_official_code][item.id] =
             null;
           this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code][
             item.id
           ] = null;
+          this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][
+            item.id
+          ] = null;
+          if(item.category == 'OUTPUT'){
+            this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][
+              item.id
+            ] = {};
+            for(let indicator of item.indicators) {
+              this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] = null;
+            }
+          }
           this.noValuesAssigned[partner.code][wp.ost_wp.wp_official_code][
             item.id
           ] = false;
@@ -1121,7 +1331,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             false;
           if (!this.summaryBudgets[wp.ost_wp.wp_official_code][item.id])
             this.summaryBudgets[wp.ost_wp.wp_official_code][item.id] = 0;
-
+          if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id])
+            this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id] = {};
+          if (item.category === 'OUTPUT') {
+            for (let indicator of item.indicators) {
+              if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id]) {
+                this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id] = 0;
+              }
+            }
+          }
           if (!this.perValues[partner.code]) this.perValues[partner.code] = {};
           if (!this.haveTrue[partner.code]) this.haveTrue[partner.code] = {};
           if (!this.perValues[partner.code][wp.ost_wp.wp_official_code])
@@ -1211,12 +1429,25 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id,
       this.phase.id
     );
-
     this.setvalues(
       this.savedValues.values,
       this.savedValues.perValues,
       this.savedValues.no_budget
     );
+
+    this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicator(
+      this.params.id,
+      this.phase.id
+    );
+    
+    this.setvaluesForIndicators(this.savedValuesForIndicator);
+    this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
+
+    this.setTotalTargetForIndicators();
+
+    this.setItemIndicatorAndBudget();
+    this.sammaryCalc();
+    
     const tab = this.activatedRoute.snapshot.queryParamMap.get("tab");
     if (tab && this.initiative_data.is_valid && this.initUser?.role != 'MELIA Focal Point')
       this.selectedTabIndex = Number(tab);
@@ -1242,9 +1473,11 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
     
 
-    console.log(this.allData)
-    console.log(this.wps)
+    // console.log(this.allData)
+    // console.log(this.displayBudgetValuesItemIndicator)
+    // console.log(this.budgetValues)
 
+    
 
     //sort WP titles
     this.wps.forEach((d: any) => {
@@ -1260,6 +1493,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     })
   }
   savedValues: any = null;
+  savedValuesForIndicator: any = null;
   isCenter: boolean = false;
   selectedTabIndex: number = 0;
   canSubmit: any;
@@ -1313,7 +1547,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.my_roles = this.InitiativeUsers.filter(
       (d: any) => d?.user?.id == this?.user_info?.id
     ).map((d: any) => d.role);
-    console.log(this.initiative_data)
     this.InitiativeUsers.map((d: any) => {
       if (d.role == "Leader") this.leaders.push(d.user);
     });
@@ -1471,6 +1704,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.noValuesAssigned[partner_code][wp_id][item_id] = no_budget;
       this.sammaryCalc();
     });
+    this.socket.on("setDataValueForIndicator-" + this.params.id, (data: any) => {
+      const { partner_code, wp_id, item_id, indicator_id, budgetValue, subTotalBudgetIndicator } = data;
+      this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id] = budgetValue;
+      this.displayBudgetValues[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
+
+      this.setItemIndicatorAndBudget();
+      this.sammaryCalc();
+      this.recomputeIndicatorBudgetTotals();
+    });
     this.socket.on("setDataBudget-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, budget } = data;
       this.wp_budgets[partner_code][wp_id] = budget;
@@ -1563,6 +1805,42 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.dialog.closeAll();
   }
 
+  //set values for item-indicator and budget (front-end)
+  setItemIndicatorAndBudget() {
+    Object.keys(this.displayBudgetValuesIndicator).forEach((code) => {
+      Object.keys(this.displayBudgetValuesIndicator[code]).forEach((wp_id) => {
+        Object.keys(this.displayBudgetValuesIndicator[code][wp_id]).forEach((item_id) => {
+          let sum = 0;
+          let total = 0;
+    
+          Object.keys(this.displayBudgetValuesIndicator[code][wp_id][item_id]).forEach((indicator_id) => {
+            const value = this.displayBudgetValuesIndicator[code][wp_id][item_id][indicator_id];
+            sum += Number(value) || 0; 
+          });
+    
+          if (!this.displayBudgetValuesItemIndicator[code]) {
+            this.displayBudgetValuesItemIndicator[code] = {};
+          }
+          if (!this.displayBudgetValuesItemIndicator[code][wp_id]) {
+            this.displayBudgetValuesItemIndicator[code][wp_id] = {};
+          }
+    
+          this.displayBudgetValuesItemIndicator[code][wp_id][item_id] = sum;
+
+          this.budgetValues[code][wp_id][item_id] = sum;
+          this.displayBudgetValues[code][wp_id][item_id] = sum;
+
+
+          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach(val => {
+            if (typeof val === "number") {
+              total += Number(val) || 0;
+            } 
+          });
+          this.wp_budgets[code][wp_id] = total;
+        });
+      });
+    });
+  }
   setvalues(valuesToSet: any, perValuesToSet: any, noBudget: any) {
     if (valuesToSet != null)
       Object.keys(this.values).forEach((code) => {
@@ -1637,6 +1915,123 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.setIndecatorValues();
     this.getAllMeliasLength()
   }
+
+  setvaluesForIndicators(data: any[]) {
+    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
+    const ids = Object.values(indicatorIds);
+    const filtered = data.filter(item => ids.includes(item.result_uuid));
+    for(let value of filtered) {
+      this.displayBudgetValuesIndicator[value.organization_code][value.workPackage.wp_official_code][value.parent_id][value.result_uuid] = Number(value.budget);      
+    }
+    this.sammaryCalc();
+  }
+
+  setPartnervaluesForIndicators(data: any[]) {  
+    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
+    const ids = Object.values(indicatorIds);
+    const filtered = data.filter(item => ids.includes(item.result_uuid));
+
+    for(let value of filtered) {
+      const orgCode = value.organization_code;
+      const wpCode = value.workPackage.wp_official_code;
+      const indicatorType = value.indicator_type;
+      const budget = Number(value.budget) || 0;
+
+      
+      if (!this.budgetValuesIndicatorPartner[orgCode] || typeof this.budgetValuesIndicatorPartner[orgCode] !== 'object') {
+        this.budgetValuesIndicatorPartner[orgCode] = {};
+      }
+
+      if (!this.budgetValuesIndicatorPartner[orgCode][wpCode] || typeof this.budgetValuesIndicatorPartner[orgCode][wpCode] !== 'object') {
+        this.budgetValuesIndicatorPartner[orgCode][wpCode] = {};
+      }
+
+      if (!this.budgetValuesIndicatorPartner[orgCode][wpCode][indicatorType]) {
+        this.budgetValuesIndicatorPartner[orgCode][wpCode][indicatorType] = 0;
+      }
+
+      this.budgetValuesIndicatorPartner[orgCode][wpCode][indicatorType] += budget;
+
+
+
+
+      if (!this.budgetValuesIndicatorSummary[wpCode]) {
+        this.budgetValuesIndicatorSummary[wpCode] = {};
+      }
+  
+      if (!this.budgetValuesIndicatorSummary[wpCode][indicatorType]) {
+        this.budgetValuesIndicatorSummary[wpCode][indicatorType] = 0;
+      }
+  
+      this.budgetValuesIndicatorSummary[wpCode][indicatorType] += budget;
+
+
+      if (!this.totalBudgetValuesIndicatorPartner[orgCode]) {
+        this.totalBudgetValuesIndicatorPartner[orgCode] = {};
+      }
+  
+      if (!this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType]) {
+        this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType] = 0;
+      }
+  
+      this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType] += budget;
+  
+      if (!this.totalBudgetValuesIndicatorSummary[indicatorType]) {
+        this.totalBudgetValuesIndicatorSummary[indicatorType] = 0;
+      }
+  
+      this.totalBudgetValuesIndicatorSummary[indicatorType] += budget;
+      
+    }
+  }
+
+  async recomputeIndicatorBudgetTotals() {
+    this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicator(
+      this.params.id,
+      this.phase.id
+    );
+    this.budgetValuesIndicatorPartner = {};
+    this.budgetValuesIndicatorSummary = {};
+    this.totalBudgetValuesIndicatorPartner = {};
+    this.totalBudgetValuesIndicatorSummary = {};
+  
+    const indicatorIds = this.results?.[this.results.length - 1]?.indicator_ids ?? {};
+    const ids = new Set(Object.values(indicatorIds));
+  
+    const filtered = this.savedValuesForIndicator.filter((item:any) => ids.has(item.result_uuid));
+  
+  
+    for (const item of filtered) {
+  
+      const org = item.organization_code;
+      const wp = item.workPackage?.wp_official_code;
+      const type = item.indicator_type;
+      const budget = Number(item.budget) || 0;
+  
+      this.budgetValuesIndicatorPartner[org] ??= {};
+      this.budgetValuesIndicatorPartner[org][wp] ??= {};
+      this.budgetValuesIndicatorPartner[org][wp][type] =
+        (this.budgetValuesIndicatorPartner[org][wp][type] || 0) + budget;
+  
+      
+      this.budgetValuesIndicatorSummary[wp] ??= {};
+      this.budgetValuesIndicatorSummary[wp][type] =
+        (this.budgetValuesIndicatorSummary[wp][type] || 0) + budget;
+  
+      this.totalBudgetValuesIndicatorPartner[org] ??= {};
+      this.totalBudgetValuesIndicatorPartner[org][type] =
+        (this.totalBudgetValuesIndicatorPartner[org][type] || 0) + budget;
+  
+      this.totalBudgetValuesIndicatorSummary[type] =
+        (this.totalBudgetValuesIndicatorSummary[type] || 0) + budget;
+    }
+  
+    this.budgetValuesIndicatorPartner = { ...this.budgetValuesIndicatorPartner };
+    this.budgetValuesIndicatorSummary = { ...this.budgetValuesIndicatorSummary };
+    this.totalBudgetValuesIndicatorPartner = { ...this.totalBudgetValuesIndicatorPartner };
+    this.totalBudgetValuesIndicatorSummary = { ...this.totalBudgetValuesIndicatorSummary };
+  }
+  
 
   checkEOI(category: any) {
     return this.phase?.show_eoi ? category == "EOI" : false;
@@ -2283,7 +2678,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             this.perAllValuesIndicator[group][dataId] = {};
           }
   
-          for (let key of this.indicatorTypes) {
+          for (let key of this.highLevelOutputIndicatorTypes) {
             this.perAllValuesIndicator[group][dataId][key] = indicatorValues[key] ?? 0;
           }
         }
@@ -2331,4 +2726,51 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     }
     return total
   }
+  getScope(indicator: any, type: string) {
+    let target = type == 'item' ? 'location' : 'geographic_scope'
+      let scope = '';
+      if(indicator[target] == 'global') {
+        scope = 'Global';
+      } else if(indicator[target] == 'country') {
+        scope = 'Country: ' + indicator.country.map((c:any) => c.name).join(', ')
+      } else if(indicator[target] == 'regional') {
+        scope = 'Regional: ' + indicator.region.map((c:any) => c.name).join(', ')
+      }
+      return scope
+  }
+
+  getTargetValue(targets: any[]) {
+    let result = targets.find(t => 
+      t.project.id === "Pooled funded" &&
+      moment(t.date).year() === 2026
+    );
+    return result?.value ?? 'N/A'
+  }
+
+  setTotalTargetForIndicators() {
+    for (let wp of this.actualWps) {
+      if (!this.totalTargetsIndicator[wp.ost_wp.wp_official_code]) {
+        this.totalTargetsIndicator[wp.ost_wp.wp_official_code] = {};
+      }
+  
+      const wpData = this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code];
+      if (!wpData) continue;
+  
+      Object.keys(wpData).forEach((itemId) => {
+        const indicators = wpData[itemId];
+  
+        Object.keys(indicators).forEach((indicatorName) => {
+          const value = Number(indicators[indicatorName]) || 0;
+  
+          if (!this.totalTargetsIndicator[wp.ost_wp.wp_official_code][indicatorName]) {
+            this.totalTargetsIndicator[wp.ost_wp.wp_official_code][indicatorName] = 0;
+          }
+  
+          this.totalTargetsIndicator[wp.ost_wp.wp_official_code][indicatorName] += value;
+        });
+      });
+    }
+    
+  }
+  
 }

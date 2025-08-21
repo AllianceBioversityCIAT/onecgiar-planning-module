@@ -563,6 +563,25 @@ export class SubmissionService {
       throw new BadRequestException('getSaved error');
     }
   }
+
+  async getSavedIndicator(id, phaseId) {
+    try {
+      const saved_data = await this.resultRepository.find({
+        where: {
+          initiative_id: id,
+          submission_id: IsNull(),
+          phase_id: phaseId,
+          type: 'INDICATOR',
+        },
+        relations: ['values', 'workPackage'],
+      });
+      return saved_data;
+    } catch (error) {
+      console.error('error getSaved Data', error);
+      throw new BadRequestException('getSaved error');
+    }
+  }
+
   async saveResultData(id, data: any, user) {
     const initiativeId = id;
     const { partner_code, wp_id, item_id, per_id, value, phase_id, title, is_project } = data;
@@ -797,7 +816,7 @@ export class SubmissionService {
   }
   async saveResultDataValue(id, data: any, user) {
     const initiativeId = id;
-    console.log(data)
+    console.log('data' ,data)
     const {
       partner_code,
       wp_id,
@@ -806,7 +825,10 @@ export class SubmissionService {
       percent_value,
       budget_value,
       no_budget,
-      phase_id
+      phase_id,
+      type,
+      parent_id,
+      indicator_type
     } = data;
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
@@ -904,13 +926,19 @@ export class SubmissionService {
       oldResult.value = percent_value;
       oldResult.budget = budget_value;
       oldResult.no_budget = no_budget;
-      oldResult.phase_id = phase_id
+      oldResult.phase_id = phase_id,
+      oldResult.type = type
+      oldResult.parent_id = parent_id;
+      oldResult.indicator_type = indicator_type;
+
       await this.resultRepository.save(oldResult);
     } 
     else {
       const newResult = this.resultRepository.create();
       newResult.budget = budget_value;
       newResult.initiative = initiativeObject;
+      newResult.type = type;
+      newResult.indicator_type = indicator_type;
 
       newResult.value = percent_value;
       newResult.no_budget = no_budget;
@@ -919,6 +947,7 @@ export class SubmissionService {
       newResult.result_uuid = item_id;
       newResult.organization = organizationObject;
       newResult.workPackage = workPackageObject;
+      newResult.parent_id = parent_id;
       await this.resultRepository.save(newResult);
 
     }
@@ -1295,6 +1324,11 @@ export class SubmissionService {
     let newArray = [];
 
     wps.forEach((wp: any) => {
+      // let cross = this.allData['CROSS'] || [];
+      // let melia = this.allData['CROSS-melia'] || [];
+      // let crossCutting = this.allData['CROSS-Cross-Cutting'] || [];
+      // this.allData['CROSS'] = [...cross, ...melia, ...crossCutting];
+
       data = this.allData[wp.ost_wp.wp_official_code].map((d: any) => {
         let obj: any = {};
         obj['id'] = d.id;
@@ -1306,7 +1340,7 @@ export class SubmissionService {
         obj['Type'] = this.getCategory(d.category);
         indicatorTypes.forEach((indicator: any) => {
           obj[indicator] =
-            this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[obj.id][indicator] ?? '';
+            this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[obj.id]?.[indicator] ?? '';
         });
         obj['Melias'] = '';
 
@@ -1405,19 +1439,29 @@ export class SubmissionService {
   }
   
 
-  getPartnersData(wps: any[], indicatorTypes: any[], partners: any[], organization: any) {
+  getPartnersData(wps: any[], indicatorTypes: any[], partners: any[], organization: any) { 
     let data;
     let newArray = [];
 
-
+    // console.log(this.partnersData[49])
     if (organization)
       partners = partners.filter((d: any) => d.code == organization.code);
     partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()))
     partners.forEach((partner: any) => {
       const partnersWp = [];
+      // const cross = this.partnersData[partner.code]['CROSS'] || [];
+      // const melia = this.partnersData[partner.code]['CROSS-melia'] || [];
+      // const crossCutting = this.partnersData[partner.code]['CROSS-Cross-Cutting'] || [];
+
+      // // Merge all into CROSS
+      // this.partnersData[partner.code]['CROSS'] = [...cross, ...melia, ...crossCutting];
       wps.forEach((wp: any) => {
+       
         data = (this.partnersData[partner.code][wp?.ost_wp?.wp_official_code] || [])?.map(
           (d: any) => {
+            // console.log(d.id,partner.code,this.displayBudgetValues[partner.code][
+            //   wp.ost_wp.wp_official_code
+            // ][d.id])
             let obj: any = {};
             obj['id'] = d.id;
             obj['WP_Results'] = d?.initiativeMelia?.meliaType?.name
@@ -1428,7 +1472,7 @@ export class SubmissionService {
             obj['Type'] = this.getCategory(d.category);
             indicatorTypes.forEach((indicator: any) => {
               obj[indicator] =
-                this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[obj.id][indicator] ?? '';
+                this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[obj.id]?.[indicator] ?? '';
             });
             obj['Melias'] = '';
 
@@ -1441,16 +1485,39 @@ export class SubmissionService {
             //   ] + '%';
             obj['Percentage'] = '';
 
-            obj['Budget'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleValues[partner.code][
-              wp.ost_wp.wp_official_code
-            ]))
-              ? this.formatWithThousandsSeparator(this.roundNumber(this.budgetValues[partner.code][wp.ost_wp.wp_official_code][
-                d.id
-              ]))
-              : this.formatWithThousandsSeparator(this.roundNumber(this.displayBudgetValues[partner.code][
+            // if(d.category == 'WP') {
+              obj['Budget'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleValues[partner.code][
                 wp.ost_wp.wp_official_code
-              ][d.id]));
-
+              ]))
+                ? this.formatWithThousandsSeparator(this.roundNumber(this.budgetValues[partner.code][wp.ost_wp.wp_official_code][
+                  d.id
+                ]))
+                : this.formatWithThousandsSeparator(this.roundNumber(this.displayBudgetValues[partner.code][
+                  wp.ost_wp.wp_official_code
+                ][d.id]));
+            // }
+            //  else if(d.category == 'MELIA Studies') {
+            //   obj['Budget'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleValues[partner.code][
+            //     wp.ost_wp.wp_official_code + '-melia'
+            //   ]))
+            //     ? this.formatWithThousandsSeparator(this.roundNumber(this.budgetValues[partner.code][wp.ost_wp.wp_official_code+ '-melia'][
+            //       d.id
+            //     ]))
+            //     : this.formatWithThousandsSeparator(this.roundNumber(this.displayBudgetValues[partner.code][
+            //       wp.ost_wp.wp_official_code+ '-melia'
+            //     ][d.id]));
+            // } else if(d.category == 'Cross-Cutting') {
+            //   obj['Budget'] = this.formatWithThousandsSeparator(this.roundNumber(this.toggleValues[partner.code][
+            //     wp.ost_wp.wp_official_code + '-Cross-Cutting'
+            //   ]))
+            //     ? this.formatWithThousandsSeparator(this.roundNumber(this.budgetValues[partner.code][wp.ost_wp.wp_official_code+ '-Cross-Cutting'][
+            //       d.id
+            //     ]))
+            //     : this.formatWithThousandsSeparator(this.roundNumber(this.displayBudgetValues[partner.code][
+            //       wp.ost_wp.wp_official_code+ '-Cross-Cutting'
+            //     ][d.id]));
+            // }
+            
             return obj;
           },
         );
@@ -1482,7 +1549,7 @@ export class SubmissionService {
       newArray.push(partnersWp);
     });
     return newArray;
-  }
+  } 
 
   user: any;
   data: any = [];
@@ -1921,6 +1988,28 @@ export class SubmissionService {
           category: 'IPSR',
           ost_wp: { wp_official_code: 'IPSR' },
         });
+        let melias = [];
+        if(this.initiative_data.synchronized){
+          for (let wp of this.wps) {
+            melias.push({
+              id: wp.id,
+              title: wp.ost_wp.wp_official_code + '-melia',
+              category: "melia",
+              ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-melia', acronym: wp.ost_wp.wp_official_code },
+            });
+          }
+        }
+        let crossCutting = [];
+        if(this.initiative_data.synchronized){
+          for (let wp of this.wps) {
+            crossCutting.push({
+              id: 'Cross-Cutting', 
+              title: wp.ost_wp.wp_official_code + '-Cross-Cutting',
+              category: "Cross Cutting",
+              ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + '-Cross-Cutting' },
+            });
+          }
+        }
         let w3Projects = [];
         if(this.initiative_data.synchronized){
           
@@ -1954,7 +2043,7 @@ export class SubmissionService {
             });
           }
         }
-        this.wps = [...this.wps, ...w3Projects, ...geographicScope, ...partnersWps];
+        this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partnersWps];
 
     if (partners.length < 1)
       partners = await this.organizationRepository.find();
@@ -1968,6 +2057,7 @@ export class SubmissionService {
       if (!this.noValuesAssigned[partner.code])
         this.noValuesAssigned[partner.code] = {};
       for (let wp of this.wps) {
+        // console.log(wp)
         if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
         if (!this.wp_budgets[partner.code][wp.ost_wp.wp_official_code])
           this.wp_budgets[partner.code][wp.ost_wp.wp_official_code] = null;
@@ -2181,46 +2271,81 @@ export class SubmissionService {
     this.GeographicScopeWp = this.wps.filter((d: any) => d.category == 'Geographic-Scope');
     this.partnersWp = this.wps.filter((d: any) => d.category == 'partners');
 
-    this.wps = this.wps.filter((d: any) => d.category == 'WP' || d.category == 'Projects');
+    // this.wps = this.wps.filter((d: any) => d.category == 'WP' || d.category == 'Projects' || d.category == 'Cross Cutting' || d.category == 'melia');
 
 
-    //sort WPS
-    const aows = this.wps.filter(item => /^AOW\d{2}/.test(item.title)).sort((a, b) => {
-      const numA = parseInt(a.title.match(/^AOW(\d{2})/)[1]);
-      const numB = parseInt(b.title.match(/^AOW(\d{2})/)[1]);
-      return numA - numB;
-    });
+    // //sort WPS
+    // const aows = this.wps.filter(item => /^AOW\d{2}/.test(item.title)).sort((a, b) => {
+    //   const numA = parseInt(a.title.match(/^AOW(\d{2})/)[1]);
+    //   const numB = parseInt(b.title.match(/^AOW(\d{2})/)[1]);
+    //   return numA - numB;
+    // });
     
-    const firstProject = this.wps.find(item => /^(SP\d{2})-AOW\d{2}-project$/.test(item.title));
-    const spCode = firstProject ? firstProject.title.match(/^(SP\d{2})/)[1] : 'SP02';
+    // const firstProject = this.wps.find(item => /^(SP\d{2})-AOW\d{2}-project$/.test(item.title));
+    // const spCode = firstProject ? firstProject.title.match(/^(SP\d{2})/)[1] : 'SP02';
     
-    const projects = this.wps.filter(item =>
-      new RegExp(`^${spCode}-AOW\\d{2}-project$`).test(item.title)
-    );
-    const crossProject = this.wps.find(item => item.title === "CROSS-project");
-    const totalItem = this.wps.find(item => item.title === "Total");
+    // const projects = this.wps.filter(item =>
+    //   new RegExp(`^${spCode}-AOW\\d{2}-project$`).test(item.title)
+    // );
+    // const crossProject = this.wps.find(item => item.title === "CROSS-project");
+    // const totalItem = this.wps.find(item => item.title === "Total");
     
-    const sorted = [];
+    // const sorted = [];
     
-    aows.forEach(aow => {
-      const number = aow.title.match(/^AOW(\d{2})/)[1];
-      sorted.push(aow);
+    // aows.forEach(aow => {
+    //   const number = aow.title.match(/^AOW(\d{2})/)[1];
+    //   sorted.push(aow);
     
-      if (number === "00" && crossProject) {
-        sorted.push(crossProject);
-      }
+    //   if (number === "00" && crossProject) {
+    //     sorted.push(crossProject);
+    //   }
     
-      const relatedProject = projects.find(p => p.title.includes(`AOW${number}`));
-      if (relatedProject) {
-        sorted.push(relatedProject);
-      }
-    });
+    //   const relatedProject = projects.find(p => p.title.includes(`AOW${number}`));
+    //   if (relatedProject) {
+    //     sorted.push(relatedProject);
+    //   }
+    // });
     
-    if (totalItem) {
-      sorted.push(totalItem);
-    }
+    // if (totalItem) {
+    //   sorted.push(totalItem);
+    // }
 
-    this.wps = sorted;
+    // Filter relevant categories
+this.wps = this.wps.filter((d: any) =>
+  ['WP', 'Projects', 'Cross Cutting', 'melia'].includes(d.category)
+);
+
+// Group WPs by their base wp_official_code (e.g., CROSS, SP01-AOW01)
+const groupedMap = new Map<string, any[]>();
+
+for (const wp of this.wps) {
+  const code = wp.ost_wp?.wp_official_code || '';
+  // Extract base code (before any suffix like -melia, -project, -Cross-Cutting)
+  const base = code.replace(/-(melia|project|Cross-Cutting)$/, '');
+
+  if (!groupedMap.has(base)) {
+    groupedMap.set(base, []);
+  }
+  groupedMap.get(base).push(wp);
+}
+
+// Sort each group: base → melia → Cross-Cutting → project
+const suffixOrder = ['','-melia','-Cross-Cutting','-project'];
+const sortedWps: any[] = [];
+
+for (const base of Array.from(groupedMap.keys()).sort()) {
+  const group = groupedMap.get(base)!;
+
+  // Sort within the group based on suffix priority
+  const ordered = suffixOrder.map(suffix =>
+    group.find(wp => wp.ost_wp?.wp_official_code === base + suffix)
+  ).filter(Boolean); // remove undefined
+
+  sortedWps.push(...ordered);
+}
+
+this.wps = sortedWps;
+
 
     let { lockupArray } = this.getConsolidatedData(this.wps, this.indicatorTypes);
 
@@ -2230,6 +2355,7 @@ export class SubmissionService {
     let allDataPartner = await this.getAllDataForGeoAndPartner(this.partnersWp, [this.period[0]], partners, submissionId);
     const lockupArrayForGeo = this.GeographicScopeWp.map((d:any) => d.ost_wp.wp_official_code);
     const lockupArrayForPartner = this.partnersWp.map((d:any) => d.ost_wp.wp_official_code);
+    console.log(this.wps)
 
     let partnersData;
     if (!organization)
@@ -2923,17 +3049,29 @@ export class SubmissionService {
       let _rowForProjects = 6;
       let cellRef;
       let startRowForPartner = this.actualWps.length + 2 + 5;
-      for (let wp of this.wps) {
+      for (let wp of this.actualWps) {
         //calculate total budget for each center (total center)
-        if(wp.category != "Projects") {
-          arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
+        const code = wp.ost_wp.wp_official_code;
+
+        if(wp.category !== "Projects") {
+          // arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
+          arrayOfCellRefWpBudgets = this.newgetCellRefBudgets([
+            this.allData[code],
+            this.allData[code + '-melia'],
+            this.allData[code + '-Cross-Cutting']
+          ], startRow, ws);
+          let totalRows = 0;
+          if (this.allData[code]) totalRows += this.allData[code].length + 1;
+          if (this.allData[code + '-melia']) totalRows += this.allData[code + '-melia'].length + 1;
+          if (this.allData[code + '-Cross-Cutting']) totalRows += this.allData[code + '-Cross-Cutting'].length + 1;
+          if (this.allData[code + '-project']) totalRows += this.allData[code + '-project'].length + 1;
           cellRef = XLSX.utils.encode_cell({ r: _row++, c: col });
           ws[cellRef] = {
             t: 'n',
-            f: '=' + arrayOfCellRefWpBudgets,
+            f: '=' + arrayOfCellRefWpBudgets.replace('1- ', ''),
             z: "#,##0",
             s: {
-              fill: { fgColor: { rgb: '454962' } },
+              fill: { fgColor: { rgb: '454982' } },
               font: { color: { rgb: 'ffffff' } },
               alignment: {
                 horizontal: 'center',
@@ -2941,9 +3079,10 @@ export class SubmissionService {
               },
             },
           }
-          startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
-        } else  if(wp.category == "Projects") {
-          arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
+          startRow += totalRows;
+          // startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
+        } else {
+          arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[code], startRow, ws);
           cellRef = XLSX.utils.encode_cell({ r: _rowForProjects++, c: col - 1 });
           ws[cellRef] = {
             t: 'n',
@@ -2958,7 +3097,10 @@ export class SubmissionService {
               },
             },
           }
-          startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
+          if (this.allData[code]) {
+            startRow += this.allData[code].length + 1;
+          }
+          // startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
         }
       }
 
@@ -3457,6 +3599,7 @@ export class SubmissionService {
         unlink(join(process.cwd(), 'generated_files', file_name), null);
       } catch (e) { }
     }, 9000);
+    console.log('soso',this.displayBudgetValues[49]['CROSS-Cross-Cutting']['7e09b213-c935-419b-9c06-e74d0251ea4f'])
     return new StreamableFile(file, {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       disposition: `attachment; filename="${file_name}"`,
@@ -3469,6 +3612,7 @@ export class SubmissionService {
     //   partners: partnersData,
     //   wps: this.wps
     // };
+
   }
 
   wpsTotalSum = 0;
@@ -3673,6 +3817,136 @@ export class SubmissionService {
       return this.phase?.show_eoi ? category == "EOI" : false;
   }
 
+  // async getDataForWp(
+  //   id: string,
+  //   partner_code: any | null = null,
+  //   official_code: any = null,
+  //   ost_wp_acronym: string,
+  //   wp_category: string
+  // ) {
+  //   let wp_data;
+  //   if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners') {
+  //     wp_data = this.results.filter((d: any) => {
+  //       if (partner_code)
+  //         return (
+  //           (d.category == "OUTPUT" ||
+  //             d.category == "OUTCOME" ||
+  //             this.checkEOI(d.category) ||
+  //             d.category == "Cross Cutting" ||
+  //             d.category == "IPSR" ||
+  //             d.category == "Melia"
+  //           ) &&
+  //           (d.group == id ||
+  //             (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
+  //             // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
+  //             ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+  //             d.wp_id == official_code ||
+  //             (official_code == "CROSS" && this.checkEOI(d.category))
+  //           )
+  //         );
+  //       else
+  //         return (
+  //           ((d.category == "OUTPUT" ||
+  //             d.category == "OUTCOME" ||
+  //             this.checkEOI(d.category) ||
+  //             d.category == "Cross Cutting" ||
+  //             d.category == "IPSR" ||
+  //             d.category == "Melia" 
+  //           ) &&
+  //             (d.group == id || (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects')  ||
+  //             // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
+  //             ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+  //               d.wp_id == official_code)) ||
+  //           (official_code == "CROSS" && this.checkEOI(d.category))
+  //         );
+  //     });
+  //   }  else if(wp_category == 'Projects') {
+  //     wp_data = this.results.filter((d: any) => {
+  //       if (partner_code)
+  //         return (
+  //           (d.category == "Project") &&
+  //           (
+  //             (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+  //           )
+  //         );
+  //       else
+  //       return (
+  //         (d.category == "Project") &&
+  //         (
+  //           (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+  //         )
+  //       );
+  //     });
+  //   } else if(wp_category == 'Geographic-Scope') {
+  //     wp_data = this.results.filter((d: any) => {
+  //       if (partner_code)
+  //         return (
+  //           (d.category == "Geographic-Scope") &&
+  //           (
+  //             (d?.parent_id == id && d.category == 'Geographic-Scope' && wp_category == 'Geographic-Scope')
+  //           )
+  //         );
+  //       else
+  //       return (
+  //         (d.category == "Geographic-Scope") &&
+  //         (
+  //           (d?.parent_id == id && d.category == 'Geographic-Scope' && wp_category == 'Geographic-Scope')
+  //         )
+  //       );
+  //     });
+  //   } else if(wp_category == 'partners') {
+  //     wp_data = this.results.filter((d: any) => {
+  //       if (partner_code)
+  //         return (
+  //           (d.category == "partners") &&
+  //           (
+  //             (d?.parent_id == id && d.category == 'partners' && wp_category == 'partners')
+  //           )
+  //         );
+  //       else
+  //       return (
+  //         (d.category == "partners") &&
+  //         (
+  //           (d?.parent_id == id && d.category == 'partners' && wp_category == 'partners')
+  //         )
+  //       );
+  //     });
+  //   }
+ 
+  //   if (ost_wp_acronym === 'AOW00') {
+  //     const meliaMap = new Map<string, any>();
+  //     const nonMeliaItems: any[] = [];
+    
+  //     for (const item of wp_data) {
+  //       if (item.category !== 'Melia') {
+  //         nonMeliaItems.push(item);
+  //         continue;
+  //       }
+    
+  //       const key = `${item.id}`;
+    
+  //       if (!meliaMap.has(key)) {
+  //         meliaMap.set(key, {
+  //           ...item,
+  //           results: item.results ?? '',
+  //         });
+  //       } else {
+  //         const existing = meliaMap.get(key);
+  //         if (item.results && !existing.results.includes(item.results)) {
+  //           existing.results += `, ${item.results}`;
+  //         }
+  //       }
+  //     }
+    
+  //     wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
+  //   }
+    
+
+
+  //   wp_data.sort(this.compare);
+
+  //   return wp_data;
+  // }
   async getDataForWp(
     id: string,
     partner_code: any | null = null,
@@ -3681,23 +3955,25 @@ export class SubmissionService {
     wp_category: string
   ) {
     let wp_data;
-    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners') {
+    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
             (d.category == "OUTPUT" ||
               d.category == "OUTCOME" ||
               this.checkEOI(d.category) ||
-              d.category == "Cross Cutting" ||
-              d.category == "IPSR" ||
-              d.category == "Melia"
+              // d.category == "Cross Cutting" ||
+              d.category == "IPSR" 
+              // d.category == "Melia"
             ) &&
             (d.group == id ||
               (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects') ||
               // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
-              ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
-              d.wp_id == official_code ||
-              (official_code == "CROSS" && this.checkEOI(d.category))
+              ((this.checkEOI(d.category) || d.category == "OUTCOME" && !d.group) && ost_wp_acronym == 'AOW00') ||
+
+              // ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+              d.wp_id == official_code 
+              // (official_code == "CROSS" && this.checkEOI(d.category))
             )
           );
         else
@@ -3705,15 +3981,17 @@ export class SubmissionService {
             ((d.category == "OUTPUT" ||
               d.category == "OUTCOME" ||
               this.checkEOI(d.category) ||
-              d.category == "Cross Cutting" ||
-              d.category == "IPSR" ||
-              d.category == "Melia" 
+              // d.category == "Cross Cutting" ||
+              d.category == "IPSR" 
+              // d.category == "Melia" 
             ) &&
               (d.group == id || (d?.parent_id == id && d.category != 'Project' && wp_category != 'Projects')  ||
               // (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') ||
-              ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
-                d.wp_id == official_code)) ||
-            (official_code == "CROSS" && this.checkEOI(d.category))
+              ((this.checkEOI(d.category) || d.category == "OUTCOME" && !d.group) && ost_wp_acronym == 'AOW00') ||
+
+              // ((this.checkEOI(d.category) || d.category == "Cross Cutting" || (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')) && ost_wp_acronym == 'AOW00') ||
+                d.wp_id == official_code)) 
+            // (official_code == "CROSS" && this.checkEOI(d.category))
           );
       });
     }  else if(wp_category == 'Projects') {
@@ -3722,18 +4000,49 @@ export class SubmissionService {
           return (
             (d.category == "Project") &&
             (
-              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+              (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') || (!d?.parent_id && d.category == 'Project' && official_code == 'CROSS-project')
             )
           );
         else
         return (
           (d.category == "Project") &&
           (
-            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects')
+            (d?.parent_id == id && d.category == 'Project' && wp_category == 'Projects') || (!d?.parent_id && d.category == 'Project' && official_code == 'CROSS-project')
           )
         );
       });
-    } else if(wp_category == 'Geographic-Scope') {
+    } 
+    else if(wp_category == 'melia') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "Melia") &&
+            (
+              (d?.parent_id == id) || ( (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')  && ost_wp_acronym == 'CROSS') 
+            )
+          );
+        else
+        return (
+          (d.category == "Melia") &&
+          (
+            (d?.parent_id == id) || ( (!d.group && d.category != 'Melia') || (!d.parent_id && d.category == 'Melia')  && ost_wp_acronym == 'CROSS') 
+          )
+        );
+      });
+    } 
+     else if(wp_category == 'Cross Cutting') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+              (d.category == "Cross Cutting" && official_code == 'CROSS-Cross-Cutting')
+          );
+        else
+        return (
+          (d.category == "Cross Cutting" && official_code == 'CROSS-Cross-Cutting')
+        );
+      });
+    } 
+    else if(wp_category == 'Geographic-Scope') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -3769,33 +4078,33 @@ export class SubmissionService {
       });
     }
  
-    if (ost_wp_acronym === 'AOW00') {
-      const meliaMap = new Map<string, any>();
-      const nonMeliaItems: any[] = [];
+    // if (ost_wp_acronym === 'AOW00') {
+    //   const meliaMap = new Map<string, any>();
+    //   const nonMeliaItems: any[] = [];
     
-      for (const item of wp_data) {
-        if (item.category !== 'Melia') {
-          nonMeliaItems.push(item);
-          continue;
-        }
+    //   for (const item of wp_data) {
+    //     if (item.category !== 'Melia') {
+    //       nonMeliaItems.push(item);
+    //       continue;
+    //     }
     
-        const key = `${item.id}`;
+    //     const key = `${item.id}`;
     
-        if (!meliaMap.has(key)) {
-          meliaMap.set(key, {
-            ...item,
-            results: item.results ?? '',
-          });
-        } else {
-          const existing = meliaMap.get(key);
-          if (item.results && !existing.results.includes(item.results)) {
-            existing.results += `, ${item.results}`;
-          }
-        }
-      }
+    //     if (!meliaMap.has(key)) {
+    //       meliaMap.set(key, {
+    //         ...item,
+    //         results: item.results ?? '',
+    //       });
+    //     } else {
+    //       const existing = meliaMap.get(key);
+    //       if (item.results && !existing.results.includes(item.results)) {
+    //         existing.results += `, ${item.results}`;
+    //       }
+    //     }
+    //   }
     
-      wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
-    }
+    //   wp_data = [...nonMeliaItems, ...Array.from(meliaMap.values())];
+    // }
     
 
 
@@ -4113,6 +4422,32 @@ export class SubmissionService {
     }
   }
 
+  newgetCellRefBudgets(data: any[], startRaw: number, ws: any): string {
+    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const col = range.e.c;
+    const groupExpressions: string[] = [];
+    let currentRow = startRaw;
+  
+    for (const dataset of data) {
+      if (!dataset || dataset.length === 0) continue;
+  
+      const cellRefs: string[] = [];
+  
+      for (let i = 0; i < dataset.length; i++) {
+        const cellRef = XLSX.utils.encode_cell({ r: currentRow + i, c: col });
+        cellRefs.push(cellRef);
+      }
+  
+      currentRow += dataset.length + 1;
+  
+      if (cellRefs.length > 0) {
+        groupExpressions.push(cellRefs.join('+'));
+      }
+    }
+  
+    return groupExpressions.length === 0 ? '0' : '1- ' + groupExpressions.join(' + ');
+  }
+  
 
   getCellRefBudgets(data: any[], startRaw: any, ws) {
     let arrayBudgets = [];

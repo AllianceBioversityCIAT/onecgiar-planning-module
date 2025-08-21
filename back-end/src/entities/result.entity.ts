@@ -34,6 +34,15 @@ export class Result {
   @Column({ default: false })
   is_project: boolean;
 
+  @Column({ default: null })
+  type: string;
+
+  @Column({ default: null })
+  parent_id: string;
+
+  @Column({ default: null })
+  indicator_type: string;
+
   @ManyToOne(() => Organization, (organization) => organization.results)
   @JoinColumn({ name: 'organization_code' })
   organization: Organization;

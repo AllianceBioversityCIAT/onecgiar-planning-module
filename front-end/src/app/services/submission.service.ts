@@ -262,6 +262,12 @@ export class SubmissionService {
     ).catch((e) => false);
   }
 
+  async getSavedDataIndicator(id: number, phaseId: any) {
+    return firstValueFrom(
+      this.http.get(environment.api_url+'/submission/save-indicator/' + id + '/phaseId/' + phaseId).pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async saveResultValues(id: number, data: any) {
     return firstValueFrom(
       this.http
