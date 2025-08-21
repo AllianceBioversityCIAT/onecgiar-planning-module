@@ -94,6 +94,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   wp_budgets: any = {};
   budgetValues: any = {};
   displayBudgetValues: any = {};
+  displayBudgetValuesItemIndicator: any = {};
+
   displayBudgetValuesIndicator: any = {};
   budgetValuesIndicatorPartner: any = {};
   totalBudgetValuesIndicatorPartner: any = {};
@@ -308,10 +310,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             subTotalBudgetIndicator += val;
           } 
         });
-        this.displayBudgetValues[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
-        this.budgetValues[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
+        this.displayBudgetValuesItemIndicator[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
+       
 
-        Object.values(this.displayBudgetValues[partner_code][wp_id]).forEach(val => {
+        Object.values(this.displayBudgetValuesItemIndicator[partner_code][wp_id]).forEach(val => {
           if (typeof val === "number") {
             totalWpBudget += val;
           } 
@@ -344,9 +346,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           budgetValue,
           subTotalBudgetIndicator
         });
-        // this.recomputeIndicatorTotals();
-        this.changeCalc(partner_code, wp_id, item_id, parent_title, 'budget', false, 'ITEM', false);
-        this.wpBudgetChange(partner_code, wp_id, totalWpBudget, false);
       }
     }, 500);
   } 
@@ -973,6 +972,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.budgetValues = {};
     this.budgetValues = {};
     this.displayBudgetValues = {};
+    this.displayBudgetValuesItemIndicator = {};
+
     this.displayBudgetValuesIndicator = {};
     this.budgetValuesIndicatorPartner = {};
     this.budgetValuesIndicatorSummary = {};
@@ -1186,6 +1187,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.budgetValues[partner.code] = {};
       if (!this.displayBudgetValues[partner.code])
         this.displayBudgetValues[partner.code] = {};
+      if (!this.displayBudgetValuesItemIndicator[partner.code])
+        this.displayBudgetValuesItemIndicator[partner.code] = {};
       if (!this.displayBudgetValuesIndicator[partner.code])
         this.displayBudgetValuesIndicator[partner.code] = {};
       if (!this.budgetValuesIndicatorPartner[partner.code])
@@ -1208,6 +1211,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.budgetValues[partner.code][wp.ost_wp.wp_official_code] = {};
         if (!this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code])
           this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code] =
+            {};
+        if (!this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code])
+          this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code] =
             {};
         if (!this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code])
           this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code] =
@@ -1305,6 +1311,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.budgetValues[partner.code][wp.ost_wp.wp_official_code][item.id] =
             null;
           this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code][
+            item.id
+          ] = null;
+          this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][
             item.id
           ] = null;
           if(item.category == 'OUTPUT'){
@@ -1436,8 +1445,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     this.setTotalTargetForIndicators();
 
-    console.log('this.budgetValuesIndicatorPartner', this.budgetValuesIndicatorPartner)
-
+    this.setItemIndicatorAndBudget();
+    this.sammaryCalc();
     
     const tab = this.activatedRoute.snapshot.queryParamMap.get("tab");
     if (tab && this.initiative_data.is_valid && this.initUser?.role != 'MELIA Focal Point')
@@ -1464,9 +1473,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
     
 
-    console.log(this.allData)
-    console.log(this.displayBudgetValuesIndicator)
-    console.log(this.budgetValues)
+    // console.log(this.allData)
+    // console.log(this.displayBudgetValuesItemIndicator)
+    // console.log(this.budgetValues)
 
     
 
@@ -1700,9 +1709,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
 
+      this.setItemIndicatorAndBudget();
       this.sammaryCalc();
-      this.recomputeIndicatorTotals();
-
+      this.recomputeIndicatorBudgetTotals();
     });
     this.socket.on("setDataBudget-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, budget } = data;
@@ -1796,6 +1805,42 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.dialog.closeAll();
   }
 
+  //set values for item-indicator and budget (front-end)
+  setItemIndicatorAndBudget() {
+    Object.keys(this.displayBudgetValuesIndicator).forEach((code) => {
+      Object.keys(this.displayBudgetValuesIndicator[code]).forEach((wp_id) => {
+        Object.keys(this.displayBudgetValuesIndicator[code][wp_id]).forEach((item_id) => {
+          let sum = 0;
+          let total = 0;
+    
+          Object.keys(this.displayBudgetValuesIndicator[code][wp_id][item_id]).forEach((indicator_id) => {
+            const value = this.displayBudgetValuesIndicator[code][wp_id][item_id][indicator_id];
+            sum += Number(value) || 0; 
+          });
+    
+          if (!this.displayBudgetValuesItemIndicator[code]) {
+            this.displayBudgetValuesItemIndicator[code] = {};
+          }
+          if (!this.displayBudgetValuesItemIndicator[code][wp_id]) {
+            this.displayBudgetValuesItemIndicator[code][wp_id] = {};
+          }
+    
+          this.displayBudgetValuesItemIndicator[code][wp_id][item_id] = sum;
+
+          this.budgetValues[code][wp_id][item_id] = sum;
+          this.displayBudgetValues[code][wp_id][item_id] = sum;
+
+
+          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach(val => {
+            if (typeof val === "number") {
+              total += Number(val) || 0;
+            } 
+          });
+          this.wp_budgets[code][wp_id] = total;
+        });
+      });
+    });
+  }
   setvalues(valuesToSet: any, perValuesToSet: any, noBudget: any) {
     if (valuesToSet != null)
       Object.keys(this.values).forEach((code) => {
@@ -1872,7 +1917,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   setvaluesForIndicators(data: any[]) {
-    for(let value of data) {
+    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
+    const ids = Object.values(indicatorIds);
+    const filtered = data.filter(item => ids.includes(item.result_uuid));
+    for(let value of filtered) {
       this.displayBudgetValuesIndicator[value.organization_code][value.workPackage.wp_official_code][value.parent_id][value.result_uuid] = Number(value.budget);      
     }
     this.sammaryCalc();
@@ -1937,8 +1985,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     }
   }
 
-  async recomputeIndicatorTotals() {
-    // Reset all totals
+  async recomputeIndicatorBudgetTotals() {
     this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicator(
       this.params.id,
       this.phase.id
@@ -1951,42 +1998,34 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     const indicatorIds = this.results?.[this.results.length - 1]?.indicator_ids ?? {};
     const ids = new Set(Object.values(indicatorIds));
   
-    // Filter only relevant indicator data
     const filtered = this.savedValuesForIndicator.filter((item:any) => ids.has(item.result_uuid));
   
-    const seen = new Set<string>(); // deduplicate by result_uuid
   
     for (const item of filtered) {
-      if (seen.has(item.result_uuid)) continue;
-      seen.add(item.result_uuid);
   
       const org = item.organization_code;
       const wp = item.workPackage?.wp_official_code;
       const type = item.indicator_type;
       const budget = Number(item.budget) || 0;
   
-      // Per-partner, per-WP totals
       this.budgetValuesIndicatorPartner[org] ??= {};
       this.budgetValuesIndicatorPartner[org][wp] ??= {};
       this.budgetValuesIndicatorPartner[org][wp][type] =
         (this.budgetValuesIndicatorPartner[org][wp][type] || 0) + budget;
   
-      // WP-level totals
+      
       this.budgetValuesIndicatorSummary[wp] ??= {};
       this.budgetValuesIndicatorSummary[wp][type] =
         (this.budgetValuesIndicatorSummary[wp][type] || 0) + budget;
   
-      // Total per partner (all WPs)
       this.totalBudgetValuesIndicatorPartner[org] ??= {};
       this.totalBudgetValuesIndicatorPartner[org][type] =
         (this.totalBudgetValuesIndicatorPartner[org][type] || 0) + budget;
   
-      // Global totals
       this.totalBudgetValuesIndicatorSummary[type] =
         (this.totalBudgetValuesIndicatorSummary[type] || 0) + budget;
     }
   
-    // Trigger Angular change detection
     this.budgetValuesIndicatorPartner = { ...this.budgetValuesIndicatorPartner };
     this.budgetValuesIndicatorSummary = { ...this.budgetValuesIndicatorSummary };
     this.totalBudgetValuesIndicatorPartner = { ...this.totalBudgetValuesIndicatorPartner };
@@ -2709,17 +2748,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   setTotalTargetForIndicators() {
-    // initialize structure
     for (let wp of this.actualWps) {
       if (!this.totalTargetsIndicator[wp.ost_wp.wp_official_code]) {
         this.totalTargetsIndicator[wp.ost_wp.wp_official_code] = {};
       }
   
-      // if wp has data
       const wpData = this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code];
       if (!wpData) continue;
   
-      // loop over items inside this WP
       Object.keys(wpData).forEach((itemId) => {
         const indicators = wpData[itemId];
   

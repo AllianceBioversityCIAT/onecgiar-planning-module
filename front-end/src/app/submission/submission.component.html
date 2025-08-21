@@ -4133,7 +4133,7 @@
                         <th>{{ item.year }} - {{ item.quarter }}</th>
                       </ng-container> -->
                       <tr>
-                        <th>Desc</th>
+                        <th>Description</th>
                         <th>Type</th>
                         <th>Geographic Scope</th>
                         <th>Target</th>
@@ -4256,7 +4256,7 @@
   
                         <td *ngIf="i === 0"  [attr.rowspan]="item.indicators.length || 1">
                           {{
-                          displayBudgetValues[partner.code][wp.ost_wp.wp_official_code][item.id]
+                          displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]
                           }}
                           <!-- <mat-form-field
                             class="form-dialog-content__field"
