@@ -282,7 +282,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           value: percentValue,
           no_budget: this.noValuesAssigned[partner_code][wp_id][item_id],
         });
-      // this.sammaryCalc();
+      this.sammaryCalc();
       this.validateCenter(partner_code, false);
     }, 500);
     this.initiative_data = await this.submissionService.getInitiative(
@@ -311,8 +311,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           } 
         });
         this.displayBudgetValuesItemIndicator[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
-       
-
+        
         Object.values(this.displayBudgetValuesItemIndicator[partner_code][wp_id]).forEach(val => {
           if (typeof val === "number") {
             totalWpBudget += val;
@@ -320,7 +319,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         });
         this.wp_budgets[partner_code][wp_id] = totalWpBudget;
 
-      const result = await this.submissionService.saveResultValue(
+        const result = await this.submissionService.saveResultValue(
         this.params.id,
         {
           partner_code: partner_code,
@@ -2460,6 +2459,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   validateWp(partner_code: any, wp_id: any) { 
+    const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting '];
+    const isIncluded = validateWp.some(item => wp_id.toLowerCase().includes(item.toLowerCase()));
+
     let valid = true;
     let wpChecked = false;
     let message = "";
@@ -2492,49 +2494,54 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     //     if (perChecked) wpChecked = true;
     //   }
     // });
-
-    this.errors[partner_code][wp_id] = null;
-    if (
-      this.totals[partner_code][wp_id] == 0 &&
-      (this.wp_budgets[partner_code][wp_id] != 0 && this.wp_budgets[partner_code][wp_id] != null)
-    ) {
-      valid = false;
-      this.errors[partner_code][wp_id] =
-        "There is a work package with a budget not disaggregated";
-      message = "There is a work package with a budget not disaggregated";
-    } else if (
-      // wpChecked &&
-      // hasBudget &&
-      (Math.round(total) !== 0 &&  Number(this.wp_budgets[partner_code][wp_id]) !== 0)
-    ) {
-      valid = false;
-      if ( Math.round(total) !== Number(this.wp_budgets[partner_code][wp_id])) {
+    if(isIncluded){
+      this.errors[partner_code][wp_id] = null;
+      if (
+        this.totals[partner_code][wp_id] == 0 &&
+        (this.wp_budgets[partner_code][wp_id] != 0 && this.wp_budgets[partner_code][wp_id] != null)
+      ) {
+        valid = false;
         this.errors[partner_code][wp_id] =
-          "Results budget must be equal total budget";
-        message = "The subtotal of all percentages should equal 100%";
-      } else {
-        valid = true;
-        this.errors[partner_code][wp_id] = null;
-        message = '';
+          "There is a work package with a budget not disaggregated";
+        message = "There is a work package with a budget not disaggregated";
+      } else if (
+        // wpChecked &&
+        // hasBudget &&
+        (Math.round(total) !== 0 &&  Number(this.wp_budgets[partner_code][wp_id]) !== 0)
+      ) {
+        valid = false;
+        if ( Math.round(total) !== Number(this.wp_budgets[partner_code][wp_id])) {
+          this.errors[partner_code][wp_id] =
+            "Results budget must be equal total budget";
+          message = "The subtotal of all percentages should equal 100%";
+        } else {
+          valid = true;
+          this.errors[partner_code][wp_id] = null;
+          message = '';
+        }
+         
+      } else if (
+        this.totals[partner_code][wp_id] > 0 &&
+        !+this.wp_budgets[partner_code][wp_id]
+      ) {
+        valid = false;
+        this.errors[partner_code][wp_id] =
+          "There is a work package without a total budget assigned";
+        message = "There is a work package without a total budget assigned";
+      } else if (!valid) {
+        this.errors[partner_code][wp_id] =
+          "There is a checked item(s) but not budgeted";
+        message = "There is a checked item(s) but not budgeted";
       }
-       
-    } else if (
-      this.totals[partner_code][wp_id] > 0 &&
-      !+this.wp_budgets[partner_code][wp_id]
-    ) {
-      valid = false;
-      this.errors[partner_code][wp_id] =
-        "There is a work package without a total budget assigned";
-      message = "There is a work package without a total budget assigned";
-    } else if (!valid) {
-      this.errors[partner_code][wp_id] =
-        "There is a checked item(s) but not budgeted";
-      message = "There is a checked item(s) but not budgeted";
+      return {
+        valid: valid,
+        message: message,
+      };
     }
-    return {
-      valid: valid,
-      message: message,
-    };
+     return {
+        valid: valid,
+        message: message,
+      };
   } 
   async excel() {
     await this.submissionService.excelCurrent(this.params.id);
