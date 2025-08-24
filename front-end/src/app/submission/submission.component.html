@@ -4198,6 +4198,15 @@
                               <input
                                 mask="separator.2"
                                 thousandSeparator=","
+                                [disabled]="
+                                !+wp_budgets[partner.code][
+                                  wp.ost_wp.wp_official_code] ||
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
                                 (keyup)="
                                   changeCalcForIndicator(
                                     partner.code,
