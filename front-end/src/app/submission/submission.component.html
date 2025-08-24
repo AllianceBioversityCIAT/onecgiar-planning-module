@@ -2247,7 +2247,8 @@
                         roundNumbers([
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code],
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia'],
-                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting'],
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-partners']
                         ]) | number
                       }}
                     </td>
@@ -3954,7 +3955,8 @@
                       {{ roundNumbers([
                         wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code],
                         wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-melia'],
-                        wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-Cross-Cutting']
+                        wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-Cross-Cutting'],
+                        wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-partners']
                       ]) | number }}
                     </td>
                     <td>
