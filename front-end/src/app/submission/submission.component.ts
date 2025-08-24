@@ -2164,7 +2164,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           )
         );
       });
-    }
+    } 
  
     // if (ost_wp_acronym === 'AOW00') {
     //   const meliaMap = new Map<string, any>();
