@@ -2610,22 +2610,22 @@
                           </td>
                         </ng-container> -->
                         <td>
-                          {{  indicator.description }}
+                          {{  indicator?.description }}
                         </td>
                         <td>
-                          {{  indicator.type.name }}
+                          {{  indicator?.type?.name }}
                         </td>
                         <td>
                           {{  getScope(indicator, 'item')  }}
                         </td>
                         <td>
-                          {{  getTargetValue(indicator.target) }}
+                          {{  getTargetValue(indicator?.target) }}
                         </td>
 
                         <td>
                           {{   summaryBudgetsIndicator[
                             wp.ost_wp.wp_official_code
-                          ][item.id][indicator.id] }}
+                          ][item.id][indicator?.id] }}
                         </td>
                        
                         <td (click)="item.isExpand = !item.isExpand" *ngIf="i === 0"  [attr.rowspan]="item.indicators.length || 1">
@@ -2721,7 +2721,7 @@
                       </td>
 
                       <ng-container *ngFor="let type of outcomeIndicatorTypes">
-                        <td>{{ item.category == 'OUTCOME' ? perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item.id]?.[type] : '-' }}</td>
+                        <td>{{ item.category == 'OUTCOME' ? perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item?.id]?.[type] : '-' }}</td>
                       </ng-container>
 
                       <td *ngIf="showSubQualitativeIndicators(item?.qualitative_indicators) != ''" (click)="qualitativeIndicatorsDialog(item?.qualitative_indicators)" title="More Info" class="pointer">
@@ -3645,6 +3645,8 @@
                         }}
                       </td>
                   </tr>
+                 
+                  </ng-container>
                   <tr class="total">
                     <td [attr.colspan]="4">
                       <div class="subtotal">Subtotal</div>
@@ -3660,7 +3662,6 @@
                       }}
                     </td>
                   </tr>
-                  </ng-container>
                 </table>
               </div>
             </ng-container>
@@ -4175,16 +4176,16 @@
   
                         <!-- <ng-container *ngFor="let indicator of item.indicators"> -->
                           <td>
-                            {{  indicator.description }}
+                            {{  indicator?.description }}
                           </td>
                           <td>
-                            {{  indicator.type.name }}
+                            {{  indicator?.type?.name }}
                           </td>
                           <td>
                             {{  getScope(indicator, 'item')  }}
                           </td>
                           <td>
-                            {{  getTargetValue(indicator.target) }}
+                            {{  getTargetValue(indicator?.target) }}
                           </td>
                           <td>
                             <mat-form-field
@@ -4202,17 +4203,17 @@
                                     partner.code,
                                     wp.ost_wp.wp_official_code,
                                     item.id,
-                                    indicator.type.name,
-                                    indicator.id,
+                                    indicator?.type?.name,
+                                    indicator?.id,
                                     'INDICATOR',
                                     item.title,
-                                    indicator.type.value
+                                    indicator?.type?.value
                                   )
                                 "
                                 [(ngModel)]="
                                   displayBudgetValuesIndicator[partner.code][
                                     wp.ost_wp.wp_official_code
-                                  ][item.id][indicator.id]
+                                  ][item.id][indicator?.id]
                                 "
                                 matInput
                               />
