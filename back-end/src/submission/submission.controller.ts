@@ -268,7 +268,7 @@ export class SubmissionController {
                   for (const indicator of items.indicators) {
                     // if (!indicator?.type?.toc_id || !indicator.target?.length) continue;
                     
-                    let indicatorType = indicator.type.value;
+                    let indicatorType = indicator?.type?.value;
     
                     if(indicator.related_node_id){
                       indicator.id = indicator.related_node_id
