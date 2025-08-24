@@ -173,9 +173,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   getTotalBudgetForEachPartner(budgets: { [key: string]: any }) {
     return Object.entries(budgets)
       .filter(([key]) => 
-        !key.includes('-project') &&
-        !key.toLowerCase().includes('melia') &&
-        !key.toLowerCase().includes('partners')
+        !key.includes('-project')
       )
       .reduce((sum, [, value]) => sum + Number(value || 0), 0)
       .toString()
@@ -787,12 +785,11 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
     .filter(([key]) => 
-      !key.includes('-project') &&
-      !key.toLowerCase().includes('melia') &&
-      !key.toLowerCase().includes('partners')
+      !key.includes('-project')
     )
     .reduce((sum, [, value]: any) => sum + value, 0);
   
+    console.log(this.summaryBudgetsTotal)
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
       Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
