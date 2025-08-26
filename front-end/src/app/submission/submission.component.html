@@ -2318,7 +2318,7 @@
                 ></app-popover>
               </mat-card-title>
               <mat-card-content>
-                <ng-container *ngIf="wp.ost_wp.acronym != 'AOW00'">
+                <ng-container >
                   <div class="sub-head pooled">
                     <span class="sub-title">Pooled Funded/High Level Output	</span> 
                     <mat-slide-toggle
@@ -2378,7 +2378,7 @@
                 </div>
               </div> -->
 
-              <ng-container *ngIf="wp.ost_wp.acronym != 'AOW00'">
+              <ng-container>
 
                 <div class="table-box-1 mat-elevation-z8">
                   <table>
@@ -2619,7 +2619,7 @@
                           {{  getScope(indicator, 'item')  }}
                         </td>
                         <td>
-                          {{  getTargetValue(indicator?.target) }}
+                          {{  getTargetValue(indicator?.targets) }}
                         </td>
 
                         <td>
@@ -4052,7 +4052,7 @@
 
 
                   
-                  <div class="sub-head"*ngIf="wp.ost_wp.acronym != 'AOW00'">
+                  <div class="sub-head">
                     <span class="sub-title sub-title-2">Pooled Funded/High Level Output</span>
                   
                   <div class="btns-sec">
@@ -4121,7 +4121,7 @@
 
 
               <mat-card-content>
-                <div class="table-box-2 mat-elevation-z8" *ngIf="wp.ost_wp.acronym != 'AOW00'">
+                <div class="table-box-2 mat-elevation-z8">
                   <table
                     [ngClass]="{
                       error: errors[partner.code][wp.ost_wp.wp_official_code]
@@ -4185,7 +4185,7 @@
                             {{  getScope(indicator, 'item')  }}
                           </td>
                           <td>
-                            {{  getTargetValue(indicator?.target) }}
+                            {{  getTargetValue(indicator?.targets) }}
                           </td>
                           <td>
                             <mat-form-field
@@ -4421,7 +4421,7 @@
                     </tr>
                   </table>
                 </div>
-                <p class="error" *ngIf="wp.ost_wp.acronym != 'AOW00'">
+                <p class="error">
                   {{ errors[partner.code][wp.ost_wp.wp_official_code] }}
                 </p>
 

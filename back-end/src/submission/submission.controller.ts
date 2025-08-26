@@ -274,33 +274,33 @@ export class SubmissionController {
                       indicator.id = indicator.related_node_id
                     }
                     indicatorIds.push(indicator.id)
-                    for (const target of indicator.target) {
-                      if (!target?.date || !target?.value) continue;
-                      if (target?.project?.id == 'Pooled funded') {
-                        const date = new Date(target.date);
-                        if (date.getFullYear() === 2026) {
-                          const value = parseFloat(target.value);
+                    for (const target of indicator.targets) {
+                      // if (!target?.date || !target?.value) continue;
+                      // if (target?.project?.id == 'Pooled funded') {
+                        // const date = new Date(target.date);
+                        // if (date.getFullYear() === 2026) {
+                          const value = parseFloat(target['2026']);
                           if (!isNaN(value)) {
                             if(indicatorType == 'custom')
                               indicatorType = indicatorType + '-' + items.category;
                             sumPooledFundedByType[indicatorType] = (sumPooledFundedByType[indicatorType] || 0) + value;
                           }
-                        }
-                      } else {
+                        // }
+                      // } else {
                         //for project 
-                        const date = new Date(target.date);
-                        if (date.getFullYear() === 2026) {
-                          const value = parseFloat(target.value);
-                          if (!isNaN(value)) {
-                            if (!sumProjectByType[target.project.id]) {
-                              sumProjectByType[target.project.id] = {};
-                            }
-                            if(indicatorType == 'custom')
-                              indicatorType = indicatorType + '-' + items.category;
-                            sumProjectByType[target.project.id][indicatorType] = (sumProjectByType[target.project.id][indicatorType] || 0) + value;
-                          }
-                        }
-                      }
+                        // const date = new Date(target.date);
+                        // if (date.getFullYear() === 2026) {
+                        //   const value = parseFloat(target.value);
+                        //   if (!isNaN(value)) {
+                        //     if (!sumProjectByType[target.project.id]) {
+                        //       sumProjectByType[target.project.id] = {};
+                        //     }
+                        //     if(indicatorType == 'custom')
+                        //       indicatorType = indicatorType + '-' + items.category;
+                        //     sumProjectByType[target.project.id][indicatorType] = (sumProjectByType[target.project.id][indicatorType] || 0) + value;
+                        //   }
+                        // }
+                      // }
                     }
                   }
     

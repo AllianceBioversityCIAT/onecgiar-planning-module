@@ -789,7 +789,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     )
     .reduce((sum, [, value]: any) => sum + value, 0);
   
-    console.log(this.summaryBudgetsTotal)
+    // console.log(this.summaryBudgetsTotal)
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
       Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
@@ -894,7 +894,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         }
 
     }
-    console.log(this.perAllValuesIndicator)
+    // console.log(this.perAllValuesIndicator)
 
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
@@ -1469,7 +1469,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
     
 
-    // console.log(this.allData)
+    console.log(this.allData)
     // console.log(this.displayBudgetValuesItemIndicator)
     // console.log(this.budgetValues)
 
@@ -2675,6 +2675,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         }
   
         for (let data of allData) {
+          // console.log('dada', data)
           const dataId = data.id;
           const indicatorValues = data.pooled_funded_indicator_values || {};
   
@@ -2744,11 +2745,11 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   getTargetValue(targets: any[]) {
-    let result = targets.find(t => 
-      t.project.id === "Pooled funded" &&
-      moment(t.date).year() === 2026
-    );
-    return result?.value ?? 'N/A'
+    // let result = targets.find(t => 
+    //   t.project.id === "Pooled funded" &&
+    //   moment(t.date).year() === 2026
+    // );
+    return targets[0]?.['2026'] ?? 'N/A'
   }
 
   setTotalTargetForIndicators() {
