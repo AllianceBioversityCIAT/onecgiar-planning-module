@@ -256,51 +256,30 @@ export class SubmissionController {
                 if (items.projects?.length) {
                   items.projects = items.projects.map((proj: any) => proj.id);
                 }
-                if (items.indicators?.length)  items.indicators  = items.indicators.map((i: any) => i);
+                if (items.quantitative_indicators?.length)  items.quantitative_indicators  = items.quantitative_indicators.map((i: any) => i);
 
                 if (items.partners?.length)  items.partners  = items.partners.map((p: any) => p);
 
                 
-                if (items.indicators?.length && (items.category == 'OUTPUT' || items.category == 'OUTCOME')) {
+                if (items.quantitative_indicators?.length && (items.category == 'OUTPUT' || items.category == 'OUTCOME')) {
                   const sumPooledFundedByType: Record<string, number> = {};
                   const sumProjectByType: Record<string, any> = {};
 
-                  for (const indicator of items.indicators) {
-                    // if (!indicator?.type?.toc_id || !indicator.target?.length) continue;
+                  for (const indicator of items.quantitative_indicators) {
                     
                     let indicatorType = indicator?.type?.value;
     
                     if(indicator.related_node_id){
                       indicator.id = indicator.related_node_id
                     }
-                    indicatorIds.push(indicator.id)
+                    indicatorIds.push(indicator.id);
                     for (const target of indicator.targets) {
-                      // if (!target?.date || !target?.value) continue;
-                      // if (target?.project?.id == 'Pooled funded') {
-                        // const date = new Date(target.date);
-                        // if (date.getFullYear() === 2026) {
                           const value = parseFloat(target['2026']);
                           if (!isNaN(value)) {
                             if(indicatorType == 'custom')
                               indicatorType = indicatorType + '-' + items.category;
                             sumPooledFundedByType[indicatorType] = (sumPooledFundedByType[indicatorType] || 0) + value;
                           }
-                        // }
-                      // } else {
-                        //for project 
-                        // const date = new Date(target.date);
-                        // if (date.getFullYear() === 2026) {
-                        //   const value = parseFloat(target.value);
-                        //   if (!isNaN(value)) {
-                        //     if (!sumProjectByType[target.project.id]) {
-                        //       sumProjectByType[target.project.id] = {};
-                        //     }
-                        //     if(indicatorType == 'custom')
-                        //       indicatorType = indicatorType + '-' + items.category;
-                        //     sumProjectByType[target.project.id][indicatorType] = (sumProjectByType[target.project.id][indicatorType] || 0) + value;
-                        //   }
-                        // }
-                      // }
                     }
                   }
     
@@ -308,7 +287,6 @@ export class SubmissionController {
                   items.projects_indicator_values = sumProjectByType;
 
                 }
-
               
 
               return items;
@@ -328,14 +306,14 @@ export class SubmissionController {
                   const key = `${melia.id}_${data.group}`;
                   if (meliaMap.has(key)) {
                     const existing = meliaMap.get(key);
-                    if (!existing.results.includes(data.title)) {
-                      existing.results += ', ' + data.title;
+                    if (!existing.supported_outcome.includes(data.title)) {
+                      existing.supported_outcome += ', ' + data.title;
                     }
                   } else {
                     meliaMap.set(key, {
                       id: melia.id,
                       parent_id: data.group,
-                      results: data.title,
+                      supported_outcome: data.title,
                       category: 'Melia',
                       ...melia,
                     });
@@ -392,17 +370,17 @@ export class SubmissionController {
             
             for (const data of filteredData) {
               if (data.category === 'OUTPUT') {
-                for (const indicator of data.indicators) {
+                for (const indicator of data.quantitative_indicators) {
                   let costumeId = indicator.id;
                   let location;
                   if (indicator.location === 'regional') {
-                      const regionNames = [...(indicator.region ?? [])].map(r => r.name).sort();
+                      const regionNames = [...(indicator.regions ?? [])].map(r => r.name).sort();
                       location = `Region: ${regionNames.join(', ')}`;
-                      costumeId = `R_${indicator.region.map((r: any) => r.um49Code).join('-')}`;
+                      costumeId = `R_${indicator.regions.map((r: any) => r.um49Code).join('-')}`;
                   } else if (indicator.location === 'country') {
-                      const countryNames = [...(indicator.country ?? [])].map(c => c.name).sort();
+                      const countryNames = [...(indicator.countries ?? [])].map(c => c.name).sort();
                       location = `Country: ${countryNames.join(', ')}`;
-                      costumeId = `C_${indicator.country.map((r: any) => r.code).join('-')}`;
+                      costumeId = `C_${indicator.countries.map((r: any) => r.code).join('-')}`;
                   } else if(indicator.location === 'global') {
                       location = 'Global'
                   }

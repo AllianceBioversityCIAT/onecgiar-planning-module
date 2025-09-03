@@ -18,7 +18,7 @@ export class ParametersSettingsComponent {
   Messages: any;
   value: any;
   isActivateToggled!: boolean;
-
+  showValues: boolean;
   constructor(
     private constantService: ConstantService,
     private underMaintenanceService: UnderMaintenanceService,
@@ -46,7 +46,7 @@ export class ParametersSettingsComponent {
   async ngOnInit() {
     await this.getPublishStatus();
     await this.getUnderMaintenance();
-
+    await this.showIndicatorValues()
     await this.getActivateStatus();
 
     this.title.setTitle("Parameter settings");
@@ -65,6 +65,16 @@ export class ParametersSettingsComponent {
     } else {
       this.canSubmit = true;
     }
+  }
+
+  async showIndicatorValues() {
+    const data : any = await this.constantService.getShowIndicatorValues();
+    this.showValues = data.value !== "0";
+  }
+
+  async toggleIndicatorValues() {
+    this.showValues = !this.showValues;
+    this.constantService.updateShowIndicatorValues(this.showValues);
   }
 
   editUnderMaintenance($event: any) {
@@ -98,4 +108,6 @@ export class ParametersSettingsComponent {
     this.isActivateToggled = !this.isActivateToggled;
     this.underMaintenanceService.updateStatus(this.isActivateToggled);
   }
+
+  
 }

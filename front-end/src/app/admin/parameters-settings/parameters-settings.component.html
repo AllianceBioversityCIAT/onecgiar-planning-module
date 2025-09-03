@@ -33,6 +33,21 @@
       </mat-card-content>
     </mat-card>
 
+    <mat-card class="result">
+      <mat-card-content>
+        <h2 class="example-h2">Show target indicator center values</h2>
+
+        <section class="example-section">
+          <mat-slide-toggle
+            class="example-margin"
+            [checked]="showValues"
+            (change)="toggleIndicatorValues()"
+          >
+          </mat-slide-toggle>
+        </section>
+      </mat-card-content>
+    </mat-card>
+
     <div class="under-m-container">
       <!-- step-1 -->
       <div class="under-m-t-box">

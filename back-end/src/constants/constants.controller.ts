@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 @Controller('constants')
 export class ConstantsController {
     constructor(
-        @InjectRepository(Constants) private phaseRepository: Repository<Constants>
+        @InjectRepository(Constants) private constantsRepository: Repository<Constants>
       ) {}
     @ApiBearerAuth()
     @ApiCreatedResponse({
@@ -19,7 +19,7 @@ export class ConstantsController {
     })
     @Get('system-submit')
     async getSubmitStatus() {
-        return await this.phaseRepository.findOne({where: { id: 1 }})
+        return await this.constantsRepository.findOne({where: { id: 1 }})
     }
     @ApiBearerAuth()
     @ApiCreatedResponse({
@@ -28,8 +28,29 @@ export class ConstantsController {
     })
     @Patch('update-system-submit')
     async changeSubmitStatus(@Body() value: any) {
-        const publish =  await this.phaseRepository.findOne({ where: { id: 1 } });
+        const publish =  await this.constantsRepository.findOne({ where: { id: 1 } });
         publish.value =  value.status;
-        return await this.phaseRepository.save(publish);
+        return await this.constantsRepository.save(publish);
+    }
+
+    @ApiBearerAuth()
+    @ApiCreatedResponse({
+        description: '',
+        type: Constants,
+    })
+    @Get('indicator-values')
+    async getShowIndicatorValues() {
+        return await this.constantsRepository.findOne({where: { id: 3 }})
+    }
+    @ApiBearerAuth()
+    @ApiCreatedResponse({
+        description: '',
+        type: Constants,
+    })
+    @Patch('update-indicator-values')
+    async updateShowIndicatorValues(@Body() value: any) {
+        const constant =  await this.constantsRepository.findOne({ where: { id: 3 } });
+        constant.value =  value.status;
+        return await this.constantsRepository.save(constant);
     }
 }
