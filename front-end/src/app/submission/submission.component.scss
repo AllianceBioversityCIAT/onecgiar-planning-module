@@ -2546,9 +2546,9 @@ pre {
   //   padding: 1rem;
   // }
 
-  td:nth-child(1) {
-    text-align: left;
-  }
+  // td:nth-child(1) {
+  //   text-align: left;
+  // }
 
   td:nth-child(2) {
     text-align: center;
@@ -3311,6 +3311,99 @@ pre {
 .w3-project-table {
   margin-top: 60px;
 }
+.w3-project-table.project-table th:nth-child(2),
+.w3-project-table.project-table td:nth-child(2) {
+  width: 80% !important;
+  height: 3.5rem !important;
+}
+
+.w3-project-table.project-table th:nth-child(1),
+.w3-project-table.project-table td:nth-child(1) {
+  width: 10% !important;
+  height: 3.5rem !important;
+}
+.w3-project-table.project-table th:nth-child(3),
+.w3-project-table.project-table td:nth-child(3) {
+  width: 10% !important;
+  height: 3.5rem !important;
+}
+
+
+
+.w3-project-table.melia-table th:nth-child(2),
+.w3-project-table.melia-table td:nth-child(2) {
+  width: 40% !important;
+  height: 3.5rem !important;
+}
+
+.w3-project-table.melia-table th:nth-child(3),
+.w3-project-table.melia-table td:nth-child(3) {
+  width: 60% !important;
+  height: 3.5rem !important;
+}
+
+.table-box-1.output-table th:nth-child(2),
+.table-box-1.output-table td:nth-child(2) {
+  width: 40% !important;
+  height: 3.5rem !important;
+}
+
+.table-box-1.output-table th:nth-child(3),
+.table-box-1.output-table td:nth-child(3) {
+  width: 25% !important;
+  height: 3.5rem !important;
+}
+
+.table-box-1.output-table th:nth-child(4),
+.table-box-1.output-table td:nth-child(4) {
+  width: 20% !important;
+  height: 3.5rem !important;
+}
+
+
+.table-box-1.outcome-table th:nth-child(2),
+.table-box-1.outcome-table td:nth-child(2) {
+  width: 30% !important;
+  height: 3.5rem !important;
+}
+
+.table-box-1.outcome-table th:nth-child(3),
+.table-box-1.outcome-table td:nth-child(3) {
+  width: 45% !important;
+  height: 3.5rem !important;
+}
+
+.table-box-1.outcome-table th:nth-child(4),
+.table-box-1.outcome-table td:nth-child(4) {
+  width: 20% !important;
+  height: 3.5rem !important;
+}
+
+
+.table-box-2.output-table th:nth-child(1),
+.table-box-2.output-table td:nth-child(1) {
+  width: 35% !important;
+  height: 3.5rem !important;
+}
+
+.table-box-2.output-table th:nth-child(2),
+.table-box-2.output-table td:nth-child(2) {
+  width: 60% !important;
+  height: 3.5rem !important;
+}
+
+
+.table-box-2.melia-table th:nth-child(1),
+.table-box-2.melia-table td:nth-child(1) {
+  width: 25% !important;
+  height: 3.5rem !important;
+}
+.table-box-2.melia-table th:nth-child(2),
+.table-box-2.melia-table td:nth-child(2) {
+  width: 60% !important;
+  height: 3.5rem !important;
+}
+
 
 .sub-title-2 {
   bottom: -50px !important;
@@ -3405,4 +3498,13 @@ pre {
   background-color: #5569dd !important;
   color: white !important;
 
+}
+.truncate-text {
+  display: inline-block;
+  max-width: 200px; /* Adjust width as needed */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  cursor: pointer;
 }

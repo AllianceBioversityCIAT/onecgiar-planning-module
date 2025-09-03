@@ -19,7 +19,16 @@ export class ConstantService {
     return firstValueFrom(this.http.patch(environment.api_url+`/constants/update-system-submit`, data ).pipe(map(d=>d))).catch((e) => false);
   }
 
-  // async editConstantsVariable(data:any) {
+  async getShowIndicatorValues() {
+    return firstValueFrom(this.http.get(environment.api_url+'/constants/indicator-values').pipe(map(d=>d))).catch((e) => false);
+  }
+
+  async updateShowIndicatorValues(status: any) {
+    const data = {status: status};
+    return firstValueFrom(this.http.patch(environment.api_url+`/constants/update-indicator-values`, data ).pipe(map(d=>d))).catch((e) => false);
+  }
+
+  // async editConstantsVariable(data:any) { 
   //   return firstValueFrom(this.http.put(`/constant`, data).pipe(map(d=>d))).catch((e) => false);
   // }
 

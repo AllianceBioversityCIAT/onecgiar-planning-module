@@ -84,6 +84,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   summaryBudgets: any = {};
   summaryBudgetsIndicator: any = {};
   totalTargetsIndicator: any = {};
+  totalTargetsIndicatorPartners: any = {};
 
   summaryBudgetsTotal: any = {};
   summaryBudgetsAllTotal: any = 0;
@@ -156,7 +157,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       values[code][id][item.id] = {};
     }
   
-    for (let indicator of item.indicators) {
+    for (let indicator of item.quantitative_indicators) {
       if (!values[code][id][item.id][indicator.id]) {
 
         values[code][id][item.id][indicator.id] = 0;
@@ -789,7 +790,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     )
     .reduce((sum, [, value]: any) => sum + value, 0);
   
-    console.log(this.summaryBudgetsTotal)
+    // console.log(this.summaryBudgetsTotal)
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
       Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
@@ -961,6 +962,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.summaryBudgets = {};
     this.summaryBudgetsIndicator = {};
     this.totalTargetsIndicator = {};
+    this.totalTargetsIndicatorPartners = {};
 
     this.summaryBudgetsTotal = {};
     this.wp_budgets = {};
@@ -1316,7 +1318,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][
               item.id
             ] = {};
-            for(let indicator of item.indicators) {
+            for(let indicator of item.quantitative_indicators) {
               this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] = null;
             }
           }
@@ -1330,7 +1332,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id])
             this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id] = {};
           if (item.category === 'OUTPUT') {
-            for (let indicator of item.indicators) {
+            for (let indicator of item.quantitative_indicators) {
               if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id]) {
                 this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id] = 0;
               }
@@ -1440,10 +1442,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
 
     this.setTotalTargetForIndicators();
-
+    this.setTotalTargetForIndicatorsForPartners()
     this.setItemIndicatorAndBudget();
     this.sammaryCalc();
-    
+    this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners)
     const tab = this.activatedRoute.snapshot.queryParamMap.get("tab");
     if (tab && this.initiative_data.is_valid && this.initUser?.role != 'MELIA Focal Point')
       this.selectedTabIndex = Number(tab);
@@ -1469,8 +1471,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
     
 
-    // console.log(this.allData)
-    // console.log(this.displayBudgetValuesItemIndicator)
+    console.log(this.allData)
+    console.log(this.totalTargetsIndicatorPartners)
     // console.log(this.budgetValues)
 
     
@@ -1493,6 +1495,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   isCenter: boolean = false;
   selectedTabIndex: number = 0;
   canSubmit: any;
+  toggleIndicatorValues: any;
   InitiativeUsers: any;
   leaders: any[] = [];
   organizationSelected: any = "";
@@ -1743,6 +1746,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       );
     });
     this.canSubmit = await this.constantsService.getSubmitStatus();
+    const data : any = await this.constantsService.getShowIndicatorValues();
+    this.toggleIndicatorValues = data.value !== "0";
   }
 
   cancelLastSubmission() {
@@ -2205,8 +2210,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   addCross() {
+    const isSmallScreen = window.innerWidth <= 768;
     const dialogRef = this.dialog.open(CrossCuttingComponent, {
       data: { id: "add", initiative_id: this.params.id },
+      height: isSmallScreen ? '65%' : '70%',
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
@@ -2675,6 +2682,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         }
   
         for (let data of allData) {
+          // console.log('dada', data)
           const dataId = data.id;
           const indicatorValues = data.pooled_funded_indicator_values || {};
   
@@ -2722,6 +2730,40 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
   return total;
 }
+
+totalConsolidatedTargetPartner: any;
+
+ getTotalIndValuesByPartner(data: any): Record<string, Record<string, number>> {
+  if (!data) return {};
+
+  const totals: Record<string, Record<string, number>> = {};
+
+  Object.keys(data).forEach((partnerId) => {
+    totals[partnerId] = {};
+    const partner = data[partnerId];
+
+    Object.keys(partner).forEach((category) => {
+      const categoryData = partner[category];
+
+      if (typeof categoryData === 'object' && categoryData !== null) {
+        Object.keys(categoryData).forEach((indicator) => {
+          const value = categoryData[indicator];
+          if (typeof value === 'number') {
+            totals[partnerId][indicator] = (totals[partnerId][indicator] || 0) + value;
+          }
+        });
+      }
+    });
+  });
+  this.totalConsolidatedTargetPartner = totals;
+  console.log(totals)
+  return totals;
+}
+
+
+
+
+
  
   getAllMeliasLength() {
     let total = 0;
@@ -2736,19 +2778,18 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       if(indicator[target] == 'global') {
         scope = 'Global';
       } else if(indicator[target] == 'country') {
-        scope = 'Country: ' + indicator.country.map((c:any) => c.name).join(', ')
+        scope = 'Country: ' + indicator.countries?.map((c:any) => c.name).join(', ')
       } else if(indicator[target] == 'regional') {
-        scope = 'Regional: ' + indicator.region.map((c:any) => c.name).join(', ')
+        scope = 'Regional: ' + indicator.regions?.map((c:any) => c.name).join(', ')
       }
       return scope
   }
 
   getTargetValue(targets: any[]) {
-    let result = targets.find(t => 
-      t.project.id === "Pooled funded" &&
-      moment(t.date).year() === 2026
-    );
-    return result?.value ?? 'N/A'
+    return targets.reduce((sum, target) => {
+      const val = parseFloat(target?.['2026']) || 0;
+      return sum + val;
+    }, 0);
   }
 
   setTotalTargetForIndicators() {
@@ -2776,5 +2817,54 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     }
     
   }
+
+  setTotalTargetForIndicatorsForPartners() {
+    for (let partner of this.partners) {
+      if (!this.totalTargetsIndicatorPartners[partner.code]) {
+        this.totalTargetsIndicatorPartners[partner.code] = {};
+      }
+      for (let wp of this.actualWps) {
+        if (!this.totalTargetsIndicatorPartners[partner.code][wp.ost_wp.wp_official_code]) {
+          this.totalTargetsIndicatorPartners[partner.code][wp.ost_wp.wp_official_code] = {};
+        }
+      }
+    }
   
+    for (let wp of this.actualWps) {
+      const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
+    
+      for (let wpData of wpDataArray) {
+        const wpCode = wpData.ost_wp?.wp_official_code || wp.ost_wp.wp_official_code;
+    
+        for (let indicator of wpData.quantitative_indicators || []) {
+          const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
+            ? indicator.type.value
+            : 'Other';
+    
+          for (let target of indicator.targets || []) {
+            for (let targetPartner of target.centers || []) {
+              const partnerCode = targetPartner.code;
+    
+              if (!this.totalTargetsIndicatorPartners[partnerCode]) {
+                this.totalTargetsIndicatorPartners[partnerCode] = {};
+              }
+    
+              if (!this.totalTargetsIndicatorPartners[partnerCode][wpCode]) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode] = {};
+              }
+    
+              if (!this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType]) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] = 0;
+              }
+    
+              const value = parseFloat(target['2026']);
+              if (!isNaN(value)) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

@@ -2269,25 +2269,25 @@
                     </td>
                   </ng-container> -->
                   <td>
-                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of innovations (innovation development)') }}
+                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of innovations (innovation development)') }} 
                   </td>
                   <td>
                     {{ totalBudgetValuesIndicatorSummary?.['Number of innovations (innovation development)'] ?? 0 }}
                   </td>
                   <td>
-                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of knowledge products') }}
+                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of knowledge products') }} 
                   </td>
                   <td>
                     {{ totalBudgetValuesIndicatorSummary?.['Number of knowledge products'] ?? 0 }}
                   </td>
                   <td>
-                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of people trained (capacity sharing for development)') }}
+                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of people trained (capacity sharing for development)') }} 
                   </td>
                   <td>
                     {{ totalBudgetValuesIndicatorSummary?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                   </td>
                   <td>
-                    {{ getTotalIndAllValues(perAllValuesIndicator, 'custom-OUTPUT') }}
+                    {{ getTotalIndAllValues(perAllValuesIndicator, 'custom-OUTPUT') }} 
                   </td>
                   <td>
                     {{ totalBudgetValuesIndicatorSummary?.['custom-OUTPUT'] ?? 0 }}
@@ -2318,7 +2318,7 @@
                 ></app-popover>
               </mat-card-title>
               <mat-card-content>
-                <ng-container *ngIf="wp.ost_wp.acronym != 'AOW00'">
+                <ng-container >
                   <div class="sub-head pooled">
                     <span class="sub-title">Pooled Funded/High Level Output	</span> 
                     <mat-slide-toggle
@@ -2378,9 +2378,9 @@
                 </div>
               </div> -->
 
-              <ng-container *ngIf="wp.ost_wp.acronym != 'AOW00'">
+              <ng-container>
 
-                <div class="table-box-1 mat-elevation-z8">
+                <div class="table-box-1 mat-elevation-z8 output-table">
                   <table>
                     <tr>
                       <th rowspan="2">Actions</th>
@@ -2406,9 +2406,9 @@
                       *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
                     >
                       <ng-container  *ngIf="item.category == 'OUTPUT'">
-                        <ng-container *ngFor="let indicator of item.indicators; let i = index">
+                        <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">
                       <tr>
-                        <td *ngIf="!(wp.id == 'IPSR')">
+                        <td *ngIf="i === 0" [attr.rowspan]="item.quantitative_indicators.length || 1">
                           <ng-container
                             *ngIf="item.category == 'Cross Cutting'"
                           >
@@ -2597,7 +2597,7 @@
                       </div>
                         </ng-container>
                         </td>
-                        <td  *ngIf="i === 0"  class="wp-title box-center" [attr.rowspan]="item.indicators.length || 1">
+                        <td  *ngIf="i === 0"  class="wp-title box-center" [attr.rowspan]="item.quantitative_indicators.length || 1">
                             {{
                               item.title
                             }}
@@ -2609,17 +2609,17 @@
                             {{  perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item.id]?.[type] }}
                           </td>
                         </ng-container> -->
-                        <td>
-                          {{  indicator?.description }}
+                        <td title="{{ indicator?.description }}" matTooltipPosition="above">
+                          <span class="truncate-text">{{ indicator?.description }}</span>
                         </td>
-                        <td>
-                          {{  indicator?.type?.name }}
+                        <td title="{{ indicator?.type?.name  }}" matTooltipPosition="above">
+                          <span class="truncate-text">{{ indicator?.type?.name }}</span>
                         </td>
                         <td>
                           {{  getScope(indicator, 'item')  }}
                         </td>
                         <td>
-                          {{  getTargetValue(indicator?.target) }}
+                          {{  getTargetValue(indicator?.targets) }}
                         </td>
 
                         <td>
@@ -2628,7 +2628,7 @@
                           ][item.id][indicator?.id] }}
                         </td>
                        
-                        <td (click)="item.isExpand = !item.isExpand" *ngIf="i === 0"  [attr.rowspan]="item.indicators.length || 1">
+                        <td (click)="item.isExpand = !item.isExpand" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? (summaryBudgets[wp.ost_wp.wp_official_code][
@@ -2683,119 +2683,79 @@
                 <span class="sub-title">Pooled Funded/Outcome</span>
               </div>
 
-              <div class="table-box-1 mat-elevation-z8">
+              <div class="table-box-1 mat-elevation-z8 outcome-table">
                 <table>
                   <tr>
-                    <th>Actions</th>
-                    <th>Outcome title</th>
-                    <th>Policy change</th>
-                    <th>Innovation Use</th>
-                    <th>Other Outcomes</th>
-                    <th>Qualititative Indicator (Max)</th>
+                    <th rowspan="2">Actions</th>
+                    <th rowspan="2">Outcome title</th>
+                    <th colspan="4">Indicator</th>
                   </tr>
-
-                  <ng-container
-                    *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
-                  >
-                    <ng-container  *ngIf="item.category == 'OUTCOME' || item.category == 'EOI'">
-                    <tr>
-                      <td>
-                   
-                          <figure
-                            matTooltip="For any changes use ToC tool"
-                            matTooltipPosition="below"
-                            class="toc-img-center"
-                          >
-                            <img
-                              class="toc-img-size"
-                              src="../../assets/shared-image/toc-5.png"
-                              alt="Photo of toc"
-                            />
-                          </figure>
-                      </td>
-                      <td class="wp-title box-center">
-                          {{
-                           item.title
-                          }}
-
-                      </td>
-
-                      <ng-container *ngFor="let type of outcomeIndicatorTypes">
-                        <td>{{ item.category == 'OUTCOME' ? perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item?.id]?.[type] : '-' }}</td>
+                
+                  <tr>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Geographic Scope</th>
+                    <th>Target</th>
+                  </tr>
+                
+                  <ng-container *ngFor="let item of allData[wp.ost_wp.wp_official_code]">
+                    <ng-container *ngIf="item.category == 'OUTCOME' || item.category == 'EOI'">
+                      
+                      <ng-container *ngIf="item.quantitative_indicators?.length > 0; else noIndicators">
+                        <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">
+                          <tr>
+                            <td *ngIf="i === 0" [attr.rowspan]="item.quantitative_indicators.length">
+                              <figure
+                                matTooltip="For any changes use ToC tool"
+                                matTooltipPosition="below"
+                                class="toc-img-center"
+                              >
+                                <img
+                                  class="toc-img-size"
+                                  src="../../assets/shared-image/toc-5.png"
+                                  alt="Photo of toc"
+                                />
+                              </figure>
+                            </td>
+                            <td class="wp-title box-center" *ngIf="i === 0" [attr.rowspan]="item.quantitative_indicators.length">
+                              {{ item.title }}
+                            </td>
+                            <td>{{ indicator?.description }}</td>
+                            <td>{{ indicator?.type?.name }}</td>
+                            <td>{{ getScope(indicator, 'item') }}</td>
+                            <td>{{ getTargetValue(indicator?.targets) }}</td>
+                          </tr>
+                        </ng-container>
                       </ng-container>
-
-                      <td *ngIf="showSubQualitativeIndicators(item?.qualitative_indicators) != ''" (click)="qualitativeIndicatorsDialog(item?.qualitative_indicators)" title="More Info" class="pointer">
-                        {{ showSubQualitativeIndicators(item?.qualitative_indicators) }}
-
-                      </td>
-                      <td *ngIf="showSubQualitativeIndicators(item?.qualitative_indicators) == ''">
-                        {{ '' }}
-                      </td>
-                      <!-- <ng-container *ngFor="let per of period">
-                        <td (click)="item.isExpand = !item.isExpand">
-                          <mat-icon
-                            class="icon-sub-table-2"
-                            color="primary"
-                            *ngIf="
-                              perAllValues[wp.ost_wp.wp_official_code][
-                                item.id
-                              ][per.id] == true
-                            "
-                            >close</mat-icon
-                          >
-                        </td>
-                      </ng-container> -->
-                      <!-- <td (click)="item.isExpand = !item.isExpand">
-                        {{
-                          toggleSummaryValues[wp.ost_wp.wp_official_code]
-                            ? (summaryBudgets[wp.ost_wp.wp_official_code][
-                                item.id
-                              ] | number)
-                            : (roundNumber(
-                                summaryBudgets[wp.ost_wp.wp_official_code][
-                                  item.id
-                                ]
-                              ) | number)
-                        }}
-                      </td> -->
-                    </tr>
-
-
-
-                   
-                    
-
-
+                
+                      <ng-template #noIndicators>
+                        <tr>
+                          <td>
+                            <figure
+                              matTooltip="For any changes use ToC tool"
+                              matTooltipPosition="below"
+                              class="toc-img-center"
+                            >
+                              <img
+                                class="toc-img-size"
+                                src="../../assets/shared-image/toc-5.png"
+                                alt="Photo of toc"
+                              />
+                            </figure>
+                          </td>
+                          <td class="wp-title box-center">
+                            {{ item.title }}
+                          </td>
+                          <td colspan="4" class="text-center">
+                            No quantitative indicators available
+                          </td>
+                        </tr>
+                      </ng-template>
+                
                     </ng-container>
                   </ng-container>
-                  <tr class="total">
-                    <td [attr.colspan]="2">
-                      <div class="subtotal">Subtotal</div>
-                    </td>
-
-                    <ng-container *ngFor="let type of outcomeIndicatorTypes">
-                      <td>
-                        {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
-                      </td>
-                    </ng-container>
-                      <td>
-                        {{ '-' }}
-                      </td>
-                      
-
-                    <!-- <td>
-                      {{
-                        toggleSummaryValues[wp.ost_wp.wp_official_code]
-                          ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                            | number)
-                          : (roundNumber(
-                              summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                            ) | number)
-                      }}
-                    </td> -->
-                  </tr>
-
                 </table>
+                
               </div>
 
 
@@ -2825,7 +2785,7 @@
                   "
                   >Show decimals</mat-slide-toggle>
                 </div>
-                <div class="table-box-1 mat-elevation-z8 w3-project-table">
+                <div class="table-box-1 mat-elevation-z8 w3-project-table melia-table">
                  
                 <table>
                   <tr>
@@ -2985,7 +2945,7 @@
                      
                      
                       <td>
-                        {{ item?.results}}
+                        {{ item?.supported_outcome}}
                       </td>
                       <td>
                         {{ getScope(item, 'melia') }}
@@ -3354,7 +3314,7 @@
                   }"
                   >Show decimals</mat-slide-toggle>
                 </div>
-                <div class="table-box-1 mat-elevation-z8 w3-project-table">
+                <div class="table-box-1 mat-elevation-z8 w3-project-table project-table">
                  
                 <table>
                   <tr>
@@ -3908,26 +3868,38 @@
                         {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
                       </td>
                     </ng-container> -->
-                    <td>
-                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] }}
+                    <td *ngIf="!toggleIndicatorValues">
+                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
+                    </td>
+                    <td *ngIf="toggleIndicatorValues">
+                      {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
                     </td>
                     <td>
                       {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
                     </td>
-                    <td>
-                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] }}
+                    <td *ngIf="!toggleIndicatorValues">
+                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
+                    </td>
+                    <td *ngIf="toggleIndicatorValues">
+                      {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
                     </td>
                     <td>
                       {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
                     </td>
-                    <td>
-                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] }}
+                    <td *ngIf="!toggleIndicatorValues">
+                      {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
+                    </td>
+                    <td *ngIf="toggleIndicatorValues">
+                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                     </td>
                     <td>
                       {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                     </td>
-                    <td>
-                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] }}
+                    <td *ngIf="!toggleIndicatorValues">
+                      {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
+                    </td>
+                    <td *ngIf="toggleIndicatorValues">
+                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
                     </td>
                     <td>
                       {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
@@ -3976,26 +3948,38 @@
                     {{ getTotalIndAllValues(perAllValuesIndicator, type) }}
                       </td>
                   </ng-container> -->
-                  <td>
-                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of innovations (innovation development)') }}
+                  <td *ngIf="!toggleIndicatorValues">
+                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of innovations (innovation development)')  }}
+                  </td>
+                  <td *ngIf="toggleIndicatorValues">
+                    {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of innovations (innovation development)'] ?? 0  }}
                   </td>
                   <td>
                     {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of innovations (innovation development)'] ?? 0 }}
                   </td>
-                  <td>
+                  <td *ngIf="!toggleIndicatorValues">
                     {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of knowledge products') }}
+                  </td>
+                  <td *ngIf="toggleIndicatorValues">
+                    {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of knowledge products'] ?? 0  }}
                   </td>
                   <td>
                     {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of knowledge products'] ?? 0 }}
                   </td>
-                  <td>
-                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of people trained (capacity sharing for development)') }}
+                  <td *ngIf="!toggleIndicatorValues">
+                    {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of people trained (capacity sharing for development)')  }}
+                  </td>
+                  <td *ngIf="toggleIndicatorValues">
+                    {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of people trained (capacity sharing for development)'] ?? 0  }}
                   </td>
                   <td>
                     {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                   </td>
-                  <td>
-                    {{ getTotalIndAllValues(perAllValuesIndicator, 'custom-OUTPUT') }}
+                  <td *ngIf="!toggleIndicatorValues">
+                    {{ getTotalIndAllValues(perAllValuesIndicator, 'custom-OUTPUT')  }}
+                  </td>
+                  <td *ngIf="toggleIndicatorValues">
+                    {{ totalConsolidatedTargetPartner?.[partner.code]?.['custom-OUTPUT'] ?? 0  }}
                   </td>
                   <td>
                     {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['custom-OUTPUT'] ?? 0 }}
@@ -4052,7 +4036,7 @@
 
 
                   
-                  <div class="sub-head"*ngIf="wp.ost_wp.acronym != 'AOW00'">
+                  <div class="sub-head">
                     <span class="sub-title sub-title-2">Pooled Funded/High Level Output</span>
                   
                   <div class="btns-sec">
@@ -4121,7 +4105,7 @@
 
 
               <mat-card-content>
-                <div class="table-box-2 mat-elevation-z8" *ngIf="wp.ost_wp.acronym != 'AOW00'">
+                <div class="table-box-2 mat-elevation-z8 output-table">
                   <table
                     [ngClass]="{
                       error: errors[partner.code][wp.ost_wp.wp_official_code]
@@ -4157,7 +4141,7 @@
                       "
                     >
                     <ng-container *ngIf="item.category == 'OUTPUT'">
-                      <ng-container *ngFor="let indicator of item.indicators; let i = index">
+                      <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">
 
                       <tr
                         [ngClass]="{
@@ -4167,7 +4151,7 @@
                             ][item.id]
                         }"
                       >
-                        <td *ngIf="i === 0" class="wp-title"  [attr.rowspan]="item.indicators.length || 1">
+                        <td *ngIf="i === 0" class="wp-title"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                             {{
                             item.title
                             }}
@@ -4185,7 +4169,7 @@
                             {{  getScope(indicator, 'item')  }}
                           </td>
                           <td>
-                            {{  getTargetValue(indicator?.target) }}
+                            {{  getTargetValue(indicator?.targets) }}
                           </td>
                           <td>
                             <mat-form-field
@@ -4198,6 +4182,15 @@
                               <input
                                 mask="separator.2"
                                 thousandSeparator=","
+                                [disabled]="
+                                !+wp_budgets[partner.code][
+                                  wp.ost_wp.wp_official_code] ||
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
                                 (keyup)="
                                   changeCalcForIndicator(
                                     partner.code,
@@ -4257,7 +4250,7 @@
   
                         
   
-                        <td *ngIf="i === 0"  [attr.rowspan]="item.indicators.length || 1">
+                        <td *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                           {{
                           displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]
                           }}
@@ -4412,7 +4405,7 @@
                     </tr>
                   </table>
                 </div>
-                <p class="error" *ngIf="wp.ost_wp.acronym != 'AOW00'">
+                <p class="error">
                   {{ errors[partner.code][wp.ost_wp.wp_official_code] }}
                 </p>
 
@@ -4554,7 +4547,7 @@
                       >Show decimals</mat-slide-toggle
                     >
                 </div>
-                <div class="table-box-2 mat-elevation-z8">
+                <div class="table-box-2 mat-elevation-z8 melia-table">
                   <table
                     [ngClass]="{
                       error: errors[partner.code][wp.ost_wp.wp_official_code + '-melia']
@@ -4590,7 +4583,7 @@
                         </td>
   
                         <td>
-                          {{ item.results }}
+                          {{ item.supported_outcome }}
                         </td>
 
                         <td>
