@@ -2829,7 +2829,7 @@ totalConsolidatedTargetPartner: any;
         }
       }
     }
-  
+   
     for (let wp of this.actualWps) {
       const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
     
