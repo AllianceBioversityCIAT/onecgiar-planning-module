@@ -15,7 +15,7 @@ export class BudgetAssumptionSummaryComponent {
   ) {}
 
   budget_assumptions: any;
-
+ 
 
   async ngOnInit() {
     await this.getData();
