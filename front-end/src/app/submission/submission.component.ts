@@ -28,6 +28,8 @@ import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.
 import { UserService } from "../services/user.service";
 import { QualitativeIndicatorsComponent } from "./qualitative-indicators/qualitative-indicators.component";
 import * as moment from 'moment';
+import { BudgetAssumptionsComponent } from "./budget-assumptions/budget-assumptions.component";
+import { BudgetAssumptionSummaryComponent } from "./budget-assumption-summary/budget-assumption-summary.component";
 
 @Component({
   selector: "app-submission",
@@ -2867,4 +2869,38 @@ totalConsolidatedTargetPartner: any;
       }
     }
   }
+
+  openBudgetAssumptionsDialog(partner: number, item_id: string, wp_id: string, budget: number, type: string) {
+    const data ={ 
+      organization_code: partner,
+      item_id: item_id,
+      wp_id: wp_id,
+      item_budget: budget,
+      type: type
+    }
+    this.dialog
+    .open(BudgetAssumptionsComponent, {
+      data: {
+        data
+      },
+      width: '800px',
+      maxWidth: '850px',
+      maxHeight: '500px',
+      height: '320px',
+    })
+  } 
+
+  openBudgetAssumptionsDialogSummary(item_id: string) {
+    console.log(item_id)
+    this.dialog
+    .open(BudgetAssumptionSummaryComponent, {
+      data: {
+        item_id
+      },
+      width: '800px',
+      maxWidth: '850px',
+      maxHeight: '600px',
+      height: 'auto',
+    })
+  } 
 }

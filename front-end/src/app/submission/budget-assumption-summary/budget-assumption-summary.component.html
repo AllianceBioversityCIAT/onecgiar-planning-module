@@ -1,0 +1,27 @@
+<div class="head">
+  <span class="title"> Budget Assumptions </span>
+  <button mat-icon-button (click)="onClose()" class="close-btn">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content>
+  <div
+    class="assumptions-container"
+    *ngIf="budget_assumptions?.length > 0; else noData"
+  >
+    <div class="assumption-card" *ngFor="let assumption of budget_assumptions">
+      <div class="acronym">{{ assumption.organization.acronym }}</div>
+      <div class="details">
+        <p class="budget-text">{{ assumption.budget_assumptions }}</p>
+        <p class="item-budget">Budget: {{ assumption.item_budget }}</p>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noData>
+    <div class="no-results">
+      <p>No budget assumptions found.</p>
+    </div>
+  </ng-template>
+</mat-dialog-content>

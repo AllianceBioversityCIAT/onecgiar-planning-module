@@ -24,6 +24,7 @@ import { VariableModule } from './variable/variable.module';
 import { WsGuard } from './ws.guard';
 import { UnderMaintenanceModule } from './under-maintenance/under-maintenance.module';
 import { ArchiveModule } from './archive/archive.module';
+import { BudgetAssumptionsModule } from './budget-assumptions/budget-assumptions.module';
 
 @Module({
   controllers:[AppController],
@@ -62,6 +63,7 @@ import { ArchiveModule } from './archive/archive.module';
     VariableModule,
     UnderMaintenanceModule,
     ArchiveModule,
+    BudgetAssumptionsModule,
     
   ],
 })

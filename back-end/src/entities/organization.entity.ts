@@ -10,6 +10,7 @@ import { Initiative } from './initiative.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { History } from './history.entity';
 import { WpBudget } from './wp-budget.entity';
+import { BudgetAssumptions } from './budget-assumptions.entity';
 
 @Entity()
 export class Organization {
@@ -34,6 +35,9 @@ export class Organization {
   @OneToMany(() => WpBudget, (wp_budget) => wp_budget.organization)
   wp_budget: WpBudget[];
   
+  @OneToMany(() => BudgetAssumptions, (BudgetAssumptions) => BudgetAssumptions.organization)
+  Budget_assumptions: BudgetAssumptions[];
+
   @OneToMany(() => History, (history) => history.organization)
   history: History[];
 }

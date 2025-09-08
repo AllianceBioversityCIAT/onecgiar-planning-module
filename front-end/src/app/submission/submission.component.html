@@ -2623,9 +2623,23 @@
                         </td>
 
                         <td>
-                          {{   summaryBudgetsIndicator[
-                            wp.ost_wp.wp_official_code
-                          ][item.id][indicator?.id] }}
+                          <div class="td-flex">
+                            <span>
+                              {{   summaryBudgetsIndicator[
+                              wp.ost_wp.wp_official_code
+                            ][item.id][indicator?.id] }}
+                            </span>
+                            <img 
+                              src="../../assets/shared-image/Vector.png"
+                              (click)="
+                              openBudgetAssumptionsDialogSummary(indicator.id)"
+                              matTooltip="Budget assumptions"
+                              matTooltipPosition="above"
+                              class="budget-assumptions-icon"
+                              width="20"
+                              height="20"
+                            >
+                          </div>
                         </td>
                        
                         <td (click)="item.isExpand = !item.isExpand" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
@@ -2951,17 +2965,33 @@
                         {{ getScope(item, 'melia') }}
                       </td>
                       <td (click)="item.isExpand = !item.isExpand">
-                        {{
-                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-melia']
-                            ? (summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][
-                                item.id
-                              ] | number)
-                            : (roundNumber(
-                                summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][
-                                  item.id
-                                ]
-                              ) | number)
-                        }}
+                        <div class="td-flex">
+                          <span>
+                            {{
+                              toggleSummaryValues[wp.ost_wp.wp_official_code + '-melia']
+                                ? (summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][
+                                    item.id
+                                  ] | number)
+                                : (roundNumber(
+                                    summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][
+                                      item.id
+                                    ]
+                                  ) | number)
+                            }}
+                          </span>
+                          <img 
+                            src="../../assets/shared-image/Vector.png"
+                            (click)="
+                            openBudgetAssumptionsDialogSummary(item.id)"
+                            matTooltip="Budget assumptions"
+                            matTooltipPosition="above"
+                            class="budget-assumptions-icon"
+                            width="20"
+                            height="20"
+                          >
+                        </div>
+                    
+                   
                       </td>
                     </tr>
 
@@ -3222,17 +3252,37 @@
                         </td>
                         
                       <td (click)="item.isExpand = !item.isExpand">
-                        {{
-                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-Cross-Cutting']
-                            ? (summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][
-                                item.id
-                              ] | number)
-                            : (roundNumber(
-                                summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][
-                                  item.id
-                                ]
-                              ) | number)
-                        }}
+
+                        <div class="td-flex">
+                          <span>
+                            {{
+                              toggleSummaryValues[wp.ost_wp.wp_official_code + '-Cross-Cutting']
+                                ? (summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][
+                                    item.id
+                                  ] | number)
+                                : (roundNumber(
+                                    summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][
+                                      item.id
+                                    ]
+                                  ) | number)
+                            }}
+                          </span>
+                          <img 
+                            src="../../assets/shared-image/Vector.png"
+                            (click)="
+                            openBudgetAssumptionsDialogSummary(item.id)"
+                            matTooltip="Budget assumptions"
+                            matTooltipPosition="above"
+                            class="budget-assumptions-icon"
+                            width="20"
+                            height="20"
+                          >
+                        </div>
+
+
+
+
+                   
                       </td>
                     </tr>
 
@@ -3399,17 +3449,33 @@
                           {{ item?.projects_indicator_values?.['custom-OUTPUT'] ?? null }}
                         </td> -->
                       <td (click)="item.isExpand = !item.isExpand">
-                        {{
-                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
-                            ? (summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
-                                item.id
-                              ] | number)
-                            : (roundNumber(
-                                summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
-                                  item.id
-                                ]
-                              ) | number)
-                        }}
+                        <div class="td-flex">
+                          <span>
+                            {{
+                              toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
+                                ? (summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
+                                    item.id
+                                  ] | number)
+                                : (roundNumber(
+                                    summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
+                                      item.id
+                                    ]
+                                  ) | number)
+                            }}
+                          </span>
+                          <img 
+                            src="../../assets/shared-image/Vector.png"
+                            (click)="
+                            openBudgetAssumptionsDialogSummary(item.id)"
+                            matTooltip="Budget assumptions"
+                            matTooltipPosition="above"
+                            class="budget-assumptions-icon"
+                            width="20"
+                            height="20"
+                          >
+                        </div>
+
+                      
                       </td>
                     </tr>
 
@@ -3592,17 +3658,33 @@
                         </td>
                       </ng-container>
                       <td (click)="item.isExpand = !item.isExpand">
-                        {{
-                          toggleSummaryValues[wp.ost_wp.wp_official_code + '-partners']
-                            ? (summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][
-                                item.id
-                              ] | number)
-                            : (roundNumber(
-                                summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][
-                                  item.id
-                                ]
-                              ) | number)
-                        }}
+
+                        <div class="td-flex">
+                          <span>
+                            {{
+                              toggleSummaryValues[wp.ost_wp.wp_official_code + '-partners']
+                                ? (summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][
+                                    item.id
+                                  ] | number)
+                                : (roundNumber(
+                                    summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][
+                                      item.id
+                                    ]
+                                  ) | number)
+                            }}
+                          </span>
+                          <img 
+                            src="../../assets/shared-image/Vector.png"
+                            (click)="
+                            openBudgetAssumptionsDialogSummary(item.id)"
+                            matTooltip="Budget assumptions"
+                            matTooltipPosition="above"
+                            class="budget-assumptions-icon"
+                            width="20"
+                            height="20"
+                          >
+                        </div>
+                    
                       </td>
                   </tr>
                  
@@ -4172,7 +4254,8 @@
                             {{  getTargetValue(indicator?.targets) }}
                           </td>
                           <td>
-                            <mat-form-field
+                            <div class="td-flex">
+                              <mat-form-field
                               class="form-dialog-content__field"
                               floatLabel="always"
                               hideRequiredMarker
@@ -4183,8 +4266,6 @@
                                 mask="separator.2"
                                 thousandSeparator=","
                                 [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4211,6 +4292,24 @@
                                 matInput
                               />
                             </mat-form-field>
+                            <img 
+                              src="../../assets/shared-image/Vector.png"
+                              matTooltip="Budget assumptions"
+                              [class.disabled-icon]="!displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id]"
+                              matTooltipPosition="above"
+                              (click)="displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] &&
+                              openBudgetAssumptionsDialog(
+                                partner.code,
+                                indicator.id,
+                                wp.ost_wp.wp_official_code,
+                                displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator?.id],
+                                'INDICATOR'
+                                )"
+                              class="budget-assumptions-icon"
+                              width="20"
+                              height="20"
+                            >
+                            </div>
                           </td>
                         <!-- </ng-container> -->
                         <!-- <ng-container *ngFor="let type of highLevelOutputIndicatorTypes">
@@ -4621,7 +4720,8 @@
   
                      
                         <td>
-                          <mat-form-field
+                          <div class="td-flex">
+                            <mat-form-field
                             class="form-dialog-content__field"
                             floatLabel="always"
                             hideRequiredMarker
@@ -4706,6 +4806,27 @@
                               matInput
                             />
                           </mat-form-field>
+                          <img 
+                          src="../../assets/shared-image/Vector.png"
+                          matTooltip="Budget assumptions"
+                          [class.disabled-icon]="!displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-melia'][item.id]"
+                          matTooltipPosition="above"
+                          (click)="displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-melia'][item.id] &&
+                          openBudgetAssumptionsDialog(
+                            partner.code,
+                            item.id,
+                            wp.ost_wp.wp_official_code + '-melia',
+                            displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-melia'][item.id],
+                            'MELIA'
+                            )"
+                          class="budget-assumptions-icon"
+                          width="20"
+                          height="20"
+                        >
+                          </div>
+                         
+
+                        
                         </td>
                       </tr>
   
@@ -4860,7 +4981,8 @@
     
                        
                           <td>
-                            <mat-form-field
+                            <div class="td-flex">
+                              <mat-form-field
                               class="form-dialog-content__field"
                               floatLabel="always"
                               hideRequiredMarker
@@ -4945,6 +5067,25 @@
                                 matInput
                               />
                             </mat-form-field>
+                              <img 
+                              src="../../assets/shared-image/Vector.png"
+                              matTooltip="Budget assumptions"
+                              matTooltipPosition="above"
+                              [class.disabled-icon]="!displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id]"
+                              (click)="displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id] &&
+                              openBudgetAssumptionsDialog(
+                                partner.code,
+                                item.id,
+                                wp.ost_wp.wp_official_code + '-Cross-Cutting',
+                                displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id],
+                                'Cross-Cutting'
+                                )"
+                              class="budget-assumptions-icon"
+                              width="20"
+                              height="20"
+                            >
+                            </div>
+                           
                           </td>
                         </tr>
     
@@ -5150,7 +5291,8 @@
   
                      
                         <td>
-                          <mat-form-field
+                          <div class="td-flex">
+                            <mat-form-field
                             class="form-dialog-content__field"
                             floatLabel="always"
                             hideRequiredMarker
@@ -5235,6 +5377,24 @@
                               matInput
                             />
                           </mat-form-field>
+                            <img 
+                            src="../../assets/shared-image/Vector.png"
+                            matTooltip="Budget assumptions"
+                            matTooltipPosition="above"
+                            [class.disabled-icon]="!displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-project'][item.id]"
+                            (click)="displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-project'][item.id] &&
+                            openBudgetAssumptionsDialog(
+                              partner.code,
+                              item.id,
+                              wp.ost_wp.wp_official_code + '-project',
+                              displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-project'][item.id],
+                              'PROJECT'
+                              )"
+                            class="budget-assumptions-icon"
+                            width="20"
+                            height="20"
+                          >
+                          </div>
                         </td>
                       </tr>
   
@@ -5429,7 +5589,8 @@
                         </ng-container>
 
                         <td>
-                          <mat-form-field
+                          <div class="td-flex">
+                            <mat-form-field
                             class="form-dialog-content__field"
                             floatLabel="always"
                             hideRequiredMarker
@@ -5511,6 +5672,25 @@
                               matInput
                             />
                           </mat-form-field>
+                            <img 
+                            src="../../assets/shared-image/Vector.png"
+                            matTooltip="Budget assumptions"
+                            matTooltipPosition="above"
+                            [class.disabled-icon]="!displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id]"
+                            (click)="displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id] &&
+                            openBudgetAssumptionsDialog(
+                              partner.code,
+                              item.id,
+                              wp.ost_wp.wp_official_code + '-partners',
+                              displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id],
+                              'PARTNER'
+                              )"
+                            class="budget-assumptions-icon"
+                            width="20"
+                            height="20"
+                          >
+                          </div>
+                         
                         </td>
                       </tr>
 

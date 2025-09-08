@@ -1,0 +1,34 @@
+<div class="indicators-container">
+  <h2>Budget Assumptions</h2>
+  <div class="content">
+    <form [formGroup]="Form" (ngSubmit)="onSubmit()">
+      <mat-form-field
+        class="form-dialog-content__field full-width"
+        floatLabel="always"
+        hideRequiredMarker
+        appearance="outline"
+      >
+        <textarea
+          matInput
+          formControlName="budget_assumptions"
+          class="texta"
+          cdkAutosizeMinRows="2"
+          cdkAutosizeMaxRows="10"
+          placeholder="Enter budget assumptions..."
+        ></textarea>
+        <mat-error
+          *ngIf="
+            Form.get('budget_assumptions')?.hasError('required') &&
+            Form.get('budget_assumptions')?.touched
+          "
+        >
+          Budget assumption is required
+        </mat-error>
+      </mat-form-field>
+    </form>
+
+    <div class="footer">
+      <button class="save-btn" (click)="onSubmit()">Save</button>
+    </div>
+  </div>
+</div>

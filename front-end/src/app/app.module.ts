@@ -105,6 +105,8 @@ import { VersionComponent } from './archive/version/version.component';
 import { GrantedAccessPipePipe } from './team-members/granted-access-pipe.pipe';
 import { CenterValidateComponent } from './submission/center-validate/center-validate.component';
 import { QualitativeIndicatorsComponent } from './submission/qualitative-indicators/qualitative-indicators.component';
+import { BudgetAssumptionsComponent } from './submission/budget-assumptions/budget-assumptions.component';
+import { BudgetAssumptionSummaryComponent } from './submission/budget-assumption-summary/budget-assumption-summary.component';
 
 
 @NgModule({
@@ -170,6 +172,8 @@ import { QualitativeIndicatorsComponent } from './submission/qualitative-indicat
     GrantedAccessPipePipe,
     CenterValidateComponent,
     QualitativeIndicatorsComponent,
+    BudgetAssumptionsComponent,
+    BudgetAssumptionSummaryComponent,
   ],
   imports: [
     BrowserModule,
