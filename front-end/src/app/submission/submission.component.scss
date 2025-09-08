@@ -3508,3 +3508,20 @@ pre {
   vertical-align: middle;
   cursor: pointer;
 }
+
+.td-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.budget-assumptions-icon {
+  filter: invert(32%) sepia(98%) saturate(1500%) hue-rotate(200deg);
+  cursor: pointer;
+}
+
+.disabled-icon {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none; /* prevents clicking */
+}
