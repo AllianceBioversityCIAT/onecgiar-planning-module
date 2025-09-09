@@ -4740,9 +4740,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4777,9 +4774,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4840,44 +4834,9 @@
                       </td>
                   
                       <td>
-                        <div class="form">
-                          <mat-form-field
-                            class="form-dialog-content__field"
-                            floatLabel="always"
-                            hideRequiredMarker
-                            appearance="outline"
-                            class="budget"
-                          >
-                            <input
-                              mask="separator.2"
-                              thousandSeparator=","
-                              placeholder="Total Budget"
-                              [disabled]="
-                                partnersStatus[partner.code] ||
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved' ||
-                                !partner?.canEdit ||
-                                initUser?.role === 'Financial Focal Point'
-                              "
-                              matInput
-                              [(ngModel)]="
-                                wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ]
-                              "
-                              (keyup)="
-                                wpBudgetChange(
-                                  partner.code,
-                                  wp.ost_wp.wp_official_code + '-melia',
-                                  wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-melia'
-                                  ],
-                                  true
-                                )
-                              "
-                            />
-                          </mat-form-field>
-                        </div>
+                        {{      wp_budgets[partner.code][
+                          wp.ost_wp.wp_official_code + '-melia'
+                        ]}}
                       </td>
                     </tr>
                   </table>
@@ -5001,9 +4960,6 @@
                                   ]
                                 "
                                 [disabled]="
-                                  !+wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ] ||
                                   partnersStatus[partner.code] ||
                                   initStatus == 'Pending' ||
                                   initStatus == 'Approved' ||
@@ -5038,9 +4994,6 @@
                                   ]
                                 "
                                 [disabled]="
-                                  !+wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ] ||
                                   partnersStatus[partner.code] ||
                                   initStatus == 'Pending' ||
                                   initStatus == 'Approved' ||
@@ -5099,44 +5052,10 @@
                         </td>
                     
                         <td>
-                          <div class="form">
-                            <mat-form-field
-                              class="form-dialog-content__field"
-                              floatLabel="always"
-                              hideRequiredMarker
-                              appearance="outline"
-                              class="budget"
-                            >
-                              <input
-                                mask="separator.2"
-                                thousandSeparator=","
-                                placeholder="Total Budget"
-                                [disabled]="
-                                  partnersStatus[partner.code] ||
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved' ||
-                                  !partner?.canEdit ||
-                                  initUser?.role === 'Financial Focal Point'
-                                "
-                                matInput
-                                [(ngModel)]="
-                                  wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ]
-                                "
-                                (keyup)="
-                                  wpBudgetChange(
-                                    partner.code,
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting',
-                                    wp_budgets[partner.code][
-                                      wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                    ],
-                                    true
-                                  )
-                                "
-                              />
-                            </mat-form-field>
-                          </div>
+                          {{  wp_budgets[partner.code][
+                            wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                          ]}}
+                          
                         </td>
                       </tr>
                     </table>
@@ -5311,9 +5230,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5348,9 +5264,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5410,44 +5323,9 @@
                       </td>
                   
                       <td>
-                        <div class="form">
-                          <mat-form-field
-                            class="form-dialog-content__field"
-                            floatLabel="always"
-                            hideRequiredMarker
-                            appearance="outline"
-                            class="budget"
-                          >
-                            <input
-                              mask="separator.2"
-                              thousandSeparator=","
-                              placeholder="Total Budget"
-                              [disabled]="
-                                partnersStatus[partner.code] ||
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved' ||
-                                !partner?.canEdit ||
-                                initUser?.role === 'Financial Focal Point'
-                              "
-                              matInput
-                              [(ngModel)]="
-                                wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ]
-                              "
-                              (keyup)="
-                                wpBudgetChange(
-                                  partner.code,
-                                  wp.ost_wp.wp_official_code + '-project',
-                                  wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ],
-                                  true
-                                )
-                              "
-                            />
-                          </mat-form-field>
-                        </div>
+                        {{   wp_budgets[partner.code][
+                          wp.ost_wp.wp_official_code + '-project'
+                        ]}}
                       </td>
                     </tr>
                   </table>
@@ -5606,9 +5484,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-partners'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5620,7 +5495,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code + '-partners',
                                   item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  item?.acronym,
                                   'budget',
                                   false,
                                   'PARTNER',
@@ -5643,9 +5518,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-partners'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5657,7 +5529,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code + '-partners',
                                   item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  item?.acronym,
                                   'budget',
                                   false,
                                   'PARTNER',
@@ -5702,44 +5574,9 @@
                     </td>
                 
                     <td>
-                      <div class="form">
-                        <mat-form-field
-                          class="form-dialog-content__field"
-                          floatLabel="always"
-                          hideRequiredMarker
-                          appearance="outline"
-                          class="budget"
-                        >
-                          <input
-                            mask="separator.2"
-                            thousandSeparator=","
-                            placeholder="Total Budget"
-                            [disabled]="
-                              partnersStatus[partner.code] ||
-                              initStatus == 'Pending' ||
-                              initStatus == 'Approved' ||
-                              !partner?.canEdit ||
-                              initUser?.role === 'Financial Focal Point'
-                            "
-                            matInput
-                            [(ngModel)]="
-                              wp_budgets[partner.code][
-                                wp.ost_wp.wp_official_code + '-partners'
-                              ]
-                            "
-                            (keyup)="
-                              wpBudgetChange(
-                                partner.code,
-                                wp.ost_wp.wp_official_code + '-partners',
-                                wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-partners'
-                                ],
-                                true
-                              )
-                            "
-                          />
-                        </mat-form-field>
-                      </div>
+                     {{       wp_budgets[partner.code][
+                      wp.ost_wp.wp_official_code + '-partners'
+                    ]}}
                     </td>
                   </tr>
                   </table>

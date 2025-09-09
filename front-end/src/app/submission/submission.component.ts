@@ -218,29 +218,37 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean, item_type: string | null = null, socket: boolean) {
     if (this.timeCalc) clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
-      let percentValue;
-      let budgetValue;
+      let percentValue = 0;
+      let budgetValue = 0;
       let isActualValues = this.toggleValues[partner_code][wp_id];
-
-      if (type == "percent") {
-        if (isActualValues) {
-          percentValue = Number(this.values[partner_code][wp_id][item_id]);
-        } else {
-          percentValue = Number(this.displayValues[partner_code][wp_id][item_id]);
-        }
-        budgetValue = this.budgetValue(
-          percentValue,
-          this.wp_budgets[partner_code][wp_id]
-        );
-      } else {
+      let budget = 0;
+      // if (type == "percent") {
+      //   if (isActualValues) {
+      //     percentValue = Number(this.values[partner_code][wp_id][item_id]);
+      //   } else {
+      //     percentValue = Number(this.displayValues[partner_code][wp_id][item_id]);
+      //   }
+      //   budgetValue = this.budgetValue(
+      //     percentValue,
+      //     this.wp_budgets[partner_code][wp_id]
+      //   );
+      // } else {
         budgetValue = isActualValues
-          ? this.budgetValues[partner_code][wp_id][item_id]
-          : this.displayBudgetValues[partner_code][wp_id][item_id];
+          ? Number(this.budgetValues[partner_code][wp_id][item_id])
+          : Number(this.displayBudgetValues[partner_code][wp_id][item_id]);
+        Object.values(this.displayBudgetValues[partner_code][wp_id]).forEach(val => {
+          if (typeof val === "number") {
+            budget += val;
+
+          } 
+        });
+        this.wp_budgets[partner_code][wp_id] = budget;
+
         percentValue = this.percentValue(
           budgetValue,
           this.wp_budgets[partner_code][wp_id]
         );
-      }
+      // }
       this.values[partner_code][wp_id][item_id] = percentValue;
       this.displayValues[partner_code][wp_id][item_id] =
         Math.round(percentValue);
@@ -251,15 +259,19 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       if(percentValue == 0 && !fromCheck)
         this.haveTrue[partner_code][wp_id][item_id] = true;
 
-      if(fromCheck && !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
-        true
-      )) {
-        this.values[partner_code][wp_id][item_id] = 0;
-        this.displayValues[partner_code][wp_id][item_id] =0
-        this.haveTrue[partner_code][wp_id][item_id] = false;
-
-      }
-
+      const result2 = await this.submissionService.saveWpBudget(this.params.id, {
+        partner_code,
+        wp_id,
+        budget,
+        phaseId: this.phase.id,
+      });
+      if (result2)
+        this.socket.emit("setDataBudget", {
+          id: this.params.id,
+          partner_code,
+          wp_id,
+          budget,
+        });
       const result = await this.submissionService.saveResultValue(
         this.params.id,
         {
@@ -267,7 +279,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           wp_id: wp_id,
           item_id: item_id,
           item_title: item_title,
-          percent_value: percentValue,
+          percent_value: !percentValue ? 0 : percentValue,
           budget_value: budgetValue,
           no_budget: this.noValuesAssigned[partner_code][wp_id][item_id],
           phase_id: this.phase.id,
@@ -283,6 +295,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           value: percentValue,
           no_budget: this.noValuesAssigned[partner_code][wp_id][item_id],
         });
+
+   
       this.sammaryCalc();
       this.validateCenter(partner_code, false);
     }, 500);
@@ -382,7 +396,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   percentValue(value: number, totalBudget: number) {
-    return (value / totalBudget) * 100;
+    return Number((value / totalBudget) * 100);
   }
 
   budgetValue(value: number, totalBudget: number) {
@@ -1474,8 +1488,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log(this.totalTargetsIndicatorPartners)
-    // console.log(this.budgetValues)
+    // console.log(this.totalTargetsIndicatorPartners)
+    console.log(this.summaryBudgetsTotal)
 
     
 
@@ -1717,6 +1731,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.socket.on("setDataBudget-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, budget } = data;
       this.wp_budgets[partner_code][wp_id] = budget;
+      this.sammaryCalc();
       // this.refreshValues(partner_code, wp_id);
     });
     this.socket.on("statusOfCenter", (data: any) => {
