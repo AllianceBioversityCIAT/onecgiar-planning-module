@@ -959,6 +959,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   phase: any;
   actualWps:any;
   tocIncompleteData: boolean = false;
+  partnersMelia:any;
+  partnersProject:any;
+  partnersProjectMelia:any;
   async InitData() {
     this.loading = true;
     this.wpsTotalSum = 0;
@@ -1017,6 +1020,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           return d;
         });
     }
+
+    this.partnersProjectMelia = await this.submissionService.getActualTocData(
+      this.params.code
+    );
+
+    this.partnersMelia = this.partnersProjectMelia.melias;
+    this.partnersProject = this.partnersProjectMelia.projects;
+
  
       const cross_data = await this.submissionService.getCrossByInitiative(
         this.params.id
@@ -1488,8 +1499,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    // console.log(this.totalTargetsIndicatorPartners)
-    console.log(this.summaryBudgetsTotal)
+    console.log(this.displayBudgetValues)
+    console.log(this.actualWps)
 
     
 
@@ -2918,4 +2929,17 @@ totalConsolidatedTargetPartner: any;
       height: 'auto',
     })
   } 
+
+  getMeliaProjectItemTotal(partnerCode: string, item: any, type: string): number {
+    if (!item?.results?.length) return 0;
+  
+    return item.results.reduce((sum: number, result: any) => {
+      const wpCode = result?.group?.ost_wp?.wp_official_code + type;
+      const value =
+        this.displayBudgetValues?.[partnerCode]?.[wpCode]?.[item.id] || 0;
+  
+      return sum + Number(value.toString().replace(/,/g, ''));
+    }, 0);
+  }
+  
 }
