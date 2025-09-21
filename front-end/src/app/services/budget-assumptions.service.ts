@@ -30,4 +30,11 @@ export class BudgetAssumptionsService {
       this.http.get(environment.api_url+"/budget-assumptions/" + item_id).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
+
+
+  async getAll() {
+    return firstValueFrom(
+      this.http.get(environment.api_url+"/budget-assumptions/all").pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
 }

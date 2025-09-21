@@ -11,8 +11,14 @@ export class BudgetAssumptionsController {
 
     @ApiBearerAuth()
     @Get()
-    findAll(@Query() body: any) {
+    findOne(@Query() body: any) {
       return this.service.findOne(body);
+    }
+
+    @ApiBearerAuth()
+    @Get('all')
+    findAll() {
+      return this.service.findAll();
     }
   
 

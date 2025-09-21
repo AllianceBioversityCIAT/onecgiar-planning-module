@@ -27,6 +27,11 @@ export class BudgetAssumptionsService {
         });
       }
 
+      findAll() {
+        return this.repo.find();
+      }
+
+
 
       async createOrUpdate(data: any) {
         let budgetAssumptions: any = await this.repo.findOne({

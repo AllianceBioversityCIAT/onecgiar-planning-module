@@ -30,6 +30,7 @@ import { QualitativeIndicatorsComponent } from "./qualitative-indicators/qualita
 import * as moment from 'moment';
 import { BudgetAssumptionsComponent } from "./budget-assumptions/budget-assumptions.component";
 import { BudgetAssumptionSummaryComponent } from "./budget-assumption-summary/budget-assumption-summary.component";
+import { BudgetAssumptionsService } from "../services/budget-assumptions.service";
 
 @Component({
   selector: "app-submission",
@@ -57,6 +58,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private initiativeService: InitiativesService,
     private toster: ToastrService,
     private userService: UserService,
+    private budgetAssumptionsService: BudgetAssumptionsService,
+
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -1555,6 +1558,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
   user_info: any;
   my_roles: any;
+  allBudgetAssumptions: any[] = [];
+
   async ngOnInit() {
     this.socket.on('connect_error', this.handelDisconnect);
     this.socket.on('disconnect', this.handelDisconnect);
@@ -1659,7 +1664,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       'Number of Policy (Policy Change)',
       'Innovation Use',
       'custom-OUTCOME'
-    ]
+    ];
+
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
+    console.log(this.allBudgetAssumptions)
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
@@ -2913,7 +2921,13 @@ totalConsolidatedTargetPartner: any;
       maxWidth: '850px',
       maxHeight: '500px',
       height: '320px',
-    })
+    }).afterClosed()
+    .subscribe(async dialogResult => {
+      if (dialogResult) {
+        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
+        this.hasBudgetAssumptions(dialogResult.data.organization_code, dialogResult.data.item_id, dialogResult.data.wp_id);
+      }
+    });
   } 
 
   openBudgetAssumptionsDialogSummary(item_id: string) {
@@ -2940,6 +2954,14 @@ totalConsolidatedTargetPartner: any;
   
       return sum + Number(value.toString().replace(/,/g, ''));
     }, 0);
+  }
+
+  hasBudgetAssumptions(partnerCode: string, itemId: number, wpId: string): boolean {
+    return this.allBudgetAssumptions.some(a =>
+      a.organization_code === partnerCode &&
+      a.item_id === itemId &&
+      a.wp_id === wpId
+    );
   }
   
 }
