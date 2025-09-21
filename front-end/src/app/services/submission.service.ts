@@ -94,6 +94,13 @@ export class SubmissionService {
     );
   }
 
+  async getActualTocData(code: string) {
+    return firstValueFrom(
+      this.http.get(environment.api_url+'/submission/actual-toc/' + code).pipe(map((d: any) => d))
+    );
+  }
+
+
   async getTocSubmissionData(id: any) {
     return firstValueFrom(
       this.http.get(environment.api_url+'/submission/toc_submission_data/' + id).pipe(map((d: any) => d))

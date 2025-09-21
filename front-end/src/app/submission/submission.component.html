@@ -4223,7 +4223,7 @@
                       "
                     >
                     <ng-container *ngIf="item.category == 'OUTPUT'">
-                      <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">
+                      <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index"> 
 
                       <tr
                         [ngClass]="{
@@ -4631,7 +4631,7 @@
 
 
 
-              <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-melia'].length">
+              <!-- <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-melia'].length">
 
                 <div class="sub-head-w3">
                   <span class="sub-title-w3">MELIA Study</span>
@@ -4666,7 +4666,6 @@
                         ]
                       "
                     >
-                    <!-- <ng-container *ngIf="item.category == 'melia'"> -->
                       <tr
                         [ngClass]="{
                           itemHasError:
@@ -4688,36 +4687,7 @@
                         <td>
                           {{ getScope(item, 'melia') }}
                         </td>
-                        <!-- <ng-container *ngFor="let per of period">
-                          <td>
-                            <mat-checkbox
-                              [disabled]="
-                                partnersStatus[partner.code] ||
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved' ||
-                                !partner?.canEdit ||
-                                initUser?.role === 'Financial Focal Point'
-                              "
-                              [(ngModel)]="
-                                perValues[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ][item.id][per.id]
-                              "
-                              (change)="
-                                changeEnable(
-                                  partner.code,
-                                  wp.ost_wp.wp_official_code + '-project',
-                                  item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
-                                  per.id,
-                                  item.category,
-                                  $event
-                                )
-                              "
-                            ></mat-checkbox>
-                          </td>
-                        </ng-container> -->
-  
+                      
                      
                         <td>
                           <div class="td-flex">
@@ -4740,9 +4710,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4777,9 +4744,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -4832,7 +4796,6 @@
   
   
                       
-                    <!-- </ng-container> -->
                   </ng-container>
                     <tr class="total">
                       <td [colSpan]="3">
@@ -4840,44 +4803,9 @@
                       </td>
                   
                       <td>
-                        <div class="form">
-                          <mat-form-field
-                            class="form-dialog-content__field"
-                            floatLabel="always"
-                            hideRequiredMarker
-                            appearance="outline"
-                            class="budget"
-                          >
-                            <input
-                              mask="separator.2"
-                              thousandSeparator=","
-                              placeholder="Total Budget"
-                              [disabled]="
-                                partnersStatus[partner.code] ||
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved' ||
-                                !partner?.canEdit ||
-                                initUser?.role === 'Financial Focal Point'
-                              "
-                              matInput
-                              [(ngModel)]="
-                                wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-melia'
-                                ]
-                              "
-                              (keyup)="
-                                wpBudgetChange(
-                                  partner.code,
-                                  wp.ost_wp.wp_official_code + '-melia',
-                                  wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-melia'
-                                  ],
-                                  true
-                                )
-                              "
-                            />
-                          </mat-form-field>
-                        </div>
+                        {{      wp_budgets[partner.code][
+                          wp.ost_wp.wp_official_code + '-melia'
+                        ]}}
                       </td>
                     </tr>
                   </table>
@@ -4885,7 +4813,7 @@
                 <p class="error">
                   {{ errors[partner.code][wp.ost_wp.wp_official_code + '-melia'] }}
                 </p>
-                </ng-container>
+                </ng-container> -->
 
 
 
@@ -5001,9 +4929,6 @@
                                   ]
                                 "
                                 [disabled]="
-                                  !+wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ] ||
                                   partnersStatus[partner.code] ||
                                   initStatus == 'Pending' ||
                                   initStatus == 'Approved' ||
@@ -5038,9 +4963,6 @@
                                   ]
                                 "
                                 [disabled]="
-                                  !+wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ] ||
                                   partnersStatus[partner.code] ||
                                   initStatus == 'Pending' ||
                                   initStatus == 'Approved' ||
@@ -5099,44 +5021,10 @@
                         </td>
                     
                         <td>
-                          <div class="form">
-                            <mat-form-field
-                              class="form-dialog-content__field"
-                              floatLabel="always"
-                              hideRequiredMarker
-                              appearance="outline"
-                              class="budget"
-                            >
-                              <input
-                                mask="separator.2"
-                                thousandSeparator=","
-                                placeholder="Total Budget"
-                                [disabled]="
-                                  partnersStatus[partner.code] ||
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved' ||
-                                  !partner?.canEdit ||
-                                  initUser?.role === 'Financial Focal Point'
-                                "
-                                matInput
-                                [(ngModel)]="
-                                  wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                  ]
-                                "
-                                (keyup)="
-                                  wpBudgetChange(
-                                    partner.code,
-                                    wp.ost_wp.wp_official_code + '-Cross-Cutting',
-                                    wp_budgets[partner.code][
-                                      wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                                    ],
-                                    true
-                                  )
-                                "
-                              />
-                            </mat-form-field>
-                          </div>
+                          {{  wp_budgets[partner.code][
+                            wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                          ]}}
+                          
                         </td>
                       </tr>
                     </table>
@@ -5159,57 +5047,11 @@
 
 
 
-                <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
+                <!-- <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
 
                 <div class="sub-head-w3">
                   <span class="sub-title-w3">W3-Bilateral Projects</span>
                   <div class="btns-sec-w3">
-                    <!-- <div class="btns-w3">
-                      <button
-                        class="check-btn-w3"
-                        *ngIf="partner?.canEdit"
-                        [disabled]="
-                          partnersStatus[partner.code] ||
-                          initStatus == 'Pending' ||
-                          initStatus == 'Approved'||
-                          initUser?.role === 'Financial Focal Point'
-                        "
-                        (click)="
-                          checkAll(partner.code, wp.ost_wp.wp_official_code + '-project', true, true)
-                        "
-                        [ngClass]="{
-                          disabled:
-                            partnersStatus[partner.code] ||
-                              initStatus == 'Pending' ||
-                              initStatus == 'Approved' ||
-                              initUser?.role === 'Financial Focal Point'
-                        }"
-                      >
-                        Check all
-                      </button>
-                      <button
-                        class="check-btn-clear-w3"
-                        *ngIf="partner?.canEdit"
-                        [disabled]="
-                          partnersStatus[partner.code] ||
-                          initStatus == 'Pending' ||
-                          initStatus == 'Approved' ||
-                          initUser?.role === 'Financial Focal Point'
-                        "
-                        (click)="
-                          checkAll(partner.code, wp.ost_wp.wp_official_code+ '-project', false, true)
-                        "
-                        [ngClass]="{
-                          disabled:
-                            partnersStatus[partner.code] ||
-                            initStatus == 'Pending' ||
-                            initStatus == 'Approved'||
-                            initUser?.role === 'Financial Focal Point'
-                        }"
-                      >
-                        Clear all
-                      </button>
-                    </div> -->
     
                     <mat-slide-toggle
                       [(ngModel)]="
@@ -5231,10 +5073,6 @@
                   >
                     <tr>
                       <th>Project title</th>
-                      <!-- <ng-container *ngFor="let item of period">
-                        <th>{{ item.year }} - {{ item.quarter }}</th>
-                      </ng-container> -->
-                      <!-- <th class="per">Budget Percentage</th>  -->
                       <th class="budget">W3 Baratialar Project (USD)</th> 
                     </tr>
   
@@ -5259,37 +5097,7 @@
                         </td>
   
                         
-                        <!-- <ng-container *ngFor="let per of period">
-                          <td>
-                            <mat-checkbox
-                              [disabled]="
-                                partnersStatus[partner.code] ||
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved' ||
-                                !partner?.canEdit ||
-                                initUser?.role === 'Financial Focal Point'
-                              "
-                              [(ngModel)]="
-                                perValues[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ][item.id][per.id]
-                              "
-                              (change)="
-                                changeEnable(
-                                  partner.code,
-                                  wp.ost_wp.wp_official_code + '-project',
-                                  item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
-                                  per.id,
-                                  item.category,
-                                  $event
-                                )
-                              "
-                            ></mat-checkbox>
-                          </td>
-                        </ng-container> -->
-  
-                     
+                      
                         <td>
                           <div class="td-flex">
                             <mat-form-field
@@ -5311,9 +5119,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5348,9 +5153,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5410,44 +5212,9 @@
                       </td>
                   
                       <td>
-                        <div class="form">
-                          <mat-form-field
-                            class="form-dialog-content__field"
-                            floatLabel="always"
-                            hideRequiredMarker
-                            appearance="outline"
-                            class="budget"
-                          >
-                            <input
-                              mask="separator.2"
-                              thousandSeparator=","
-                              placeholder="Total Budget"
-                              [disabled]="
-                                partnersStatus[partner.code] ||
-                                initStatus == 'Pending' ||
-                                initStatus == 'Approved' ||
-                                !partner?.canEdit ||
-                                initUser?.role === 'Financial Focal Point'
-                              "
-                              matInput
-                              [(ngModel)]="
-                                wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-project'
-                                ]
-                              "
-                              (keyup)="
-                                wpBudgetChange(
-                                  partner.code,
-                                  wp.ost_wp.wp_official_code + '-project',
-                                  wp_budgets[partner.code][
-                                    wp.ost_wp.wp_official_code + '-project'
-                                  ],
-                                  true
-                                )
-                              "
-                            />
-                          </mat-form-field>
-                        </div>
+                        {{   wp_budgets[partner.code][
+                          wp.ost_wp.wp_official_code + '-project'
+                        ]}}
                       </td>
                     </tr>
                   </table>
@@ -5455,8 +5222,20 @@
                 <p class="error">
                   {{ errors[partner.code][wp.ost_wp.wp_official_code + '-project'] }}
                 </p>
-                </ng-container>
-              <!-- <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-Geographic-Scope'].length">
+                </ng-container> -->
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
+                <!-- <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-Geographic-Scope'].length">
 
                 <div class="sub-head-w3">
                   <span class="sub-title-w3">Geographic Scope</span>
@@ -5606,9 +5385,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-partners'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5620,7 +5396,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code + '-partners',
                                   item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  item?.acronym,
                                   'budget',
                                   false,
                                   'PARTNER',
@@ -5643,9 +5419,6 @@
                                 ]
                               "
                               [disabled]="
-                                !+wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-partners'
-                                ] ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5657,7 +5430,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code + '-partners',
                                   item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  item?.acronym,
                                   'budget',
                                   false,
                                   'PARTNER',
@@ -5702,44 +5475,9 @@
                     </td>
                 
                     <td>
-                      <div class="form">
-                        <mat-form-field
-                          class="form-dialog-content__field"
-                          floatLabel="always"
-                          hideRequiredMarker
-                          appearance="outline"
-                          class="budget"
-                        >
-                          <input
-                            mask="separator.2"
-                            thousandSeparator=","
-                            placeholder="Total Budget"
-                            [disabled]="
-                              partnersStatus[partner.code] ||
-                              initStatus == 'Pending' ||
-                              initStatus == 'Approved' ||
-                              !partner?.canEdit ||
-                              initUser?.role === 'Financial Focal Point'
-                            "
-                            matInput
-                            [(ngModel)]="
-                              wp_budgets[partner.code][
-                                wp.ost_wp.wp_official_code + '-partners'
-                              ]
-                            "
-                            (keyup)="
-                              wpBudgetChange(
-                                partner.code,
-                                wp.ost_wp.wp_official_code + '-partners',
-                                wp_budgets[partner.code][
-                                  wp.ost_wp.wp_official_code + '-partners'
-                                ],
-                                true
-                              )
-                            "
-                          />
-                        </mat-form-field>
-                      </div>
+                     {{       wp_budgets[partner.code][
+                      wp.ost_wp.wp_official_code + '-partners'
+                    ]}}
                     </td>
                   </tr>
                   </table>
@@ -5754,6 +5492,368 @@
 
             </mat-card>
           </mat-tab>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <mat-tab label="W3/Bilateral">
+            <mat-card>
+              <div class="sub-head">
+                <span class="sub-title">Total W3/Bilateral budget</span>
+              </div>
+              <mat-card-content>
+                <div class="table-box-partner-project mat-elevation-z8">
+                  <table
+                  >
+                    <tr>
+                      <th>Project title</th>
+                      <th>AOW</th>
+                      <th>High Level Output</th>
+                      <th>Budget (USD)</th>
+                      <th class="budget">Total budget (USD)</th> 
+                    </tr>
+  
+                    <ng-container
+                      *ngFor="
+                        let item of partnersProject
+                      "
+                    >
+                    <ng-container *ngFor="let result of item.results; let i = index">
+                      <tr
+                      >
+                        <td *ngIf="i === 0" class="wp-title"  [attr.rowspan]="item.results.length || 1">
+                            {{item.name}}                        
+                        </td>
+  
+                        <td>
+                          {{ result?.group?.ost_wp?.acronym }}                        
+                      </td>
+                      <td>
+                        {{ result.titles }}                        
+                    </td>
+                        
+                 
+                      
+                        <td >
+                          <div class="td-flex">
+                            <mat-form-field
+                            class="form-dialog-content__field"
+                            floatLabel="always"
+                            hideRequiredMarker
+                            appearance="outline"
+                            class="budget"
+                            *ngIf="
+                              item.category != 'EOI' && item.category != 'OUTCOME'
+                            "
+                          >
+                            <input
+                              mask="separator.2"
+                              thousandSeparator=","
+                              *ngIf="
+                                toggleValues[partner.code][
+                                result?.group?.ost_wp?.wp_official_code + '-project'
+                                ]
+                              "
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              (keyup)="
+                                changeCalc(
+                                  partner.code,
+                                  result?.group?.ost_wp?.wp_official_code + '-project',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  'budget',
+                                  false,
+                                  'PROJECT',
+                                  true
+                                )
+                              "
+                              [(ngModel)]="
+                                budgetValues[partner.code][
+                                result?.group?.ost_wp?.wp_official_code + '-project'
+                                ][item.id]
+                              "
+                              matInput
+                            />
+                            <input
+                              mask="separator.2"
+                              thousandSeparator=","
+                              *ngIf="
+                                !toggleValues[partner.code][
+                                result?.group?.ost_wp?.wp_official_code + '-project'
+                                ]
+                              "
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              (keyup)="
+                                changeCalc(
+                                  partner.code,
+                                  result?.group?.ost_wp?.wp_official_code + '-project',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  'budget',
+                                  false,
+                                  'PROJECT',
+                                  true
+                                )
+                              "
+                              [(ngModel)]="
+                                displayBudgetValues[partner.code][
+                                result?.group?.ost_wp?.wp_official_code + '-project'
+                                ][item.id]
+                              "
+                              matInput
+                            />
+                          </mat-form-field>
+                          <img 
+                          src="../../assets/shared-image/Vector.png"
+                          matTooltip="Budget assumptions"
+                          matTooltipPosition="above"
+                          [class.disabled-icon]="!displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id]"
+                          (click)="displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id] &&
+                          openBudgetAssumptionsDialog(
+                            partner.code,
+                            item.id,
+                            result?.group?.ost_wp?.wp_official_code + '-project',
+                            displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id],
+                            'PROJECT'
+                            )"
+                          class="budget-assumptions-icon"
+                          width="20"
+                          height="20"
+                        >
+                          </div>
+                        </td>
+
+                        <td *ngIf="i === 0"   [attr.rowspan]="item.results.length || 1">
+                          {{ getMeliaProjectItemTotal(partner.code, item, '-project')}}                        
+                      </td>
+                      </tr>
+  
+                    
+  
+                     
+                    </ng-container>
+                  </ng-container>
+                    <tr class="total">
+                      <td [colSpan]="4">
+                        <div class="subtotal">W3/Bilateral projects sub-total</div>
+                      </td>
+                  
+                      <td>
+                        {{ getTotalBudgetForEachPartnerProject(wp_budgets[partner.code]) }}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
+
+
+
+
+
+
+
+
+
+
+
+
+          <mat-tab label="MELIA Study">
+            <mat-card>
+              <div class="sub-head">
+                <span class="sub-title">MELIA Study - Pooled funding</span>
+              </div>
+              <mat-card-content>
+            <ng-container *ngIf="partnersMelia.length">
+
+             
+                <div class="table-box-partner-project mat-elevation-z8 melia-table">
+                  <table
+                  >
+                    <tr>
+                      <th>MELIA study title</th>
+                      <th>AOW</th>
+                      <th>Supported outcome</th>
+                      <th>AOW budget (USD)</th>
+                      <th class="budget">Total budget (USD)</th> 
+                    </tr>
+  
+                    <ng-container
+                      *ngFor="
+                        let item of partnersMelia
+                      "
+                    >
+                    <ng-container *ngFor="let result of item.results; let i = index">
+                      <tr
+                      >
+                        <td *ngIf="i === 0" class="wp-title"  [attr.rowspan]="item.results.length || 1">
+                            {{
+                             item.title
+                            }}                        
+                        </td>
+  
+                        <td>
+                          {{ result?.group?.ost_wp?.acronym }}                        
+                      </td>
+                      <td>
+                        {{ result.titles }}                        
+                    </td>
+                        
+
+                        <td>
+                          <div class="td-flex">
+                            <mat-form-field
+                            class="form-dialog-content__field"
+                            floatLabel="always"
+                            hideRequiredMarker
+                            appearance="outline"
+                            class="budget"
+                            *ngIf="
+                              item.category != 'EOI' && item.category != 'OUTCOME'
+                            "
+                          >
+                            <input
+                              mask="separator.2"
+                              thousandSeparator=","
+                              *ngIf="
+                                toggleValues[partner.code][
+                                result?.group?.ost_wp?.wp_official_code + '-melia'
+                                ]
+                              "
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              (keyup)="
+                                changeCalc(
+                                  partner.code,
+                                  result?.group?.ost_wp?.wp_official_code + '-melia',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  'budget',
+                                  false,
+                                  'MELIA',
+                                  true
+                                )
+                              "
+                              [(ngModel)]="
+                                budgetValues[partner.code][
+                                result?.group?.ost_wp?.wp_official_code + '-melia'
+                                ][item.id]
+                              "
+                              matInput
+                            />
+                            <input
+                              mask="separator.2"
+                              thousandSeparator=","
+                              *ngIf="
+                                !toggleValues[partner.code][
+                                result?.group?.ost_wp?.wp_official_code + '-melia'
+                                ]
+                              "
+                              [disabled]="
+                                partnersStatus[partner.code] ||
+                                initStatus == 'Pending' ||
+                                initStatus == 'Approved' ||
+                                !partner?.canEdit ||
+                                initUser?.role === 'Financial Focal Point'
+                              "
+                              (keyup)="
+                                changeCalc(
+                                  partner.code,
+                                  result?.group?.ost_wp?.wp_official_code + '-melia',
+                                  item.id,
+                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  'budget',
+                                  false,
+                                  'MELIA',
+                                  true
+                                )
+                              "
+                              [(ngModel)]="
+                                displayBudgetValues[partner.code][
+                                result?.group?.ost_wp?.wp_official_code + '-melia'
+                                ][item.id]
+                              "
+                              matInput
+                            />
+                          </mat-form-field>
+                          <img 
+                          src="../../assets/shared-image/Vector.png"
+                          matTooltip="Budget assumptions"
+                          [class.disabled-icon]="!displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id]"
+                          matTooltipPosition="above"
+                          (click)="displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id] &&
+                          openBudgetAssumptionsDialog(
+                            partner.code,
+                            item.id,
+                            result?.group?.ost_wp?.wp_official_code + '-melia',
+                            displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id],
+                            'MELIA'
+                            )"
+                          class="budget-assumptions-icon"
+                          width="20"
+                          height="20"
+                        >
+                          </div>
+                         
+
+                        
+                        </td>
+                      
+                     
+                        <td *ngIf="i === 0"   [attr.rowspan]="item.results.length || 1">
+                          {{ getMeliaProjectItemTotal(partner.code, item, '-melia') }}
+                        </td>
+                      </tr>
+  
+  
+                    </ng-container>
+                  </ng-container>
+                    <tr class="total">
+                      <td [colSpan]="4">
+                        <div class="subtotal">MELIA studies budget sub-total</div>
+                      </td>
+                  
+                      <td>
+                        {{ getTotalBudgetForEachPartnerMelia(wp_budgets[partner.code]) }}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                </ng-container> 
+              </mat-card-content>
+
+            </mat-card>
+          </mat-tab>
+
         </mat-tab-group>
 
 
