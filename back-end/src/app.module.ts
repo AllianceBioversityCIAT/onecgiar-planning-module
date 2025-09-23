@@ -25,6 +25,7 @@ import { WsGuard } from './ws.guard';
 import { UnderMaintenanceModule } from './under-maintenance/under-maintenance.module';
 import { ArchiveModule } from './archive/archive.module';
 import { BudgetAssumptionsModule } from './budget-assumptions/budget-assumptions.module';
+import { AnaplanModule } from './anaplan/anaplan.module';
 
 @Module({
   controllers:[AppController],
@@ -64,6 +65,7 @@ import { BudgetAssumptionsModule } from './budget-assumptions/budget-assumptions
     UnderMaintenanceModule,
     ArchiveModule,
     BudgetAssumptionsModule,
+    AnaplanModule,
     
   ],
 })

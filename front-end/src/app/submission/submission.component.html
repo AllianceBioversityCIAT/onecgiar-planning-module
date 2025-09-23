@@ -5899,6 +5899,95 @@
             </mat-card>
           </mat-tab>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <ng-container *ngIf="anaplanBudgets">
+          <mat-tab label="Anaplan">
+            <mat-card>
+              <div class="sub-head">
+                <span class="sub-title">Anaplan</span>
+              </div>
+              <mat-card-content>
+                <ng-container *ngIf="anaplanLabels?.length">
+          
+                  <div class="table-box-partner-project mat-elevation-z8 melia-table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Main Accounts</th>
+                          <th *ngFor="let wp of actualWps">{{ wp.ost_wp.acronym }}</th>
+                          <th>Total budget</th>
+                        </tr>
+                      </thead>
+          
+                      <tbody>
+                        <tr *ngFor="let anaplan of anaplanLabels">
+                          <td class="wp-title">{{ anaplan.label }}</td>
+          
+                          <td *ngFor="let wp of actualWps">
+                            <div class="td-flex">
+                              <mat-form-field
+                                floatLabel="always"
+                                hideRequiredMarker
+                                appearance="outline"
+                                class="budget"
+                              >
+                                <input
+                                  matInput
+                                  mask="separator.2"
+                                  thousandSeparator=","
+                                  [(ngModel)]="anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][anaplan.id]"
+                                  (keyup)="anaplanCalc(partner.code,anaplan.id, wp.ost_wp.wp_official_code)"
+                                  [disabled]="
+                                    partnersStatus[partner.code] ||
+                                    initStatus == 'Pending' ||
+                                    initStatus == 'Approved' ||
+                                    !partner?.canEdit ||
+                                    initUser?.role === 'Financial Focal Point'
+                                  "
+                                />
+                              </mat-form-field>
+                            </div>
+                          </td>
+          
+                          <td>
+                            {{ getTotalsByAnaplan(partner.code, anaplan.id) }}
+                          </td>
+                        </tr>
+                      </tbody>
+          
+                      <tfoot>
+                        <tr class="total">
+                          <td>
+                            <div class="subtotal">Sub-total</div>
+                          </td>
+                          <td *ngFor="let wp of actualWps">
+                            {{ getWpTotals(partner.code ,wp.ost_wp.wp_official_code) }}
+                          </td>
+                          <td>{{  getAnaplanTotal(partner.code) }}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </ng-container>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
+        </ng-container>
         </mat-tab-group>
 
 

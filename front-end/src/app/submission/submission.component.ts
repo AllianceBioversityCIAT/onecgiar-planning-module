@@ -31,6 +31,7 @@ import * as moment from 'moment';
 import { BudgetAssumptionsComponent } from "./budget-assumptions/budget-assumptions.component";
 import { BudgetAssumptionSummaryComponent } from "./budget-assumption-summary/budget-assumption-summary.component";
 import { BudgetAssumptionsService } from "../services/budget-assumptions.service";
+import { AnaplanService } from "../services/anaplan.service";
 
 @Component({
   selector: "app-submission",
@@ -59,7 +60,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private toster: ToastrService,
     private userService: UserService,
     private budgetAssumptionsService: BudgetAssumptionsService,
-
+    private anaplanService: AnaplanService,
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -98,6 +99,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   summaryBudgetsMeliaTotal: any = 0;
 
   wp_budgets: any = {};
+  anaplanBudgets: any = {};
   budgetValues: any = {};
   displayBudgetValues: any = {};
   displayBudgetValuesItemIndicator: any = {};
@@ -1206,6 +1208,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   
       this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partners];
 
+
+    this.anaplanLabels = await this.anaplanService.getAll();
       
     for (let partner of this.partners) {
       this.partnersStatus[partner.code] = this.checkComplete(partner.code);
@@ -1213,6 +1217,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
       if (!this.budgetValues[partner.code])
         this.budgetValues[partner.code] = {};
+      if (!this.anaplanBudgets[partner.code]) {
+        this.anaplanBudgets[partner.code] = {};
+      }
       if (!this.displayBudgetValues[partner.code])
         this.displayBudgetValues[partner.code] = {};
       if (!this.displayBudgetValuesItemIndicator[partner.code])
@@ -1233,6 +1240,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       for (let wp of this.wps) {
         if (!this.wp_budgets[partner.code][wp.ost_wp.wp_official_code])
           this.wp_budgets[partner.code][wp.ost_wp.wp_official_code] = null;
+        if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code]) {
+          this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code] = {};
+        }
         if (!this.toggleValues[partner.code][wp.ost_wp.wp_official_code])
           this.toggleValues[partner.code][wp.ost_wp.wp_official_code] = false;
         if (!this.budgetValues[partner.code][wp.ost_wp.wp_official_code])
@@ -1294,6 +1304,11 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               false;
         });
 
+        this.anaplanLabels.forEach((element) => {
+          if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id] =
+              0;
+        });
         result.forEach((item: any) => {
           if (item.category !== "OUTCOME" && item.category !== "OUTPUT") {
             this.check(
@@ -1475,7 +1490,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.setTotalTargetForIndicatorsForPartners()
     this.setItemIndicatorAndBudget();
     this.sammaryCalc();
-    this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners)
+    this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners);
+    await this.setAnaplanValues();
     const tab = this.activatedRoute.snapshot.queryParamMap.get("tab");
     if (tab && this.initiative_data.is_valid && this.initUser?.role != 'MELIA Focal Point')
       this.selectedTabIndex = Number(tab);
@@ -1502,8 +1518,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log(this.displayBudgetValues)
-    console.log(this.actualWps)
+    console.log(this.anaplanValues)
+    console.log(this.anaplanBudgets)
 
     
 
@@ -1559,6 +1575,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   user_info: any;
   my_roles: any;
   allBudgetAssumptions: any[] = [];
+  anaplanLabels: any[] = [];
+  anaplanValues: any[] = [];
 
   async ngOnInit() {
     this.socket.on('connect_error', this.handelDisconnect);
@@ -1759,6 +1777,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.partnersValidate[data.organization_code] = !data.is_valid;
       }
       
+    });
+
+    this.socket.on("setDataAnaplan", (data: any) => {
+      this.anaplanBudgets[data.organization_code][data.wp_id][data.anaplan_id] = data.value;
+      this.getWpTotals(data.organization_code, data.wp_id);
+      this.getTotalsByAnaplan(data.organization_code, data.anaplan_id);
+      this.getAnaplanTotal(data.organization_code);
     });
     this.socket.on("validateOfCenter", (data: any) => {
       if (this.params.id == data.initiative_id) {
@@ -2963,5 +2988,84 @@ totalConsolidatedTargetPartner: any;
       a.wp_id === wpId
     );
   }
+
+  async setAnaplanValues() {
+    this.anaplanValues = await this.anaplanService.getAllValues();
+    for(let values of this.anaplanValues){
+     this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
+    }
+  }
   
+  anaplanCalc(organization_code: number, anaplan_id: number, wp_id: number) {
+    const value = this.anaplanBudgets[organization_code][wp_id][anaplan_id]
+    const data = { organization_code, anaplan_id, wp_id, value};
+  
+    clearTimeout(this.timeCalc);
+    this.timeCalc = setTimeout(async () => {
+        await this.anaplanService.createOrUpdate(data).then(
+          () => {
+            this.socket.emit("setDataAnaplan", {
+              organization_code,
+              wp_id,
+              anaplan_id,
+              value,
+            });
+          }, (error) => {
+            console.log(error)
+          }
+        );
+    }, 500);
+  }
+
+
+  getWpTotals(partnerCode: number, wp:any): any{
+    const partnerData = this.anaplanBudgets[partnerCode];
+  
+    const totals: Record<string, number> = {};
+  
+    Object.keys(partnerData).forEach((wp) => {
+      const wpObj = partnerData[wp] as Record<number, number>;
+  
+      totals[wp] = Object.values(wpObj).reduce(
+        (sum, val) => sum + (Number(val) || 0), 
+        0
+      );
+    });
+    return totals[wp];
+  }
+  
+  getTotalsByAnaplan(partnerCode: number, anaplan_id:number) {
+    const partnerData = this.anaplanBudgets[partnerCode];
+    if (!partnerData) return {};
+  
+    const totals: Record<number, number> = {};
+  
+    Object.values(partnerData).forEach((wpObj) => {
+      Object.entries(wpObj as Record<number, number>).forEach(([anaplanId, value]) => {
+        const id = +anaplanId;
+        const val = value || 0;
+  
+        if (!totals[id]) {
+          totals[id] = 0;
+        }
+        totals[id] += val;
+      });
+    });
+    return totals[anaplan_id];
+  }
+
+  getAnaplanTotal(partnerCode: number): number {
+    const partnerData = this.anaplanBudgets[partnerCode];
+    if (!partnerData) return 0;
+  
+    let total = 0;
+  
+    Object.values(partnerData).forEach((wpObj) => {
+      Object.values(wpObj as Record<number, number>).forEach((val) => {
+        total += val || 0;
+      });
+    });
+  
+    return total;
+  }
 }
