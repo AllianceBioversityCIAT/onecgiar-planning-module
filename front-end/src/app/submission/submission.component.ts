@@ -1780,10 +1780,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     });
 
     this.socket.on("setDataAnaplan", (data: any) => {
-      this.anaplanBudgets[data.organization_code][data.wp_id][data.anaplan_id] = data.value;
-      this.getWpTotals(data.organization_code, data.wp_id);
-      this.getTotalsByAnaplan(data.organization_code, data.anaplan_id);
-      this.getAnaplanTotal(data.organization_code);
+      if (this.params.id == data.initiative_id) {
+        this.anaplanBudgets[data.organization_code][data.wp_id][data.anaplan_id] = data.value;
+        this.getWpTotals(data.organization_code, data.wp_id);
+        this.getTotalsByAnaplan(data.organization_code, data.anaplan_id);
+        this.getAnaplanTotal(data.organization_code);
+      }
     });
     this.socket.on("validateOfCenter", (data: any) => {
       if (this.params.id == data.initiative_id) {
@@ -2990,21 +2992,23 @@ totalConsolidatedTargetPartner: any;
   }
 
   async setAnaplanValues() {
-    this.anaplanValues = await this.anaplanService.getAllValues();
+    this.anaplanValues = await this.anaplanService.getAllValues(this.params.id);
     for(let values of this.anaplanValues){
      this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
     }
   }
   
   anaplanCalc(organization_code: number, anaplan_id: number, wp_id: number) {
-    const value = this.anaplanBudgets[organization_code][wp_id][anaplan_id]
-    const data = { organization_code, anaplan_id, wp_id, value};
+    const value = this.anaplanBudgets[organization_code][wp_id][anaplan_id];
+    const initiative_id = this.initiative_data.id;
+    const data = { organization_code, anaplan_id, wp_id, value, initiative_id};
   
     clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
         await this.anaplanService.createOrUpdate(data).then(
           () => {
             this.socket.emit("setDataAnaplan", {
+              initiative_id,
               organization_code,
               wp_id,
               anaplan_id,

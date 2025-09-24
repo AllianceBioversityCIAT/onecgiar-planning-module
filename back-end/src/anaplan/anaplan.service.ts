@@ -20,8 +20,13 @@ export class AnaplanService {
     return this.repo.find();
   }
 
-  findAllValues() {
+  findAllValues(id: number) {
     return this.anaplanValuesRepo.find({
+      where: {
+        initiative: {
+          id: id
+        }
+      },
       relations: ['workPackage', 'anaplan', 'organization']
     });
   }
@@ -34,6 +39,7 @@ export class AnaplanService {
 
     let record = await this.anaplanValuesRepo.findOne({
       where: {
+        initiative_id: data.initiative_id,
         organization_code: data.organization_code,
         anaplan_id: data.anaplan_id,
         workPackage: workPackageObject,
@@ -45,6 +51,7 @@ export class AnaplanService {
       return await this.anaplanValuesRepo.save(record);
     } else {
       const newRecord = this.anaplanValuesRepo.create({
+        initiative_id: data.initiative_id,
         organization_code: data.organization_code,
         anaplan_id: data.anaplan_id,
         wp_id: workPackageObject.wp_id,

@@ -16,9 +16,9 @@ export class AnaplanService {
     ).catch((e) => false);
   }
 
-  async getAllValues() {
+  async getAllValues(initiative_id: number) {
     return firstValueFrom(
-      this.http.get(environment.api_url+"/anaplan/all-values").pipe(map((d: any) => d))
+      this.http.get(environment.api_url+"/anaplan/all-values/" + initiative_id).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
 
