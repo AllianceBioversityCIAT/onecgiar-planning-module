@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AnaplanService } from './anaplan.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
@@ -14,9 +14,9 @@ export class AnaplanController {
   
 
     @ApiBearerAuth()
-    @Get('all-values')
-    findAllValues() {
-      return this.service.findAllValues();
+    @Get('all-values/:initiative_id')
+    findAllValues(@Param('initiative_id') id: number) {
+      return this.service.findAllValues(id);
     }
 
     @ApiBearerAuth()

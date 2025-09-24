@@ -16,6 +16,7 @@ import { InitiativeRoles } from './initiative-roles.entity';
 import { IpsrValue } from './ipsr-value.entity';
 import { CenterStatus } from './center-status.entity';
 import { History } from './history.entity';
+import { AnaplanValues } from './anaplan-values.entity';
 
 @Entity()
 export class Initiative {
@@ -143,6 +144,11 @@ export class Initiative {
   @Column({type: 'bool', default: false})
   synchronized: boolean;
 
+
+  @OneToMany(() => AnaplanValues, (AnaplanValues) => AnaplanValues.initiative)
+  anaplan_values: AnaplanValues[];
+
+  
   // @ManyToMany(() => Melia, (melia) => melia.other_initiatives)
   // melia: Melia[];
 
