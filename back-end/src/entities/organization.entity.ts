@@ -11,6 +11,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { History } from './history.entity';
 import { WpBudget } from './wp-budget.entity';
 import { BudgetAssumptions } from './budget-assumptions.entity';
+import { AnaplanValues } from './anaplan-values.entity';
 
 @Entity()
 export class Organization {
@@ -40,4 +41,8 @@ export class Organization {
 
   @OneToMany(() => History, (history) => history.organization)
   history: History[];
+
+
+  @OneToMany(() => AnaplanValues, (AnaplanValues) => AnaplanValues.organization)
+  anaplan_values: AnaplanValues[];
 }

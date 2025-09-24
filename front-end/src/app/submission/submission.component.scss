@@ -3520,13 +3520,23 @@ pre {
   cursor: pointer;
 }
 
+
+
 .disabled-icon {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none; /* prevents clicking */
+  filter: grayscale(100%);
+  pointer-events: none;
+  opacity: 0.6;
 }
 
+.normal-icon {
+  opacity: 1;
+  cursor: pointer;
+}
 
+.half-opacity-icon {
+  opacity: 0.5;
+  cursor: pointer;
+}
 
 
 
@@ -3615,3 +3625,16 @@ pre {
   }
 }
 
+.table-box-partner-project table th:not(:first-child),
+.table-box-partner-project table td:not(:first-child) {
+  width: 100px !important;
+  max-width: 125px !important;
+  text-align: center !important;
+}
+
+.table-box-partner-project table th:first-child,
+.table-box-partner-project table td:first-child {
+  width: 300px !important;
+  max-width: 125px !important;
+  text-align: center !important;
+}

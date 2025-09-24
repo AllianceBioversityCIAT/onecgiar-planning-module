@@ -56,7 +56,8 @@ export class BudgetAssumptionsComponent implements OnInit {
             this.toast.success("Added successfully");
           else this.toast.success("Updated successfully");
 
-          this.dialogRef.close(true);
+
+          this.dialogRef.close(this.data);
         },
         (error) => {
           this.toast.error(error.error.message);

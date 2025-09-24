@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Result } from './result.entity';
 import { History } from './history.entity';
+import { AnaplanValues } from './anaplan-values.entity';
 
 
 @Entity()
@@ -47,4 +48,8 @@ export class WorkPackage {
 
   @OneToMany(() => History, (history) => history.work_package)
   history: History[];
+
+
+  @OneToMany(() => AnaplanValues, (AnaplanValues) => AnaplanValues.workPackage)
+  anaplan_values: AnaplanValues[];
 }

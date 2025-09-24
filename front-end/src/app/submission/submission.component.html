@@ -4295,7 +4295,16 @@
                             <img 
                               src="../../assets/shared-image/Vector.png"
                               matTooltip="Budget assumptions"
-                              [class.disabled-icon]="!displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id]"
+                              [ngClass]="{
+                                'disabled-icon': !hasBudgetAssumptions(partner.code, indicator.id, wp.ost_wp.wp_official_code) 
+                                                 && !displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id],
+                                
+                                'normal-icon': hasBudgetAssumptions(partner.code, indicator.id, wp.ost_wp.wp_official_code) 
+                                                && displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id],
+                                
+                                'half-opacity-icon': !hasBudgetAssumptions(partner.code, indicator.id, wp.ost_wp.wp_official_code) 
+                                                     && displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id]
+                              }"
                               matTooltipPosition="above"
                               (click)="displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] &&
                               openBudgetAssumptionsDialog(
@@ -4993,7 +5002,16 @@
                               src="../../assets/shared-image/Vector.png"
                               matTooltip="Budget assumptions"
                               matTooltipPosition="above"
-                              [class.disabled-icon]="!displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id]"
+                              [ngClass]="{
+                                'disabled-icon': !hasBudgetAssumptions(partner.code, item.id, wp.ost_wp.wp_official_code + '-Cross-Cutting') 
+                                                 && !displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id],
+                                
+                                'normal-icon': hasBudgetAssumptions(partner.code, item.id, wp.ost_wp.wp_official_code + '-Cross-Cutting') 
+                                                && displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id],
+                                
+                                'half-opacity-icon': !hasBudgetAssumptions(partner.code, item.id, wp.ost_wp.wp_official_code + '-Cross-Cutting') 
+                                                     && displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id]
+                              }"
                               (click)="displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id] &&
                               openBudgetAssumptionsDialog(
                                 partner.code,
@@ -5449,7 +5467,16 @@
                             src="../../assets/shared-image/Vector.png"
                             matTooltip="Budget assumptions"
                             matTooltipPosition="above"
-                            [class.disabled-icon]="!displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id]"
+                            [ngClass]="{
+                              'disabled-icon': !hasBudgetAssumptions(partner.code, item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                               && !displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id],
+                              
+                              'normal-icon': hasBudgetAssumptions(partner.code, item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                              && displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id],
+                              
+                              'half-opacity-icon': !hasBudgetAssumptions(partner.code, item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                                   && displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id]
+                            }"
                             (click)="displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id] &&
                             openBudgetAssumptionsDialog(
                               partner.code,
@@ -5630,7 +5657,16 @@
                           src="../../assets/shared-image/Vector.png"
                           matTooltip="Budget assumptions"
                           matTooltipPosition="above"
-                          [class.disabled-icon]="!displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id]"
+                          [ngClass]="{
+                            'disabled-icon': !hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-project') 
+                                             && !displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id],
+                            
+                            'normal-icon': hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-project') 
+                                            && displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id],
+                            
+                            'half-opacity-icon': !hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-project') 
+                                                 && displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id]
+                          }"
                           (click)="displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id] &&
                           openBudgetAssumptionsDialog(
                             partner.code,
@@ -5808,7 +5844,16 @@
                           <img 
                           src="../../assets/shared-image/Vector.png"
                           matTooltip="Budget assumptions"
-                          [class.disabled-icon]="!displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id]"
+                          [ngClass]="{
+                            'disabled-icon': !hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-melia') 
+                                             && !displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id],
+                            
+                            'normal-icon': hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-melia') 
+                                            && displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id],
+                            
+                            'half-opacity-icon': !hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-melia') 
+                                                 && displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id]
+                          }"
                           matTooltipPosition="above"
                           (click)="displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id] &&
                           openBudgetAssumptionsDialog(
@@ -5854,6 +5899,95 @@
             </mat-card>
           </mat-tab>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <ng-container *ngIf="anaplanBudgets">
+          <mat-tab label="Anaplan">
+            <mat-card>
+              <div class="sub-head">
+                <span class="sub-title">Anaplan</span>
+              </div>
+              <mat-card-content>
+                <ng-container *ngIf="anaplanLabels?.length">
+          
+                  <div class="table-box-partner-project mat-elevation-z8 melia-table">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Main Accounts</th>
+                          <th *ngFor="let wp of actualWps">{{ wp.ost_wp.acronym }}</th>
+                          <th>Total budget</th>
+                        </tr>
+                      </thead>
+          
+                      <tbody>
+                        <tr *ngFor="let anaplan of anaplanLabels">
+                          <td class="wp-title">{{ anaplan.label }}</td>
+          
+                          <td *ngFor="let wp of actualWps">
+                            <div class="td-flex">
+                              <mat-form-field
+                                floatLabel="always"
+                                hideRequiredMarker
+                                appearance="outline"
+                                class="budget"
+                              >
+                                <input
+                                  matInput
+                                  mask="separator.2"
+                                  thousandSeparator=","
+                                  [(ngModel)]="anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][anaplan.id]"
+                                  (keyup)="anaplanCalc(partner.code,anaplan.id, wp.ost_wp.wp_official_code)"
+                                  [disabled]="
+                                    partnersStatus[partner.code] ||
+                                    initStatus == 'Pending' ||
+                                    initStatus == 'Approved' ||
+                                    !partner?.canEdit ||
+                                    initUser?.role === 'Financial Focal Point'
+                                  "
+                                />
+                              </mat-form-field>
+                            </div>
+                          </td>
+          
+                          <td>
+                            {{ getTotalsByAnaplan(partner.code, anaplan.id) }}
+                          </td>
+                        </tr>
+                      </tbody>
+          
+                      <tfoot>
+                        <tr class="total">
+                          <td>
+                            <div class="subtotal">Sub-total</div>
+                          </td>
+                          <td *ngFor="let wp of actualWps">
+                            {{ getWpTotals(partner.code ,wp.ost_wp.wp_official_code) }}
+                          </td>
+                          <td>{{  getAnaplanTotal(partner.code) }}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </ng-container>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
+        </ng-container>
         </mat-tab-group>
 
 
