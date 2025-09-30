@@ -3602,62 +3602,34 @@
               </div>
             </ng-container> -->
 
-            
-
+          
             <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length">
               <div class="sub-head">
-                <span class="sub-title">partners</span>
+                <span class="sub-title">Contracted Partners - Pooled funding</span>
               </div>
               <div class="table-box-1 mat-elevation-z8 w3-project-table">
                  
                 <table>
                   <tr>
-                      <th>Actions</th>
                       <th>Partner</th>
-                      <th>High level output title</th>
-                      <th>Contracted Partners</th>
-                      <th>Pooled Funded (USD)</th>
+                      <th>Center</th>
+                      <th>Geographic location</th>
+                      <th>Total budget (USD)</th>
                   </tr>
                   <ng-container
                     *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-partners']"
                   >
+                  <ng-container *ngIf="item.selectedCountries?.length; else noCountries">
+                  <ng-container *ngFor="let selectedCountries of item.selectedCountries; let i = index">
                     <tr>
-                      <td class="f-c-Geographic-Scope">
-                          <figure
-                            matTooltip="For any changes use ToC tool"
-                            matTooltipPosition="below"
-                            class="toc-img-center"
-                          >
-                            <img
-                              class="toc-img-size"
-                              src="../../assets/shared-image/toc-5.png"
-                              alt="Photo of toc"
-                            />
-                          </figure>
-                      </td>
-                      <td class="wp-title box-center">
+                      <td class="wp-title box-center" *ngIf="i === 0" [attr.rowspan]="item.selectedCountries.length || 1">
                        {{item.name}}
                       </td>
 
-                      <td class="wp-title box-center">
-                        {{item.results}}
-                       </td>
-                      
-                      <ng-container *ngFor="let per of period | slice:0:1">
-                        <td (click)="item.isExpand = !item.isExpand">
-                          <mat-icon
-                            class="icon-sub-table-2"
-                            color="primary"
-                            *ngIf="
-                              perAllValues[wp.ost_wp.wp_official_code + '-partners'][
-                                item.id
-                              ][per.id] == true
-                            "
-                            >close</mat-icon
-                          >
-                        </td>
-                      </ng-container>
-                      <td (click)="item.isExpand = !item.isExpand">
+                   
+                      <td>{{ selectedCountries.centerName }}</td>
+                      <td>{{ selectedCountries.countries }}</td>
+                      <td (click)="item.isExpand = !item.isExpand" *ngIf="i === 0" [attr.rowspan]="item.selectedCountries.length || 1">
 
                         <div class="td-flex">
                           <span>
@@ -3687,10 +3659,47 @@
                     
                       </td>
                   </tr>
-                 
+                      </ng-container>
+                    </ng-container>
+                    <ng-template #noCountries>
+                      <tr>
+                        <!-- Partner column -->
+                        <td class="wp-title box-center">
+                          {{ item.name }}
+                        </td>
+                  
+                        <!-- Empty center -->
+                        <td>-</td>
+                  
+                        <!-- Empty countries -->
+                        <td>-</td>
+                  
+                        <!-- Budget -->
+                        <td (click)="item.isExpand = !item.isExpand">
+                          <div class="td-flex">
+                            <span>
+                              {{
+                                toggleSummaryValues[wp.ost_wp.wp_official_code + '-partners']
+                                  ? (summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id] | number)
+                                  : (roundNumber(summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id]) | number)
+                              }}
+                            </span>
+                            <img 
+                              src="../../assets/shared-image/Vector.png"
+                              (click)="openBudgetAssumptionsDialogSummary(item.id)"
+                              matTooltip="Budget assumptions"
+                              matTooltipPosition="above"
+                              class="budget-assumptions-icon"
+                              width="20"
+                              height="20"
+                            >
+                          </div>
+                        </td>
+                      </tr>
+                    </ng-template>
                   </ng-container>
                   <tr class="total">
-                    <td [attr.colspan]="4">
+                    <td [attr.colspan]="3">
                       <div class="subtotal">Subtotal</div>
                     </td>
                     <td>
@@ -5324,7 +5333,7 @@
 
               <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length">
                 <div class="sub-head-w3">
-                  <span class="sub-title-w3">Partners</span>
+                  <span class="sub-title-w3">Contracted Partners - Pooled funding</span>
                 </div>    
                 
 
@@ -5334,9 +5343,10 @@
                   }">
                     <tr>
                         <th>partners</th>
-                        <th>High level output title</th>
+                        <th>High level outputs</th>
                         <th>Contracted Partners</th>
-                        <th>Pooled Funded (USD)</th>
+                        <th>Geographic location</th>
+                        <th>Total budget (USD)</th>
                     </tr>
   
                     <ng-container
@@ -5384,6 +5394,21 @@
                             ></mat-checkbox>
                           </td>
                         </ng-container>
+                        <td>
+                          <app-geographic-location
+                          [countries]="clarisaCountries"
+                          [(selectedCountries)]="partner.selectedCountries"
+                          [(savedCountries)]="item.selectedCountries"
+                          [allCenterCountryValues]="allCenterCountryValues"
+                          [center]="partner"
+                          [workPackage]="wp"
+                          [initiative_id]="initiative_data.id"
+                          [item_id]="item.id"
+                          (selectedCountriesChange)="onCountriesChange($event, partner, wp, item)"
+                          [disabled]="(perValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id] | inQue)"
+                        >
+                        </app-geographic-location>
+                        </td>
 
                         <td>
                           <div class="td-flex">
@@ -5403,6 +5428,9 @@
                                 ]
                               "
                               [disabled]="
+                              (perValues[partner.code][
+                                wp.ost_wp.wp_official_code + '-partners'
+                              ][item.id] | inQue) ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5431,12 +5459,16 @@
                             <input
                               mask="separator.2"
                               thousandSeparator=","
+                              
                               *ngIf="
                                 !toggleValues[partner.code][
                                   wp.ost_wp.wp_official_code + '-partners'
                                 ]
                               "
                               [disabled]="
+                              (perValues[partner.code][
+                                wp.ost_wp.wp_official_code + '-partners'
+                              ][item.id] | inQue) ||
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
@@ -5497,7 +5529,7 @@
                    
                   </ng-container>
                   <tr class="total">
-                    <td [colSpan]="3">
+                    <td [colSpan]="4">
                       <div class="subtotal">Subtotal</div>
                     </td>
                 

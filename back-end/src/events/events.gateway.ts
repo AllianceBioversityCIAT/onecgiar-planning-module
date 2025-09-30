@@ -79,6 +79,11 @@ export class EventsGateway implements OnModuleInit {
     this.server.emit('changeSubmissionStatus', data);
   }
 
+  @SubscribeMessage('setSelectedCountryPartner')
+  setSelectedCountryPartner(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    this.server.emit('setSelectedCountryPartner', data);
+  }
+
   onModuleInit() {
     this.server?.on('connect', (socket) => {
       socket.on('disconnect', (data) => {

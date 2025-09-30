@@ -32,6 +32,7 @@ import { BudgetAssumptionsComponent } from "./budget-assumptions/budget-assumpti
 import { BudgetAssumptionSummaryComponent } from "./budget-assumption-summary/budget-assumption-summary.component";
 import { BudgetAssumptionsService } from "../services/budget-assumptions.service";
 import { AnaplanService } from "../services/anaplan.service";
+import { ClarisaCountryService } from "../services/clarisa-country.service";
 
 @Component({
   selector: "app-submission",
@@ -61,6 +62,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private budgetAssumptionsService: BudgetAssumptionsService,
     private anaplanService: AnaplanService,
+    private countryService: ClarisaCountryService
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -76,7 +78,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.headerService.backgroundDeleteLr = "#5569dd";
   }
 
-
+  clarisaCountries: any[] = [];
   user: any;
   data: any = [];
   wps: any = [];
@@ -1518,9 +1520,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log(this.anaplanValues)
-    console.log(this.anaplanBudgets)
-
+    console.log(this.partnersData)
     
 
     //sort WP titles
@@ -1577,7 +1577,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   allBudgetAssumptions: any[] = [];
   anaplanLabels: any[] = [];
   anaplanValues: any[] = [];
-
+  allCenterCountryValues: any[] = [];
   async ngOnInit() {
     this.socket.on('connect_error', this.handelDisconnect);
     this.socket.on('disconnect', this.handelDisconnect);
@@ -1589,6 +1589,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
+    this.clarisaCountries = await this.countryService.getAll();
+    this.allCenterCountryValues = await this.countryService.getAllValues();
+
     this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.initiative_data.synchronized == true ? this.params.code : this.params.id)
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
@@ -1811,6 +1814,38 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.canSubmit = await this.constantsService.getSubmitStatus();
     const data : any = await this.constantsService.getShowIndicatorValues();
     this.toggleIndicatorValues = data.value !== "0";
+
+   
+    // this.socket.on("setSelectedCountryPartner", (payload: any) => {
+    //   const { partner, wp, result_id, selectedCountries } = payload || {};
+    //   // console.log(payload)
+    
+    
+    //   const wpKey = wp.ost_wp.wp_official_code + "-partners";
+    //   const parentData = this.partnersData[partner.code][wpKey];
+    //   const soso = this.partnersData[49][wpKey];
+
+  
+    
+    //   for (let item of parentData) {
+    //     if (item.id == result_id) {
+    //       setTimeout(() => {
+    //         console.log(parentData, partner.code)
+    //         console.log(soso, '49')
+
+    //         item.selectedCountries = [];
+    //           // ✅ keep mapped structure consistent with child
+    //         item.selectedCountries= [];
+
+    //       // Force Angular to detect changes in child inputs
+    //       // this.partnersData = { ...this.partnersData };
+    
+    //       // console.log("Updating item via socket:", item);
+    //       }, 500);
+        
+    //     }
+    //   }
+    // });
   }
 
   cancelLastSubmission() {
@@ -3071,5 +3106,32 @@ totalConsolidatedTargetPartner: any;
     });
   
     return total;
+  }
+
+
+  async onCountriesChange(selectedCountries: any[], partner: any, wp: any, item: any) {
+    const initiative_id = this.initiative_data.id;
+    const official_code = this.initiative_data.official_code;
+
+    const result_id = item.id;
+    const parent_id = item.parent_id
+    const data = {partner, wp, initiative_id, result_id}
+    await this.countryService.createOrUpdate(data).then(
+      (res) => {
+        if(res)
+          setTimeout(() => {
+            this.socket.emit("setSelectedCountryPartner", {
+              official_code,
+              result_id,
+              parent_id,
+              partner,
+              wp,
+              selectedCountries
+            });
+          }, 500);
+      }, (error) => {
+        console.log(error)
+      }
+    )
   }
 }

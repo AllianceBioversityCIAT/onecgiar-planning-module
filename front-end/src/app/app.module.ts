@@ -107,6 +107,7 @@ import { CenterValidateComponent } from './submission/center-validate/center-val
 import { QualitativeIndicatorsComponent } from './submission/qualitative-indicators/qualitative-indicators.component';
 import { BudgetAssumptionsComponent } from './submission/budget-assumptions/budget-assumptions.component';
 import { BudgetAssumptionSummaryComponent } from './submission/budget-assumption-summary/budget-assumption-summary.component';
+import { GeographicLocationComponent } from './submission/geographic-location/geographic-location.component';
 
 
 @NgModule({
@@ -174,6 +175,7 @@ import { BudgetAssumptionSummaryComponent } from './submission/budget-assumption
     QualitativeIndicatorsComponent,
     BudgetAssumptionsComponent,
     BudgetAssumptionSummaryComponent,
+    GeographicLocationComponent,
   ],
   imports: [
     BrowserModule,
@@ -182,14 +184,11 @@ import { BudgetAssumptionSummaryComponent } from './submission/budget-assumption
     FormsModule,
     MatCardModule,
     MatIconModule,
-    MatInputModule,
     MatTabsModule,
     MatChipsModule,
     BrowserAnimationsModule,
     MatCheckboxModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
     ReactiveFormsModule,
     MatMenuModule,
@@ -205,7 +204,6 @@ import { BudgetAssumptionSummaryComponent } from './submission/budget-assumption
     MatSelectModule,
     BrowserAnimationsModule,
     NgSelectModule,
-    MatSelectModule,
     ToastrModule.forRoot(),
     MatTooltipModule,
     MatToolbarModule,

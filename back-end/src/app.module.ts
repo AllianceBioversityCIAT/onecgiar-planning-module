@@ -26,6 +26,7 @@ import { UnderMaintenanceModule } from './under-maintenance/under-maintenance.mo
 import { ArchiveModule } from './archive/archive.module';
 import { BudgetAssumptionsModule } from './budget-assumptions/budget-assumptions.module';
 import { AnaplanModule } from './anaplan/anaplan.module';
+import { ClarisaCountryModule } from './clarisa-country/clarisa-country.module';
 
 @Module({
   controllers:[AppController],
@@ -66,6 +67,7 @@ import { AnaplanModule } from './anaplan/anaplan.module';
     ArchiveModule,
     BudgetAssumptionsModule,
     AnaplanModule,
+    ClarisaCountryModule,
     
   ],
 })
