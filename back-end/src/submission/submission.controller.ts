@@ -233,7 +233,7 @@ export class SubmissionController {
       this.httpService
         .get(process.env.TOC_API + '/toc/' + id)
         .pipe(
-          map((dd: any) => {
+          map(async (dd: any) => {
             const melias = dd?.data?.melias ?? [];
             const projects = dd?.data?.projects ?? [];
             let indicatorIds = [];
@@ -409,7 +409,8 @@ export class SubmissionController {
                 for (const partner of data.partners ?? []) {
                   const key = `${partner.code}_${data.group}`;
                   const title = data.title?.trim();
-            
+                  const selectedCountries = await this.submissionService.getSelectedCountry(partner.code , id);
+                  console.log(selectedCountries)
                   if (partnersMap.has(key)) {
                     const existing = partnersMap.get(key);
                     const titleSet = new Set(
@@ -424,6 +425,7 @@ export class SubmissionController {
                       parent_id: data.group,
                       results: title,
                       category: 'partners',
+                      selectedCountries: selectedCountries,
                     });
                   }
                 }

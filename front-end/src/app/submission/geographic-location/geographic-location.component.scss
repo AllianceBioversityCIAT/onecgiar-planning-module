@@ -1,0 +1,18 @@
+::ng-deep .country-select-panel {
+    min-width: 300px !important;
+}
+
+::ng-deep .search-option input {
+    width: 100%;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    border: none;
+    font-size: 16px;
+}
+
+::ng-deep .search-option {
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}

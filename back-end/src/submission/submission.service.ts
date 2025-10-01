@@ -35,6 +35,7 @@ import { History } from 'src/entities/history.entity';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
+import { PartnerCountry } from 'src/entities/Partner-country.entity';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -69,8 +70,8 @@ export class SubmissionService {
     private CrossCuttingRepository: Repository<CrossCutting>,
     @InjectRepository(IpsrValue)
     private ipsrValueRepository: Repository<IpsrValue>,
-    // @InjectRepository(InitiativeMelia)
-    // private initiativeMeliaRepository: Repository<InitiativeMelia>,
+    @InjectRepository(PartnerCountry)
+    private partnerCountryRepository: Repository<PartnerCountry>,
     private emailService: EmailService,
     private readonly httpService: HttpService,
   ) { }
@@ -580,6 +581,25 @@ export class SubmissionService {
       console.error('error getSaved Data', error);
       throw new BadRequestException('getSaved error');
     }
+  }
+
+  async getSelectedCountry(resultId: number, initiative_id: string ) {
+    return await this.partnerCountryRepository
+    .createQueryBuilder("pc")
+    .leftJoin("pc.organization", "org")
+    .leftJoin("pc.country", "country")
+    .leftJoin("pc.initiative", "initiative")
+    .select("pc.result_id", "resultId")
+    .addSelect("pc.center_code", "centerCode")
+    .addSelect("org.acronym", "centerName")
+    .addSelect("GROUP_CONCAT(country.name ORDER BY country.name)", "countries")
+    .where("pc.result_id = :resultId", { resultId: resultId })
+    .andWhere('initiative.official_code = :initiative_id', { initiative_id })
+    .groupBy("pc.result_id")
+    .addGroupBy("pc.center_code")
+    .addGroupBy("org.acronym")
+    .getRawMany();
+
   }
 
   async saveResultData(id, data: any, user) {

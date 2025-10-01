@@ -1,0 +1,23 @@
+<mat-form-field appearance="outline" class="w-100">
+  <mat-label>Select Country</mat-label>
+  <mat-select
+    panelClass="country-select-panel"
+    [value]="selectedCountryObjects[center?.code] || []"
+    multiple
+    [disabled]="disabled"
+    (selectionChange)="onChange($event.value)"
+    [compareWith]="compareCountries"
+  >
+  <mat-option [disabled]="true" class="search-option">
+    <input
+      type="text"
+      placeholder="Search..."
+      (keyup)="applyFilter($event)"
+      (click)="$event.stopPropagation()"
+    />
+  </mat-option>
+    <mat-option *ngFor="let country of filteredCountries" [value]="country">
+      {{ country.name }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>

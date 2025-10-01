@@ -30,6 +30,7 @@ import { Email } from 'src/entities/email.entity';
 import { Variable } from 'src/entities/variable.entity';
 import { EmailService } from 'src/email/email.service';
 import { History } from 'src/entities/history.entity';
+import { PartnerCountry } from 'src/entities/Partner-country.entity';
 
 @Module({
   imports: [
@@ -51,7 +52,8 @@ import { History } from 'src/entities/history.entity';
       // InitiativeMelia,
       Email,
       Variable,
-      History
+      History,
+      PartnerCountry
     ]),
     HttpModule,
     CacheModule.register(),
@@ -63,5 +65,6 @@ import { History } from 'src/entities/history.entity';
   ],
   controllers: [SubmissionController],
   providers: [SubmissionService, EmailService],
+  exports: [SubmissionService],
 })
 export class SubmissionModule {}
