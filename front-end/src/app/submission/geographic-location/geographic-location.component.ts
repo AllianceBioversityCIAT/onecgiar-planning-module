@@ -27,7 +27,6 @@ export class GeographicLocationComponent implements OnInit {
   ngOnInit() {
     this.filteredCountries = this.countries;
     this.filterSavedCountries();
-    console.log(this.disabled);
 
     this.socket.on("setSelectedCountryPartner", (payload: any) => {
       const { partner, wp, result_id, selectedCountries } = payload || {};

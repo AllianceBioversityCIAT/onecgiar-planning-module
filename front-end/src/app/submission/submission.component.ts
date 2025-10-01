@@ -1816,36 +1816,21 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.toggleIndicatorValues = data.value !== "0";
 
    
-    // this.socket.on("setSelectedCountryPartner", (payload: any) => {
-    //   const { partner, wp, result_id, selectedCountries } = payload || {};
-    //   // console.log(payload)
+    this.socket.on("setSelectedCountrySummary", (payload: any) => {
+      const { wp, selectedCountries, result_id } = payload || {};
     
-    
-    //   const wpKey = wp.ost_wp.wp_official_code + "-partners";
-    //   const parentData = this.partnersData[partner.code][wpKey];
-    //   const soso = this.partnersData[49][wpKey];
+      const wpKey = wp.ost_wp.wp_official_code + "-partners";
+      const allData = this.allData[wpKey];
 
-  
-    
-    //   for (let item of parentData) {
-    //     if (item.id == result_id) {
-    //       setTimeout(() => {
-    //         console.log(parentData, partner.code)
-    //         console.log(soso, '49')
-
-    //         item.selectedCountries = [];
-    //           // ✅ keep mapped structure consistent with child
-    //         item.selectedCountries= [];
-
-    //       // Force Angular to detect changes in child inputs
-    //       // this.partnersData = { ...this.partnersData };
-    
-    //       // console.log("Updating item via socket:", item);
-    //       }, 500);
-        
-    //     }
-    //   }
-    // });
+      for (let item of allData) {
+        if (item.id == result_id) {
+          setTimeout(() => {
+            item.selectedCountries = [];
+            item.selectedCountries = selectedCountries;
+          }, 500);
+        }
+      }
+    });
   }
 
   cancelLastSubmission() {
@@ -3127,6 +3112,13 @@ totalConsolidatedTargetPartner: any;
               partner,
               wp,
               selectedCountries
+            });
+          }, 500);
+          setTimeout(() => {
+            this.socket.emit("setSelectedCountrySummary", {
+              official_code,
+              result_id,
+              wp
             });
           }, 500);
       }, (error) => {

@@ -39,7 +39,7 @@ export class PartnerCountry {
   country: ClarisaCountry;
   
   @Column()
-  country_code: string;
+  country_code: number;
 
   @Column()
   result_id: number;

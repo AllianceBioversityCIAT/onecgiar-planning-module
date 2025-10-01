@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { planing_data } from './defalut';
+import { SubmissionService } from 'src/submission/submission.service';
 
 @WebSocketGateway({
   cors: {
@@ -18,7 +19,7 @@ export class EventsGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
   planing_data: any = planing_data;
-  constructor() {}
+  constructor(private submissionService: SubmissionService) {}
 
   @SubscribeMessage('setDataValue')
   changePer(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
@@ -82,6 +83,13 @@ export class EventsGateway implements OnModuleInit {
   @SubscribeMessage('setSelectedCountryPartner')
   setSelectedCountryPartner(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     this.server.emit('setSelectedCountryPartner', data);
+  }
+
+  @SubscribeMessage('setSelectedCountrySummary')
+  async setSelectedCountrySummary(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    const { official_code, result_id, wp } = data;
+    const selectedCountries = await this.submissionService.getSelectedCountry(result_id, official_code)
+    this.server.emit('setSelectedCountrySummary', { wp, selectedCountries, result_id });
   }
 
   onModuleInit() {
