@@ -3,7 +3,7 @@ import { Entity, PrimaryColumn, Column } from 'typeorm';
 @Entity()
 export class ClarisaCountry {
   @PrimaryColumn()
-  code: string;
+  code: number;
 
   @Column()
   name: string;
