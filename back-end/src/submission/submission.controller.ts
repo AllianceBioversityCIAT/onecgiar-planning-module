@@ -410,7 +410,6 @@ export class SubmissionController {
                   const key = `${partner.code}_${data.group}`;
                   const title = data.title?.trim();
                   const selectedCountries = await this.submissionService.getSelectedCountry(partner.code , id);
-                  console.log(selectedCountries)
                   if (partnersMap.has(key)) {
                     const existing = partnersMap.get(key);
                     const titleSet = new Set(
