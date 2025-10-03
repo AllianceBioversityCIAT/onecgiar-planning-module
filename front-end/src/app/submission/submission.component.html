@@ -2170,25 +2170,28 @@
             <div class="table-box mat-elevation-z8">
               <table>
                 <tr>
-                  <th rowspan="2">Area of Work ID and title</th>
+                  <th rowspan="3">Area of Work</th>
+                  <th colspan="11">Pooled Funding</th>
+                  <th rowspan="3">W3/ Bilateral Project (USD)</th>
+                </tr>
+                <tr>
                   <th colspan="2">Innovation Development</th>
                   <th colspan="2">Knowledge product</th>
                   <th colspan="2">Capacity Sharing</th>
                   <th colspan="2">Others outputs</th>
-                  <th rowspan="2">MELIA Studies budget</th>
                   <th rowspan="2">Partner budget</th>
+                  <th rowspan="2">MELIA Studies budget</th>
                   <th rowspan="2">Total Pooled Funding budget (USD)</th>
-                  <th rowspan="2">W3 Baratialar Project (USD)</th>
                 </tr>
                 <tr>
-                  <th>Total Target</th>
-                  <th>Pooled Funding Budget</th>
-                  <th>Total Target</th>
-                  <th>Pooled Funding Budget</th>
-                  <th>Total Target</th>
-                  <th>Pooled Funding Budget</th>
-                  <th>Total Target</th>
-                  <th>Pooled Funding Budget</th>
+                  <th>Target</th>
+                  <th>Budget</th>
+                  <th>Target</th>
+                  <th>Budget</th>
+                  <th>Target</th>
+                  <th>Budget</th>
+                  <th>Target</th>
+                  <th>Budget</th>
                 </tr>
                 <ng-container *ngFor="let wp of actualWps">
                   <tr>
@@ -2224,17 +2227,17 @@
                     </td>
                     <td>
                       {{
-                      roundNumber(
-                        summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia']
-                      ) | number
+                        roundNumber(
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-partners']
+                        ) | number
                       }}
                     </td>
                     <td>
                       {{
-                      roundNumber(
-                        summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-partners']
-                      ) | number
-                      }}
+                        roundNumber(
+                          summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia']
+                        ) | number
+                        }}
                     </td>
                     <!-- <td>
                       {{
@@ -2294,8 +2297,8 @@
                   </td>
 
                   <!-- <td>{{ wpsTotalSum | number : "1.2-2" }}%</td> -->
-                  <td>{{ roundNumber(summaryBudgetsMeliaTotal) | number }}</td>
                   <td>{{ roundNumber(summaryBudgetsPartnerTotal) | number }}</td>
+                  <td>{{ roundNumber(summaryBudgetsMeliaTotal) | number }}</td>
 
                   <td>{{ roundNumber(summaryBudgetsAllTotal) | number }}</td>
                   <td>{{ roundNumber(summaryBudgetsProjectsTotal) | number }}</td>
@@ -2320,7 +2323,7 @@
               <mat-card-content>
                 <ng-container >
                   <div class="sub-head pooled">
-                    <span class="sub-title">Pooled Funded/High Level Output	</span> 
+                    <span class="sub-title">High Level Outputs - Pooled Funding	</span> 
                     <mat-slide-toggle
                     class="show-d-2"
                     [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code]"
@@ -2383,19 +2386,18 @@
                 <div class="table-box-1 mat-elevation-z8 output-table">
                   <table>
                     <tr>
-                      <th rowspan="2">Actions</th>
-                      <th rowspan="2">High Level Output	Title</th>
-                      <th colspan="5">Indicator</th>
-                      <th rowspan="2">Total Budget</th>
+                      <th rowspan="2" style="width: 25% !important">High Level Output</th>
+                      <th colspan="5" style="width: 65% !important">Key Performance Indicators</th>
+                      <th rowspan="2" style="width: 10% !important">Total Budget (USD)</th>
                     </tr>
 
 
                     <tr>
-                      <th>Description</th>
-                      <th>Type</th>
-                      <th>Geographic Scope</th>
-                      <th>Target</th>
-                      <th>Pooled Funded (USD)</th>
+                      <th style="width: 10% !important">Description</th>
+                      <th style="width: 10% !important">Type</th>
+                      <th style="width: 25% !important">Geographic Location</th>
+                      <th style="width: 10% !important">Target</th>
+                      <th style="width: 10% !important">Budget (USD)</th>
                     </tr>
 
 
@@ -2408,196 +2410,7 @@
                       <ng-container  *ngIf="item.category == 'OUTPUT'">
                         <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">
                       <tr>
-                        <td *ngIf="i === 0" [attr.rowspan]="item.quantitative_indicators.length || 1">
-                          <ng-container
-                            *ngIf="item.category == 'Cross Cutting'"
-                          >
-                            <div class="box">
-                              <button
-                                *ngIf="
-                                  canSubmitPORB() &&
-                                  user.role == 'user'
-                                "
-                                mat-icon-button
-                                [matMenuTriggerFor]="menu"
-                                [disabled]="
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved'|| !initiative_data.is_valid
-                                "
-                                [ngClass]="{
-                                  disabled:
-                                    initStatus == 'Pending' ||
-                                    initStatus == 'Approved'|| !initiative_data.is_valid
-                                }"
-                              >
-                                <mat-icon class="icon-sub-table-2"
-                                  >more_vert</mat-icon
-                                >
-                              </button>
-
-                              <button
-                                *ngIf="user.role == 'admin'"
-                                mat-icon-button
-                                [matMenuTriggerFor]="menu"
-                                [disabled]="
-                                  initStatus == 'Pending' ||
-                                  initStatus == 'Approved'|| !initiative_data.is_valid
-                                "
-                                [ngClass]="{
-                                  disabled:
-                                    initStatus == 'Pending' ||
-                                    initStatus == 'Approved'|| !initiative_data.is_valid
-                                }"
-                              >
-                                <mat-icon class="icon-sub-table-2"
-                                  >more_vert</mat-icon
-                                >
-                              </button>
-
-                              <button
-                                style="
-                                  background: none;
-                                  border: none;
-                                  position: relative;
-                                  top: -0.4rem;
-                                "
-                                (click)="item.isExpand = !item.isExpand"
-                                *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                              >
-                                <i
-                                  *ngIf="!item.isExpand"
-                                  class="bi-chevron-right"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="10"
-                                    viewBox="0 0 16 10"
-                                    fill="none"
-                                  >
-                                    <path
-                                      d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                      fill="#0f212f"
-                                    />
-                                  </svg>
-                                </i>
-                                <i *ngIf="item.isExpand" class="bi-chevron-up">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="10"
-                                    viewBox="0 0 16 10"
-                                    fill="none"
-                                  >
-                                    <path
-                                      d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                      fill="#0f212f"
-                                    />
-                                  </svg>
-                                </i>
-                              </button>
-                              <mat-menu #menu="matMenu">
-                                <button
-                                  (click)="editCross(item.id)"
-                                  mat-menu-item
-                                >
-                                  <mat-icon class="icon-sub-table-2"
-                                    >edit</mat-icon
-                                  >
-                                  Edit
-                                </button>
-                                <button
-                                  (click)="deleteCross(item.id)"
-                                  mat-menu-item
-                                >
-                                  <mat-icon class="icon-sub-table-2"
-                                    >delete</mat-icon
-                                  >
-                                  Delete
-                                </button>
-                              </mat-menu>
-                            </div>
-                          </ng-container>
-                          <ng-container
-                            *ngIf="
-                              item.category != 'Cross Cutting' &&
-                              item.category != 'Melia'
-                            "
-                          >
-                            <figure
-                              matTooltip="For any changes use ToC tool"
-                              matTooltipPosition="below"
-                              class="toc-img-center"
-                            >
-                              <img
-                                class="toc-img-size"
-                                src="../../assets/shared-image/toc-5.png"
-                                alt="Photo of toc"
-                              />
-                            </figure>
-                          </ng-container>
-                          <ng-container
-                          *ngIf="
-                            item.category == 'Melia'
-                          "
-                        >
-                        <div class="box-melia">
-                          <figure
-                            matTooltip="For any changes use ToC tool"
-                            matTooltipPosition="below"
-                            class="toc-img-center"
-                          >
-                            <img
-                              class="toc-img-size"
-                              src="../../assets/shared-image/toc-5.png"
-                              alt="Photo of toc"
-                            />
-                          </figure>
-                          <button
-                          style="
-                            background: none;
-                            border: none;
-                            position: relative;
-                          "
-                          (click)="item.isExpand = !item.isExpand"
-                          *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                        >
-                          <i
-                            *ngIf="!item.isExpand"
-                            class="bi-chevron-right"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="10"
-                              viewBox="0 0 16 10"
-                              fill="none"
-                            >
-                              <path
-                                d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                fill="#0f212f"
-                              />
-                            </svg>
-                          </i>
-                          <i *ngIf="item.isExpand" class="bi-chevron-up">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="10"
-                              viewBox="0 0 16 10"
-                              fill="none"
-                            >
-                              <path
-                                d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                fill="#0f212f"
-                              />
-                            </svg>
-                          </i>
-                        </button>
-                      </div>
-                        </ng-container>
-                        </td>
-                        <td  *ngIf="i === 0"  class="wp-title box-center" [attr.rowspan]="item.quantitative_indicators.length || 1">
+                        <td  *ngIf="i === 0" style="width: 25% !important"  class="wp-title box-center" [attr.rowspan]="item.quantitative_indicators.length || 1">
                             {{
                               item.title
                             }}
@@ -2609,20 +2422,20 @@
                             {{  perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item.id]?.[type] }}
                           </td>
                         </ng-container> -->
-                        <td title="{{ indicator?.description }}" matTooltipPosition="above">
+                        <td style="width: 10% !important" title="{{ indicator?.description }}" matTooltipPosition="above">
                           <span class="truncate-text">{{ indicator?.description }}</span>
                         </td>
-                        <td title="{{ indicator?.type?.name  }}" matTooltipPosition="above">
+                        <td style="width: 10% !important" title="{{ indicator?.type?.name  }}" matTooltipPosition="above">
                           <span class="truncate-text">{{ indicator?.type?.name }}</span>
                         </td>
-                        <td>
+                        <td style="width: 25% !important">
                           {{  getScope(indicator, 'item')  }}
                         </td>
-                        <td>
+                        <td style="width: 10% !important">
                           {{  getTargetValue(indicator?.targets) }}
                         </td>
 
-                        <td>
+                        <td style="width: 10% !important">
                           <div class="td-flex">
                             <span>
                               {{   summaryBudgetsIndicator[
@@ -2630,6 +2443,16 @@
                             ][item.id][indicator?.id] }}
                             </span>
                             <img 
+                            [ngClass]="{
+                              'disabled-icon': !hasBudgetAssumptionsSummary(indicator.id, wp.ost_wp.wp_official_code) 
+                                               && !summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id],
+                              
+                              'normal-icon': hasBudgetAssumptionsSummary(indicator.id, wp.ost_wp.wp_official_code) 
+                                              && summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id],
+                              
+                              'half-opacity-icon': !hasBudgetAssumptionsSummary(indicator.id, wp.ost_wp.wp_official_code) 
+                                                   && summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id]
+                            }"
                               src="../../assets/shared-image/Vector.png"
                               (click)="
                               openBudgetAssumptionsDialogSummary(indicator.id)"
@@ -2642,7 +2465,7 @@
                           </div>
                         </td>
                        
-                        <td (click)="item.isExpand = !item.isExpand" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
+                        <td style="width: 10% !important" (click)="item.isExpand = !item.isExpand" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? (summaryBudgets[wp.ost_wp.wp_official_code][
@@ -2664,8 +2487,8 @@
                     </ng-container>
                     </ng-container>
                     <tr class="total">
-                      <td [attr.colspan]="7">
-                        <div class="subtotal">Subtotal</div>
+                      <td [attr.colspan]="6">
+                        <div class="subtotal">HLO budget sub-total</div>
                       </td>
 
                      <!-- <ng-container *ngFor="let type of highLevelOutputIndicatorTypes">
@@ -2694,21 +2517,20 @@
 
 
               <div class="sub-head pooled">
-                <span class="sub-title">Pooled Funded/Outcome</span>
+                <span class="sub-title">Outcomes - Pooled Funding</span>
               </div>
 
               <div class="table-box-1 mat-elevation-z8 outcome-table">
                 <table>
                   <tr>
-                    <th rowspan="2">Actions</th>
                     <th rowspan="2">Outcome title</th>
-                    <th colspan="4">Indicator</th>
+                    <th colspan="3">Key Performance Indicators</th>
                   </tr>
                 
                   <tr>
-                    <th>Description</th>
-                    <th>Type</th>
-                    <th>Geographic Scope</th>
+                    <!-- <th>Description</th> -->
+                    <th style="width: 10% !important;">Type</th>
+                    <th>Geographic Location</th>
                     <th>Target</th>
                   </tr>
                 
@@ -2718,24 +2540,11 @@
                       <ng-container *ngIf="item.quantitative_indicators?.length > 0; else noIndicators">
                         <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">
                           <tr>
-                            <td *ngIf="i === 0" [attr.rowspan]="item.quantitative_indicators.length">
-                              <figure
-                                matTooltip="For any changes use ToC tool"
-                                matTooltipPosition="below"
-                                class="toc-img-center"
-                              >
-                                <img
-                                  class="toc-img-size"
-                                  src="../../assets/shared-image/toc-5.png"
-                                  alt="Photo of toc"
-                                />
-                              </figure>
-                            </td>
                             <td class="wp-title box-center" *ngIf="i === 0" [attr.rowspan]="item.quantitative_indicators.length">
                               {{ item.title }}
                             </td>
-                            <td>{{ indicator?.description }}</td>
-                            <td>{{ indicator?.type?.name }}</td>
+                            <!-- <td>{{ indicator?.description }}</td> -->
+                            <td style="width: 10% !important;">{{ indicator?.type?.name }}</td>
                             <td>{{ getScope(indicator, 'item') }}</td>
                             <td>{{ getTargetValue(indicator?.targets) }}</td>
                           </tr>
@@ -2744,23 +2553,10 @@
                 
                       <ng-template #noIndicators>
                         <tr>
-                          <td>
-                            <figure
-                              matTooltip="For any changes use ToC tool"
-                              matTooltipPosition="below"
-                              class="toc-img-center"
-                            >
-                              <img
-                                class="toc-img-size"
-                                src="../../assets/shared-image/toc-5.png"
-                                alt="Photo of toc"
-                              />
-                            </figure>
-                          </td>
                           <td class="wp-title box-center">
                             {{ item.title }}
                           </td>
-                          <td colspan="4" class="text-center">
+                          <td colspan="3" class="text-center">
                             No quantitative indicators available
                           </td>
                         </tr>
@@ -2790,7 +2586,7 @@
               <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-melia'].length">
 
                 <div class="sub-head">
-                  <span class="sub-title">Melia Study</span>
+                  <span class="sub-title">MELIA study - Pooled funding</span>
                   <mat-slide-toggle
                   class="show-d-2"
                   [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code  + '-melia']"
@@ -2803,11 +2599,10 @@
                  
                 <table>
                   <tr>
-                    <th>Actions</th>
-                    <th>MELIA study title</th>
-                    <th>Supported outcome</th>
-                    <th>Target Geography</th>
-                    <th>Pooled Funded (USD)</th>
+                    <th>MELIA study</th>
+                    <th>Supported outcomes</th>
+                    <th>Geographic location</th>
+                    <th>Total budget (USD)</th>
                   </tr>
 
 
@@ -2820,136 +2615,6 @@
                     *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-melia']"
                   >
                     <tr>
-                      <td *ngIf="!(wp.id == 'IPSR')">
-                        <ng-container
-                        *ngIf="
-                          item.category == 'Melia'
-                        "
-                      >
-                      <div class="box-melia">
-                        <figure
-                          matTooltip="For any changes use ToC tool"
-                          matTooltipPosition="below"
-                          class="toc-img-center"
-                        >
-                          <img
-                            class="toc-img-size"
-                            src="../../assets/shared-image/toc-5.png"
-                            alt="Photo of toc"
-                          />
-                        </figure>
-                    </div>
-                      </ng-container>
-                      <ng-container
-                      *ngIf="item.category == 'Cross Cutting'"
-                    >
-                      <div class="box">
-                        <button
-                          *ngIf="
-                            canSubmitPORB() &&
-                            user.role == 'user'
-                          "
-                          mat-icon-button
-                          [matMenuTriggerFor]="menu"
-                          [disabled]="
-                            initStatus == 'Pending' ||
-                            initStatus == 'Approved'|| !initiative_data.is_valid
-                          "
-                          [ngClass]="{
-                            disabled:
-                              initStatus == 'Pending' ||
-                              initStatus == 'Approved'|| !initiative_data.is_valid
-                          }"
-                        >
-                          <mat-icon class="icon-sub-table-2"
-                            >more_vert</mat-icon
-                          >
-                        </button>
-
-                        <button
-                          *ngIf="user.role == 'admin'"
-                          mat-icon-button
-                          [matMenuTriggerFor]="menu"
-                          [disabled]="
-                            initStatus == 'Pending' ||
-                            initStatus == 'Approved'|| !initiative_data.is_valid
-                          "
-                          [ngClass]="{
-                            disabled:
-                              initStatus == 'Pending' ||
-                              initStatus == 'Approved'|| !initiative_data.is_valid
-                          }"
-                        >
-                          <mat-icon class="icon-sub-table-2"
-                            >more_vert</mat-icon
-                          >
-                        </button>
-
-                        <button
-                          style="
-                            background: none;
-                            border: none;
-                            position: relative;
-                            top: -0.4rem;
-                          "
-                          (click)="item.isExpand = !item.isExpand"
-                          *ngIf="!item?.initiativeMelia?.meliaType?.name"
-                        >
-                          <i
-                            *ngIf="!item.isExpand"
-                            class="bi-chevron-right"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="10"
-                              viewBox="0 0 16 10"
-                              fill="none"
-                            >
-                              <path
-                                d="M1.88 0L8 6.18084L14.12 0L16 1.90283L8 10L0 1.90283L1.88 0Z"
-                                fill="#0f212f"
-                              />
-                            </svg>
-                          </i>
-                          <i *ngIf="item.isExpand" class="bi-chevron-up">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="10"
-                              viewBox="0 0 16 10"
-                              fill="none"
-                            >
-                              <path
-                                d="M14.12 10L8 3.81916L1.88 10L1.66351e-07 8.09716L8 -6.99382e-07L16 8.09717L14.12 10Z"
-                                fill="#0f212f"
-                              />
-                            </svg>
-                          </i>
-                        </button>
-                        <mat-menu #menu="matMenu">
-                          <button
-                            (click)="editCross(item.id)"
-                            mat-menu-item
-                          >
-                            <mat-icon class="icon-sub-table-2"
-                              >edit</mat-icon
-                            >
-                            Edit
-                          </button>
-                          <button
-                            (click)="deleteCross(item.id)"
-                            mat-menu-item
-                          >
-                            <mat-icon class="icon-sub-table-2"
-                              >delete</mat-icon
-                            >
-                            Delete
-                          </button>
-                        </mat-menu>
-                      </div>
-                    </ng-container>
-                      </td>
                       <td class="wp-title box-center">
                           {{
                             item.title
@@ -2980,6 +2645,16 @@
                             }}
                           </span>
                           <img 
+                          [ngClass]="{
+                            'disabled-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-melia') 
+                                             && !summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][item.id],
+                            
+                            'normal-icon': hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-melia') 
+                                            && summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][item.id],
+                            
+                            'half-opacity-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-melia') 
+                                                 && summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][item.id]
+                          }"
                             src="../../assets/shared-image/Vector.png"
                             (click)="
                             openBudgetAssumptionsDialogSummary(item.id)"
@@ -2996,62 +2671,14 @@
                     </tr>
 
 
-                    <ng-container *ngIf="item.category == 'Cross Cutting'">
-                      <tr *ngIf="item.isExpand">
-                        <td colspan="12" style="padding: 0.5rem">
-                          <table class="table table-sm">
-                            <thead>
-                              <th
-                                style="
-                                  background: none;
-                                  text-align: left;
-                                  color: #0f212f;
-                                "
-                              >
-                                Description:
-                              </th>
-                            </thead>
-                            <tbody>
-                              <tr
-                                style="background: none"
-                                *ngIf="
-                                  !item?.initiativeMelia?.meliaType?.name
-                                "
-                              >
-                                <td
-                                  style="
-                                    background: none;
-                                    border: none;
-                                    text-align: left;
-                                    background-color: none;
-                                    font-size: 1.3rem;
-                                    color: #0f212f;
-                                    padding: 0.7rem;
-                                  "
-                                >
-                                  {{
-                                    item?.ipsr?.id
-                                      ? item?.ipsr.title +
-                                        " (" +
-                                        item.value +
-                                        ")"
-                                      : item.description
-                                  }}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </td>
-                      </tr>
-                    </ng-container>
 
                     
 
 
                   </ng-container>
                   <tr class="total">
-                    <td [attr.colspan]="4">
-                      <div class="subtotal">Subtotal</div>
+                    <td [attr.colspan]="3">
+                      <div class="subtotal">MELIA budget sub-total</div>
                     </td>
                     <!-- <ng-container *ngFor="let per of period">
                       <td>
@@ -3096,7 +2723,7 @@
               <ng-container *ngIf="wp.ost_wp.acronym == 'AOW00'">
 
                 <div class="sub-head">
-                  <span class="sub-title">Cross-Cutting</span>
+                  <span class="sub-title">Cross-cutting costs - Pooled funding</span>
                   <div class="content">
                     <mat-slide-toggle
                     class="show-d-1"
@@ -3158,9 +2785,8 @@
                 <table>
                   <tr>
                     <th>Actions</th>
-                    <th>Cross-Cutting</th>
-                    <th>Description</th>
-                    <th>Pooled Funded (USD)</th>
+                    <th>Cost elements</th>
+                    <th>Total budget (USD)</th>
                   </tr>
 
 
@@ -3245,11 +2871,7 @@
                           }}
                       </td>
                       
-                     
-                     
-                      <td>
-                        {{ item?.description}}
-                        </td>
+                 
                         
                       <td (click)="item.isExpand = !item.isExpand">
 
@@ -3268,6 +2890,16 @@
                             }}
                           </span>
                           <img 
+                          [ngClass]="{
+                            'disabled-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-Cross-Cutting') 
+                                             && !summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id],
+                            
+                            'normal-icon': hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-Cross-Cutting') 
+                                            && summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id],
+                            
+                            'half-opacity-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-Cross-Cutting') 
+                                                 && summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id]
+                          }"
                             src="../../assets/shared-image/Vector.png"
                             (click)="
                             openBudgetAssumptionsDialogSummary(item.id)"
@@ -3292,8 +2924,8 @@
 
                   </ng-container>
                   <tr class="total">
-                    <td [attr.colspan]="3">
-                      <div class="subtotal">Subtotal</div>
+                    <td [attr.colspan]="2">
+                      <div class="subtotal">Cross-cutting costs sub-total</div>
                     </td>
                     <!-- <ng-container *ngFor="let per of period">
                       <td>
@@ -3339,7 +2971,7 @@
                 <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
 
                 <div class="sub-head">
-                  <span class="sub-title">W3-Bilateral Projects</span>
+                  <span class="sub-title">W3/Bilateral Projects budget</span>
                   <mat-slide-toggle
                   [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code  + '-project']"
                   (toggleChange)="
@@ -3368,18 +3000,9 @@
                  
                 <table>
                   <tr>
-                    <th>Actions</th>
                     <th>Project title</th>
-                    
-                    <!-- <th>Policy change</th>
-                    <th>Innovation Use</th>
-                    <th>Other Outcomes</th>
-                    <th>Qualititative Indicator (Max)</th>
-                    <th>Knowledge product</th>
-                    <th>Innovation Development</th>
-                    <th>Capacity Sharing</th>
-                    <th>Others outputs</th> -->
-                    <th>W3 Baratialar Project (USD)</th>
+                    <th>High Level Output title</th>
+                    <th>W3/Bilateral Project (USD)</th>
                   </tr>
 
 
@@ -3393,23 +3016,12 @@
                   >
                     <ng-container  *ngIf="item.category == 'Project'">
                     <tr>
-                      <td *ngIf="!(wp.id == 'IPSR')">
-                          <figure
-                            matTooltip="For any changes use ToC tool"
-                            matTooltipPosition="below"
-                            class="toc-img-center"
-                          >
-                            <img
-                              class="toc-img-size"
-                              src="../../assets/shared-image/toc-5.png"
-                              alt="Photo of toc"
-                            />
-                          </figure>
-                      </td>
                       <td class="wp-title box-center">
                           {{item.name}}
                       </td>
-                      
+                      <td >
+                        {{item.result}}
+                      </td>
                       <!-- <ng-container *ngFor="let per of period">
                         <td (click)="item.isExpand = !item.isExpand">
                           <mat-icon
@@ -3464,6 +3076,16 @@
                             }}
                           </span>
                           <img 
+                          [ngClass]="{
+                            'disabled-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-project') 
+                                             && !summaryBudgets[wp.ost_wp.wp_official_code + '-project'][item.id],
+                            
+                            'normal-icon': hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-project') 
+                                            && summaryBudgets[wp.ost_wp.wp_official_code + '-project'][item.id],
+                            
+                            'half-opacity-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-project') 
+                                                 && summaryBudgets[wp.ost_wp.wp_official_code + '-project'][item.id]
+                          }"
                             src="../../assets/shared-image/Vector.png"
                             (click)="
                             openBudgetAssumptionsDialogSummary(item.id)"
@@ -3487,7 +3109,7 @@
                   </ng-container>
                   <tr class="total">
                     <td [attr.colspan]="2">
-                      <div class="subtotal">Subtotal</div>
+                      <div class="subtotal">W3/Bilateral budget sub-total</div>
                     </td>
                     <!-- <ng-container *ngFor="let per of period">
                       <td>
@@ -3646,6 +3268,16 @@
                             }}
                           </span>
                           <img 
+                          [ngClass]="{
+                            'disabled-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                             && !summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id],
+                            
+                            'normal-icon': hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                            && summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id],
+                            
+                            'half-opacity-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                                 && summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id]
+                          }"
                             src="../../assets/shared-image/Vector.png"
                             (click)="
                             openBudgetAssumptionsDialogSummary(item.id)"
@@ -3685,6 +3317,16 @@
                               }}
                             </span>
                             <img 
+                            [ngClass]="{
+                              'disabled-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                               && !summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id],
+                              
+                              'normal-icon': hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                              && summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id],
+                              
+                              'half-opacity-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
+                                                   && summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id]
+                            }"
                               src="../../assets/shared-image/Vector.png"
                               (click)="openBudgetAssumptionsDialogSummary(item.id)"
                               matTooltip="Budget assumptions"
@@ -3700,7 +3342,7 @@
                   </ng-container>
                   <tr class="total">
                     <td [attr.colspan]="3">
-                      <div class="subtotal">Subtotal</div>
+                      <div class="subtotal">Contracted Partners budget sub-Total</div>
                     </td>
                     <td>
                       {{
@@ -3923,7 +3565,7 @@
 
         <mat-card>
           <mat-card-title class="card-title-table">
-            Consolidated
+            {{ partner.acronym }} - Consolidated
             <app-popover id="1"></app-popover>
           </mat-card-title>
 
@@ -3931,25 +3573,29 @@
             <div class="table-box mat-elevation-z8">
               <table>
                 <tr>
-                  <th rowspan="2">Area of Work ID and Title</th>
-                  <th colspan="2">Innovation Development</th>
-                  <th colspan="2">Knowledge Product</th>
-                  <th colspan="2">Capacity Sharing</th>
-                  <th colspan="2">Others Outputs</th>
-                  <th rowspan="2">MELIA Studies Budget</th>
-                  <th rowspan="2">Partners Budget</th>
-                  <th rowspan="2">Total Pooled Funding Budget (USD)</th>
-                  <th rowspan="2">W3 Bilateral Project (USD)</th>
+                  <th rowspan="3">Area of Work</th>
+                  <th colspan="11">Pooled Funding</th>
+                
+                  <th rowspan="3">W3/ Bilateral Project (USD)</th>
                 </tr>
                 <tr>
-                  <th>Total Target</th>
-                  <th>Pooled Funding Budget</th>
-                  <th>Total Target</th>
-                  <th>Pooled Funding Budget</th>
-                  <th>Total Target</th>
-                  <th>Pooled Funding Budget</th>
-                  <th>Total Target</th>
-                  <th>Pooled Funding Budget</th>
+                  <th colspan="2">Innovation Development</th>
+                  <th colspan="2">Knowledge product</th>
+                  <th colspan="2">Capacity Sharing</th>
+                  <th colspan="2">Others outputs</th>
+                  <th rowspan="2">Partner budget</th>
+                  <th rowspan="2">MELIA Studies budget</th>
+                  <th rowspan="2">Total Pooled Funding budget (USD)</th>
+                </tr>
+                <tr>
+                  <th>Target</th>
+                  <th>Budget</th>
+                  <th>Target</th>
+                  <th>Budget</th>
+                  <th>Target</th>
+                  <th>Budget</th>
+                  <th>Target</th>
+                  <th>Budget</th>
                 </tr>
                 <ng-container *ngFor="let wp of actualWps">
                   <tr>
@@ -4128,7 +3774,7 @@
 
                   
                   <div class="sub-head">
-                    <span class="sub-title sub-title-2">Pooled Funded/High Level Output</span>
+                    <span class="sub-title sub-title-2">High Level Outputs - Pooled funding</span>
                   
                   <div class="btns-sec">
                     <!-- <div class="btns">
@@ -4202,21 +3848,21 @@
                       error: errors[partner.code][wp.ost_wp.wp_official_code]
                     }"
                   >
-                    <tr>
-                      <th rowspan="2">High level output title</th>
-                      <th colspan="5">Indicator</th>
-                      <th rowspan="2">Total Budget</th>
-                    </tr>
-                      <!-- <ng-container *ngFor="let item of period">
-                        <th>{{ item.year }} - {{ item.quarter }}</th>
-                      </ng-container> -->
-                      <tr>
-                        <th>Description</th>
-                        <th>Type</th>
-                        <th>Geographic Scope</th>
-                        <th>Target</th>
-                        <th>Pooled Funded (USD)</th>
-                      </tr>
+                  <tr>
+                    <th rowspan="2" style="width: 25% !important">High Level Output</th>
+                    <th colspan="5" style="width: 65% !important">Key Performance Indicators</th>
+                    <th rowspan="2" style="width: 10% !important">Total Budget (USD)</th>
+                  </tr>
+
+
+                  <tr>
+                    <th style="width: 10% !important">Description</th>
+                    <th style="width: 10% !important">Type</th>
+                    <th style="width: 25% !important">Geographic Location</th>
+                    <th style="width: 10% !important">Target</th>
+                    <th style="width: 10% !important">Budget (USD)</th>
+                  </tr>
+
                       <!-- <th>Knowledge product</th>
                       <th>Innovation Development</th>
                       <th>Capacity Sharing</th>
@@ -4242,7 +3888,7 @@
                             ][item.id]
                         }"
                       >
-                        <td *ngIf="i === 0" class="wp-title"  [attr.rowspan]="item.quantitative_indicators.length || 1">
+                        <td style="width: 25% !important" *ngIf="i === 0" class="wp-title"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                             {{
                             item.title
                             }}
@@ -4250,19 +3896,19 @@
 
   
                         <!-- <ng-container *ngFor="let indicator of item.indicators"> -->
-                          <td>
+                          <td style="width: 10% !important">
                             {{  indicator?.description }}
                           </td>
-                          <td>
+                          <td style="width: 10% !important">
                             {{  indicator?.type?.name }}
                           </td>
-                          <td>
+                          <td style="width: 25% !important">
                             {{  getScope(indicator, 'item')  }}
                           </td>
-                          <td>
+                          <td style="width: 10% !important">
                             {{  getTargetValue(indicator?.targets) }}
                           </td>
-                          <td>
+                          <td style="width: 10% !important">
                             <div class="td-flex">
                               <mat-form-field
                               class="form-dialog-content__field"
@@ -4367,7 +4013,7 @@
   
                         
   
-                        <td *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
+                        <td style="width: 10% !important" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                           {{
                           displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]
                           }}
@@ -4461,7 +4107,7 @@
                   </ng-container>
                     <tr class="total">
                       <td [colSpan]="6">
-                        <div class="subtotal">Subtotal</div>
+                        <div class="subtotal">HLO budget sub-total</div>
                       </td>
                       <!-- <td>
                         {{
@@ -5578,7 +5224,7 @@
                     <tr>
                       <th>Project title</th>
                       <th>AOW</th>
-                      <th>High Level Output</th>
+                      <th>High Level Outputs</th>
                       <th>Budget (USD)</th>
                       <th class="budget">Total budget (USD)</th> 
                     </tr>
@@ -5763,9 +5409,9 @@
                   <table
                   >
                     <tr>
-                      <th>MELIA study title</th>
+                      <th>MELIA study</th>
                       <th>AOW</th>
-                      <th>Supported outcome</th>
+                      <th>Supported outcomes</th>
                       <th>AOW budget (USD)</th>
                       <th class="budget">Total budget (USD)</th> 
                     </tr>
@@ -5956,13 +5602,13 @@
               <mat-card-content>
                 <ng-container *ngIf="anaplanLabels?.length">
           
-                  <div class="table-box-partner-project mat-elevation-z8 melia-table">
+                  <div class="table-box-anaplan mat-elevation-z8 melia-table">
                     <table>
                       <thead>
                         <tr>
                           <th>Main Accounts</th>
                           <th *ngFor="let wp of actualWps">{{ wp.ost_wp.acronym }}</th>
-                          <th>Total budget</th>
+                          <th>Total budget (USD)</th>
                         </tr>
                       </thead>
           

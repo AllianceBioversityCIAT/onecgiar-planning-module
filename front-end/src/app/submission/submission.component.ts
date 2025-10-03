@@ -1520,7 +1520,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log(this.partnersData)
+    console.log('allBudgetAssumptions', this.allBudgetAssumptions)
     
 
     //sort WP titles
@@ -2861,7 +2861,10 @@ totalConsolidatedTargetPartner: any;
       if(indicator[target] == 'global') {
         scope = 'Global';
       } else if(indicator[target] == 'country') {
-        scope = 'Country: ' + indicator.countries?.map((c:any) => c.name).join(', ')
+        if(target == 'geographic_scope')
+          scope = 'Country: ' + indicator.country?.map((c:any) => c.name).join(', ')
+        else
+          scope = 'Country: ' + indicator.countries?.map((c:any) => c.name).join(', ')
       } else if(indicator[target] == 'regional') {
         scope = 'Regional: ' + indicator.regions?.map((c:any) => c.name).join(', ')
       }
@@ -3010,6 +3013,13 @@ totalConsolidatedTargetPartner: any;
       a.wp_id === wpId
     );
   }
+
+  hasBudgetAssumptionsSummary(itemId: number, wpId: string): boolean { 
+    return this.allBudgetAssumptions.some(a =>
+      a.item_id === itemId &&
+      a.wp_id === wpId
+    );
+  } 
 
   async setAnaplanValues() {
     this.anaplanValues = await this.anaplanService.getAllValues(this.params.id);

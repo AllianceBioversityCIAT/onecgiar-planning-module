@@ -349,7 +349,7 @@ export class SubmissionController {
                     projectMap.set(key, {
                       id: project.id,
                       parent_id: data.group,
-                      results: data.title,
+                      result: data.title,
                       category: 'Project',
                       projects_indicator_values: data.projects_indicator_values?.[project.id],
                       title: project.name,
