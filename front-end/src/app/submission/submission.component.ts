@@ -306,7 +306,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
    
       this.sammaryCalc();
       this.validateCenter(partner_code, false);
-    }, 500);
+    }, 1250); 
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -368,7 +368,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           subTotalBudgetIndicator
         });
       }
-    }, 500);
+    }, 1250); 
   } 
 
   budgetTime: any;
@@ -3072,7 +3072,7 @@ totalConsolidatedTargetPartner: any;
             console.log(error)
           }
         );
-    }, 500);
+    }, 1250); 
   }
 
 
