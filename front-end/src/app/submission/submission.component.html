@@ -2308,7 +2308,10 @@
           </mat-card-content>
         </mat-card>
 
-        <mat-tab-group>
+        <mat-tab-group
+          [selectedIndex]="selectedTabIndexAOW"
+          (selectedTabChange)="tabChangedAOW($event)"
+        >
           <mat-tab
             *ngFor="let wp of actualWps; first as isFirst; last as isLast"
             label="{{ wp.ost_wp.acronym }}"
@@ -3748,7 +3751,10 @@
 
 
 
-        <mat-tab-group>
+        <mat-tab-group
+          [selectedIndex]="selectedTabIndexAOW"
+          (selectedTabChange)="tabChangedAOW($event)"
+        >
           <mat-tab
             *ngFor="let wp of actualWps; first as isFirst; last as isLast"
             label="{{ wp.ost_wp.acronym }}"
@@ -5593,14 +5599,14 @@
 
 
 
-          <ng-container *ngIf="anaplanBudgets">
+          <!-- <ng-container *ngIf="anaplanBudgets"> -->
           <mat-tab label="Anaplan">
             <mat-card>
               <div class="sub-head">
                 <span class="sub-title">Anaplan</span>
               </div>
               <mat-card-content>
-                <ng-container *ngIf="anaplanLabels?.length">
+                <!-- <ng-container *ngIf="anaplanLabels?.length"> -->
           
                   <div class="table-box-anaplan mat-elevation-z8 melia-table">
                     <table>
@@ -5661,11 +5667,11 @@
                       </tfoot>
                     </table>
                   </div>
-                </ng-container>
+                <!-- </ng-container> -->
               </mat-card-content>
             </mat-card>
           </mat-tab>
-        </ng-container>
+        <!-- </ng-container> -->
         </mat-tab-group>
 
 

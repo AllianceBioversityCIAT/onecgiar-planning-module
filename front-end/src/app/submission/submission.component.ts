@@ -538,8 +538,25 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         relativeTo: this.activatedRoute,
         queryParams: {
           tab: tab.index,
+          AOW: this.selectedTabIndexAOW,
         },
         queryParamsHandling: "merge", // Merge new params with existing params
+      }
+    );
+  }
+  tabChangedAOW(aow: any) {
+    this.updateChildPath(aow.index);
+  }
+  updateChildPath(index: any) {
+    this.selectedTabIndexAOW = index;
+    this.router.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: {
+          AOW: index,
+        },
+        queryParamsHandling: "merge",
       }
     );
   }
@@ -1494,11 +1511,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.sammaryCalc();
     this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners);
     await this.setAnaplanValues();
-    const tab = this.activatedRoute.snapshot.queryParamMap.get("tab");
-    if (tab && this.initiative_data.is_valid && this.initUser?.role != 'MELIA Focal Point')
-      this.selectedTabIndex = Number(tab);
-    else 
-      this.selectedTabIndex = 0;
+
     this.title2.setTitle("Complete the PORB");
     this.meta.updateTag({
       name: "description",
@@ -1540,6 +1553,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   savedValuesForIndicator: any = null;
   isCenter: boolean = false;
   selectedTabIndex: number = 0;
+  selectedTabIndexAOW: number = 0;
+
   canSubmit: any;
   toggleIndicatorValues: any;
   InitiativeUsers: any;
@@ -1596,6 +1611,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
+    const tab = this.activatedRoute.snapshot.queryParamMap.get('tab');
+    if (tab && this.initiative_data.is_valid && this.initUser?.role !== 'MELIA Focal Point') {
+      this.selectedTabIndex = tab ? +tab : 0;
+
+    } 
+    const aowTab = this.activatedRoute.snapshot.queryParamMap.get('AOW');
+    if (aowTab && this.initiative_data.is_valid && this.initUser?.role !== 'MELIA Focal Point') {
+      this.selectedTabIndexAOW = aowTab ? +aowTab : 0;
+    } 
     this.my_roles = this.InitiativeUsers.filter(
       (d: any) => d?.user?.id == this?.user_info?.id
     ).map((d: any) => d.role);
