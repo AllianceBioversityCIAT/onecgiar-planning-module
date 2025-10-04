@@ -37,18 +37,16 @@ export class GeographicLocationComponent implements OnInit {
 
   onChange(newSelection: any[]): void {
     this.selectedCountryObjects[this.center.code] = [...newSelection];
-
-    const mappedWrappers = this.selectedCountryObjects[this.center.code].map(
-      (w: any) => ({
-        ...w,
-        country: w.country ?? w,
-        initiative_id: w.initiative_id ?? this.initiative_id,
-        partner_code: this.center?.code,
-        result_id: this.item_id,
-        wp_id: this.workPackage,
-      })
-    );
-
+  
+    const mappedWrappers = newSelection.map((w: any) => ({
+      ...w,
+      country: w.country ?? w,
+      initiative_id: w.initiative_id ?? this.initiative_id,
+      partner_code: this.center?.code,
+      result_id: this.item_id,
+      wp_id: this.workPackage,
+    }));
+  
     this.selectedCountriesChange.emit(mappedWrappers);
   }
 
