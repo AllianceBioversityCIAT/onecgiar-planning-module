@@ -2411,6 +2411,7 @@
                       *ngFor="let item of allData[wp.ost_wp.wp_official_code]"
                     >
                       <ng-container  *ngIf="item.category == 'OUTPUT'">
+                        <ng-container *ngIf="item.quantitative_indicators?.length > 0; else noIndicatorsSummary">
                         <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">
                       <tr>
                         <td  *ngIf="i === 0" style="width: 25% !important"  class="wp-title box-center" [attr.rowspan]="item.quantitative_indicators.length || 1">
@@ -2487,6 +2488,31 @@
 
 
                       </ng-container>
+                    </ng-container>
+                    <ng-template #noIndicatorsSummary>
+                      <tr>
+                        <td class="wp-title box-center">
+                          {{ item.title }}
+                        </td>
+                        <td colspan="5" class="text-center">
+                          No quantitative indicators available
+                        </td>
+                        <td style="width: 10% !important" (click)="item.isExpand = !item.isExpand">
+                          {{
+                            toggleSummaryValues[wp.ost_wp.wp_official_code]
+                              ? (summaryBudgets[wp.ost_wp.wp_official_code][
+                                  item.id
+                                ] | number)
+                              : (roundNumber(
+                                  summaryBudgets[wp.ost_wp.wp_official_code][
+                                    item.id
+                                  ]
+                                ) | number)
+                          }}
+                        </td>
+                      </tr>
+                    </ng-template>
+
                     </ng-container>
                     </ng-container>
                     <tr class="total">
@@ -3883,8 +3909,9 @@
                         ]
                       "
                     >
-                    <ng-container *ngIf="item.category == 'OUTPUT'">
-                      <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index"> 
+                    <ng-container *ngIf="item.category == 'OUTPUT'"> 
+                      <ng-container *ngIf="item.quantitative_indicators?.length > 0; else noHloIndicators">
+                      <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">  
 
                       <tr
                         [ngClass]="{
@@ -4109,6 +4136,22 @@
                         </td>
                       </tr>
                       </ng-container>
+                    </ng-container>
+                    <ng-template #noHloIndicators>
+                      <tr>
+                        <td class="wp-title box-center">
+                          {{ item.title }}
+                        </td>
+                        <td colspan="5" class="text-center">
+                          No quantitative indicators available
+                        </td>
+                        <td style="width: 10% !important" >
+                          {{
+                          displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]
+                          }}
+                        </td>
+                      </tr>
+                    </ng-template>
                     </ng-container>
                   </ng-container>
                     <tr class="total">
