@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from "@angular/core";
+import { Component, HostListener, OnDestroy, OnInit, ViewChild } from "@angular/core";
 
 import { SubmissionService } from "../services/submission.service";
 import { AppSocket } from "../socket.service";
@@ -33,6 +33,7 @@ import { BudgetAssumptionSummaryComponent } from "./budget-assumption-summary/bu
 import { BudgetAssumptionsService } from "../services/budget-assumptions.service";
 import { AnaplanService } from "../services/anaplan.service";
 import { ClarisaCountryService } from "../services/clarisa-country.service";
+import { MatTabGroup } from "@angular/material/tabs";
 
 @Component({
   selector: "app-submission",
@@ -62,7 +63,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private budgetAssumptionsService: BudgetAssumptionsService,
     private anaplanService: AnaplanService,
-    private countryService: ClarisaCountryService
+    private countryService: ClarisaCountryService,
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -76,6 +77,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.headerService.backgroundDeleteYes = "#5569dd";
     this.headerService.backgroundDeleteClose = "#808080";
     this.headerService.backgroundDeleteLr = "#5569dd";
+  }
+
+  @ViewChild(MatTabGroup) tabGroup: MatTabGroup;
+
+  currentScroll = 0;
+
+  @HostListener('window:scroll', [])
+  onScroll(): void {
+    this.currentScroll = window.scrollY;
   }
 
   clarisaCountries: any[] = [];
@@ -546,6 +556,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
   tabChangedAOW(aow: any) {
     this.updateChildPath(aow.index);
+    setTimeout(() => window.scrollTo({ top: this.currentScroll }));
   }
   updateChildPath(index: any) {
     this.selectedTabIndexAOW = index;
