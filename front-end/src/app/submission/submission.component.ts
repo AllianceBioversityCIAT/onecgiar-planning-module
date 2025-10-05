@@ -306,7 +306,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
    
       this.sammaryCalc();
       this.validateCenter(partner_code, false);
-    }, 500);
+    }, 1250); 
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -368,7 +368,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           subTotalBudgetIndicator
         });
       }
-    }, 500);
+    }, 1250); 
   } 
 
   budgetTime: any;
@@ -538,8 +538,25 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         relativeTo: this.activatedRoute,
         queryParams: {
           tab: tab.index,
+          AOW: this.selectedTabIndexAOW,
         },
         queryParamsHandling: "merge", // Merge new params with existing params
+      }
+    );
+  }
+  tabChangedAOW(aow: any) {
+    this.updateChildPath(aow.index);
+  }
+  updateChildPath(index: any) {
+    this.selectedTabIndexAOW = index;
+    this.router.navigate(
+      [],
+      {
+        relativeTo: this.activatedRoute,
+        queryParams: {
+          AOW: index,
+        },
+        queryParamsHandling: "merge",
       }
     );
   }
@@ -1494,11 +1511,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.sammaryCalc();
     this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners);
     await this.setAnaplanValues();
-    const tab = this.activatedRoute.snapshot.queryParamMap.get("tab");
-    if (tab && this.initiative_data.is_valid && this.initUser?.role != 'MELIA Focal Point')
-      this.selectedTabIndex = Number(tab);
-    else 
-      this.selectedTabIndex = 0;
+
     this.title2.setTitle("Complete the PORB");
     this.meta.updateTag({
       name: "description",
@@ -1520,7 +1533,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log(this.partnersData)
+    console.log('allBudgetAssumptions', this.allBudgetAssumptions)
     
 
     //sort WP titles
@@ -1540,6 +1553,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   savedValuesForIndicator: any = null;
   isCenter: boolean = false;
   selectedTabIndex: number = 0;
+  selectedTabIndexAOW: number = 0;
+
   canSubmit: any;
   toggleIndicatorValues: any;
   InitiativeUsers: any;
@@ -1596,6 +1611,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
+    const tab = this.activatedRoute.snapshot.queryParamMap.get('tab');
+    if (tab && this.initiative_data.is_valid && this.initUser?.role !== 'MELIA Focal Point') {
+      this.selectedTabIndex = tab ? +tab : 0;
+
+    } 
+    const aowTab = this.activatedRoute.snapshot.queryParamMap.get('AOW');
+    if (aowTab && this.initiative_data.is_valid && this.initUser?.role !== 'MELIA Focal Point') {
+      this.selectedTabIndexAOW = aowTab ? +aowTab : 0;
+    } 
     this.my_roles = this.InitiativeUsers.filter(
       (d: any) => d?.user?.id == this?.user_info?.id
     ).map((d: any) => d.role);
@@ -2861,7 +2885,10 @@ totalConsolidatedTargetPartner: any;
       if(indicator[target] == 'global') {
         scope = 'Global';
       } else if(indicator[target] == 'country') {
-        scope = 'Country: ' + indicator.countries?.map((c:any) => c.name).join(', ')
+        if(target == 'geographic_scope')
+          scope = 'Country: ' + indicator.country?.map((c:any) => c.name).join(', ')
+        else
+          scope = 'Country: ' + indicator.countries?.map((c:any) => c.name).join(', ')
       } else if(indicator[target] == 'regional') {
         scope = 'Regional: ' + indicator.regions?.map((c:any) => c.name).join(', ')
       }
@@ -3011,6 +3038,13 @@ totalConsolidatedTargetPartner: any;
     );
   }
 
+  hasBudgetAssumptionsSummary(itemId: number, wpId: string): boolean { 
+    return this.allBudgetAssumptions.some(a =>
+      a.item_id === itemId &&
+      a.wp_id === wpId
+    );
+  } 
+
   async setAnaplanValues() {
     this.anaplanValues = await this.anaplanService.getAllValues(this.params.id);
     for(let values of this.anaplanValues){
@@ -3038,7 +3072,7 @@ totalConsolidatedTargetPartner: any;
             console.log(error)
           }
         );
-    }, 500);
+    }, 1250); 
   }
 
 
