@@ -229,6 +229,7 @@ export class SubmissionController {
   })
   @Get('toc/:id')
   async getTocs(@Param('id') id) {
+    const activePhase = await this.submissionService.PhasesService.findActivePhase();
     return await firstValueFrom(
       this.httpService
         .get(process.env.TOC_API + '/toc/' + id)
@@ -274,7 +275,7 @@ export class SubmissionController {
                     }
                     indicatorIds.push(indicator.id);
                     for (const target of indicator.targets) {
-                          const value = parseFloat(target['2026']);
+                          const value = parseFloat(target[activePhase.reportingYear]); 
                           if (!isNaN(value)) {
                             if(indicatorType == 'custom')
                               indicatorType = indicatorType + '-' + items.category;

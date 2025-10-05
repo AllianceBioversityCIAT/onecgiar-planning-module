@@ -61,7 +61,7 @@ export class SubmissionService {
     private historyRepository: Repository<History>,
     private CrossCuttingService: CrossCuttingService,
     private IpsrValueService: IpsrValueService,
-    private PhasesService: PhasesService,
+    public PhasesService: PhasesService,
     private initService: InitiativesService,
     private periodService: PeriodsService,
     // @InjectRepository(Melia)

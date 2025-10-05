@@ -2908,7 +2908,7 @@ totalConsolidatedTargetPartner: any;
 
   getTargetValue(targets: any[]) {
     return targets.reduce((sum, target) => {
-      const val = parseFloat(target?.['2026']) || 0;
+      const val = parseFloat(target?.[this.phase.reportingYear]) || 0; 
       return sum + val;
     }, 0);
   }
@@ -2978,7 +2978,7 @@ totalConsolidatedTargetPartner: any;
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] = 0;
               }
     
-              const value = parseFloat(target['2026']);
+              const value = parseFloat(target[this.phase.reportingYear]); 
               if (!isNaN(value)) {
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
               }
