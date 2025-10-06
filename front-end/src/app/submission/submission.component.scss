@@ -1479,7 +1479,6 @@ pre {
 }
 .table-box-3 {
   width: 100%;
-  overflow: auto;
   margin-top: 40px;
   th,
   td {
@@ -2068,6 +2067,22 @@ pre {
 .w3-project-table.melia-table th:nth-child(4),
 .w3-project-table.melia-table td:nth-child(4) {
   width: 5% !important;
+  height: 3.5rem !important;
+}
+
+.table-box-1.accelerator-table th:nth-child(1),
+.table-box-1.accelerator-table td:nth-child(1) {
+  width: 20% !important;
+  height: 3.5rem !important;
+}
+.table-box-1.accelerator-table th:nth-child(2),
+.table-box-1.accelerator-table td:nth-child(2) {
+  width: 40% !important;
+  height: 3.5rem !important;
+}
+.table-box-1.accelerator-table th:nth-child(3),
+.table-box-1.accelerator-table td:nth-child(3) {
+  width: 40% !important;
   height: 3.5rem !important;
 }
 

@@ -237,6 +237,8 @@ export class SubmissionController {
           map(async (dd: any) => {
             const melias = dd?.data?.melias ?? [];
             const projects = dd?.data?.projects ?? [];
+            let synergyPrograms: any[] = dd?.data?.synergy_programs ?? [];
+            synergyPrograms.filter(s => s.result.category == 'OUTPUT').map(d => d['category'] = 'synergy-programs')
             let indicatorIds = [];
             const filteredData = dd.data?.data?.filter(
               (d) =>
@@ -437,12 +439,14 @@ export class SubmissionController {
 
     
             return [
+              ...synergyPrograms,
               ...newMelias,
               ...newProjects,
               ...filteredData,
               ...newIndicators,
               ...newPartners,
-              { indicator_ids: { ...indicatorIds } }
+              { indicator_ids: { ...indicatorIds } },
+              
             ];
           }),
           catchError((error: AxiosError) => {
