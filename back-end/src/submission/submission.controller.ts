@@ -229,6 +229,7 @@ export class SubmissionController {
   })
   @Get('toc/:id')
   async getTocs(@Param('id') id) {
+    const activePhase = await this.submissionService.PhasesService.findActivePhase();
     return await firstValueFrom(
       this.httpService
         .get(process.env.TOC_API + '/toc/' + id)
@@ -236,6 +237,8 @@ export class SubmissionController {
           map(async (dd: any) => {
             const melias = dd?.data?.melias ?? [];
             const projects = dd?.data?.projects ?? [];
+            let synergyPrograms: any[] = dd?.data?.synergy_programs ?? [];
+            synergyPrograms.filter(s => s.result.category == 'OUTPUT').map(d => d['category'] = 'synergy-programs')
             let indicatorIds = [];
             const filteredData = dd.data?.data?.filter(
               (d) =>
@@ -274,7 +277,7 @@ export class SubmissionController {
                     }
                     indicatorIds.push(indicator.id);
                     for (const target of indicator.targets) {
-                          const value = parseFloat(target['2026']);
+                          const value = parseFloat(target[activePhase.reportingYear]); 
                           if (!isNaN(value)) {
                             if(indicatorType == 'custom')
                               indicatorType = indicatorType + '-' + items.category;
@@ -436,12 +439,14 @@ export class SubmissionController {
 
     
             return [
+              ...synergyPrograms,
               ...newMelias,
               ...newProjects,
               ...filteredData,
               ...newIndicators,
               ...newPartners,
-              { indicator_ids: { ...indicatorIds } }
+              { indicator_ids: { ...indicatorIds } },
+              
             ];
           }),
           catchError((error: AxiosError) => {

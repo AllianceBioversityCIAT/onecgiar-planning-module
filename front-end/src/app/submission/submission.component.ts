@@ -1235,8 +1235,21 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           });
         }
       }
+
+      let synergyPrograms = [];
+      if(this.initiative_data.synchronized){
+        
+        for (let wp of this.wps) {
+          synergyPrograms.push({
+            id: wp.id,
+            title: wp.ost_wp.wp_official_code + "-synergy-programs",
+            category: "synergy-programs",
+            ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + "-synergy-programs" },
+          });
+        }
+      }
   
-      this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partners];
+      this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partners, ...synergyPrograms];
 
 
     this.anaplanLabels = await this.anaplanService.getAll();
@@ -1723,7 +1736,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     ];
 
     this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
-    console.log(this.allBudgetAssumptions)
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
@@ -2163,7 +2175,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     wp_category: string
   ) {
     let wp_data;
-    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting') {
+    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting' && wp_category != 'synergy-programs') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -2281,6 +2293,23 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           (d.category == "partners") &&
           (
             (d?.parent_id == id && d.category == 'partners' && wp_category == 'partners')
+          )
+        );
+      });
+    }  else if(wp_category == 'synergy-programs') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "synergy-programs") &&
+            (
+              (d?.wp.id == id && d.category == 'synergy-programs' && wp_category == 'synergy-programs')
+            )
+          );
+        else
+        return (
+          (d.category == "synergy-programs") &&
+          (
+            (d?.wp.id == id && d.category == 'synergy-programs' && wp_category == 'synergy-programs')
           )
         );
       });
@@ -2908,7 +2937,7 @@ totalConsolidatedTargetPartner: any;
 
   getTargetValue(targets: any[]) {
     return targets.reduce((sum, target) => {
-      const val = parseFloat(target?.['2026']) || 0;
+      const val = parseFloat(target?.[this.phase.reportingYear]) || 0; 
       return sum + val;
     }, 0);
   }
@@ -2978,7 +3007,7 @@ totalConsolidatedTargetPartner: any;
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] = 0;
               }
     
-              const value = parseFloat(target['2026']);
+              const value = parseFloat(target[this.phase.reportingYear]); 
               if (!isNaN(value)) {
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
               }

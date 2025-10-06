@@ -3387,6 +3387,46 @@
                 </table>
               </div>
             </ng-container>
+
+
+
+
+
+
+
+            <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-synergy-programs'].length">
+              <div class="sub-head">
+                <span class="sub-title">Cross-Program or Accelerator collaboration</span>
+              </div>
+              <div class="table-box-1 mat-elevation-z8 accelerator-table">
+                 
+                <table>
+                  <tr>
+                      <th>Program or Accelerator</th>
+                      <!-- <th>Area of Work</th> -->
+                      <th>High Level Output</th>
+                      <th>Brief description of how each Program/Accelerator contributes</th>
+                  </tr>
+                  <ng-container
+                    *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-synergy-programs']"
+                  >
+                    <tr>
+                      <td class="wp-title box-center">
+                       {{item.flow.title}}
+                      </td>
+
+                   
+                      <!-- <td>{{  }}</td> -->
+                      <td>{{ item.result.title }}</td>
+                      <td>{{ item.description }}</td>
+                  </tr>
+                  </ng-container>
+                </table>
+              </div>
+            </ng-container>
+
+
+
               </mat-card-content>
             </mat-card>
           </mat-tab>
