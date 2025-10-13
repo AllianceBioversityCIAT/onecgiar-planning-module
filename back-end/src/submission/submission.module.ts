@@ -31,6 +31,7 @@ import { Variable } from 'src/entities/variable.entity';
 import { EmailService } from 'src/email/email.service';
 import { History } from 'src/entities/history.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
+import { AnaplanModule } from 'src/anaplan/anaplan.module';
 
 @Module({
   imports: [
@@ -61,7 +62,8 @@ import { PartnerCountry } from 'src/entities/Partner-country.entity';
     IpsrValueModule,
     PhasesModule,
     InitiativesModule,
-    PeriodsModule
+    PeriodsModule,
+    AnaplanModule
   ],
   controllers: [SubmissionController],
   providers: [SubmissionService, EmailService],

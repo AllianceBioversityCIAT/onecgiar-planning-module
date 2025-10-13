@@ -475,82 +475,9 @@ export class SubmissionController {
     type: getTocData,
   })
   @Get('actual-toc/:code')
-  async getActualTocs(@Param('code') code: string) {
-    try {
-      const response = await firstValueFrom(
-        this.httpService
-          .get(`${process.env.TOC_API}/toc/${code}`)
-          .pipe(
-            catchError((error: AxiosError) => {
-              console.error('TOC API Error:', error.message);
-              throw new InternalServerErrorException(
-                'Failed to fetch TOC data',
-              );
-            }),
-          ),
-      );
-      
-      const { melias, projects } = response.data;
-
-     
-
-      const processItems = (items: any[]) => {
-        return items.map((item) => {
-          const groupedResults: Record<string, any> = {};
-          if(item.related_node_id)
-            item.id = item.related_node_id;
-          item.results.forEach((result) => {
-            const related_node_id = result.group?.related_node_id;
-  
-            if (!groupedResults[related_node_id]) {
-              groupedResults[related_node_id] = {
-                ...result,
-                // if AOW  is (00)
-                group: result.group ?? {
-                  ost_wp: {
-                    acronym: "AOW00",
-                    wp_official_code: `CROSS`,
-                    initiativeId: code
-                  }
-                },
-                titles: [result.title],
-              };
-            } else {
-              const exists = groupedResults[related_node_id].titles.some(
-                (t) => t.id === result.title.id,
-              );
-  
-              if (!exists) {
-                groupedResults[related_node_id].titles.push(result.title);
-              }
-            }
-          });
-  
-          return {
-            ...item,
-            results: Object.values(groupedResults).map((res) => {
-              const { title, ...rest } = res;
-              return rest;
-            }),
-          };
-        });
-      };
-  
-      const processedMelias = processItems(melias);
-      const processedProjects = processItems(projects);
-  
-      return { melias: processedMelias, projects: processedProjects };
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
+  getActualTocs(@Param('code') code: string) {
+   return this.submissionService.getActualTocs(code);
   }
-
-
-
-
-
-
-
 
 
 
