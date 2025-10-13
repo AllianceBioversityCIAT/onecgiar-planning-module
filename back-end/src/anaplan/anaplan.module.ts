@@ -12,6 +12,7 @@ import { WorkPackage } from 'src/entities/workPackage.entity';
     TypeOrmModule.forFeature([Anaplan, AnaplanValues, WorkPackage]),
   ],
   controllers: [AnaplanController],
-  providers: [AnaplanService]
+  providers: [AnaplanService],
+  exports: [AnaplanService]
 })
 export class AnaplanModule {}

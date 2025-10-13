@@ -2311,6 +2311,7 @@
         <mat-tab-group
           [selectedIndex]="selectedTabIndexAOW"
           (selectedTabChange)="tabChangedAOW($event)"
+          dynamicHeight="true"
         >
           <mat-tab
             *ngFor="let wp of actualWps; first as isFirst; last as isLast"
@@ -3820,6 +3821,7 @@
         <mat-tab-group
           [selectedIndex]="selectedTabIndexAOW"
           (selectedTabChange)="tabChangedAOW($event)"
+          dynamicHeight="true"
         >
           <mat-tab
             *ngFor="let wp of actualWps; first as isFirst; last as isLast"
