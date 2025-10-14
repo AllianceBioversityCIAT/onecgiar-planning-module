@@ -1557,7 +1557,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log('allBudgetAssumptions', this.allBudgetAssumptions)
+    console.log('partnersData', this.displayBudgetValues)
     
 
     //sort WP titles
