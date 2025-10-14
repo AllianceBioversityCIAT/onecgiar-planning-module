@@ -4672,10 +4672,20 @@ export class SubmissionService {
             initiative_id: id
           })),
           catchError((error: AxiosError) => {
+            console.log('Error', error.message);
             throw new InternalServerErrorException();
           }),
         ),
-    );
+    ).catch((err) => {
+      console.log(err);
+      return {
+        original_id: null,
+        version_id: null,
+        version: null,
+        phase: null,
+        initiative_id: id
+      };
+    })
   }
 
 
