@@ -2085,7 +2085,21 @@ export class SubmissionService {
             });
           }
         }
-        this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partnersWps];
+
+        let synergyPrograms = [];
+        if(this.initiative_data.synchronized){
+          
+          for (let wp of this.actualWps) {
+            synergyPrograms.push({
+              id: wp.id,
+              title: wp.ost_wp.wp_official_code + "-synergy-programs",
+              category: "synergy-programs",
+              ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + "-synergy-programs" },
+            });
+          }
+        }
+
+        this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partnersWps, ...synergyPrograms];
 
     if (partners.length < 1)
       partners = await this.organizationRepository.find();
@@ -3710,6 +3724,13 @@ export class SubmissionService {
     const summaryHighLevelOutput = this.generateExcelSummaryHLO();
     XLSX.utils.book_append_sheet(wb, summaryHighLevelOutput, 'HLO');
 
+    // Outcome for summary
+    const summaryOutcome = this.generateExcelSummaryOutcome();
+    XLSX.utils.book_append_sheet(wb, summaryOutcome, 'Outcome');
+
+    // synergy programs for summary
+    const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
+    XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'synergy programs');
     /********************************  For centers *****************************/
     const data = await this.getActualTocs(this.initiative_data.official_code);
     for(let partner of partners) {
@@ -4157,7 +4178,7 @@ export class SubmissionService {
     wp_category: string
   ) {
     let wp_data;
-    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting') {
+    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting' && wp_category != 'synergy-programs') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -4278,7 +4299,24 @@ export class SubmissionService {
           )
         );
       });
-    }
+    }  else if(wp_category == 'synergy-programs') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "synergy-programs") &&
+            (
+              (d?.wp.id == id && d.category == 'synergy-programs' && wp_category == 'synergy-programs')
+            )
+          );
+        else
+        return (
+          (d.category == "synergy-programs") &&
+          (
+            (d?.wp.id == id && d.category == 'synergy-programs' && wp_category == 'synergy-programs')
+          )
+        );
+      });
+    } 
  
     // if (ost_wp_acronym === 'AOW00') {
     //   const meliaMap = new Map<string, any>();
@@ -5482,10 +5520,6 @@ const totalRowIndex = rows.length + 1;
   }
 
 
-
-
-
-
   generateExcelSummaryHLO() {
     const headerStyle = {
       font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
@@ -5705,4 +5739,255 @@ const totalRowIndex = rows.length + 1;
    
   }
     
+
+  generateExcelSummaryOutcome() {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const ws_data = [];
+    const merges = [];
+  
+    ws_data.push([
+      'AOW',
+      'Outcome title',
+      'Key Performance Indicators', null, null,
+    ]);
+    ws_data.push([
+      null, null,
+      'Type', 'Geographic Location', 'Target',
+    ]);
+  
+    merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }); // AOW
+    merges.push({ s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }); // Outcome title
+    merges.push({ s: { r: 0, c: 2 }, e: { r: 0, c: 4 } }); // KPI group
+  
+    let currentRowIndex = 2;
+  
+    this.actualWps.forEach(wp => {
+      const wpCode = wp.ost_wp.wp_official_code;
+      const wpItems = this.allData[wpCode] || [];
+      const isValidItem = wpItems.filter(d => d.category == 'OUTCOME' || d.category == 'EOI');
+      if (!isValidItem.length) return;
+  
+      const wpStartRow = currentRowIndex;
+  
+      isValidItem.forEach(item => {
+        const startRowForItem = currentRowIndex;
+  
+        if (item.quantitative_indicators && item.quantitative_indicators.length > 0) {
+          item.quantitative_indicators.forEach((indicator, i) => {
+            const isFirstIndicator = i === 0;
+            const row = isFirstIndicator
+              ? [
+                  wp.ost_wp.acronym,
+                  item.title,
+                  indicator?.type?.name || 'N/A',
+                  this.getScope(indicator, 'item'),
+                  this.getTargetValue(indicator?.targets),
+                ]
+              : [
+                  wp.ost_wp.acronym,
+                  null,
+                  indicator?.type?.name || 'N/A',
+                  this.getScope(indicator, 'item'),
+                  this.getTargetValue(indicator?.targets),
+                ];
+            ws_data.push(row);
+            currentRowIndex++;
+          });
+  
+          merges.push({ s: { r: startRowForItem, c: 1 }, e: { r: currentRowIndex - 1, c: 1 } });
+  
+        } else {
+          ws_data.push([
+            wp.ost_wp.acronym,
+            item.title,
+            'No quantitative indicators available',
+            null,
+            null,
+          ]);
+          merges.push({ s: { r: startRowForItem, c: 2 }, e: { r: startRowForItem, c: 4 } });
+          currentRowIndex++;
+        }
+      });
+  
+      const wpEndRow = currentRowIndex - 1;
+      if (wpEndRow >= wpStartRow) {
+        merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
+      }
+    });
+  
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws['!merges'] = merges;
+  
+    ws['!cols'] = [
+      { wch: 10 }, // A: AOW
+      { wch: 40 }, // B: Outcome title
+      { wch: 25 }, // C: Type
+      { wch: 30 }, // D: Geographic Location
+      { wch: 25 }, // E: Target
+    ];
+  
+    ws['!rows'] = [];
+    for (let R = 0; R < ws_data.length; ++R) {
+      const isHeader = R < 2;
+      ws['!rows'][R] = { hpt: isHeader ? 30 : 45 };
+  
+      for (let C = 0; C < ws_data[R].length; ++C) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[addr];
+        if (!cell) continue;
+        cell.s = isHeader ? headerStyle : dataCellStyle;
+      }
+    }
+  
+    merges.forEach(m => {
+      if (m.s.c === 0 && m.e.c === 0) {
+        const cellAddr = XLSX.utils.encode_cell(m.s);
+        if (ws[cellAddr]) ws[cellAddr].s = wpVerticalTitleStyle;
+      }
+    });
+  
+    return ws;
+  }
+  
+
+
+
+
+  generateExcelSummarySynergyPrograms() {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const ws_data = [];
+    const merges = [];
+  
+    ws_data.push([
+      'AOW',
+      'Program or Accelerator',
+      'High Level Output',
+      'Brief description of how each Program/Accelerator contributes',
+    ]);
+  
+  
+    let currentRowIndex = 1;
+  
+    this.actualWps.forEach(wp => {
+      const wpCode = wp.ost_wp.wp_official_code + '-synergy-programs';
+      const wpItems = this.allData[wpCode] || [];
+      if (!wpItems.length) return; // Skip if no data
+      const wpStartRow = currentRowIndex;
+
+  
+        wpItems.forEach(item => {
+    
+              const row = [
+                wp.ost_wp.acronym,
+                item.flow.title,
+                item.result.title,
+                item.description
+              ];
+              ws_data.push(row);
+              currentRowIndex++;
+        });
+        const wpEndRow = currentRowIndex - 1;
+        if (wpEndRow >= wpStartRow) {
+          merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
+        }
+    });
+  
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws['!merges'] = merges;
+  
+    ws['!cols'] = [
+      { wch: 10 }, // A: AOW
+      { wch: 40 }, // B: Outcome title
+      { wch: 25 }, // C: Type
+      { wch: 30 }, // D: Geographic Location
+    ];
+  
+    ws['!rows'] = [];
+    for (let R = 0; R < ws_data.length; ++R) {
+      const isHeader = R < 1;
+      ws['!rows'][R] = { hpt: isHeader ? 60 : 45 };
+  
+      for (let C = 0; C < ws_data[R].length; ++C) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[addr];
+        if (!cell) continue;
+        cell.s = isHeader ? headerStyle : dataCellStyle;
+      }
+    }
+  
+    merges.forEach(m => {
+      if (m.s.c === 0 && m.e.c === 0) {
+        const cellAddr = XLSX.utils.encode_cell(m.s);
+        if (ws[cellAddr]) ws[cellAddr].s = wpVerticalTitleStyle;
+      }
+    });
+  
+    return ws;
+  }
 }
