@@ -362,26 +362,6 @@
                   [id]="isFirst ? '15' : isLast ? '16' : '2'"
                 ></app-popover>
               </mat-card-title>
-              <mat-slide-toggle
-                [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code]"
-                (toggleChange)="
-                  toggleSummaryActualValues(wp.ost_wp.wp_official_code)
-                "
-                [ngClass]="{
-                  'show-d': wp.id != 'CROSS' && wp.id != 'IPSR',
-                  'show-d-2': wp.id == 'CROSS',
-                  'show-d-3': wp.id == 'IPSR',
-                  'show-d-4':
-                    wp.id == 'IPSR' &&
-                    user.role == 'user' &&
-                    initUser?.role === 'Contributor',
-                  'show-d-5':
-                    wp.id == 'CROSS' &&
-                    user.role == 'user' &&
-                    initUser?.role === 'Contributor'
-                }"
-                >Show decimals</mat-slide-toggle
-              >
               <div class="wp-actions flex-box">
                 <!-- admin -->
                 <div class="risk-report-button-box">
@@ -1228,16 +1208,7 @@
                   </button>
                 </div>
 
-                <mat-slide-toggle
-                  [(ngModel)]="
-                    toggleValues[partner.code][wp.ost_wp.wp_official_code]
-                  "
-                  (toggleChange)="
-                    toggleActualValues(partner.code, wp.ost_wp.wp_official_code)
-                  "
-                  class="show-d-1"
-                  >Show decimals</mat-slide-toggle
-                >
+             
               </div>
             </div>
             <mat-card-content>
@@ -2328,14 +2299,7 @@
                 <ng-container >
                   <div class="sub-head pooled">
                     <span class="sub-title">High Level Outputs - Pooled Funding	</span> 
-                    <mat-slide-toggle
-                    class="show-d-2"
-                    [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code]"
-                    (toggleChange)="
-                      toggleSummaryActualValues(wp.ost_wp.wp_official_code)
-                    "
-                   
-                    >Show decimals</mat-slide-toggle>
+             
                   </div>
            
                 </ng-container>
@@ -2436,11 +2400,11 @@
                         <td style="width: 25% !important">
                           {{  getScope(indicator, 'item')  }}
                         </td>
-                        <td style="width: 10% !important">
+                        <td class="talign-center" style="width: 10% !important">
                           {{  getTargetValue(indicator?.targets) }}
                         </td>
 
-                        <td style="width: 10% !important">
+                        <td class="talign-center" style="width: 10% !important">
                           <div class="td-flex">
                             <span>
                               {{   summaryBudgetsIndicator[
@@ -2470,7 +2434,7 @@
                           </div>
                         </td>
                        
-                        <td style="width: 10% !important" (click)="item.isExpand = !item.isExpand" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
+                        <td class="talign-center" style="width: 10% !important" (click)="item.isExpand = !item.isExpand" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                           {{
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? (summaryBudgets[wp.ost_wp.wp_official_code][
@@ -2617,13 +2581,7 @@
 
                 <div class="sub-head">
                   <span class="sub-title">MELIA study - Pooled funding</span>
-                  <mat-slide-toggle
-                  class="show-d-2"
-                  [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code  + '-melia']"
-                  (toggleChange)="
-                    toggleSummaryActualValues(wp.ost_wp.wp_official_code  + '-melia')
-                  "
-                  >Show decimals</mat-slide-toggle>
+
                 </div>
                 <div class="table-box-1 mat-elevation-z8 w3-project-table melia-table">
                  
@@ -2755,14 +2713,7 @@
                 <div class="sub-head">
                   <span class="sub-title">Cross-cutting costs - Pooled funding</span>
                   <div class="content">
-                    <mat-slide-toggle
-                    class="show-d-1"
-                    [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code  + '-Cross-Cutting']"
-                    (toggleChange)="
-                      toggleSummaryActualValues(wp.ost_wp.wp_official_code  + '-Cross-Cutting')
-                    "
-                    
-                    >Show decimals</mat-slide-toggle>
+              
                     <div class="wp-actions flex-box">
 
                       <div>
@@ -3002,29 +2953,7 @@
 
                 <div class="sub-head">
                   <span class="sub-title">W3/Bilateral Projects budget</span>
-                  <mat-slide-toggle
-                  [(ngModel)]="toggleSummaryValues[wp.ost_wp.wp_official_code  + '-project']"
-                  (toggleChange)="
-                    toggleSummaryActualValues(wp.ost_wp.wp_official_code  + '-project')
-                  "
-                  [ngClass]="{
-                    'show-d': wp.id != 'CROSS' && wp.ost_wp.acronym != 'AOW00' && wp.id != 'IPSR',
-                    'show-d-2': wp.id == 'CROSS' || wp.ost_wp.acronym == 'AOW00',
-                    'show-d-3': wp.id == 'IPSR',
-                    'show-d-4':
-                      wp.id == 'IPSR' &&
-                      user.role == 'user' &&
-                      initUser?.role === 'Contributor' ||
-                      initUser?.role === 'MELIA Focal Point'||
-                      initUser?.role === 'Financial Focal Point',
-                    'show-d-5':
-                      (wp.id == 'CROSS' || wp.ost_wp.acronym == 'AOW00') &&
-                      user.role == 'user' &&
-                      initUser?.role === 'Contributor' ||
-                      initUser?.role === 'MELIA Focal Point'||
-                      initUser?.role === 'Financial Focal Point',
-                  }"
-                  >Show decimals</mat-slide-toggle>
+
                 </div>
                 <div class="table-box-1 mat-elevation-z8 w3-project-table project-table">
                  
@@ -3898,16 +3827,7 @@
                       </button>
                     </div> -->
     
-                    <mat-slide-toggle
-                      [(ngModel)]="
-                        toggleValues[partner.code][wp.ost_wp.wp_official_code]
-                      "
-                      (toggleChange)="
-                        toggleActualValues(partner.code, wp.ost_wp.wp_official_code)
-                      "
-                      class="show-d-1"
-                      >Show decimals</mat-slide-toggle
-                    >
+              
                   </div>
                 </div>
                 </div>
@@ -3980,10 +3900,10 @@
                           <td style="width: 25% !important">
                             {{  getScope(indicator, 'item')  }}
                           </td>
-                          <td style="width: 10% !important">
+                          <td class="talign-center" style="width: 10% !important">
                             {{  getTargetValue(indicator?.targets) }}
                           </td>
-                          <td style="width: 10% !important">
+                          <td class="talign-center" style="width: 10% !important">
                             <div class="td-flex">
                               <mat-form-field
                               class="form-dialog-content__field"
@@ -4088,7 +4008,7 @@
   
                         
   
-                        <td style="width: 10% !important" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
+                        <td class="talign-center" style="width: 10% !important" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                           {{
                           displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]
                           }}
@@ -4390,16 +4310,7 @@
 
                 <div class="sub-head-w3">
                   <span class="sub-title-w3">MELIA Study</span>
-                    <mat-slide-toggle
-                      [(ngModel)]="
-                        toggleValues[partner.code][wp.ost_wp.wp_official_code + '-melia']
-                      "
-                      (toggleChange)="
-                        toggleActualValues(partner.code, wp.ost_wp.wp_official_code + '-melia')
-                      "
-                      class="show-d-1"
-                      >Show decimals</mat-slide-toggle
-                    >
+                 
                 </div>
                 <div class="table-box-2 mat-elevation-z8 melia-table">
                   <table
@@ -4581,16 +4492,7 @@
 
                   <div class="sub-head-w3">
                     <span class="sub-title-w3">Cross-Cutting</span>
-                      <mat-slide-toggle
-                        [(ngModel)]="
-                          toggleValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting']
-                        "
-                        (toggleChange)="
-                          toggleActualValues(partner.code, wp.ost_wp.wp_official_code + '-Cross-Cutting')
-                        "
-                        class="show-d-1"
-                        >Show decimals</mat-slide-toggle
-                      >
+                    
                   </div>
                   <div class="table-box-2 mat-elevation-z8">
                     <table
@@ -4817,16 +4719,7 @@
                   <span class="sub-title-w3">W3-Bilateral Projects</span>
                   <div class="btns-sec-w3">
     
-                    <mat-slide-toggle
-                      [(ngModel)]="
-                        toggleValues[partner.code][wp.ost_wp.wp_official_code + '-project']
-                      "
-                      (toggleChange)="
-                        toggleActualValues(partner.code, wp.ost_wp.wp_official_code + '-project')
-                      "
-                      class="show-d-1"
-                      >Show decimals</mat-slide-toggle
-                    >
+              
                   </div>
                 </div>
                 <div class="table-box-2 mat-elevation-z8">
@@ -5103,7 +4996,7 @@
                         </td>
   
                         <ng-container *ngFor="let per of period | slice:0:1">
-                          <td>
+                          <td class="talign-center">
                             <mat-checkbox
                               [disabled]="
                                 partnersStatus[partner.code] ||
@@ -5643,7 +5536,7 @@
                         </td>
                       
                      
-                        <td *ngIf="i === 0"   [attr.rowspan]="item.results.length || 1">
+                        <td class="talign-center w-10" *ngIf="i === 0"   [attr.rowspan]="item.results.length || 1">
                           {{ getMeliaProjectItemTotal(partner.code, item, '-melia') }}
                         </td>
                       </tr>

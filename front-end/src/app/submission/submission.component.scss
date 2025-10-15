@@ -6,6 +6,12 @@
   position: relative;
   bottom: -6px;
 }
+.w-10{
+  width: 10% !important;
+}
+.talign-center {
+  text-align: center !important;
+}
 .pointer {
   cursor: pointer;
 }
@@ -520,7 +526,9 @@ mat-slide-toggle {
   background-color: blue !important;
 }
 
-
+td input{
+  text-align: center;
+}
 .th-1-m {
   margin-left: 0.1rem;
   text-align: center;
@@ -741,126 +749,23 @@ table {
   td:nth-child(1) {
     text-align: left;
     max-width: 400px;
-    padding: 2.3rem;
+    padding: 0.6rem;
   }
 
   td:nth-child(2) {
     width: 100px !important;
   }
 
-  // th:nth-child(2) {
-  //   width: 27rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(2) {
-  //   width: 27rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(3) {
-  //   width: 200rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(3) {
-  //   width: 26rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(4) {
-  //   width: 200rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(4) {
-  //   width: 30rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(5) {
-  //   width: 200rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(5) {
-  //   width: 19rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(6) {
-  //   width: 200rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(6) {
-  //   width: 19rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(7) {
-  //   width: 50rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(7) {
-  //   width: 12rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(8) {
-  //   width: 100rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(8) {
-  //   width: 12rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(9) {
-  //   width: 100rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(9) {
-  //   width: 12rem;
-  //   // height: 3.5rem;
-  //   padding: 1rem;
-  // }
-
   td {
     border: 1px solid #b9b9b9b5;
 
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem;
     font-style: normal;
     font-weight: 400;
-    line-height: 114.5%; /* 1.374rem */
-    // background-color: #f0f0f0;
-
-    /* font-weight: 500; */
-    /* margin: 16px 0 12px 0; */
-    /* display: block; */
-    /* max-width: 450px; */
-    /* min-width: 250px; */
+    line-height: 114.5%; 
     white-space: normal !important;
   }
 
@@ -1429,7 +1334,7 @@ pre {
   }
 
   td:nth-child(2) {
-    text-align: center;
+    text-align: left;
     max-width: 900px;
   }
 
@@ -1439,7 +1344,7 @@ pre {
     border: 1px solid #b9b9b9b5;
 
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem;
     font-style: normal;
@@ -1494,11 +1399,11 @@ pre {
   }
 
   td:nth-child(2) {
-    text-align: center;
+    text-align: left;
     width: 40%;
   }
   td:nth-child(3) {
-    text-align: center;
+    text-align: left;
     width: 20%;
   }
   td:nth-child(4) {
@@ -1511,7 +1416,7 @@ pre {
     border: 1px solid #b9b9b9b5;
 
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem;
     font-style: normal;
@@ -2341,37 +2246,13 @@ pre {
     text-align: left;
   }
 
-  td:nth-child(1) {
-    text-align: center;
-    width: 30% !important;
-    padding: 2.3rem;
-  }
-
-  td:nth-child(2) {
-    width: 10% !important;
-    max-width: 100px !important;
-  }
-
-  td:nth-child(3) {
-    text-align: left;
-    width: 40% !important;
-    padding: 1.3rem;
-  }
-
-  td:nth-child(4) {
-    max-width: 100px !important;
-    width: 10% !important;
-  }
-
-  td:nth-child(5) {
-    width: 10% !important;
-  }
+  
  
   td {
     border: 1px solid #b9b9b9b5;
 
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem;
     font-style: normal;
@@ -2419,11 +2300,11 @@ pre {
   text-align: center !important;
 }
 
-.table-box-anaplan table th:first-child,
 .table-box-anaplan table td:first-child {
-  width: 300px !important;
-  max-width: 125px !important;
-  text-align: center !important;
+  width: 337px !important;
+  max-width: 337px !important;
+  padding: 10px;
+  text-align: left !important;
 }
 
 
