@@ -3431,6 +3431,67 @@
               </mat-card-content>
             </mat-card>
           </mat-tab>
+
+
+
+      
+
+          <mat-tab label="Anaplan">
+            <mat-card>
+              <div class="sub-head">
+                <span class="sub-title">Anaplan</span>
+              </div>
+          
+              <mat-card-content>
+                <div class="table-box-anaplan mat-elevation-z8 melia-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Main Accounts</th>
+                        <th *ngFor="let wp of actualWps">{{ wp.ost_wp.acronym }}</th>
+                        <th>Total budget (USD)</th>
+                      </tr>
+                    </thead>
+          
+                    <tbody>
+                      <tr *ngFor="let anaplan of anaplanLabels">
+                        <td class="wp-title">{{ anaplan.label }}</td>
+          
+                        <td *ngFor="let wp of actualWps" class="text-right">
+                          {{
+                            getAnaplanValueAcrossPartners(wp.ost_wp.wp_official_code, anaplan.id)
+                            
+                          }}
+                        </td>
+          
+                        <td class="text-right">
+                          {{ getTotalByAnaplanId(anaplan.id) }}
+                        </td>
+                      </tr>
+                    </tbody>
+          
+                    <tfoot>
+                      <tr class="total">
+                        <td><div class="subtotal">Sub-total</div></td>
+          
+                        <td *ngFor="let wp of actualWps" class="text-right">
+                          {{ getWpTotalsAcrossPartners(wp.ost_wp.wp_official_code) }}
+                        </td>
+          
+                        <td class="text-right">
+                          {{ getSummaryTotalAnaplan()  }}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
+          
+
+
+          
         </mat-tab-group>
 
       
@@ -5684,14 +5745,12 @@
 
 
 
-          <!-- <ng-container *ngIf="anaplanBudgets"> -->
           <mat-tab label="Anaplan">
             <mat-card>
               <div class="sub-head">
                 <span class="sub-title">Anaplan</span>
               </div>
               <mat-card-content>
-                <!-- <ng-container *ngIf="anaplanLabels?.length"> -->
           
                   <div class="table-box-anaplan mat-elevation-z8 melia-table">
                     <table>
@@ -5752,11 +5811,9 @@
                       </tfoot>
                     </table>
                   </div>
-                <!-- </ng-container> -->
               </mat-card-content>
             </mat-card>
           </mat-tab>
-        <!-- </ng-container> -->
         </mat-tab-group>
 
 
