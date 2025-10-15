@@ -34,6 +34,7 @@ import { BudgetAssumptionsService } from "../services/budget-assumptions.service
 import { AnaplanService } from "../services/anaplan.service";
 import { ClarisaCountryService } from "../services/clarisa-country.service";
 import { MatTabGroup } from "@angular/material/tabs";
+import { Location } from "@angular/common";
 
 @Component({
   selector: "app-submission",
@@ -64,6 +65,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private budgetAssumptionsService: BudgetAssumptionsService,
     private anaplanService: AnaplanService,
     private countryService: ClarisaCountryService,
+    private location: Location
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -542,34 +544,22 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.updatePath(organization);
   }
   updatePath(tab: any) {
-    this.router.navigate(
-      [], // Remain on current route
-      {
-        relativeTo: this.activatedRoute,
-        queryParams: {
-          tab: tab.index,
-          AOW: this.selectedTabIndexAOW,
-        },
-        queryParamsHandling: "merge", // Merge new params with existing params
-      }
-    );
+    this.location.replaceState(
+    this.router.url.split('?')[0], // keep current path
+    `tab=${tab.index}&AOW=${this.selectedTabIndexAOW}`        // new query params
+  );
+  this.selectedTabIndex = tab.index;
   }
   tabChangedAOW(aow: any) {
     this.updateChildPath(aow.index);
     setTimeout(() => window.scrollTo({ top: this.currentScroll }));
   }
   updateChildPath(index: any) {
-    this.selectedTabIndexAOW = index;
-    this.router.navigate(
-      [],
-      {
-        relativeTo: this.activatedRoute,
-        queryParams: {
-          AOW: index,
-        },
-        queryParamsHandling: "merge",
-      }
-    );
+     this.location.replaceState(
+    this.router.url.split('?')[0], // keep current path
+    `tab=${this.selectedTabIndex}&AOW=${index}`        // new query params
+   );
+   this.selectedTabIndexAOW = index;
   }
   async changes(
     partner_code: any,
