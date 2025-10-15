@@ -3271,5 +3271,9 @@ totalConsolidatedTargetPartner: any;
   
     return total;
   }
+
+  haveHLO(data: any[]) {
+    return data.some(item => item.category === 'OUTPUT');
+  }
   
 }

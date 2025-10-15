@@ -2317,7 +2317,7 @@
             *ngFor="let wp of actualWps; first as isFirst; last as isLast"
             label="{{ wp.ost_wp.acronym }}"
           >
-            <mat-card *ngIf="allData[wp.ost_wp.wp_official_code]">
+            <mat-card *ngIf="allData[wp.ost_wp.wp_official_code].length">
               <mat-card-title class="card-title-table"
                 >{{ wp.title }}
                 <app-popover
@@ -2325,7 +2325,7 @@
                 ></app-popover>
               </mat-card-title>
               <mat-card-content>
-                <ng-container >
+                <ng-container *ngIf="haveHLO(allData[wp.ost_wp.wp_official_code])">
                   <div class="sub-head pooled">
                     <span class="sub-title">High Level Outputs - Pooled Funding	</span> 
                     <mat-slide-toggle
@@ -2340,52 +2340,9 @@
            
                 </ng-container>
       
-              <!-- <div class="wp-actions flex-box">
+              
 
-                <div>
-                  <button
-                    class="new-btns submit-btn"
-                    mat-raised-button
-                    *ngIf="
-                      wp.ost_wp.acronym == 'AOW00' &&
-                      initUser?.role != 'Contributor' &&
-                      initUser?.role != 'MELIA Focal Point' &&
-                      initUser?.role != 'Financial Focal Point' &&
-                      user.role == 'user'
-                    "
-                    type="button"
-                    (click)="addCross()"
-                    [disabled]="
-                      initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
-                    "
-                    [ngClass]="{
-                      disabled:
-                        initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
-                    }"
-                  >
-                    Cross-Cutting
-                  </button>
-
-                  <button
-                    class="new-btns submit-btn"
-                    mat-raised-button
-                    *ngIf="wp.ost_wp.acronym == 'AOW00' && user.role == 'admin'"
-                    type="button"
-                    (click)="addCross()"
-                    [disabled]="
-                      initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
-                    "
-                    [ngClass]="{
-                      disabled:
-                        initStatus == 'Pending' || initStatus == 'Approved' || !initiative_data.is_valid
-                    }"
-                  >
-                    Cross-Cutting
-                  </button>
-                </div>
-              </div> -->
-
-              <ng-container>
+              <ng-container  *ngIf="haveHLO(allData[wp.ost_wp.wp_official_code])">
 
                 <div class="table-box-1 mat-elevation-z8 output-table">
                   <table>
@@ -3896,68 +3853,14 @@
                     [id]="isFirst ? '17' : isLast ? '18' : '3'"
                   ></app-popover>
                 </mat-card-title>
+                <ng-container *ngIf="haveHLO(partnersData[partner.code][wp.ost_wp.wp_official_code])">
                 <div class="plural-head-2">
-
-
-
-
-
-
-
-
-
-
                   
                   <div class="sub-head">
                     <span class="sub-title sub-title-2">High Level Outputs - Pooled funding</span>
                   
                   <div class="btns-sec">
-                    <!-- <div class="btns">
-                      <button
-                        class="check-btn"
-                        *ngIf="partner?.canEdit"
-                        [disabled]="
-                          partnersStatus[partner.code] ||
-                          initStatus == 'Pending' ||
-                          initStatus == 'Approved' ||
-                          initUser?.role === 'Financial Focal Point'
-                        "
-                        (click)="
-                          checkAll(partner.code, wp.ost_wp.wp_official_code, true, false)
-                        "
-                        [ngClass]="{
-                          disabled:
-                            partnersStatus[partner.code] ||
-                              initStatus == 'Pending' ||
-                              initStatus == 'Approved' ||
-                              initUser?.role === 'Financial Focal Point'
-                        }"
-                      >
-                        Check all
-                      </button>
-                      <button
-                        class="check-btn-clear"
-                        *ngIf="partner?.canEdit"
-                        [disabled]="
-                          partnersStatus[partner.code] ||
-                          initStatus == 'Pending' ||
-                          initStatus == 'Approved' ||
-                          initUser?.role === 'Financial Focal Point'
-                        "
-                        (click)="
-                          checkAll(partner.code, wp.ost_wp.wp_official_code, false, false)
-                        "
-                        [ngClass]="{
-                          disabled:
-                            partnersStatus[partner.code] ||
-                            initStatus == 'Pending' ||
-                            initStatus == 'Approved' ||
-                            initUser?.role === 'Financial Focal Point'
-                        }"
-                      >
-                        Clear all
-                      </button>
-                    </div> -->
+                  
     
                     <mat-slide-toggle
                       [(ngModel)]="
@@ -3972,12 +3875,13 @@
                   </div>
                 </div>
                 </div>
+              </ng-container>
               </div>
 
 
 
               <mat-card-content>
-                <div class="table-box-2 mat-elevation-z8 output-table">
+                <div class="table-box-2 mat-elevation-z8 output-table" *ngIf="haveHLO(partnersData[partner.code][wp.ost_wp.wp_official_code])">
                   <table
                     [ngClass]="{
                       error: errors[partner.code][wp.ost_wp.wp_official_code]
