@@ -3273,7 +3273,7 @@ totalConsolidatedTargetPartner: any;
   }
 
   haveHLO(data: any[]) {
-    return data.some(item => item.category === 'OUTPUT');
+    return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
   }
   
 }
