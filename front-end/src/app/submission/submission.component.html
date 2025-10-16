@@ -3180,7 +3180,7 @@
             </ng-container> -->
 
           
-            <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length">
+            <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length && haveselectedCountry(allData[wp.ost_wp.wp_official_code + '-partners'])">
               <div class="sub-head">
                 <span class="sub-title">Contracted Partners - Pooled funding</span>
               </div>
@@ -3196,7 +3196,7 @@
                   <ng-container
                     *ngFor="let item of allData[wp.ost_wp.wp_official_code + '-partners']"
                   >
-                  <ng-container *ngIf="item.selectedCountries?.length; else noCountries">
+                  <ng-container *ngIf="item.selectedCountries?.length">
                   <ng-container *ngFor="let selectedCountries of item.selectedCountries; let i = index">
                     <tr>
                       <td class="wp-title box-center" *ngIf="i === 0" [attr.rowspan]="item.selectedCountries.length || 1">
@@ -3248,52 +3248,6 @@
                   </tr>
                       </ng-container>
                     </ng-container>
-                    <ng-template #noCountries>
-                      <tr>
-                        <!-- Partner column -->
-                        <td class="wp-title box-center">
-                          {{ item.name }}
-                        </td>
-                  
-                        <!-- Empty center -->
-                        <td>-</td>
-                  
-                        <!-- Empty countries -->
-                        <td>-</td>
-                  
-                        <!-- Budget -->
-                        <td (click)="item.isExpand = !item.isExpand">
-                          <div class="td-flex">
-                            <span>
-                              {{
-                                toggleSummaryValues[wp.ost_wp.wp_official_code + '-partners']
-                                  ? (summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id] | number)
-                                  : (roundNumber(summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id]) | number)
-                              }}
-                            </span>
-                            <img 
-                            [ngClass]="{
-                              'disabled-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
-                                               && !summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id],
-                              
-                              'normal-icon': hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
-                                              && summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id],
-                              
-                              'half-opacity-icon': !hasBudgetAssumptionsSummary(item.id, wp.ost_wp.wp_official_code + '-partners') 
-                                                   && summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][item.id]
-                            }"
-                              src="../../assets/shared-image/Vector.png"
-                              (click)="openBudgetAssumptionsDialogSummary(item.id)"
-                              matTooltip="Budget assumptions"
-                              matTooltipPosition="above"
-                              class="budget-assumptions-icon"
-                              width="20"
-                              height="20"
-                            >
-                          </div>
-                        </td>
-                      </tr>
-                    </ng-template>
                   </ng-container>
                   <tr class="total">
                     <td [attr.colspan]="3">

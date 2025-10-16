@@ -3275,5 +3275,9 @@ totalConsolidatedTargetPartner: any;
   haveHLO(data: any[]) {
     return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
   }
+
+  haveselectedCountry(data: any[]) {
+    return data.some(item => item.selectedCountries.length);
+  }
   
 }
