@@ -2298,7 +2298,7 @@
               <mat-card-content>
                 <ng-container *ngIf="haveHLO(allData[wp.ost_wp.wp_official_code])">
                   <div class="sub-head pooled">
-                    <span class="sub-title">High Level Outputs - Pooled Funding	</span> 
+                    <span class="sub-title p-0">High Level Outputs - Pooled Funding	</span> 
              
                   </div>
            
@@ -2446,7 +2446,7 @@
 
 
               <div class="sub-head pooled">
-                <span class="sub-title">Outcomes - Pooled Funding</span>
+                <span class="sub-title p-0">Outcomes - Pooled Funding</span>
               </div>
 
               <div class="table-box-1 mat-elevation-z8 outcome-table">
@@ -2505,7 +2505,7 @@
               <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-melia'].length">
 
                 <div class="sub-head">
-                  <span class="sub-title">MELIA study - Pooled funding</span>
+                  <span class="sub-title p-0">MELIA study - Pooled funding</span>
 
                 </div>
                 <div class="table-box-1 mat-elevation-z8 w3-project-table melia-table">
@@ -2636,7 +2636,7 @@
               <ng-container *ngIf="wp.ost_wp.acronym == 'AOW00'">
 
                 <div class="sub-head">
-                  <span class="sub-title">Cross-cutting costs - Pooled funding</span>
+                  <span class="sub-title p-0">Cross-cutting costs - Pooled funding</span>
                   <div class="content">
               
                     <div class="wp-actions flex-box">
@@ -2908,7 +2908,7 @@
                 <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
 
                 <div class="sub-head">
-                  <span class="sub-title">W3/Bilateral Projects budget</span>
+                  <span class="sub-title p-0">W3/Bilateral Projects budget</span>
 
                 </div>
                 <div class="table-box-1 mat-elevation-z8 w3-project-table project-table">
@@ -3142,7 +3142,7 @@
           
             <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length && haveselectedCountry(allData[wp.ost_wp.wp_official_code + '-partners'])">
               <div class="sub-head">
-                <span class="sub-title">Contracted Partners - Pooled funding</span>
+                <span class="sub-title p-0">Contracted Partners - Pooled funding</span>
               </div>
               <div class="table-box-1 mat-elevation-z8 w3-project-table">
                  
@@ -3236,7 +3236,7 @@
 
             <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-synergy-programs'].length">
               <div class="sub-head">
-                <span class="sub-title">Cross-Program or Accelerator collaboration</span>
+                <span class="sub-title p-0">Cross-Program or Accelerator collaboration</span>
               </div>
               <div class="table-box-1 mat-elevation-z8 accelerator-table">
                  
@@ -3485,7 +3485,7 @@
                 >
               </div>
 
-              <div class="card-title-3">{{ this.phase.name }}</div>
+              <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
               <div class="card-title-3 m-b-t">
                 Toc version ID: {{ this.tocSubmissionData.version }}
               </div>
