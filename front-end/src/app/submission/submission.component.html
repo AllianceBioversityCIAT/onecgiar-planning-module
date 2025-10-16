@@ -2132,7 +2132,7 @@
         </mat-card>
 
         <mat-card>
-          <mat-card-title class="card-title-table">
+          <mat-card-title class="card-title-table aow-title">
             Consolidated
             <app-popover id="1"></app-popover>
           </mat-card-title>
@@ -2289,7 +2289,7 @@
             label="{{ wp.ost_wp.acronym }}"
           >
             <mat-card *ngIf="allData[wp.ost_wp.wp_official_code].length">
-              <mat-card-title class="card-title-table"
+              <mat-card-title class="card-title-table aow-title"
                 >{{ wp.title }}
                 <app-popover
                   [id]="isFirst ? '15' : isLast ? '16' : '2'"
@@ -2298,7 +2298,7 @@
               <mat-card-content>
                 <ng-container *ngIf="haveHLO(allData[wp.ost_wp.wp_official_code])">
                   <div class="sub-head pooled">
-                    <span class="sub-title">High Level Outputs - Pooled Funding	</span> 
+                    <span class="sub-title p-0">High Level Outputs - Pooled Funding	</span> 
              
                   </div>
            
@@ -2446,7 +2446,7 @@
 
 
               <div class="sub-head pooled">
-                <span class="sub-title">Outcomes - Pooled Funding</span>
+                <span class="sub-title p-0">Outcomes - Pooled Funding</span>
               </div>
 
               <div class="table-box-1 mat-elevation-z8 outcome-table">
@@ -3534,7 +3534,7 @@
 
 
         <mat-card>
-          <mat-card-title class="card-title-table">
+          <mat-card-title class="card-title-table aow-title">
             {{ partner.acronym }} - Consolidated
             <app-popover id="1"></app-popover>
           </mat-card-title>
@@ -3729,7 +3729,7 @@
           >
             <mat-card>
               <div class="plural-head">
-                <mat-card-title class="card-title-table"
+                <mat-card-title class="card-title-table aow-title"
                   >{{ wp.title }}
                   <app-popover
                     [id]="isFirst ? '17' : isLast ? '18' : '3'"

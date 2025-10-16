@@ -1906,16 +1906,19 @@ pre {
 .pooled {
   margin-bottom: 60px !important;
 }
+.p-0 {
+  padding: 0 !important;
+}
 .sub-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
-  margin-bottom: 30px;
-
-    width: 100%;
+  margin-top: -8px;
+  margin-bottom: 19px;
+  width: 100%;
   .sub-title {
-    bottom: -25px;
+    bottom: -60px;
+    padding: 0 1.8rem;
     position: relative;
     font-family: var(--mdc-typography-headline6-font-family, var(--mdc-typography-font-family, Roboto, sans-serif));
     font-size: 18px;
@@ -2098,8 +2101,8 @@ pre {
 
 
 .sub-title-2 {
-  bottom: -50px !important;
-
+  bottom: -66px !important;
+  padding: 0 2.2 rem;
 }
 
 .btns-sec {
@@ -2392,4 +2395,10 @@ pre {
 }
 ::ng-deep .mat-tab-body-wrapper {
   min-height: 100vh;
+}
+
+.aow-title {
+  padding: 0px 1.7rem !important;
+  margin-bottom: -70px;
+  font-weight: 600;
 }
