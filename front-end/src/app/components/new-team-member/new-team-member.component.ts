@@ -48,7 +48,7 @@ export class NewTeamMemberComponent implements OnInit {
 
   Roles: any[] = [
     { value: ROLES.LEAD, viewValue: ROLES.LEAD },
-    { value: ROLES.CoLeader, viewValue: ROLES.CoLeader },
+    // { value: ROLES.CoLeader, viewValue: ROLES.CoLeader },
     { value: ROLES.COORDINATOR, viewValue: ROLES.COORDINATOR },
     { value: ROLES.CONTRIBUTOR, viewValue: ROLES.CONTRIBUTOR },
     { value: ROLES.MELIA_Focal_Point, viewValue: ROLES.MELIA_Focal_Point },
