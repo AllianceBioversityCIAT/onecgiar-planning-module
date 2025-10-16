@@ -674,7 +674,7 @@ export class SubmissionService {
         async (data) => {
           const history = this.historyRepository.create();
           history.item_name = title;
-          history.resource_property = value ? 'Checked period' : 'unchecked period';
+          history.resource_property = value ? 'Checked partner' : 'unchecked partner';
           history.old_value = newResultPeriodValue.value == true ? 'False' : 'True';
           history.new_value = value == true ? 'True' : 'False';
           history.user_id = user.id;

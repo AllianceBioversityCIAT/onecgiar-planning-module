@@ -2536,8 +2536,8 @@
                       
                      
                      
-                      <td>
-                        {{ item?.supported_outcome}}
+                      <td [innerHTML]="item?.supported_outcome">
+                     
                       </td>
                       <td>
                         {{ getScope(item, 'melia') }}
@@ -3725,6 +3725,8 @@
         >
           <mat-tab
             *ngFor="let wp of actualWps; first as isFirst; last as isLast"
+           
+           
             label="{{ wp.ost_wp.acronym }}"
           >
             <mat-card>

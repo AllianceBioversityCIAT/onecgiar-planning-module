@@ -529,6 +529,12 @@ mat-slide-toggle {
 td input{
   text-align: center;
 }
+::ng-deep .tdul{
+  margin-left: 20px !important;
+  li{
+    margin-bottom: 5px;
+  }
+}
 .th-1-m {
   margin-left: 0.1rem;
   text-align: center;
