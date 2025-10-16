@@ -12,13 +12,24 @@ import {
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/role/roles.guard';
 import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
 import { Organization } from 'src/entities/organization.entity';
-import { getCountries, getCountriesRegions, getPartners, getPartnersreq, getRegions } from 'src/DTO/organizations.dto';
+import {
+  getCountries,
+  getCountriesRegions,
+  getPartners,
+  getPartnersreq,
+  getRegions,
+} from 'src/DTO/organizations.dto';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('Organizations')
@@ -33,7 +44,7 @@ export class OrganizationsController {
     description: '',
     type: Organization,
   })
-  @ApiBody({ type: Organization})
+  @ApiBody({ type: Organization })
   @Post()
   create(@Body() createOrganizationDto: CreateOrganizationDto) {
     return this.organizationsService.create(createOrganizationDto);
@@ -47,6 +58,11 @@ export class OrganizationsController {
   @Get()
   findAll(@Query() query) {
     return this.organizationsService.findAll(query);
+  }
+
+  @Get('admin')
+  findAlladmin(@Query() query) {
+    return this.organizationsService.findAll(query, true);
   }
 
   @ApiCreatedResponse({
@@ -92,7 +108,7 @@ export class OrganizationsController {
     description: '',
     type: Organization,
   })
-  @ApiBody({ type: Organization})
+  @ApiBody({ type: Organization })
   @ApiBearerAuth()
   @Patch(':id')
   update(
@@ -104,7 +120,7 @@ export class OrganizationsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
-  @ApiBody({ type: getCountriesRegions})
+  @ApiBody({ type: getCountriesRegions })
   @ApiBearerAuth()
   @Delete(':id')
   remove(@Param('id') id: string) {

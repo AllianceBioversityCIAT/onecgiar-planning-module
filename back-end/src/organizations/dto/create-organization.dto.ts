@@ -4,4 +4,6 @@ export class CreateOrganizationDto {
   acronym: string;
 
   code: string;
+
+  disabled: boolean;
 }

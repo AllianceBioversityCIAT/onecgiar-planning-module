@@ -72,7 +72,7 @@ export class OrganizationsComponent implements OnInit {
   async initTable(filter = null) {
     this.organizations = await this.organizationsService.getOrganizations(
       filter
-    );
+    ,true);
     this.dataSource = new MatTableDataSource(this.organizations);
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
