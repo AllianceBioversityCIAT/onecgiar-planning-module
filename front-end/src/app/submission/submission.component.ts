@@ -1270,12 +1270,21 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       if (!this.itemHasError[partner.code])
         this.itemHasError[partner.code] = {};
 
-      for (let wp of this.wps) {
-        if (!this.wp_budgets[partner.code][wp.ost_wp.wp_official_code])
-          this.wp_budgets[partner.code][wp.ost_wp.wp_official_code] = null;
+      for(let wp of this.actualWps) {
         if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code]) {
           this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code] = {};
         }
+
+        this.anaplanLabels.forEach((element) => {
+          if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id] =
+              0;
+        });
+      }
+
+      for (let wp of this.wps) {
+        if (!this.wp_budgets[partner.code][wp.ost_wp.wp_official_code])
+          this.wp_budgets[partner.code][wp.ost_wp.wp_official_code] = null;
         if (!this.toggleValues[partner.code][wp.ost_wp.wp_official_code])
           this.toggleValues[partner.code][wp.ost_wp.wp_official_code] = false;
         if (!this.budgetValues[partner.code][wp.ost_wp.wp_official_code])
@@ -1337,11 +1346,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               false;
         });
 
-        this.anaplanLabels.forEach((element) => {
-          if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id])
-            this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id] =
-              0;
-        });
+   
         result.forEach((item: any) => {
           if (item.category !== "OUTCOME" && item.category !== "OUTPUT") {
             this.check(
@@ -1547,7 +1552,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log('partnersData', this.displayBudgetValues)
+    console.log('anaplanBudgets', this.anaplanBudgets)
     
 
     //sort WP titles
@@ -3190,4 +3195,79 @@ totalConsolidatedTargetPartner: any;
       }
     )
   }
+
+  getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData && wpData[anaplanId] !== undefined) {
+        total += Number(wpData[anaplanId]) || 0;
+      }
+    }
+  
+    return total;
+  }
+
+
+  getTotalByAnaplanId(anaplanId: number): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      for (const wpCode in partnerData) {
+        const wpData = partnerData[wpCode];
+        if (wpData && wpData[anaplanId] !== undefined) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+
+
+
+
+  getWpTotalsAcrossPartners(wpCode: string): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData) {
+        for (const anaplanId in wpData) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+  
+  getSummaryTotalAnaplan(): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      for (const wpCode in partnerData) {
+        const wpData = partnerData[wpCode];
+        for (const anaplanId in wpData) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+
+  haveHLO(data: any[]) {
+    return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+  }
+
+  haveselectedCountry(data: any[]) {
+    return data.some(item => item.selectedCountries.length);
+  }
+  
 }
