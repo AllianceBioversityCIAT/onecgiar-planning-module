@@ -552,7 +552,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
   tabChangedAOW(aow: any) {
     this.updateChildPath(aow.index);
-    setTimeout(() => window.scrollTo({ top: this.currentScroll }));
   }
   updateChildPath(index: any) {
      this.location.replaceState(

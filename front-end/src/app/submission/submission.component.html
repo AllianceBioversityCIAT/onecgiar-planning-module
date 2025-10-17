@@ -2426,7 +2426,7 @@
                       </td>
                      </ng-container> -->
 
-                      <td>
+                      <td class="talign-center">
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code]
@@ -2475,7 +2475,7 @@
                             <!-- <td>{{ indicator?.description }}</td> -->
                             <td style="width: 10% !important;">{{ indicator?.type?.name }}</td>
                             <td>{{ getScope(indicator, 'item') }}</td>
-                            <td>{{ getTargetValue(indicator?.targets) }}</td>
+                            <td class="talign-center">{{ getTargetValue(indicator?.targets) }}</td>
                           </tr>
                         </ng-container>
                       </ng-container>
@@ -2608,7 +2608,7 @@
                         >
                       </td>
                     </ng-container> -->
-                    <td>
+                    <td class="talign-center">
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-melia']
                           ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia']
@@ -2879,7 +2879,7 @@
                         >
                       </td>
                     </ng-container> -->
-                    <td>
+                    <td class="talign-center">
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-Cross-Cutting']
                           ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting']
@@ -3041,7 +3041,7 @@
                         >
                       </td>
                     </ng-container> -->
-                    <td>
+                    <td class="talign-center">
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
                           ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
@@ -3213,7 +3213,7 @@
                     <td [attr.colspan]="3">
                       <div class="subtotal">Contracted Partners budget sub-Total</div>
                     </td>
-                    <td>
+                    <td class="talign-center">
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-partners']
                           ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-partners']
@@ -4039,7 +4039,7 @@
                           {{ getTotalIndValues(perAllValuesIndicator?.[wp.ost_wp.wp_official_code], type) }}
                         </td>
                        </ng-container> -->
-                      <td>
+                      <td class="talign-center">
                         {{
                           wp_budgets[partner.code][wp.ost_wp.wp_official_code]
                         }}
@@ -4591,7 +4591,7 @@
                           <div class="subtotal">Subtotal</div>
                         </td>
                     
-                        <td>
+                        <td class="talign-center">
                           {{  wp_budgets[partner.code][
                             wp.ost_wp.wp_official_code + '-Cross-Cutting'
                           ]}}
@@ -5068,7 +5068,7 @@
                       <div class="subtotal">Subtotal</div>
                     </td>
                 
-                    <td>
+                    <td class="talign-center">
                      {{       wp_budgets[partner.code][
                       wp.ost_wp.wp_official_code + '-partners'
                     ]}}
@@ -5139,7 +5139,7 @@
                         
                  
                       
-                        <td >
+                        <td class="talign-center" >
                           <div class="td-flex">
                             <mat-form-field
                             class="form-dialog-content__field"
@@ -5249,7 +5249,7 @@
                           </div>
                         </td>
 
-                        <td *ngIf="i === 0"   [attr.rowspan]="item.results.length || 1">
+                        <td class="talign-center" *ngIf="i === 0"   [attr.rowspan]="item.results.length || 1">
                           {{ getMeliaProjectItemTotal(partner.code, item, '-project')}}                        
                       </td>
                       </tr>
@@ -5264,7 +5264,7 @@
                         <div class="subtotal">W3/Bilateral projects sub-total</div>
                       </td>
                   
-                      <td>
+                      <td class="talign-center">
                         {{ getTotalBudgetForEachPartnerProject(wp_budgets[partner.code]) }}
                       </td>
                     </tr>
@@ -5454,7 +5454,7 @@
                         <div class="subtotal">MELIA studies budget sub-total</div>
                       </td>
                   
-                      <td>
+                      <td class="talign-center">
                         {{ getTotalBudgetForEachPartnerMelia(wp_budgets[partner.code]) }}
                       </td>
                     </tr>
