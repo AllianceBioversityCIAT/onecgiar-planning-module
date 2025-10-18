@@ -3105,6 +3105,15 @@ totalConsolidatedTargetPartner: any;
     });
   }  
 
+  selectIfZero(event: FocusEvent) {
+    const input = event.target as HTMLInputElement;
+    const value = parseFloat(input.value.replace(/,/g, ''));
+    if (value === 0 || isNaN(value)) {
+      input.select();
+    }
+  }
+  
+
   openBudgetAssumptionsDialogSummary(item_id: string) {
     console.log(item_id)
     this.dialog
