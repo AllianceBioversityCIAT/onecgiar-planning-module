@@ -1820,7 +1820,11 @@ pre {
 }
 
 .itemHasError {
-  border: solid 2px red;
+  border: solid 2px red !important;
+}
+
+.itemIndicatorHasError {
+  border: solid 2px red !important;
 }
 
 

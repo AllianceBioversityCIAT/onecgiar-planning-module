@@ -3611,15 +3611,15 @@
                     <td>
                       {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
                     </td>
-                    <td>
-                      {{ roundNumber(
-                      wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-melia']
-                    ) | number }}
-                    </td>
-
+            
                     <td>
                       {{ roundNumber(
                       wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-partners']
+                    ) | number }}
+                    </td>
+                    <td>
+                      {{ roundNumber(
+                      wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-melia']
                     ) | number }}
                     </td>
 
@@ -3692,10 +3692,10 @@
                     {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['custom-OUTPUT'] ?? 0 }}
                   </td>
                   <td>
-                    {{ getTotalBudgetForEachPartnerMelia(wp_budgets[partner.code]) }}
+                    {{ getTotalBudgetForEachPartnerPartner(wp_budgets[partner.code]) }}
                   </td>
                   <td>
-                    {{ getTotalBudgetForEachPartnerPartner(wp_budgets[partner.code]) }}
+                    {{ getTotalBudgetForEachPartnerMelia(wp_budgets[partner.code]) }}
                   </td>
                   <td>
                     {{ getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
@@ -3793,14 +3793,7 @@
                       <ng-container *ngIf="item.quantitative_indicators?.length > 0">
                       <ng-container *ngFor="let indicator of item.quantitative_indicators; let i = index">  
 
-                      <tr
-                        [ngClass]="{
-                          itemHasError:
-                            itemHasError[partner.code][
-                              wp.ost_wp.wp_official_code
-                            ][item.id]
-                        }"
-                      >
+                      <tr>
                         <td style="width: 25% !important" *ngIf="i === 0" class="wp-title"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                             {{
                             item.title
@@ -3821,7 +3814,8 @@
                           <td class="talign-center" style="width: 10% !important">
                             {{  getTargetValue(indicator?.targets) }}
                           </td>
-                          <td class="talign-center" style="width: 10% !important">
+                          <td [ngClass]="{ itemIndicatorHasError: itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] }" 
+                              class="talign-center" style="width: 10% !important">
                             <div class="td-flex">
                               <mat-form-field
                               class="form-dialog-content__field"
@@ -3880,7 +3874,8 @@
                                 indicator.id,
                                 wp.ost_wp.wp_official_code,
                                 displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator?.id],
-                                'INDICATOR'
+                                'INDICATOR',
+                                item.id
                                 )"
                               class="budget-assumptions-icon"
                               width="20"
@@ -4421,12 +4416,6 @@
                         "
                       >
                         <tr
-                          [ngClass]="{
-                            itemHasError:
-                              itemHasError[partner.code][
-                                wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                              ][item.id]
-                          }"
                         >
                           <td class="wp-title">
                               {{
@@ -4468,7 +4457,7 @@
                           </ng-container> -->
     
                        
-                          <td>
+                          <td [ngClass]="{ itemHasError: itemHasError[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id] }" >
                             <div class="td-flex">
                               <mat-form-field
                               class="form-dialog-content__field"
@@ -4569,7 +4558,8 @@
                                 item.id,
                                 wp.ost_wp.wp_official_code + '-Cross-Cutting',
                                 displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-Cross-Cutting'][item.id],
-                                'Cross-Cutting'
+                                'Cross-Cutting',
+                                null
                                 )"
                               class="budget-assumptions-icon"
                               width="20"
@@ -4943,7 +4933,12 @@
                         </app-geographic-location>
                         </td>
 
-                        <td>
+                        <td   [ngClass]="{
+                          itemHasError:
+                            itemHasError[partner.code][
+                              wp.ost_wp.wp_official_code + '-partners'
+                            ][item.id]
+                        }">
                           <div class="td-flex">
                             <mat-form-field
                             class="form-dialog-content__field"
@@ -5048,7 +5043,8 @@
                               item.id,
                               wp.ost_wp.wp_official_code + '-partners',
                               displayBudgetValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id],
-                              'PARTNER'
+                              'PARTNER',
+                              null
                               )"
                             class="budget-assumptions-icon"
                             width="20"
@@ -5137,7 +5133,12 @@
                         
                  
                       
-                        <td >
+                        <td    [ngClass]="{
+                          itemHasError:
+                            itemHasError[partner.code][
+                            result?.group?.ost_wp?.wp_official_code + '-project'
+                            ][item.id]
+                        }">
                           <div class="td-flex">
                             <mat-form-field
                             class="form-dialog-content__field"
@@ -5238,7 +5239,8 @@
                             item.id,
                             result?.group?.ost_wp?.wp_official_code + '-project',
                             displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-project'][item.id],
-                            'PROJECT'
+                            'PROJECT',
+                            null
                             )"
                           class="budget-assumptions-icon"
                           width="20"
@@ -5325,7 +5327,12 @@
                     </td>
                         
 
-                        <td>
+                        <td   [ngClass]="{
+                          itemHasError:
+                            itemHasError[partner.code][
+                            result?.group?.ost_wp?.wp_official_code + '-melia'
+                            ][item.id]
+                        }">
                           <div class="td-flex">
                             <mat-form-field
                             class="form-dialog-content__field"
@@ -5426,7 +5433,8 @@
                             item.id,
                             result?.group?.ost_wp?.wp_official_code + '-melia',
                             displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id],
-                            'MELIA'
+                            'MELIA',
+                            null
                             )"
                           class="budget-assumptions-icon"
                           width="20"
