@@ -2318,9 +2318,9 @@
 
 
                     <tr>
-                      <th style="width: 10% !important">Description</th>
+                      <th style="width: 25% !important">Description</th>
                       <th style="width: 10% !important">Type</th>
-                      <th style="width: 25% !important">Geographic Location</th>
+                      <th style="width: 10% !important">Geographic Location</th>
                       <th style="width: 10% !important">Target</th>
                       <th style="width: 10% !important">Budget (USD)</th>
                     </tr>
@@ -2348,13 +2348,13 @@
                             {{  perAllValuesIndicator?.[wp.ost_wp.wp_official_code]?.[item.id]?.[type] }}
                           </td>
                         </ng-container> -->
-                        <td style="width: 10% !important" title="{{ indicator?.description }}" matTooltipPosition="above">
+                        <td style="width: 25% !important" title="{{ indicator?.description }}" matTooltipPosition="above">
                           <span class="truncate-text">{{ indicator?.description }}</span>
                         </td>
                         <td style="width: 10% !important" title="{{ indicator?.type?.name  }}" matTooltipPosition="above">
                           <span class="truncate-text">{{ indicator?.type?.name }}</span>
                         </td>
-                        <td style="width: 25% !important">
+                        <td style="width: 10% !important">
                           {{  getScope(indicator, 'item')  }}
                         </td>
                         <td class="talign-center" style="width: 10% !important">
@@ -3542,172 +3542,10 @@
       </mat-card>
 
 
-      <mat-card>
+     
         <mat-card-title class="card-title-table">
-          {{ partner.acronym }} - Consolidated
-          <app-popover id="1"></app-popover>
+        {{partner.name}} - {{ partner.acronym }}
         </mat-card-title>
-
-        <mat-card-content>
-          <div class="table-box mat-elevation-z8">
-            <table>
-              <tr>
-                <th rowspan="3">Area of Work</th>
-                <th colspan="11">Pooled Funding</th>
-              
-                <th rowspan="3">W3/ Bilateral Project (USD)</th>
-              </tr>
-              <tr>
-                <th colspan="2">Innovation Development</th>
-                <th colspan="2">Knowledge product</th>
-                <th colspan="2">Capacity Sharing</th>
-                <th colspan="2">Others outputs</th>
-                <th rowspan="2">Partner budget</th>
-                <th rowspan="2">MELIA Studies budget</th>
-                <th rowspan="2">Total Pooled Funding budget (USD)</th>
-              </tr>
-              <tr>
-                <th>Target</th>
-                <th>Budget</th>
-                <th>Target</th>
-                <th>Budget</th>
-                <th>Target</th>
-                <th>Budget</th>
-                <th>Target</th>
-                <th>Budget</th>
-              </tr>
-              <ng-container *ngFor="let wp of actualWps?.slice(0, 1)">
-                <tr>
-                  <td class="wp-title">{{ wp.title }}</td>
-                  <td *ngIf="!toggleIndicatorValues">
-                    {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
-                  </td>
-                  <td *ngIf="toggleIndicatorValues">
-                    {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
-                  </td>
-                  <td>
-                    {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
-                  </td>
-                  <td *ngIf="!toggleIndicatorValues">
-                    {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
-                  </td>
-                  <td *ngIf="toggleIndicatorValues">
-                    {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
-                  </td>
-                  <td>
-                    {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
-                  </td>
-                  <td *ngIf="!toggleIndicatorValues">
-                    {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
-                  </td>
-                  <td *ngIf="toggleIndicatorValues">
-                    {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
-                  </td>
-                  <td>
-                    {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
-                  </td>
-                  <td *ngIf="!toggleIndicatorValues">
-                    {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
-                  </td>
-                  <td *ngIf="toggleIndicatorValues">
-                    {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
-                  </td>
-                  <td>
-                    {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
-                  </td>
-          
-                  <td>
-                    {{ roundNumber(
-                    wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-partners']
-                  ) | number }}
-                  </td>
-                  <td>
-                    {{ roundNumber(
-                    wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-melia']
-                  ) | number }}
-                  </td>
-
-                  <td>
-                    {{ roundNumbers([
-                      wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code],
-                      wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-melia'],
-                      wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-Cross-Cutting'],
-                      wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-partners']
-                    ]) | number }}
-                  </td>
-                  <td>
-                    {{
-                      roundNumber(
-                        wp_budgets[partner.code][wp.ost_wp.wp_official_code + '-project']
-                      ) | number
-                    }}
-                  </td>
-                </tr>
-              </ng-container>
-              <tr class="total">
-                <td><div class="subtotal">Total</div></td>
-              
-                <td *ngIf="!toggleIndicatorValues">
-                  {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of innovations (innovation development)')  }}
-                </td>
-                <td *ngIf="toggleIndicatorValues">
-                  {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of innovations (innovation development)'] ?? 0  }}
-                </td>
-                <td>
-                  {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of innovations (innovation development)'] ?? 0 }}
-                </td>
-                <td *ngIf="!toggleIndicatorValues">
-                  {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of knowledge products') }}
-                </td>
-                <td *ngIf="toggleIndicatorValues">
-                  {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of knowledge products'] ?? 0  }}
-                </td>
-                <td>
-                  {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of knowledge products'] ?? 0 }}
-                </td>
-                <td *ngIf="!toggleIndicatorValues">
-                  {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of people trained (capacity sharing for development)')  }}
-                </td>
-                <td *ngIf="toggleIndicatorValues">
-                  {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of people trained (capacity sharing for development)'] ?? 0  }}
-                </td>
-                <td>
-                  {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
-                </td>
-                <td *ngIf="!toggleIndicatorValues">
-                  {{ getTotalIndAllValues(perAllValuesIndicator, 'custom-OUTPUT')  }}
-                </td>
-                <td *ngIf="toggleIndicatorValues">
-                  {{ totalConsolidatedTargetPartner?.[partner.code]?.['custom-OUTPUT'] ?? 0  }}
-                </td>
-                <td>
-                  {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['custom-OUTPUT'] ?? 0 }}
-                </td>
-                <td>
-                  {{ getTotalBudgetForEachPartnerPartner(wp_budgets[partner.code]) }}
-                </td>
-                <td>
-                  {{ getTotalBudgetForEachPartnerMelia(wp_budgets[partner.code]) }}
-                </td>
-                <td>
-                  {{ getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
-                </td>
-                <td>
-                  {{ getTotalBudgetForEachPartnerProject(wp_budgets[partner.code]) }}
-                </td>
-              </tr>
-            </table>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-
-
-
-
-
-
-
 
 
       <mat-tab-group
@@ -4790,9 +4628,9 @@
 
 
                   <tr>
-                    <th style="width: 10% !important">Description</th>
+                    <th style="width: 25% !important">Description</th>
                     <th style="width: 10% !important">Type</th>
-                    <th style="width: 25% !important">Geographic Location</th>
+                    <th style="width: 10% !important">Geographic Location</th>
                     <th style="width: 10% !important">Target</th>
                     <th style="width: 10% !important">Budget (USD)</th>
                   </tr>
@@ -4824,13 +4662,13 @@
 
   
                         <!-- <ng-container *ngFor="let indicator of item.indicators"> -->
-                          <td style="width: 10% !important">
+                          <td style="width: 25% !important">
                             {{  indicator?.description }}
                           </td>
                           <td style="width: 10% !important">
                             {{  indicator?.type?.name }}
                           </td>
-                          <td style="width: 25% !important">
+                          <td style="width: 10% !important">
                             {{  getScope(indicator, 'item')  }}
                           </td>
                           <td class="talign-center" style="width: 10% !important">
