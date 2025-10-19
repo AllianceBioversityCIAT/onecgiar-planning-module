@@ -236,6 +236,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   
   timeCalc: any;
   async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean, item_type: string | null = null, socket: boolean) {
+
+    console.log("changeCalc called");
     if (this.timeCalc) clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
       let percentValue = 0;
@@ -319,11 +321,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
    
       this.sammaryCalc();
       this.validateCenter(partner_code, false);
-    }, 1250); 
-    this.initiative_data = await this.submissionService.getInitiative(
+
+      this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
     this.getInitStatus(this.initiative_data);
+    }, 1250); 
+   
     // localStorage.setItem('initiatives', JSON.stringify(this.values));
   } 
 
@@ -386,6 +390,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
   budgetTime: any;
   async wpBudgetChange(partner_code: any, wp_id: any, budget: any, refresh: boolean) {
+    console.log(' sdasdasd =>>>>>>>',budget);
     if (this.budgetTime) clearTimeout(this.budgetTime);
     this.budgetTime = setTimeout(async () => {
       const result = await this.submissionService.saveWpBudget(this.params.id, {
@@ -412,7 +417,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           );
           this.getInitStatus(this.initiative_data);
         }
-    }, 1000);
+    }, 1250);
   }
 
   percentValue(value: number, totalBudget: number) {
@@ -553,7 +558,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
   tabChangedAOW(aow: any) {
     this.updateChildPath(aow.index);
-    setTimeout(() => window.scrollTo({ top: this.currentScroll }));
   }
   updateChildPath(index: any) {
      this.location.replaceState(
