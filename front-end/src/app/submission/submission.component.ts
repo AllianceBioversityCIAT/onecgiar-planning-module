@@ -2058,15 +2058,37 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.getAllMeliasLength()
   }
 
+  // setvaluesForIndicators(data: any[]) { 
+  //   const indicatorIds = this.results[this.results.length - 1].indicator_ids;
+  //   const ids = Object.values(indicatorIds);
+  //   const filtered = data.filter(item => ids.includes(item.result_uuid));
+  //   for(let value of filtered) {
+  //     this.displayBudgetValuesIndicator[value.organization_code][value.workPackage.wp_official_code][value.parent_id][value.result_uuid] = Number(value.budget);      
+  //   }
+  //   this.sammaryCalc();
+  // } 
+
   setvaluesForIndicators(data: any[]) {
     const indicatorIds = this.results[this.results.length - 1].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
-    for(let value of filtered) {
-      this.displayBudgetValuesIndicator[value.organization_code][value.workPackage.wp_official_code][value.parent_id][value.result_uuid] = Number(value.budget);      
+  
+    for (let value of filtered) {
+      const org = value.organization_code;
+      const wp = value.workPackage.wp_official_code;
+      const parent = value.parent_id;
+      const result = value.result_uuid;
+  
+      this.displayBudgetValuesIndicator[org] ??= {};
+      this.displayBudgetValuesIndicator[org][wp] ??= {};
+      this.displayBudgetValuesIndicator[org][wp][parent] ??= {};
+  
+      this.displayBudgetValuesIndicator[org][wp][parent][result] = Number(value.budget);
     }
+  
     this.sammaryCalc();
   }
+  
 
   setPartnervaluesForIndicators(data: any[]) {  
     const indicatorIds = this.results[this.results.length - 1].indicator_ids;
