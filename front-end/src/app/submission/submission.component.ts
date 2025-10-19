@@ -1568,7 +1568,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log('partnersData', this.partnersData)
+    console.log('actualWps', this.actualWps)
     
 
     //sort WP titles
