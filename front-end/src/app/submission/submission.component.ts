@@ -137,6 +137,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   partnersValidate: any = {};
   centerHasError: any = {};
   itemHasError: any = {};
+  itemIndicatorHasError: any = {};
   tocSubmissionData: any;
   check(values: any, code: string, id: number, item_id: string) {
     if (values[code] && values[code][id] && values[code][id][item_id]) {
@@ -1033,7 +1034,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.partnersValidate = {};
     this.centerHasError = {};
     this.itemHasError = {};
-
+    this.itemIndicatorHasError = {};
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -1273,6 +1274,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.centerHasError[partner.code] = false;
       if (!this.itemHasError[partner.code])
         this.itemHasError[partner.code] = {};
+      if (!this.itemIndicatorHasError[partner.code])
+        this.itemIndicatorHasError[partner.code] = {};
 
       for(let wp of this.actualWps) {
         if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code]) {
@@ -1318,6 +1321,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.summaryBudgetsTotal[wp.ost_wp.wp_official_code] = 0;
         if (!this.itemHasError[partner.code][wp.ost_wp.wp_official_code])
           this.itemHasError[partner.code][wp.ost_wp.wp_official_code] = {};
+        if (!this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code])
+          this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code] = {};
 
         const result = await this.getDataForWp(
           wp.id,
@@ -1412,8 +1417,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.noValuesAssigned[partner.code][wp.ost_wp.wp_official_code][
             item.id
           ] = false;
-          this.itemHasError[partner.code][wp.ost_wp.wp_official_code][item.id] =
-            false;
+          this.itemHasError[partner.code][wp.ost_wp.wp_official_code][item.id] = false;
+
+          this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id] = {};
+          if(item?.quantitative_indicators?.length) {
+            item?.quantitative_indicators.forEach((indicator: any) =>{
+              this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] = false;
+            });
+          }
+
           if (!this.summaryBudgets[wp.ost_wp.wp_official_code][item.id])
             this.summaryBudgets[wp.ost_wp.wp_official_code][item.id] = 0;
           if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id])
@@ -1556,7 +1568,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log('anaplanBudgets', this.anaplanBudgets)
+    console.log('partnersData', this.partnersData)
     
 
     //sort WP titles
@@ -2591,10 +2603,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     let valid = true;
     let message = "";
     Object.keys(this.partnersData[partner_code]).forEach((wp_id) => {
-      let result = this.validateWp(partner_code, wp_id);
-      if (!result.valid) {
-        valid = result.valid;
-        message = result.message;
+      for(let wp of this.actualWps){
+        let result = this.validateWp(partner_code, wp_id, wp.ost_wp.wp_official_code);
+        if (!result.valid) {
+          valid = result.valid;
+          message = result.message;
+        }
       }
     });
     if (is_mark) {
@@ -2608,7 +2622,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     };
   }
 
-  validateWp(partner_code: any, wp_id: any) { 
+  validateWp(partner_code: any, wp_id: any, wp_official_code: string) { 
     const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting '];
     const isIncluded = validateWp.some(item => wp_id.toLowerCase().includes(item.toLowerCase()));
 
@@ -2616,6 +2630,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     let wpChecked = false;
     let message = "";
     let hasBudget = false;
+    const relatedBudgets = [
+      this.wp_budgets[partner_code]?.[wp_official_code],
+      this.wp_budgets[partner_code]?.[wp_official_code + '-melia'],
+      this.wp_budgets[partner_code]?.[wp_official_code + '-Cross-Cutting'],
+      this.wp_budgets[partner_code]?.[wp_official_code + '-partners']
+    ];
+    const totalRelatedBudget = this.roundNumbers(relatedBudgets);
+    const wpTotal = this.getWpTotals(partner_code, wp_official_code);
+
     let total: any = Object.values(this.budgetValues[partner_code][wp_id]).reduce((sum: any, val: any) => sum + val, 0);
     if (!this.partnersData[partner_code][wp_id]) {
       return {
@@ -2644,6 +2667,38 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     //     if (perChecked) wpChecked = true;
     //   }
     // });
+
+    this.partnersData[partner_code][wp_id].forEach((item: any) => {
+      if (item.category == 'OUTPUT') {
+        if(item.quantitative_indicators) {
+          item.quantitative_indicators.forEach((indicator: any) => {
+              const hasBudgetAssumptions = this.hasBudgetAssumptions(partner_code, indicator.id, wp_id);
+              const budgetIndicator = this.displayBudgetValuesIndicator[partner_code][wp_id][item.id][indicator.id];
+    
+              if(budgetIndicator && !hasBudgetAssumptions) {
+                valid = false;
+                this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = true;
+                message = "There is a budget without budjet assumption"
+              } else {
+                this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = false;
+              }
+          });
+        }
+      } else {
+        const hasBudgetAssumptions = this.hasBudgetAssumptions(partner_code, item.id, wp_id);
+        const budgetItem = this.displayBudgetValues[partner_code][wp_id][item.id];
+
+        if(budgetItem && !hasBudgetAssumptions) {
+          valid = false;
+          this.itemHasError[partner_code][wp_id][item.id] = true;
+          message = "There is a budget without budjet assumption"
+        } else {
+          this.itemHasError[partner_code][wp_id][item.id] = false;
+        }
+      }
+    });
+
+
     if(isIncluded){
       this.errors[partner_code][wp_id] = null;
       if (
@@ -2654,7 +2709,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.errors[partner_code][wp_id] =
           "There is a work package with a budget not disaggregated";
         message = "There is a work package with a budget not disaggregated";
-      } else if (
+      } else if (Math.round(totalRelatedBudget) !== Math.round(wpTotal)) {
+        valid = false;
+
+        this.errors[partner_code][wp_id] =
+          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Sub-total of each AOW Anaplan.";
+        message =
+          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Sub-total of each AOW Anaplan.";
+      }  else if (
         // wpChecked &&
         // hasBudget &&
         (Math.round(total) !== 0 &&  Number(this.wp_budgets[partner_code][wp_id]) !== 0)
@@ -3017,7 +3079,7 @@ totalConsolidatedTargetPartner: any;
     }
   }
 
-  openBudgetAssumptionsDialog(partner: number, item_id: string, wp_id: string, budget: number, type: string) {
+  openBudgetAssumptionsDialog(partner: number, item_id: string, wp_id: string, budget: number, type: string, parent_id: any) { 
     const data ={ 
       organization_code: partner,
       item_id: item_id,
@@ -3039,9 +3101,22 @@ totalConsolidatedTargetPartner: any;
       if (dialogResult) {
         this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
         this.hasBudgetAssumptions(dialogResult.data.organization_code, dialogResult.data.item_id, dialogResult.data.wp_id);
+        if(parent_id)
+          this.itemIndicatorHasError[partner][wp_id][parent_id][item_id] = false;
+        else
+          this.itemHasError[partner][wp_id][item_id] = false;
       }
     });
-  } 
+  }  
+
+  selectIfZero(event: FocusEvent) {
+    const input = event.target as HTMLInputElement;
+    const value = parseFloat(input.value.replace(/,/g, ''));
+    if (value === 0 || isNaN(value)) {
+      input.select();
+    }
+  }
+  
 
   openBudgetAssumptionsDialogSummary(item_id: string) {
     console.log(item_id)
