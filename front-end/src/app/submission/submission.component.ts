@@ -1948,41 +1948,89 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   //set values for item-indicator and budget (front-end)
+  // setItemIndicatorAndBudget() {
+  //   Object.keys(this.displayBudgetValuesIndicator).forEach((code) => {
+  //     Object.keys(this.displayBudgetValuesIndicator[code]).forEach((wp_id) => {
+  //       Object.keys(this.displayBudgetValuesIndicator[code][wp_id]).forEach((item_id) => {
+  //         let sum = 0;
+  //         let total = 0;
+    
+  //         Object.keys(this.displayBudgetValuesIndicator[code][wp_id][item_id]).forEach((indicator_id) => {
+  //           const value = this.displayBudgetValuesIndicator[code][wp_id][item_id][indicator_id];
+  //           sum += Number(value) || 0; 
+  //         });
+    
+  //         if (!this.displayBudgetValuesItemIndicator[code]) {
+  //           this.displayBudgetValuesItemIndicator[code] = {};
+  //         }
+  //         if (!this.displayBudgetValuesItemIndicator[code][wp_id]) {
+  //           this.displayBudgetValuesItemIndicator[code][wp_id] = {};
+  //         }
+    
+  //         this.displayBudgetValuesItemIndicator[code][wp_id][item_id] = sum;
+
+  //         this.budgetValues[code][wp_id][item_id] = sum;
+  //         this.displayBudgetValues[code][wp_id][item_id] = sum;
+
+
+  //         Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach(val => {
+  //           if (typeof val === "number") {
+  //             total += Number(val) || 0;
+  //           } 
+  //         });
+  //         this.wp_budgets[code][wp_id] = total;
+  //       });
+  //     });
+  //   });
+  // }
+
   setItemIndicatorAndBudget() {
+    if (!this.displayBudgetValuesIndicator) return;
+  
     Object.keys(this.displayBudgetValuesIndicator).forEach((code) => {
-      Object.keys(this.displayBudgetValuesIndicator[code]).forEach((wp_id) => {
-        Object.keys(this.displayBudgetValuesIndicator[code][wp_id]).forEach((item_id) => {
+      const orgObj = this.displayBudgetValuesIndicator[code];
+      if (!orgObj) return;
+  
+      Object.keys(orgObj).forEach((wp_id) => {
+        const wpObj = orgObj[wp_id];
+        if (!wpObj) return;
+  
+        Object.keys(wpObj).forEach((item_id) => {
+          const itemObj = wpObj[item_id];
+          if (!itemObj) return;
+  
           let sum = 0;
           let total = 0;
-    
-          Object.keys(this.displayBudgetValuesIndicator[code][wp_id][item_id]).forEach((indicator_id) => {
-            const value = this.displayBudgetValuesIndicator[code][wp_id][item_id][indicator_id];
-            sum += Number(value) || 0; 
+  
+          Object.keys(itemObj).forEach((indicator_id) => {
+            const value = itemObj[indicator_id];
+            sum += Number(value) || 0;
           });
-    
-          if (!this.displayBudgetValuesItemIndicator[code]) {
-            this.displayBudgetValuesItemIndicator[code] = {};
-          }
-          if (!this.displayBudgetValuesItemIndicator[code][wp_id]) {
-            this.displayBudgetValuesItemIndicator[code][wp_id] = {};
-          }
-    
+  
+          this.displayBudgetValuesItemIndicator[code] ??= {};
+          this.displayBudgetValuesItemIndicator[code][wp_id] ??= {};
+          this.budgetValues[code] ??= {};
+          this.budgetValues[code][wp_id] ??= {};
+          this.displayBudgetValues[code] ??= {};
+          this.displayBudgetValues[code][wp_id] ??= {};
+          this.wp_budgets[code] ??= {};
+  
           this.displayBudgetValuesItemIndicator[code][wp_id][item_id] = sum;
-
           this.budgetValues[code][wp_id][item_id] = sum;
           this.displayBudgetValues[code][wp_id][item_id] = sum;
-
-
-          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach(val => {
+  
+          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach((val) => {
             if (typeof val === "number") {
               total += Number(val) || 0;
-            } 
+            }
           });
+  
           this.wp_budgets[code][wp_id] = total;
         });
       });
     });
   }
+  
   setvalues(valuesToSet: any, perValuesToSet: any, noBudget: any) {
     if (valuesToSet != null)
       Object.keys(this.values).forEach((code) => {
