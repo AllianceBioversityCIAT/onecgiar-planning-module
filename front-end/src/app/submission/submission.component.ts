@@ -1842,10 +1842,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     this.socket.on("setDataAnaplan", (data: any) => {
       if (this.params.id == data.initiative_id) {
-        this.anaplanBudgets[data.organization_code][data.wp_id][data.anaplan_id] = data.value;
-        this.getWpTotals(data.organization_code, data.wp_id);
-        this.getTotalsByAnaplan(data.organization_code, data.anaplan_id);
-        this.getAnaplanTotal(data.organization_code);
+        this.anaplanBudgets[data.organization.code][data.wp_id][data.anaplan_id] = data.value;
+        this.getWpTotals(data.organization.code, data.wp_id);
+        this.getTotalsByAnaplan(data.organization.code, data.anaplan_id);
+        this.getAnaplanTotal(data.organization.code);
       }
     });
     this.socket.on("validateOfCenter", (data: any) => {
@@ -3236,10 +3236,10 @@ totalConsolidatedTargetPartner: any;
     }
   }
   
-  anaplanCalc(organization_code: number, anaplan_id: number, wp_id: number) {
-    const value = this.anaplanBudgets[organization_code][wp_id][anaplan_id];
+  anaplanCalc(organization: any, anaplan_id: number, wp_id: number) {
+    const value = this.anaplanBudgets[organization.code][wp_id][anaplan_id];
     const initiative_id = this.initiative_data.id;
-    const data = { organization_code, anaplan_id, wp_id, value, initiative_id};
+    const data = { organization, anaplan_id, wp_id, value, initiative_id};
   
     clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
@@ -3247,7 +3247,7 @@ totalConsolidatedTargetPartner: any;
           () => {
             this.socket.emit("setDataAnaplan", {
               initiative_id,
-              organization_code,
+              organization,
               wp_id,
               anaplan_id,
               value,

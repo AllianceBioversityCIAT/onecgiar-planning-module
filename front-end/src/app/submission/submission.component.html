@@ -4142,7 +4142,7 @@
                                 partner.code,
                                 wp.ost_wp.wp_official_code + '-partners',
                                 item.id,
-                                item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                item.name,
                                 per.id,
                                 item.category,
                                 $event
@@ -4352,7 +4352,7 @@
                                 mask="separator.2"
                                 thousandSeparator=","
                                 [(ngModel)]="anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][anaplan.id]"
-                                (keyup)="anaplanCalc(partner.code,anaplan.id, wp.ost_wp.wp_official_code)"
+                                (keyup)="anaplanCalc(partner,anaplan.id, wp.ost_wp.wp_official_code)"
                                 (focus)="selectIfZero($event)"
                                 [disabled]="
                                   partnersStatus[partner.code] ||
@@ -5933,7 +5933,7 @@
                                   partner.code,
                                   wp.ost_wp.wp_official_code + '-partners',
                                   item.id,
-                                  item?.ipsr?.id ? item?.ipsr.title : item.title,
+                                  item.name,
                                   per.id,
                                   item.category,
                                   $event
@@ -6552,7 +6552,7 @@
                                   mask="separator.2"
                                   thousandSeparator=","
                                   [(ngModel)]="anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][anaplan.id]"
-                                  (keyup)="anaplanCalc(partner.code,anaplan.id, wp.ost_wp.wp_official_code)"
+                                  (keyup)="anaplanCalc(partner,anaplan.id, wp.ost_wp.wp_official_code)"
                                   (focus)="selectIfZero($event)"
                                   [disabled]="
                                     partnersStatus[partner.code] ||
