@@ -23,8 +23,13 @@ export class AnaplanService {
   ) {}
 
   findAll() {
-    return this.repo.find();
+    return this.repo.find({
+      order: {
+        label: 'ASC',
+      },
+    });
   }
+  
 
   findAllValues(id: number) {
     return this.anaplanValuesRepo.find({

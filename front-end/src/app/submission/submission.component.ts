@@ -1055,9 +1055,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.code
     );
 
-    this.partnersMelia = this.partnersProjectMelia.melias;
-    this.partnersProject = this.partnersProjectMelia.projects;
-
+    this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
+    this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
+    
  
       const cross_data = await this.submissionService.getCrossByInitiative(
         this.params.id
@@ -1572,17 +1572,22 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     //sort WP titles
-    this.wps.forEach((d: any) => {
-      if (d.category == "WP") {
-        let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
-          .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+    // this.wps.forEach((d: any) => {
+    //   if (d.category == "WP") {
+    //     let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+    //       .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-        let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-          .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+    //     let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+    //       .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
 
-        this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
-      }
-    })
+    //     this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+    //   }
+    // })
+
+  this.sort(this.allData);
+  this.sort(this.partnersData);
+
+
   }
   savedValues: any = null;
   savedValuesForIndicator: any = null;
@@ -3418,5 +3423,30 @@ totalConsolidatedTargetPartner: any;
   haveselectedCountry(data: any[]) {
     return data.some(item => item.selectedCountries.length);
   }
+  sort(obj: any): void {
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+  
+      if (Array.isArray(value)) {
+        value.sort((a, b) => {
+          const textA = (a.name || a.title || '').toLowerCase();
+          const textB = (b.name || b.title || '').toLowerCase();
+          return textA.localeCompare(textB);
+        });
+      } else if (typeof value === 'object' && value !== null) {
+        this.sort(value);
+      }
+    });
+  }
+  sortByNameOrTitle(arr: any[]): any[] {
+    if (!Array.isArray(arr)) return arr;
+  
+    return [...arr].sort((a, b) => {
+      const textA = (a.name || a.title || '').trim().toLowerCase();
+      const textB = (b.name || b.title || '').trim().toLowerCase();
+      return textA.localeCompare(textB);
+    });
+  }
+  
   
 }
