@@ -1539,6 +1539,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
     this.setvaluesForIndicators(this.savedValuesForIndicator);
     this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
+    console.log('allBudgetAssumptions', this.allBudgetAssumptions);
 
     this.setTotalTargetForIndicators();
     this.setTotalTargetForIndicatorsForPartners()
@@ -1751,7 +1752,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       'custom-OUTCOME'
     ];
 
-    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
@@ -3160,7 +3161,8 @@ totalConsolidatedTargetPartner: any;
       item_id: item_id,
       wp_id: wp_id,
       item_budget: budget,
-      type: type
+      type: type,
+      phase_id: this.phase.id
     }
     this.dialog
     .open(BudgetAssumptionsComponent, {
@@ -3174,7 +3176,7 @@ totalConsolidatedTargetPartner: any;
     }).afterClosed()
     .subscribe(async dialogResult => {
       if (dialogResult) {
-        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
+        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
         this.hasBudgetAssumptions(dialogResult.data.organization_code, dialogResult.data.item_id, dialogResult.data.wp_id);
         if(parent_id)
           this.itemIndicatorHasError[partner][wp_id][parent_id][item_id] = false;
