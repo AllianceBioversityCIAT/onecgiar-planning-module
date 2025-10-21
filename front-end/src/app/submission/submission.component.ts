@@ -556,15 +556,39 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   );
   this.selectedTabIndex = tab.index;
   }
-  tabChangedAOW(aow: any) {
-    this.updateChildPath(aow.index);
+  // tabChangedAOW(aow: any) {
+  //   this.updateChildPath(aow.index);
+  // }
+  // updateChildPath(index: any) {
+  //    this.location.replaceState(
+  //   this.router.url.split('?')[0], // keep current path
+  //   `tab=${this.selectedTabIndex}&AOW=${index}`        // new query params
+  //  );
+  //  this.selectedTabIndexAOW = index;
+  // }
+
+  isUpdatingTab = false;
+
+  tabChangedAOW(event: any) {
+    if (this.isUpdatingTab) return;
+  
+    const newIndex = event.index;
+  
+    this.isUpdatingTab = true;
+  
+    this.updateURL(newIndex);
+  
+    setTimeout(() => {
+      this.selectedTabIndexAOW = newIndex;
+      this.isUpdatingTab = false;
+    });
   }
-  updateChildPath(index: any) {
-     this.location.replaceState(
-    this.router.url.split('?')[0], // keep current path
-    `tab=${this.selectedTabIndex}&AOW=${index}`        // new query params
-   );
-   this.selectedTabIndexAOW = index;
+  
+  updateURL(newIndex: number) {
+    this.location.replaceState(
+      this.router.url.split('?')[0],
+      `tab=${this.selectedTabIndex}&AOW=${newIndex}`
+    );
   }
   async changes(
     partner_code: any,
