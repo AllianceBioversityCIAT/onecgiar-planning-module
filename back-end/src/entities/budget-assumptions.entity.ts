@@ -7,6 +7,7 @@ import {
   } from 'typeorm';
   import { ApiProperty } from '@nestjs/swagger';
 import { Organization } from './organization.entity';
+import { Phase } from './phase.entity';
 
   @Entity()
   export class BudgetAssumptions {
@@ -22,6 +23,15 @@ import { Organization } from './organization.entity';
     @ManyToOne(() => Organization)
     @JoinColumn({ name: 'organization_code' })
     organization: Organization;
+
+    @ApiProperty()
+    @Column({ nullable: true })
+    phase_id: number;
+  
+    @ApiProperty()
+    @ManyToOne(() => Phase)
+    @JoinColumn({ name: 'phase_id' })
+    phase: Phase;
 
 
     @ApiProperty()

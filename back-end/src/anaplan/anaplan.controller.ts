@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post , Request, UseGuards} from '@nestjs/common';
 import { AnaplanService } from './anaplan.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
-
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+@UseGuards(JwtAuthGuard)
 @Controller('anaplan')
 export class AnaplanController {
     constructor(private service: AnaplanService) {}
@@ -21,7 +22,7 @@ export class AnaplanController {
 
     @ApiBearerAuth()
     @Post()
-    create(@Body() body) {
-      return this.service.createOrUpdate(body);
+    create(@Body() body, @Request() req) {
+      return this.service.createOrUpdate(body, req.user);
     }
 }

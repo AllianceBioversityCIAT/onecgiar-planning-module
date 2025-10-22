@@ -43,13 +43,13 @@
                     <ng-container *ngIf="history.organization">
                         <div class="section">
                             <span>{{history.organization?.acronym}}</span><span
-                                *ngIf="history.work_package">/{{history.work_package?.acronym}}</span>
+                                *ngIf="history.work_package">/{{history.work_package?.acronym ?? history.work_package?.name}}</span>
                         </div>
                         <div class="section" *ngIf="history.item_name">
                             <span>{{ history.item_name }}</span>
                         </div>
                         <div class="section" *ngIf="history.period">
-                            Period : <span>{{history.period.year}}</span>-<span>{{history.period.quarter}}</span>
+                            <span>{{'Contracted Partners - Pooled funding'}}</span>
                         </div>
                         <div class="section"
                             *ngIf="history?.resource_property != 'Checked period' && history?.resource_property != 'unchecked period' && history?.resource_property != 'Checked result as no budget assigned' && history?.resource_property != 'unchecked result as no budget assigned'">

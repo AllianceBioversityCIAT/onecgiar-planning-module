@@ -32,9 +32,9 @@ export class BudgetAssumptionsService {
   }
 
 
-  async getAll() {
+  async getAll(phase_id: number) {
     return firstValueFrom(
-      this.http.get(environment.api_url+"/budget-assumptions/all").pipe(map((d: any) => d))
+      this.http.get(environment.api_url+"/budget-assumptions/all/" + phase_id).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
 }

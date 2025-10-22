@@ -556,15 +556,39 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   );
   this.selectedTabIndex = tab.index;
   }
-  tabChangedAOW(aow: any) {
-    this.updateChildPath(aow.index);
+  // tabChangedAOW(aow: any) {
+  //   this.updateChildPath(aow.index);
+  // }
+  // updateChildPath(index: any) {
+  //    this.location.replaceState(
+  //   this.router.url.split('?')[0], // keep current path
+  //   `tab=${this.selectedTabIndex}&AOW=${index}`        // new query params
+  //  );
+  //  this.selectedTabIndexAOW = index;
+  // }
+
+  isUpdatingTab = false;
+
+  tabChangedAOW(event: any) {
+    if (this.isUpdatingTab) return;
+  
+    const newIndex = event.index;
+  
+    this.isUpdatingTab = true;
+  
+    this.updateURL(newIndex);
+  
+    setTimeout(() => {
+      this.selectedTabIndexAOW = newIndex;
+      this.isUpdatingTab = false;
+    });
   }
-  updateChildPath(index: any) {
-     this.location.replaceState(
-    this.router.url.split('?')[0], // keep current path
-    `tab=${this.selectedTabIndex}&AOW=${index}`        // new query params
-   );
-   this.selectedTabIndexAOW = index;
+  
+  updateURL(newIndex: number) {
+    this.location.replaceState(
+      this.router.url.split('?')[0],
+      `tab=${this.selectedTabIndex}&AOW=${newIndex}`
+    );
   }
   async changes(
     partner_code: any,
@@ -1055,9 +1079,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.code
     );
 
-    this.partnersMelia = this.partnersProjectMelia.melias;
-    this.partnersProject = this.partnersProjectMelia.projects;
-
+    this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
+    this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
+    
  
       const cross_data = await this.submissionService.getCrossByInitiative(
         this.params.id
@@ -1539,6 +1563,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
     this.setvaluesForIndicators(this.savedValuesForIndicator);
     this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
+    console.log('allBudgetAssumptions', this.allBudgetAssumptions);
 
     this.setTotalTargetForIndicators();
     this.setTotalTargetForIndicatorsForPartners()
@@ -1572,17 +1597,22 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     //sort WP titles
-    this.wps.forEach((d: any) => {
-      if (d.category == "WP") {
-        let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
-          .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+    // this.wps.forEach((d: any) => {
+    //   if (d.category == "WP") {
+    //     let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+    //       .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-        let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-          .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+    //     let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+    //       .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
 
-        this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
-      }
-    })
+    //     this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+    //   }
+    // })
+
+  this.sort(this.allData);
+  this.sort(this.partnersData);
+
+
   }
   savedValues: any = null;
   savedValuesForIndicator: any = null;
@@ -1746,7 +1776,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       'custom-OUTCOME'
     ];
 
-    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
@@ -1842,10 +1872,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     this.socket.on("setDataAnaplan", (data: any) => {
       if (this.params.id == data.initiative_id) {
-        this.anaplanBudgets[data.organization_code][data.wp_id][data.anaplan_id] = data.value;
-        this.getWpTotals(data.organization_code, data.wp_id);
-        this.getTotalsByAnaplan(data.organization_code, data.anaplan_id);
-        this.getAnaplanTotal(data.organization_code);
+        this.anaplanBudgets[data.organization.code][data.wp_id][data.anaplan_id] = data.value;
+        this.getWpTotals(data.organization.code, data.wp_id);
+        this.getTotalsByAnaplan(data.organization.code, data.anaplan_id);
+        this.getAnaplanTotal(data.organization.code);
       }
     });
     this.socket.on("validateOfCenter", (data: any) => {
@@ -3155,7 +3185,8 @@ totalConsolidatedTargetPartner: any;
       item_id: item_id,
       wp_id: wp_id,
       item_budget: budget,
-      type: type
+      type: type,
+      phase_id: this.phase.id
     }
     this.dialog
     .open(BudgetAssumptionsComponent, {
@@ -3169,7 +3200,7 @@ totalConsolidatedTargetPartner: any;
     }).afterClosed()
     .subscribe(async dialogResult => {
       if (dialogResult) {
-        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
+        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
         this.hasBudgetAssumptions(dialogResult.data.organization_code, dialogResult.data.item_id, dialogResult.data.wp_id);
         if(parent_id)
           this.itemIndicatorHasError[partner][wp_id][parent_id][item_id] = false;
@@ -3236,10 +3267,10 @@ totalConsolidatedTargetPartner: any;
     }
   }
   
-  anaplanCalc(organization_code: number, anaplan_id: number, wp_id: number) {
-    const value = this.anaplanBudgets[organization_code][wp_id][anaplan_id];
+  anaplanCalc(organization: any, anaplan_id: number, wp_id: number) {
+    const value = this.anaplanBudgets[organization.code][wp_id][anaplan_id];
     const initiative_id = this.initiative_data.id;
-    const data = { organization_code, anaplan_id, wp_id, value, initiative_id};
+    const data = { organization, anaplan_id, wp_id, value, initiative_id};
   
     clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
@@ -3247,7 +3278,7 @@ totalConsolidatedTargetPartner: any;
           () => {
             this.socket.emit("setDataAnaplan", {
               initiative_id,
-              organization_code,
+              organization,
               wp_id,
               anaplan_id,
               value,
@@ -3418,5 +3449,30 @@ totalConsolidatedTargetPartner: any;
   haveselectedCountry(data: any[]) {
     return data.some(item => item.selectedCountries.length);
   }
+  sort(obj: any): void {
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+  
+      if (Array.isArray(value)) {
+        value.sort((a, b) => {
+          const textA = (a.name || a.title || '').toLowerCase();
+          const textB = (b.name || b.title || '').toLowerCase();
+          return textA.localeCompare(textB);
+        });
+      } else if (typeof value === 'object' && value !== null) {
+        this.sort(value);
+      }
+    });
+  }
+  sortByNameOrTitle(arr: any[]): any[] {
+    if (!Array.isArray(arr)) return arr;
+  
+    return [...arr].sort((a, b) => {
+      const textA = (a.name || a.title || '').trim().toLowerCase();
+      const textB = (b.name || b.title || '').trim().toLowerCase();
+      return textA.localeCompare(textB);
+    });
+  }
+  
   
 }

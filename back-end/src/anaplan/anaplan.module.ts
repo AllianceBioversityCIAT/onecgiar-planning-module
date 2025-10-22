@@ -6,10 +6,12 @@ import { Anaplan } from 'src/entities/anaplan.entity';
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
+import { History } from 'src/entities/history.entity';
+import { Initiative } from 'src/entities/initiative.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Anaplan, AnaplanValues, WorkPackage]),
+    TypeOrmModule.forFeature([Anaplan, Initiative, AnaplanValues, WorkPackage, History]),
   ],
   controllers: [AnaplanController],
   providers: [AnaplanService],

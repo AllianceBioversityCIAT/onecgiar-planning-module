@@ -9,6 +9,7 @@ import {
 import { Submission } from './submission.entity';
 // import { AnticipatedYear } from './anticipated-year.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { BudgetAssumptions } from './budget-assumptions.entity';
 
 export enum phaseStatus {
   OPEN = 'open',
@@ -61,9 +62,8 @@ export class Phase {
   @OneToMany(() => Period, (period) => period.phase)
   periods: Period[];
 
-  // @ApiProperty()
-  // @OneToMany(() => AnticipatedYear, (AnticipatedYear) => AnticipatedYear.phase)
-  // AnticipatedYear: AnticipatedYear[];
+  @OneToMany(() => BudgetAssumptions, (BudgetAssumptions) => BudgetAssumptions.phase)
+  Budget_assumptions: BudgetAssumptions[];
 
   @ApiProperty()
   @OneToMany(() => Submission, (submission) => submission.phase)
