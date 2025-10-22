@@ -3255,8 +3255,8 @@ totalConsolidatedTargetPartner: any;
 
   hasBudgetAssumptionsSummary(itemId: number, wpId: string): boolean { 
     return this.allBudgetAssumptions.some(a =>
-      a.item_id === itemId &&
-      a.wp_id === wpId
+      a.item_id == itemId &&
+      a.wp_id == wpId
     );
   } 
 
