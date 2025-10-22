@@ -266,6 +266,7 @@ export class SubmissionController {
                 
                 if (items.quantitative_indicators?.length && (items.category == 'OUTPUT' || items.category == 'OUTCOME')) {
                   const sumPooledFundedByType: Record<string, number> = {};
+                  let pooledCenters=[];
                   const sumProjectByType: Record<string, any> = {};
 
                   for (const indicator of items.quantitative_indicators) {
@@ -276,7 +277,9 @@ export class SubmissionController {
                       indicator.id = indicator.related_node_id
                     }
                     indicatorIds.push(indicator.id);
+                
                     for (const target of indicator.targets) {
+                      pooledCenters =[ ...pooledCenters , ...target.centers]
                           const value = parseFloat(target[activePhase.reportingYear]); 
                           if (!isNaN(value)) {
                             if(indicatorType == 'custom')
@@ -285,8 +288,10 @@ export class SubmissionController {
                           }
                     }
                   }
-    
+                
+         
                   items.pooled_funded_indicator_values = sumPooledFundedByType;
+                  items.pooled_centers = [...new Set(pooledCenters)]
                   items.projects_indicator_values = sumProjectByType;
 
                 }

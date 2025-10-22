@@ -1356,10 +1356,19 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           wp.ost_wp.acronym,
           wp.category
         );
+     
+        console.log('RESULT', )
+        
         if (result.length) {
           if (!this.partnersData[partner.code])
             this.partnersData[partner.code] = {};
+
+         const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT' || 'OUTCOME'))
+          if(filterd_results.length > 0 && this.toggleIndicatorValues)
+          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT' || 'OUTCOME')),...filterd_results.filter((d:any)=> d.pooled_centers.map((d:any)=>d.code).includes(partner.code))];
+         else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
+          // this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
         }
 
         if (!this.perValuesSammary[wp.ost_wp.wp_official_code])
