@@ -1584,7 +1584,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
       this.allData["IPSR"] = newIPSR;
     }
-      
+ 
     const firstKey = Object.keys(this.allData)[0];
     //sort first AOW
       const newCROSS = this.allData[firstKey].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
@@ -3245,11 +3245,11 @@ totalConsolidatedTargetPartner: any;
     }, 0);
   }
 
-  hasBudgetAssumptions(partnerCode: string, itemId: number, wpId: string): boolean {
+  hasBudgetAssumptions(partnerCode: number, itemId: any, wpId: string): boolean {
     return this.allBudgetAssumptions.some(a =>
-      a.organization_code === partnerCode &&
-      a.item_id === itemId &&
-      a.wp_id === wpId
+      a.organization_code == partnerCode &&
+      a.item_id == itemId &&
+      a.wp_id == wpId
     );
   }
 
