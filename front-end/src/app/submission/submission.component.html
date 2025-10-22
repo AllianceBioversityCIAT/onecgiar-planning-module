@@ -328,7 +328,7 @@
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                        ) | number
+                        ) | number : "1.2-2"
                       }}
                     </td>
                   </tr>
@@ -346,7 +346,7 @@
                     </td>
                   </ng-container>
                   <td>{{ wpsTotalSum | number : "1.2-2" }}%</td>
-                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number }}</td>
+                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number : "1.2-2" }}</td>
                 </tr>
               </table>
             </div>
@@ -753,12 +753,12 @@
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? (summaryBudgets[wp.ost_wp.wp_official_code][
                                   item.id
-                                ] | number)
+                                ] | number : "1.2-2")
                               : (roundNumber(
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
                                   ]
-                                ) | number)
+                                ) | number : "1.2-2")
                           }}
                         </td>
                       </tr>
@@ -899,10 +899,10 @@
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              | number)
+                              | number : "1.2-2")
                             : (roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              ) | number)
+                              ) | number : "1.2-2")
                         }}
                       </td>
                     </tr>
@@ -1107,17 +1107,17 @@
                     </ng-container>
                     <td>
                       {{
-                        getPercentageForeachPartnerWp(
+                        (getPercentageForeachPartnerWp(
                           wp_budgets[partner.code],
                           wp_budgets[partner.code][wp.ost_wp.wp_official_code]
-                        ) || 0 | number : "1.2-2"
+                        ) || 0) | number : "1.2-2"
                       }}%
                     </td>
                     <td>
                       {{
                         roundNumber(
                           wp_budgets[partner.code][wp.ost_wp.wp_official_code]
-                        ) | number
+                        ) | number : "1.2-2"
                       }}
                     </td>
                   </tr>
@@ -1136,13 +1136,16 @@
                   </ng-container>
                   <td>
                     {{
-                      getTotalPercentageForEachPartner(
+                      (getTotalPercentageForEachPartner(
                         wp_budgets[partner.code]
-                      ) || 0 | number : "1.2-2"
+                      ) || 0) | number : "1.2-2"
                     }}%
                   </td>
                   <td>
-                    {{ getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
+                    {{
+                      getTotalBudgetForEachPartner(wp_budgets[partner.code])
+                        | number : "1.2-2"
+                    }}
                   </td>
                 </tr>
               </table>
@@ -2176,38 +2179,58 @@
                       {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] }}
                     </td>
                     <td>
-                      {{ budgetValuesIndicatorSummary?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
+                      {{
+                        (budgetValuesIndicatorSummary?.[
+                          wp.ost_wp.wp_official_code
+                        ]?.['Number of innovations (innovation development)'] ??
+                          0) | number : "1.2-2"
+                      }}
                     </td>
                     <td>
                       {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] }}
                     </td>
                     <td>
-                      {{ budgetValuesIndicatorSummary?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
+                      {{
+                        (budgetValuesIndicatorSummary?.[
+                          wp.ost_wp.wp_official_code
+                        ]?.['Number of knowledge products'] ?? 0)
+                          | number : "1.2-2"
+                      }}
                     </td>
                     <td>
                       {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] }}
                     </td>
                     <td>
-                      {{ budgetValuesIndicatorSummary?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
+                      {{
+                        (budgetValuesIndicatorSummary?.[
+                          wp.ost_wp.wp_official_code
+                        ]?.[
+                          'Number of people trained (capacity sharing for development)'
+                        ] ?? 0) | number : "1.2-2"
+                      }}
                     </td>
                     <td>
                       {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] }}
                     </td>
                     <td>
-                      {{ budgetValuesIndicatorSummary?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
+                      {{
+                        (budgetValuesIndicatorSummary?.[
+                          wp.ost_wp.wp_official_code
+                        ]?.['custom-OUTPUT'] ?? 0) | number : "1.2-2"
+                      }}
                     </td>
                     <td>
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-partners']
-                        ) | number
+                        ) | number : "1.2-2"
                       }}
                     </td>
                     <td>
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia']
-                        ) | number
+                        ) | number : "1.2-2"
                         }}
                     </td>
                     <!-- <td>
@@ -2223,14 +2246,14 @@
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia'],
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting'],
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-partners']
-                        ]) | number
+                        ]) | number : "1.2-2"
                       }}
                     </td>
                     <td>
                       {{
                         roundNumber(
                           summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
-                        ) | number
+                        ) | number : "1.2-2"
                       }}
                     </td>
                   </tr>
@@ -2246,33 +2269,48 @@
                     {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of innovations (innovation development)') }} 
                   </td>
                   <td>
-                    {{ totalBudgetValuesIndicatorSummary?.['Number of innovations (innovation development)'] ?? 0 }}
+                    {{
+                      (totalBudgetValuesIndicatorSummary?.[
+                        'Number of innovations (innovation development)'
+                      ] ?? 0) | number : "1.2-2"
+                    }}
                   </td>
                   <td>
                     {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of knowledge products') }} 
                   </td>
                   <td>
-                    {{ totalBudgetValuesIndicatorSummary?.['Number of knowledge products'] ?? 0 }}
+                    {{
+                      (totalBudgetValuesIndicatorSummary?.[
+                        'Number of knowledge products'
+                      ] ?? 0) | number : "1.2-2"
+                    }}
                   </td>
                   <td>
                     {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of people trained (capacity sharing for development)') }} 
                   </td>
                   <td>
-                    {{ totalBudgetValuesIndicatorSummary?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
+                    {{
+                      (totalBudgetValuesIndicatorSummary?.[
+                        'Number of people trained (capacity sharing for development)'
+                      ] ?? 0) | number : "1.2-2"
+                    }}
                   </td>
                   <td>
                     {{ getTotalIndAllValues(perAllValuesIndicator, 'custom-OUTPUT') }} 
                   </td>
                   <td>
-                    {{ totalBudgetValuesIndicatorSummary?.['custom-OUTPUT'] ?? 0 }}
+                    {{
+                      (totalBudgetValuesIndicatorSummary?.['custom-OUTPUT'] ??
+                        0) | number : "1.2-2"
+                    }}
                   </td>
 
                   <!-- <td>{{ wpsTotalSum | number : "1.2-2" }}%</td> -->
-                  <td>{{ roundNumber(summaryBudgetsPartnerTotal) | number }}</td>
-                  <td>{{ roundNumber(summaryBudgetsMeliaTotal) | number }}</td>
+                  <td>{{ roundNumber(summaryBudgetsPartnerTotal) | number : "1.2-2" }}</td>
+                  <td>{{ roundNumber(summaryBudgetsMeliaTotal) | number : "1.2-2" }}</td>
 
-                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number }}</td>
-                  <td>{{ roundNumber(summaryBudgetsProjectsTotal) | number }}</td>
+                  <td>{{ roundNumber(summaryBudgetsAllTotal) | number : "1.2-2" }}</td>
+                  <td>{{ roundNumber(summaryBudgetsProjectsTotal) | number : "1.2-2" }}</td>
                 </tr>
               </table>
             </div>
@@ -2365,9 +2403,12 @@
                         <td class="talign-center" style="width: 10% !important">
                           <div class="td-flex">
                             <span>
-                              {{   summaryBudgetsIndicator[
-                              wp.ost_wp.wp_official_code
-                            ][item.id][indicator?.id] }}
+                              {{
+                                summaryBudgetsIndicator[
+                                  wp.ost_wp.wp_official_code
+                                ][item.id][indicator?.id]
+                                  | number : "1.2-2"
+                              }}
                             </span>
                             <img 
                             [ngClass]="{
@@ -2397,12 +2438,12 @@
                             toggleSummaryValues[wp.ost_wp.wp_official_code]
                               ? (summaryBudgets[wp.ost_wp.wp_official_code][
                                   item.id
-                                ] | number)
+                                ] | number : "1.2-2")
                               : (roundNumber(
                                   summaryBudgets[wp.ost_wp.wp_official_code][
                                     item.id
                                   ]
-                                ) | number)
+                                ) | number : "1.2-2")
                           }}
                         </td>
                       </tr>
@@ -2431,10 +2472,10 @@
                         {{
                           toggleSummaryValues[wp.ost_wp.wp_official_code]
                             ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              | number)
+                              | number : "1.2-2")
                             : (roundNumber(
                                 summaryBudgetsTotal[wp.ost_wp.wp_official_code]
-                              ) | number)
+                              ) | number : "1.2-2")
                         }}
                       </td>
                     </tr>
@@ -2550,12 +2591,12 @@
                               toggleSummaryValues[wp.ost_wp.wp_official_code + '-melia']
                                 ? (summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][
                                     item.id
-                                  ] | number)
+                                  ] | number : "1.2-2")
                                 : (roundNumber(
                                     summaryBudgets[wp.ost_wp.wp_official_code + '-melia'][
                                       item.id
                                     ]
-                                  ) | number)
+                                  ) | number : "1.2-2")
                             }}
                           </span>
                           <img 
@@ -2613,10 +2654,10 @@
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-melia']
                           ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia']
-                            | number)
+                            | number : "1.2-2")
                           : (roundNumber(
                               summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-melia']
-                            ) | number)
+                            ) | number : "1.2-2")
                       }}
                     </td>
                   </tr>
@@ -2819,12 +2860,12 @@
                               toggleSummaryValues[wp.ost_wp.wp_official_code + '-Cross-Cutting']
                                 ? (summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][
                                     item.id
-                                  ] | number)
+                                  ] | number : "1.2-2")
                                 : (roundNumber(
                                     summaryBudgets[wp.ost_wp.wp_official_code + '-Cross-Cutting'][
                                       item.id
                                     ]
-                                  ) | number)
+                                  ) | number : "1.2-2")
                             }}
                           </span>
                           <img 
@@ -2884,10 +2925,10 @@
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-Cross-Cutting']
                           ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting']
-                            | number)
+                            | number : "1.2-2")
                           : (roundNumber(
                               summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-Cross-Cutting']
-                            ) | number)
+                            ) | number : "1.2-2")
                       }}
                     </td>
                   </tr>
@@ -2983,12 +3024,12 @@
                               toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
                                 ? (summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
                                     item.id
-                                  ] | number)
+                                  ] | number : "1.2-2")
                                 : (roundNumber(
                                     summaryBudgets[wp.ost_wp.wp_official_code + '-project'][
                                       item.id
                                     ]
-                                  ) | number)
+                                  ) | number : "1.2-2")
                             }}
                           </span>
                           <img 
@@ -3046,10 +3087,10 @@
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-project']
                           ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
-                            | number)
+                            | number : "1.2-2")
                           : (roundNumber(
                               summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-project']
-                            ) | number)
+                            ) | number : "1.2-2")
                       }}
                     </td>
                   </tr>
@@ -3175,12 +3216,12 @@
                               toggleSummaryValues[wp.ost_wp.wp_official_code + '-partners']
                                 ? (summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][
                                     item.id
-                                  ] | number)
+                                  ] | number : "1.2-2")
                                 : (roundNumber(
                                     summaryBudgets[wp.ost_wp.wp_official_code + '-partners'][
                                       item.id
                                     ]
-                                  ) | number)
+                                  ) | number : "1.2-2")
                             }}
                           </span>
                           <img 
@@ -3218,10 +3259,10 @@
                       {{
                         toggleSummaryValues[wp.ost_wp.wp_official_code + '-partners']
                           ? (summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-partners']
-                            | number)
+                            | number : "1.2-2")
                           : (roundNumber(
                               summaryBudgetsTotal[wp.ost_wp.wp_official_code + '-partners']
-                            ) | number)
+                            ) | number : "1.2-2")
                       }}
                     </td>
                   </tr>
@@ -3305,7 +3346,7 @@
                         </td>
           
                         <td class="text-right">
-                          {{ getTotalByAnaplanId(anaplan.id) }}
+                          {{ getTotalByAnaplanId(anaplan.id) | number : "1.2-2" }}
                         </td>
                       </tr>
                     </tbody>
@@ -3319,7 +3360,7 @@
                         </td>
           
                         <td class="text-right">
-                          {{ getSummaryTotalAnaplan()  }}
+                          {{ getSummaryTotalAnaplan() | number : "1.2-2" }}
                         </td>
                       </tr>
                     </tfoot>
@@ -3913,10 +3954,11 @@
                       </td>
                   
                       <td class="talign-center">
-                        {{  wp_budgets[partner.code][
-                          wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                        ]}}
-                        
+                        {{
+                          wp_budgets[partner.code][
+                            wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                          ] | number : "1.2-2"
+                        }}
                       </td>
                     </tr>
                   </table>
@@ -4139,9 +4181,11 @@
                   </td>
               
                   <td class="talign-center">
-                   {{       wp_budgets[partner.code][
-                    wp.ost_wp.wp_official_code + '-partners'
-                  ]}}
+                    {{
+                      wp_budgets[partner.code][
+                        wp.ost_wp.wp_official_code + '-partners'
+                      ] | number : "1.2-2"
+                    }}
                   </td>
                 </tr>
                 </table>
@@ -4220,7 +4264,9 @@
                         <td *ngFor="let wp of actualWps?.slice(0, 1)">
                           {{ getWpTotals(partner.code ,wp.ost_wp.wp_official_code) }}
                         </td>
-                        <td>{{  getAnaplanTotal(partner.code) }}</td>
+                        <td>
+                          {{ getAnaplanTotal(partner.code) | number : "1.2-2" }}
+                        </td>
                       </tr>
                     </tfoot>
                   </table>
@@ -4442,7 +4488,12 @@
                       {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
                     </td>
                     <td>
-                      {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
+                      {{
+                        (budgetValuesIndicatorPartner?.[partner.code]?.[
+                          wp.ost_wp.wp_official_code
+                        ]?.['Number of innovations (innovation development)'] ??
+                          0) | number : "1.2-2"
+                      }}
                     </td>
                     <td *ngIf="!toggleIndicatorValues">
                       {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
@@ -4451,7 +4502,12 @@
                       {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
                     </td>
                     <td>
-                      {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 }}
+                      {{
+                        (budgetValuesIndicatorPartner?.[partner.code]?.[
+                          wp.ost_wp.wp_official_code
+                        ]?.['Number of knowledge products'] ?? 0)
+                          | number : "1.2-2"
+                      }}
                     </td>
                     <td *ngIf="!toggleIndicatorValues">
                       {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
@@ -4460,7 +4516,13 @@
                       {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                     </td>
                     <td>
-                      {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
+                      {{
+                        (budgetValuesIndicatorPartner?.[partner.code]?.[
+                          wp.ost_wp.wp_official_code
+                        ]?.[
+                          'Number of people trained (capacity sharing for development)'
+                        ] ?? 0) | number : "1.2-2"
+                      }}
                     </td>
                     <td *ngIf="!toggleIndicatorValues">
                       {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
@@ -4469,18 +4531,22 @@
                       {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
                     </td>
                     <td>
-                      {{ budgetValuesIndicatorPartner?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
+                      {{
+                        (budgetValuesIndicatorPartner?.[partner.code]?.[
+                          wp.ost_wp.wp_official_code
+                        ]?.['custom-OUTPUT'] ?? 0) | number : "1.2-2"
+                      }}
                     </td>
             
                     <td>
                       {{ roundNumber(
                       wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-partners']
-                    ) | number }}
+                    ) | number : "1.2-2" }}
                     </td>
                     <td>
                       {{ roundNumber(
                       wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-melia']
-                    ) | number }}
+                    ) | number : "1.2-2" }}
                     </td>
 
                     <!-- <td>
@@ -4497,13 +4563,13 @@
                         wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-melia'],
                         wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-Cross-Cutting'],
                         wp_budgets[partner.code]?.[wp.ost_wp?.wp_official_code + '-partners']
-                      ]) | number }}
+                      ]) | number : "1.2-2" }}
                     </td>
                     <td>
                       {{
                         roundNumber(
                           wp_budgets[partner.code][wp.ost_wp.wp_official_code + '-project']
-                        ) | number
+                        ) | number : "1.2-2"
                       }}
                     </td>
                   </tr>
@@ -4522,7 +4588,11 @@
                     {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of innovations (innovation development)'] ?? 0  }}
                   </td>
                   <td>
-                    {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of innovations (innovation development)'] ?? 0 }}
+                    {{
+                      (totalBudgetValuesIndicatorPartner?.[partner.code]?.[
+                        'Number of innovations (innovation development)'
+                      ] ?? 0) | number : "1.2-2"
+                    }}
                   </td>
                   <td *ngIf="!toggleIndicatorValues">
                     {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of knowledge products') }}
@@ -4531,7 +4601,11 @@
                     {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of knowledge products'] ?? 0  }}
                   </td>
                   <td>
-                    {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of knowledge products'] ?? 0 }}
+                    {{
+                      (totalBudgetValuesIndicatorPartner?.[partner.code]?.[
+                        'Number of knowledge products'
+                      ] ?? 0) | number : "1.2-2"
+                    }}
                   </td>
                   <td *ngIf="!toggleIndicatorValues">
                     {{ getTotalIndAllValues(perAllValuesIndicator, 'Number of people trained (capacity sharing for development)')  }}
@@ -4540,7 +4614,11 @@
                     {{ totalConsolidatedTargetPartner?.[partner.code]?.['Number of people trained (capacity sharing for development)'] ?? 0  }}
                   </td>
                   <td>
-                    {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
+                    {{
+                      (totalBudgetValuesIndicatorPartner?.[partner.code]?.[
+                        'Number of people trained (capacity sharing for development)'
+                      ] ?? 0) | number : "1.2-2"
+                    }}
                   </td>
                   <td *ngIf="!toggleIndicatorValues">
                     {{ getTotalIndAllValues(perAllValuesIndicator, 'custom-OUTPUT')  }}
@@ -4549,19 +4627,38 @@
                     {{ totalConsolidatedTargetPartner?.[partner.code]?.['custom-OUTPUT'] ?? 0  }}
                   </td>
                   <td>
-                    {{ totalBudgetValuesIndicatorPartner?.[partner.code]?.['custom-OUTPUT'] ?? 0 }}
+                    {{
+                      (totalBudgetValuesIndicatorPartner?.[partner.code]?.[
+                        'custom-OUTPUT'
+                      ] ?? 0) | number : "1.2-2"
+                    }}
                   </td>
                   <td>
-                    {{ getTotalBudgetForEachPartnerPartner(wp_budgets[partner.code]) }}
+                    {{
+                      getTotalBudgetForEachPartnerPartner(
+                        wp_budgets[partner.code]
+                      ) | number : "1.2-2"
+                    }}
                   </td>
                   <td>
-                    {{ getTotalBudgetForEachPartnerMelia(wp_budgets[partner.code]) }}
+                    {{
+                      getTotalBudgetForEachPartnerMelia(
+                        wp_budgets[partner.code]
+                      ) | number : "1.2-2"
+                    }}
                   </td>
                   <td>
-                    {{ getTotalBudgetForEachPartner(wp_budgets[partner.code]) }}
+                    {{
+                      getTotalBudgetForEachPartner(wp_budgets[partner.code])
+                        | number : "1.2-2"
+                    }}
                   </td>
                   <td>
-                    {{ getTotalBudgetForEachPartnerProject(wp_budgets[partner.code]) }}
+                    {{
+                      getTotalBudgetForEachPartnerProject(
+                        wp_budgets[partner.code]
+                      ) | number : "1.2-2"
+                    }}
                   </td>
                 </tr>
               </table>
@@ -5231,9 +5328,11 @@
                       </td>
                   
                       <td>
-                        {{      wp_budgets[partner.code][
-                          wp.ost_wp.wp_official_code + '-melia'
-                        ]}}
+                        {{
+                          wp_budgets[partner.code][
+                            wp.ost_wp.wp_official_code + '-melia'
+                          ] | number : "1.2-2"
+                        }}
                       </td>
                     </tr>
                   </table>
@@ -5446,10 +5545,11 @@
                         </td>
                     
                         <td class="talign-center">
-                          {{  wp_budgets[partner.code][
-                            wp.ost_wp.wp_official_code + '-Cross-Cutting'
-                          ]}}
-                          
+                          {{
+                            wp_budgets[partner.code][
+                              wp.ost_wp.wp_official_code + '-Cross-Cutting'
+                            ] | number : "1.2-2"
+                          }}
                         </td>
                       </tr>
                     </table>
@@ -5628,9 +5728,11 @@
                       </td>
                   
                       <td>
-                        {{   wp_budgets[partner.code][
-                          wp.ost_wp.wp_official_code + '-project'
-                        ]}}
+                        {{
+                          wp_budgets[partner.code][
+                            wp.ost_wp.wp_official_code + '-project'
+                          ] | number : "1.2-2"
+                        }}
                       </td>
                     </tr>
                   </table>
@@ -5931,9 +6033,11 @@
                     </td>
                 
                     <td class="talign-center">
-                     {{       wp_budgets[partner.code][
-                      wp.ost_wp.wp_official_code + '-partners'
-                    ]}}
+                      {{
+                        wp_budgets[partner.code][
+                          wp.ost_wp.wp_official_code + '-partners'
+                        ] | number : "1.2-2"
+                      }}
                     </td>
                   </tr>
                   </table>
@@ -6120,7 +6224,10 @@
                         </td>
 
                         <td class="talign-center" *ngIf="i === 0"   [attr.rowspan]="item.results.length || 1">
-                          {{ getMeliaProjectItemTotal(partner.code, item, '-project')}}                        
+                          {{
+                            getMeliaProjectItemTotal(partner.code, item, '-project')
+                              | number : "1.2-2"
+                          }}                        
                       </td>
                       </tr>
   
@@ -6135,7 +6242,11 @@
                       </td>
                   
                       <td class="talign-center">
-                        {{ getTotalBudgetForEachPartnerProject(wp_budgets[partner.code]) }}
+                        {{
+                          getTotalBudgetForEachPartnerProject(
+                            wp_budgets[partner.code]
+                          ) | number : "1.2-2"
+                        }}
                       </td>
                     </tr>
                   </table>
@@ -6319,7 +6430,10 @@
                       
                      
                         <td class="talign-center w-10" *ngIf="i === 0"   [attr.rowspan]="item.results.length || 1">
-                          {{ getMeliaProjectItemTotal(partner.code, item, '-melia') }}
+                          {{
+                            getMeliaProjectItemTotal(partner.code, item, '-melia')
+                              | number : "1.2-2"
+                          }}
                         </td>
                       </tr>
   
@@ -6332,7 +6446,11 @@
                       </td>
                   
                       <td class="talign-center">
-                        {{ getTotalBudgetForEachPartnerMelia(wp_budgets[partner.code]) }}
+                        {{
+                          getTotalBudgetForEachPartnerMelia(
+                            wp_budgets[partner.code]
+                          ) | number : "1.2-2"
+                        }}
                       </td>
                     </tr>
                   </table>
@@ -6408,7 +6526,9 @@
                           </td>
           
                           <td>
-                            {{ getTotalsByAnaplan(partner.code, anaplan.id) }}
+                            {{
+                              getTotalsByAnaplan(partner.code, anaplan.id)
+                            }}
                           </td>
                         </tr>
                       </tbody>
@@ -6421,7 +6541,9 @@
                           <td *ngFor="let wp of actualWps">
                             {{ getWpTotals(partner.code ,wp.ost_wp.wp_official_code) }}
                           </td>
-                          <td>{{  getAnaplanTotal(partner.code) }}</td>
+                          <td>
+                            {{ getAnaplanTotal(partner.code) | number : "1.2-2" }}
+                          </td>
                         </tr>
                       </tfoot>
                     </table>
