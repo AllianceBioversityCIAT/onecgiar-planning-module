@@ -4510,10 +4510,10 @@
                       }}
                     </td>
                     <td *ngIf="!toggleIndicatorValues">
-                      {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
+                      {{ totalTargetsIndicator?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                     </td>
                     <td *ngIf="toggleIndicatorValues">
-                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
+                      {{ totalTargetsIndicatorPartners?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                     </td>
                     <td>
                       {{
@@ -4525,10 +4525,10 @@
                       }}
                     </td>
                     <td *ngIf="!toggleIndicatorValues">
-                      {{ totalTargetsIndicatorPartners?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
+                      {{ totalTargetsIndicator?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
                     </td>
                     <td *ngIf="toggleIndicatorValues">
-                      {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
+                      {{ totalTargetsIndicatorPartners?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 }}
                     </td>
                     <td>
                       {{

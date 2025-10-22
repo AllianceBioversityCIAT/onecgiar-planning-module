@@ -1584,7 +1584,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
       this.allData["IPSR"] = newIPSR;
     }
-      
+ 
     const firstKey = Object.keys(this.allData)[0];
     //sort first AOW
       const newCROSS = this.allData[firstKey].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
@@ -1670,7 +1670,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id
     );
     this.clarisaCountries = await this.countryService.getAll();
-    this.allCenterCountryValues = await this.countryService.getAllValues();
+    this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
 
     this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.initiative_data.synchronized == true ? this.params.code : this.params.id)
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
@@ -3245,18 +3245,18 @@ totalConsolidatedTargetPartner: any;
     }, 0);
   }
 
-  hasBudgetAssumptions(partnerCode: string, itemId: number, wpId: string): boolean {
+  hasBudgetAssumptions(partnerCode: number, itemId: any, wpId: string): boolean {
     return this.allBudgetAssumptions.some(a =>
-      a.organization_code === partnerCode &&
-      a.item_id === itemId &&
-      a.wp_id === wpId
+      a.organization_code == partnerCode &&
+      a.item_id == itemId &&
+      a.wp_id == wpId
     );
   }
 
   hasBudgetAssumptionsSummary(itemId: number, wpId: string): boolean { 
     return this.allBudgetAssumptions.some(a =>
-      a.item_id === itemId &&
-      a.wp_id === wpId
+      a.item_id == itemId &&
+      a.wp_id == wpId
     );
   } 
 

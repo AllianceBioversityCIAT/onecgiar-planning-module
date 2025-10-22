@@ -9,6 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { planing_data } from './defalut';
 import { SubmissionService } from 'src/submission/submission.service';
+import { PhasesService } from 'src/phases/phases.service';
 
 @WebSocketGateway({
   cors: {
@@ -19,7 +20,7 @@ export class EventsGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
   planing_data: any = planing_data;
-  constructor(private submissionService: SubmissionService) {}
+  constructor(private submissionService: SubmissionService, private phaseService: PhasesService) {}
 
   @SubscribeMessage('setDataValue')
   changePer(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
@@ -88,7 +89,8 @@ export class EventsGateway implements OnModuleInit {
   @SubscribeMessage('setSelectedCountrySummary')
   async setSelectedCountrySummary(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
     const { official_code, result_id, wp } = data;
-    const selectedCountries = await this.submissionService.getSelectedCountry(result_id, official_code)
+    let activePhase = await this. phaseService.findActivePhase();
+    const selectedCountries = await this.submissionService.getSelectedCountry(result_id, official_code, activePhase.id)
     this.server.emit('setSelectedCountrySummary', { wp, selectedCountries, result_id });
   }
 

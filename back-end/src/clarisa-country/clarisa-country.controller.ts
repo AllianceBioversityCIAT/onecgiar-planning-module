@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ClarisaCountryService } from './clarisa-country.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
@@ -13,9 +13,9 @@ export class ClarisaCountryController {
     }
 
     @ApiBearerAuth()
-    @Get('values')
-    findAllValues() {
-      return this.service.findAllValues();
+    @Get('values/:phase_id')
+    findAllValues(@Param('phase_id') id: number) {
+      return this.service.findAllValues(id);
     }
 
 

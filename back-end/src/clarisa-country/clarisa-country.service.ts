@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ClarisaCountry } from 'src/entities/clarisa-country.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
+import { PhasesService } from 'src/phases/phases.service';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -14,21 +15,28 @@ export class ClarisaCountryService {
     private partnerCountryRepo: Repository<PartnerCountry>,
     @InjectRepository(WorkPackage)
     private workPackageRepo: Repository<WorkPackage>,
+    private phaseService: PhasesService,
   ) {}
 
   findAll() {
     return this.repo.find();
   }
 
-  findAllValues() {
+  findAllValues(id: number) {
     return this.partnerCountryRepo.find({
-      relations: ['organization', 'workPackage', 'initiative', 'country']
+      relations: ['organization', 'workPackage', 'initiative', 'country'],
+      where: {
+        phase: {
+          id: id
+        }
+      }
     });
   }
 
   async createOrUpdate(data: any) {
     const { initiative_id, wp, partner, result_id } = data;
 
+    let activePhase = await this.phaseService.findActivePhase();
     let workPackageObject : any = await this.workPackageRepo.findOneBy({
       wp_official_code: wp.ost_wp.wp_official_code + '-partners',
     });
@@ -38,6 +46,7 @@ export class ClarisaCountryService {
       center_code: partner.code,
       wp_id:  workPackageObject.wp_id,
       result_id: result_id,
+      phase_id: activePhase.id
     });
 
     const entities = partner.selectedCountries.map((c) =>
@@ -47,6 +56,7 @@ export class ClarisaCountryService {
         wp_id: workPackageObject.wp_id,
         country_code: c.code,
         result_id: result_id,
+        phase_id: activePhase.id
       }),
     );
 

@@ -337,15 +337,15 @@ for (let data of filteredData) {
   }
 }
 
-// When you need HTML for display:
-for (const [, entry] of meliaMap) {
-  const items = [...(entry.supported_outcome as Set<string>)];
-  entry.supported_outcome = `
-    <ul class="tdul">
-      ${items.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
-    </ul>
-  `;
-}
+            // When you need HTML for display:
+            for (const [, entry] of meliaMap) {
+              const items = [...(entry.supported_outcome as Set<string>)];
+              entry.supported_outcome = `
+                <ul class="tdul">
+                  ${items.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                </ul>
+              `;
+            }
             const newMelias = Array.from(meliaMap.values());
 
             for (const melia of newMelias) {
@@ -433,7 +433,7 @@ for (const [, entry] of meliaMap) {
                 for (const partner of data.partners ?? []) {
                   const key = `${partner.code}_${data.group}`;
                   const title = data.title?.trim();
-                  const selectedCountries = await this.submissionService.getSelectedCountry(partner.code , id);
+                  const selectedCountries = await this.submissionService.getSelectedCountry(partner.code , id, activePhase.id);
                   if (partnersMap.has(key)) {
                     const existing = partnersMap.get(key);
                     const titleSet = new Set(
