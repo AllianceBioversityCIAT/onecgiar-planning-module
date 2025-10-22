@@ -23,6 +23,10 @@ export class BudgetAssumptionsService {
         });
       }
 
+      async delete(id: number) {
+        return await this.repo.delete(id);
+      }
+
       async find(id: string) {
         let activePhase = await this.phaseService.findActivePhase();
 

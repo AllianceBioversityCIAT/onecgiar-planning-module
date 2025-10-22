@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, ViewChild } from "@angular/core";
 
 import { SubmissionService } from "../services/submission.service";
 import { AppSocket } from "../socket.service";
@@ -65,7 +65,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private budgetAssumptionsService: BudgetAssumptionsService,
     private anaplanService: AnaplanService,
     private countryService: ClarisaCountryService,
-    private location: Location
+    private location: Location,
+    private cdr: ChangeDetectorRef
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -1833,7 +1834,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       }
       this.sammaryCalc();
     });
-    this.socket.on("setDataValue-" + this.params.id, (data: any) => {
+    this.socket.on("setDataValue-" + this.params.id, async (data: any) => {
       const { partner_code, wp_id, item_id, value, no_budget } = data;
       this.values[partner_code][wp_id][item_id] = value;
       this.displayValues[partner_code][wp_id][item_id] = Math.round(value);
@@ -1844,17 +1845,28 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.budgetValues[partner_code][wp_id][item_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] =
         Math.round(budgetValue);
+      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+      this.hasBudgetAssumptions(partner_code, item_id, wp_id);
+      this.hasBudgetAssumptionsSummary(item_id, wp_id);
+
       this.noValuesAssigned[partner_code][wp_id][item_id] = no_budget;
       this.sammaryCalc();
+      this.cdr.detectChanges();
+
     });
-    this.socket.on("setDataValueForIndicator-" + this.params.id, (data: any) => {
+    this.socket.on("setDataValueForIndicator-" + this.params.id, async (data: any) => {
       const { partner_code, wp_id, item_id, indicator_id, budgetValue, subTotalBudgetIndicator } = data;
       this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
+      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+      this.hasBudgetAssumptions(partner_code, item_id, wp_id);
+      this.hasBudgetAssumptionsSummary(item_id, wp_id);
 
       this.setItemIndicatorAndBudget();
       this.sammaryCalc();
       this.recomputeIndicatorBudgetTotals();
+      this.cdr.detectChanges();
+
     });
     this.socket.on("setDataBudget-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, budget } = data;

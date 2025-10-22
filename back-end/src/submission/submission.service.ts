@@ -37,6 +37,7 @@ import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { AnaplanService } from 'src/anaplan/anaplan.service';
+import { BudgetAssumptionsService } from 'src/budget-assumptions/budget-assumptions.service';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -66,6 +67,7 @@ export class SubmissionService {
     private initService: InitiativesService,
     private periodService: PeriodsService,
     private anaplanService: AnaplanService,
+    private budgetAssumptionsService: BudgetAssumptionsService,
     // @InjectRepository(Melia)
     // private meliaRepository: Repository<Melia>,
     @InjectRepository(CrossCutting)
@@ -840,7 +842,7 @@ export class SubmissionService {
   }
   async saveResultDataValue(id, data: any, user) {
     const initiativeId = id;
-    // console.log('data' ,data)
+    console.log('data' ,data)
     const {
       partner_code,
       wp_id,
@@ -854,6 +856,19 @@ export class SubmissionService {
       parent_id,
       indicator_type
     } = data;
+
+    let budgetAssumptionsData = {
+      organization_code: partner_code,
+      item_id: item_id,
+      wp_id: wp_id,
+      type: type,
+      phase_id: phase_id
+    }
+    let budgetAssumptions = await this.budgetAssumptionsService.findOne(budgetAssumptionsData)
+
+    if(budget_value == 0 && budgetAssumptions) {
+      await this.budgetAssumptionsService.delete(budgetAssumptions.id);
+    }
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
     });
