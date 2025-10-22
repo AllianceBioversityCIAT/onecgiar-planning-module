@@ -3805,6 +3805,10 @@ export class SubmissionService {
       // Partners for summary
       const partnersSummarySheet = this.generateExcelSummaryPartner();
       XLSX.utils.book_append_sheet(wb, partnersSummarySheet, 'Partner');
+
+      const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
+      XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
+  
     }
     
 
@@ -5370,6 +5374,146 @@ const totalRowIndex = rows.length + 1;
       // Highlight Total Budget column // last col
       // const totalBudgetCell = XLSX.utils.encode_cell({ r: R, c: TOTAL_BUDGET_COLUMN_INDEX });
       // if (ws[totalBudgetCell]) ws[totalBudgetCell].s = subtotalCellStyle;
+    }
+
+    for (let C = 0; C < COLUMNS_COUNT; C++) {
+      const cell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW, c: C });
+      if (C === 0) {
+        if (ws[cell]) ws[cell].s = subtotalHeaderStyle;
+      } else {
+        if (ws[cell]) ws[cell].s = subtotalCellStyle;
+      }
+    }
+
+    const colWidths = [
+      { wch: 25 }, // Main Accounts
+      ...Array(this.actualWps.length).fill({ wch: 10 }), // Dynamic AOW columns
+      { wch: 20 }  // Total budget (USD)
+    ];
+    ws['!cols'] = colWidths;
+
+    const colHeight = [
+      { hpt: 25 }, // Main Accounts
+      ...Array(mainAccountLabels.length).fill({ hpt: 20 }), // Dynamic AOW columns
+      { hpt: 20 }  // Total budget (USD)
+    ];
+    ws['!rows'] = colHeight;
+
+    return ws
+  }
+  getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData && wpData[anaplanId] !== undefined) {
+        total += Number(wpData[anaplanId]) || 0;
+      }
+    }
+  
+    return total;
+  }
+  generateExcelSummaryAnaplan(){
+    const mainAccountLabels = this.anaplanLabels.map(d => d.label);
+    let header = this.actualWps.map(wp => wp.ost_wp.acronym);
+    header = ['Main Accounts', ...header, 'Total budget (USD)'];
+
+    const COLUMNS_COUNT = header.length;
+    const TOTAL_BUDGET_COLUMN_INDEX = COLUMNS_COUNT - 1;
+    const DATA_ROWS_COUNT = mainAccountLabels.length; 
+    const HEADER_ROW = 0;
+    const FIRST_DATA_ROW = HEADER_ROW + 1;
+    const SUB_TOTAL_ROW = FIRST_DATA_ROW + DATA_ROWS_COUNT; 
+    console.log(mainAccountLabels, header);
+
+    const ws = XLSX.utils.aoa_to_sheet([header]);
+
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: { top: { style: "thin" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+    };
+    
+    const subtotalHeaderStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+    
+    const subtotalCellStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      border: { top: { style: "medium" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+      numFmt: '0',
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+    
+    const dataCellStyle = {
+      alignment: { horizontal: "center", vertical: "center" },
+      border: { top: { style: "thin" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+      numFmt: '0',
+    };
+
+    let currentRow = FIRST_DATA_ROW;
+    const formulae = [];
+    const sheetData = [];
+
+    this.anaplanLabels.forEach(anaplan => {
+      const rowArray = [anaplan.label]; // Start with the static Main Account label
+      
+      this.actualWps.forEach((wp, colIndex) => {
+        const budgetValue = this.getAnaplanValueAcrossPartners(wp.ost_wp.wp_official_code, anaplan.id) || 0;
+        rowArray.push(budgetValue);
+      });
+      
+      rowArray.push(0); // Placeholder for Total Budget (USD)
+      sheetData.push(rowArray);
+
+      const startCell = XLSX.utils.encode_cell({ r: currentRow, c: 1 });
+      const endCell = XLSX.utils.encode_cell({ r: currentRow, c: TOTAL_BUDGET_COLUMN_INDEX - 1 }); 
+      const totalBudgetCell = XLSX.utils.encode_cell({ r: currentRow, c: TOTAL_BUDGET_COLUMN_INDEX }); 
+
+      formulae.push({ cell: totalBudgetCell, formula: `=SUM(${startCell}:${endCell})` });
+
+      currentRow++;
+    });
+
+    XLSX.utils.sheet_add_aoa(ws, sheetData, { origin: -1 });
+    const subTotalRowData: any = ['Sub-total'];
+
+    for (let C = 1; C < COLUMNS_COUNT; C++) {
+      const startCell = XLSX.utils.encode_cell({ r: FIRST_DATA_ROW, c: C });
+      const endCell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW - 1, c: C });
+      const subTotalCell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW, c: C });
+
+      formulae.push({ cell: subTotalCell, formula: `=SUM(${startCell}:${endCell})` });
+      subTotalRowData.push(0);
+    }
+
+    XLSX.utils.sheet_add_aoa(ws, [subTotalRowData], { origin: -1 });
+
+    formulae.forEach(({ cell, formula }) => {
+      if (!ws[cell]) ws[cell] = { t: 'n', v: 0 }; 
+      ws[cell].t = 'f';
+      ws[cell].f = formula;
+    });
+
+
+    for (let C = 0; C < COLUMNS_COUNT; ++C) {
+      const cell = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (ws[cell]) ws[cell].s = headerStyle;
+    }
+
+    // Data Cell Styling (Rows 1 to DATA_ROWS_COUNT) 
+    for (let R = FIRST_DATA_ROW; R < SUB_TOTAL_ROW; R++) {
+      for (let C = 0; C < COLUMNS_COUNT; C++) {
+        const cell = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cell]) {
+            ws[cell].s = dataCellStyle;
+        }
+      }
     }
 
     for (let C = 0; C < COLUMNS_COUNT; C++) {
