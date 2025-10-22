@@ -23,9 +23,9 @@ export class ClarisaCountryService {
     );
   }
 
-  getAllValues() {
+  getAllValues(phase_id: number) {
     return firstValueFrom(
-      this.http.get(environment.api_url+"/clarisa-country/values").pipe(map((d: any) => d))
+      this.http.get(environment.api_url+"/clarisa-country/values/" + phase_id).pipe(map((d: any) => d))
     );
   }
 }

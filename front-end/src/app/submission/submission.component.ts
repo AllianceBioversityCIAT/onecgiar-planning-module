@@ -1670,7 +1670,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id
     );
     this.clarisaCountries = await this.countryService.getAll();
-    this.allCenterCountryValues = await this.countryService.getAllValues();
+    this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
 
     this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.initiative_data.synchronized == true ? this.params.code : this.params.id)
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(

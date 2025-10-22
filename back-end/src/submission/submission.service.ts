@@ -585,24 +585,26 @@ export class SubmissionService {
     }
   }
 
-  async getSelectedCountry(resultId: number, initiative_id: string ) {
+  async getSelectedCountry(resultId: number, initiative_id: string, phase_id: number) { 
     return await this.partnerCountryRepository
     .createQueryBuilder("pc")
     .leftJoin("pc.organization", "org")
     .leftJoin("pc.country", "country")
     .leftJoin("pc.initiative", "initiative")
+    .leftJoin("pc.phase", "phase")
     .select("pc.result_id", "resultId")
     .addSelect("pc.center_code", "centerCode")
     .addSelect("org.acronym", "centerName")
     .addSelect("GROUP_CONCAT(country.name ORDER BY country.name)", "countries")
     .where("pc.result_id = :resultId", { resultId: resultId })
     .andWhere('initiative.official_code = :initiative_id', { initiative_id })
+    .andWhere('phase.id = :phase_id', { phase_id })
     .groupBy("pc.result_id")
     .addGroupBy("pc.center_code")
     .addGroupBy("org.acronym")
     .getRawMany();
 
-  }
+  } 
 
   async saveResultData(id, data: any, user) {
     const initiativeId = id;
