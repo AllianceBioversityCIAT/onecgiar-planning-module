@@ -3759,12 +3759,15 @@ export class SubmissionService {
 
     const data = await this.getActualTocs(this.initiative_data.official_code);
 
-    const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
-    XLSX.utils.book_append_sheet(wb, projectSheet, 'project');
-
-    const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
-    XLSX.utils.book_append_sheet(wb, meliaSheet, 'melia');
-
+    if(data.projects.length) {
+      const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
+      XLSX.utils.book_append_sheet(wb, projectSheet, 'project');
+    }
+   
+    if(data.melias.length) {
+      const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
+      XLSX.utils.book_append_sheet(wb, meliaSheet, 'melia');
+    }
 
     const anaplanSheet = this.generateExcelAnaplan(organization);
     XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
