@@ -33,7 +33,9 @@ export class InitiativesComponent implements OnInit {
   dataSource: MatTableDataSource<any>;
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
-activePhase: any;
+activePhase: any={
+  name: '',
+};
   constructor(
     private initiativesService: InitiativesService,
     private authService: AuthService,
