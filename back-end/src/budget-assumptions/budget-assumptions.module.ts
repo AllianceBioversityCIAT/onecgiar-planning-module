@@ -11,6 +11,7 @@ import { PhasesModule } from 'src/phases/phases.module';
     PhasesModule
   ],
   controllers: [BudgetAssumptionsController],
-  providers: [BudgetAssumptionsService]
+  providers: [BudgetAssumptionsService],
+  exports: [BudgetAssumptionsService]
 })
 export class BudgetAssumptionsModule {}

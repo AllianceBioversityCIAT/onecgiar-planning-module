@@ -37,6 +37,7 @@ import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { AnaplanService } from 'src/anaplan/anaplan.service';
+import { BudgetAssumptionsService } from 'src/budget-assumptions/budget-assumptions.service';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -66,6 +67,7 @@ export class SubmissionService {
     private initService: InitiativesService,
     private periodService: PeriodsService,
     private anaplanService: AnaplanService,
+    private budgetAssumptionsService: BudgetAssumptionsService,
     // @InjectRepository(Melia)
     // private meliaRepository: Repository<Melia>,
     @InjectRepository(CrossCutting)
@@ -840,7 +842,7 @@ export class SubmissionService {
   }
   async saveResultDataValue(id, data: any, user) {
     const initiativeId = id;
-    // console.log('data' ,data)
+    console.log('data' ,data)
     const {
       partner_code,
       wp_id,
@@ -854,6 +856,19 @@ export class SubmissionService {
       parent_id,
       indicator_type
     } = data;
+
+    let budgetAssumptionsData = {
+      organization_code: partner_code,
+      item_id: item_id,
+      wp_id: wp_id,
+      type: type,
+      phase_id: phase_id
+    }
+    let budgetAssumptions = await this.budgetAssumptionsService.findOne(budgetAssumptionsData)
+
+    if(budget_value == 0 && budgetAssumptions) {
+      await this.budgetAssumptionsService.delete(budgetAssumptions.id);
+    }
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
     });
@@ -3744,12 +3759,15 @@ export class SubmissionService {
 
     const data = await this.getActualTocs(this.initiative_data.official_code);
 
-    const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
-    XLSX.utils.book_append_sheet(wb, projectSheet, 'project');
-
-    const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
-    XLSX.utils.book_append_sheet(wb, meliaSheet, 'melia');
-
+    if(data.projects.length) {
+      const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
+      XLSX.utils.book_append_sheet(wb, projectSheet, 'project');
+    }
+   
+    if(data.melias.length) {
+      const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
+      XLSX.utils.book_append_sheet(wb, meliaSheet, 'melia');
+    }
 
     const anaplanSheet = this.generateExcelAnaplan(organization);
     XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
@@ -3790,6 +3808,10 @@ export class SubmissionService {
       // Partners for summary
       const partnersSummarySheet = this.generateExcelSummaryPartner();
       XLSX.utils.book_append_sheet(wb, partnersSummarySheet, 'Partner');
+
+      const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
+      XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
+  
     }
     
 
@@ -5355,6 +5377,146 @@ const totalRowIndex = rows.length + 1;
       // Highlight Total Budget column // last col
       // const totalBudgetCell = XLSX.utils.encode_cell({ r: R, c: TOTAL_BUDGET_COLUMN_INDEX });
       // if (ws[totalBudgetCell]) ws[totalBudgetCell].s = subtotalCellStyle;
+    }
+
+    for (let C = 0; C < COLUMNS_COUNT; C++) {
+      const cell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW, c: C });
+      if (C === 0) {
+        if (ws[cell]) ws[cell].s = subtotalHeaderStyle;
+      } else {
+        if (ws[cell]) ws[cell].s = subtotalCellStyle;
+      }
+    }
+
+    const colWidths = [
+      { wch: 25 }, // Main Accounts
+      ...Array(this.actualWps.length).fill({ wch: 10 }), // Dynamic AOW columns
+      { wch: 20 }  // Total budget (USD)
+    ];
+    ws['!cols'] = colWidths;
+
+    const colHeight = [
+      { hpt: 25 }, // Main Accounts
+      ...Array(mainAccountLabels.length).fill({ hpt: 20 }), // Dynamic AOW columns
+      { hpt: 20 }  // Total budget (USD)
+    ];
+    ws['!rows'] = colHeight;
+
+    return ws
+  }
+  getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData && wpData[anaplanId] !== undefined) {
+        total += Number(wpData[anaplanId]) || 0;
+      }
+    }
+  
+    return total;
+  }
+  generateExcelSummaryAnaplan(){
+    const mainAccountLabels = this.anaplanLabels.map(d => d.label);
+    let header = this.actualWps.map(wp => wp.ost_wp.acronym);
+    header = ['Main Accounts', ...header, 'Total budget (USD)'];
+
+    const COLUMNS_COUNT = header.length;
+    const TOTAL_BUDGET_COLUMN_INDEX = COLUMNS_COUNT - 1;
+    const DATA_ROWS_COUNT = mainAccountLabels.length; 
+    const HEADER_ROW = 0;
+    const FIRST_DATA_ROW = HEADER_ROW + 1;
+    const SUB_TOTAL_ROW = FIRST_DATA_ROW + DATA_ROWS_COUNT; 
+    console.log(mainAccountLabels, header);
+
+    const ws = XLSX.utils.aoa_to_sheet([header]);
+
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: { top: { style: "thin" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+    };
+    
+    const subtotalHeaderStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+    
+    const subtotalCellStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      border: { top: { style: "medium" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+      numFmt: '0',
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+    
+    const dataCellStyle = {
+      alignment: { horizontal: "center", vertical: "center" },
+      border: { top: { style: "thin" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+      numFmt: '0',
+    };
+
+    let currentRow = FIRST_DATA_ROW;
+    const formulae = [];
+    const sheetData = [];
+
+    this.anaplanLabels.forEach(anaplan => {
+      const rowArray = [anaplan.label]; // Start with the static Main Account label
+      
+      this.actualWps.forEach((wp, colIndex) => {
+        const budgetValue = this.getAnaplanValueAcrossPartners(wp.ost_wp.wp_official_code, anaplan.id) || 0;
+        rowArray.push(budgetValue);
+      });
+      
+      rowArray.push(0); // Placeholder for Total Budget (USD)
+      sheetData.push(rowArray);
+
+      const startCell = XLSX.utils.encode_cell({ r: currentRow, c: 1 });
+      const endCell = XLSX.utils.encode_cell({ r: currentRow, c: TOTAL_BUDGET_COLUMN_INDEX - 1 }); 
+      const totalBudgetCell = XLSX.utils.encode_cell({ r: currentRow, c: TOTAL_BUDGET_COLUMN_INDEX }); 
+
+      formulae.push({ cell: totalBudgetCell, formula: `=SUM(${startCell}:${endCell})` });
+
+      currentRow++;
+    });
+
+    XLSX.utils.sheet_add_aoa(ws, sheetData, { origin: -1 });
+    const subTotalRowData: any = ['Sub-total'];
+
+    for (let C = 1; C < COLUMNS_COUNT; C++) {
+      const startCell = XLSX.utils.encode_cell({ r: FIRST_DATA_ROW, c: C });
+      const endCell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW - 1, c: C });
+      const subTotalCell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW, c: C });
+
+      formulae.push({ cell: subTotalCell, formula: `=SUM(${startCell}:${endCell})` });
+      subTotalRowData.push(0);
+    }
+
+    XLSX.utils.sheet_add_aoa(ws, [subTotalRowData], { origin: -1 });
+
+    formulae.forEach(({ cell, formula }) => {
+      if (!ws[cell]) ws[cell] = { t: 'n', v: 0 }; 
+      ws[cell].t = 'f';
+      ws[cell].f = formula;
+    });
+
+
+    for (let C = 0; C < COLUMNS_COUNT; ++C) {
+      const cell = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (ws[cell]) ws[cell].s = headerStyle;
+    }
+
+    // Data Cell Styling (Rows 1 to DATA_ROWS_COUNT) 
+    for (let R = FIRST_DATA_ROW; R < SUB_TOTAL_ROW; R++) {
+      for (let C = 0; C < COLUMNS_COUNT; C++) {
+        const cell = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cell]) {
+            ws[cell].s = dataCellStyle;
+        }
+      }
     }
 
     for (let C = 0; C < COLUMNS_COUNT; C++) {

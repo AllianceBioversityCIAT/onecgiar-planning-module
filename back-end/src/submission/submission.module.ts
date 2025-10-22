@@ -32,6 +32,7 @@ import { EmailService } from 'src/email/email.service';
 import { History } from 'src/entities/history.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { AnaplanModule } from 'src/anaplan/anaplan.module';
+import { BudgetAssumptionsModule } from 'src/budget-assumptions/budget-assumptions.module';
 
 @Module({
   imports: [
@@ -63,7 +64,8 @@ import { AnaplanModule } from 'src/anaplan/anaplan.module';
     PhasesModule,
     InitiativesModule,
     PeriodsModule,
-    AnaplanModule
+    AnaplanModule,
+    BudgetAssumptionsModule
   ],
   controllers: [SubmissionController],
   providers: [SubmissionService, EmailService],
