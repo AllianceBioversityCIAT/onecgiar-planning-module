@@ -34,12 +34,13 @@ import { BudgetAssumptionsService } from "../services/budget-assumptions.service
 import { AnaplanService } from "../services/anaplan.service";
 import { ClarisaCountryService } from "../services/clarisa-country.service";
 import { MatTabGroup } from "@angular/material/tabs";
-import { Location } from "@angular/common";
+import { DecimalPipe, Location } from "@angular/common";
 
 @Component({
   selector: "app-submission",
   templateUrl: "./submission.component.html",
   styleUrls: ["./submission.component.scss"],
+   providers: [DecimalPipe] 
 })
 export class SubmissionComponent implements OnInit, OnDestroy {
   title = "planning";
@@ -66,7 +67,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private anaplanService: AnaplanService,
     private countryService: ClarisaCountryService,
     private location: Location,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private decimalPipe: DecimalPipe
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -3335,7 +3337,7 @@ totalConsolidatedTargetPartner: any;
         0
       );
     });
-    return totals[wp];
+    return this.decimalPipe.transform(totals[wp], '1.2-2');;
   }
   
   getTotalsByAnaplan(partnerCode: number, anaplan_id:number) {
@@ -3355,10 +3357,10 @@ totalConsolidatedTargetPartner: any;
         totals[id] += val;
       });
     });
-    return totals[anaplan_id];
+    return this.decimalPipe.transform(totals[anaplan_id], '1.2-2');
   }
 
-  getAnaplanTotal(partnerCode: number): number {
+  getAnaplanTotal(partnerCode: number):number {
     const partnerData = this.anaplanBudgets[partnerCode];
     if (!partnerData) return 0;
   
@@ -3407,7 +3409,7 @@ totalConsolidatedTargetPartner: any;
     )
   }
 
-  getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number): number {
+  getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number) {
     let total = 0;
   
     for (const partnerCode in this.anaplanBudgets) {
@@ -3418,7 +3420,7 @@ totalConsolidatedTargetPartner: any;
       }
     }
   
-    return total;
+    return this.decimalPipe.transform(total, '1.2-2');
   }
 
 
@@ -3441,7 +3443,7 @@ totalConsolidatedTargetPartner: any;
 
 
 
-  getWpTotalsAcrossPartners(wpCode: string): number {
+  getWpTotalsAcrossPartners(wpCode: string) {
     let total = 0;
   
     for (const partnerCode in this.anaplanBudgets) {
@@ -3454,7 +3456,7 @@ totalConsolidatedTargetPartner: any;
       }
     }
   
-    return total;
+    return this.decimalPipe.transform(total, '1.2-2');
   }
   
   getSummaryTotalAnaplan(): number {
