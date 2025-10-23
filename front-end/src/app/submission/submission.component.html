@@ -4512,6 +4512,7 @@
                     <td *ngIf="!toggleIndicatorValues">
                       {{ totalTargetsIndicator?.[partner.code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                     </td>
+
                     <td *ngIf="toggleIndicatorValues">
                       {{ totalTargetsIndicatorPartners?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 }}
                     </td>
@@ -6308,10 +6309,8 @@
                         
 
                         <td   [ngClass]="{
-                          itemHasError:
-                            itemHasError[partner.code][
-                            result?.group?.ost_wp?.wp_official_code + '-melia'
-                            ][item.id]
+                            itemHasError: itemHasError?.[partner.code]?.[result?.group?.ost_wp?.wp_official_code + '-melia']?.[item?.id]
+
                         }">
                           <div class="td-flex">
                             <mat-form-field
@@ -6321,19 +6320,19 @@
                             appearance="outline"
                             class="budget"
                             *ngIf="
-                              item.category != 'EOI' && item.category != 'OUTCOME'
+                              budgetValues?.[partner.code]?.[result?.group?.ost_wp?.wp_official_code + '-melia'] && displayBudgetValues?.[partner.code]?.[result?.group?.ost_wp?.wp_official_code + '-melia']
                             "
                           >
                             <input
                               mask="separator.2"
                               thousandSeparator=","
                               *ngIf="
-                                toggleValues[partner.code][
+                                toggleValues[partner.code]?.[
                                 result?.group?.ost_wp?.wp_official_code + '-melia'
                                 ]
                               "
                               [disabled]="
-                                partnersStatus[partner.code] ||
+                                partnersStatus?.[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
                                 !partner?.canEdit ||
@@ -6341,9 +6340,9 @@
                               "
                               (keyup)="
                                 changeCalc(
-                                  partner.code,
+                                  partner?.code,
                                   result?.group?.ost_wp?.wp_official_code + '-melia',
-                                  item.id,
+                                  item?.id,
                                   item?.ipsr?.id ? item?.ipsr.title : item.title,
                                   'budget',
                                   false,
@@ -6363,12 +6362,12 @@
                               mask="separator.2"
                               thousandSeparator=","
                               *ngIf="
-                                !toggleValues[partner.code][
+                                !toggleValues[partner.code]?.[
                                 result?.group?.ost_wp?.wp_official_code + '-melia'
                                 ]
                               "
                               [disabled]="
-                                partnersStatus[partner.code] ||
+                                partnersStatus?.[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
                                 !partner?.canEdit ||
@@ -6399,22 +6398,26 @@
                           src="../../assets/shared-image/Vector.png"
                           matTooltip="Budget assumptions"
                           [ngClass]="{
-                            'disabled-icon': !hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-melia') 
-                                             && !displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id],
-                            
-                            'normal-icon': hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-melia') 
-                                            && displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id],
-                            
-                            'half-opacity-icon': !hasBudgetAssumptions(partner.code, item.id, result?.group?.ost_wp?.wp_official_code + '-melia') 
-                                                 && displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id]
+                            'disabled-icon': 
+                              !hasBudgetAssumptions(partner.code, item?.id, result?.group?.ost_wp?.wp_official_code + '-melia') &&
+                              !(displayBudgetValues?.[partner.code]?.[result?.group?.ost_wp?.wp_official_code + '-melia']?.[item?.id] > 0),
+                          
+                            'normal-icon': 
+                              hasBudgetAssumptions(partner.code, item?.id, result?.group?.ost_wp?.wp_official_code + '-melia') &&
+                              displayBudgetValues?.[partner.code]?.[result?.group?.ost_wp?.wp_official_code + '-melia']?.[item?.id] > 0,
+                          
+                            'half-opacity-icon': 
+                              !hasBudgetAssumptions(partner.code, item?.id, result?.group?.ost_wp?.wp_official_code + '-melia') &&
+                              displayBudgetValues?.[partner.code]?.[result?.group?.ost_wp?.wp_official_code + '-melia']?.[item?.id] > 0
                           }"
+                          
                           matTooltipPosition="above"
                           (click)="displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id] &&
                           openBudgetAssumptionsDialog(
                             partner.code,
                             item.id,
                             result?.group?.ost_wp?.wp_official_code + '-melia',
-                            displayBudgetValues[partner.code][result?.group?.ost_wp?.wp_official_code + '-melia'][item.id],
+                            displayBudgetValues[partner.code]?.[result?.group?.ost_wp?.wp_official_code + '-melia']?.[item.id],
                             'MELIA',
                             null
                             )"
