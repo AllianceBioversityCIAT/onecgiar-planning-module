@@ -6,6 +6,12 @@
   position: relative;
   bottom: -6px;
 }
+.w-10{
+  width: 10% !important;
+}
+.talign-center {
+  text-align: center !important;
+}
 .pointer {
   cursor: pointer;
 }
@@ -120,7 +126,7 @@ mat-form-field {
   animation: moveInBottom 1.5s ease-out 1.95s;
   animation-fill-mode: backwards;
   position: relative;
-  left: 3.3rem;
+  // left: 3.3rem;
 }
 
 .text-box {
@@ -520,7 +526,15 @@ mat-slide-toggle {
   background-color: blue !important;
 }
 
-
+td input{
+  text-align: center;
+}
+::ng-deep .tdul{
+  margin-left: 20px !important;
+  li{
+    margin-bottom: 5px;
+  }
+}
 .th-1-m {
   margin-left: 0.1rem;
   text-align: center;
@@ -741,126 +755,23 @@ table {
   td:nth-child(1) {
     text-align: left;
     max-width: 400px;
-    padding: 2.3rem;
+    padding: 0.6rem;
   }
 
   td:nth-child(2) {
     width: 100px !important;
   }
 
-  // th:nth-child(2) {
-  //   width: 27rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(2) {
-  //   width: 27rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(3) {
-  //   width: 200rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(3) {
-  //   width: 26rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(4) {
-  //   width: 200rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(4) {
-  //   width: 30rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(5) {
-  //   width: 200rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(5) {
-  //   width: 19rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(6) {
-  //   width: 200rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(6) {
-  //   width: 19rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(7) {
-  //   width: 50rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(7) {
-  //   width: 12rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(8) {
-  //   width: 100rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(8) {
-  //   width: 12rem;
-
-  //   padding: 1rem;
-  // }
-
-  // th:nth-child(9) {
-  //   width: 100rem;
-
-  //   padding: 1rem;
-  // }
-
-  // td:nth-child(9) {
-  //   width: 12rem;
-  //   // height: 3.5rem;
-  //   padding: 1rem;
-  // }
-
   td {
     border: 1px solid #b9b9b9b5;
 
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem;
     font-style: normal;
     font-weight: 400;
-    line-height: 114.5%; /* 1.374rem */
-    // background-color: #f0f0f0;
-
-    /* font-weight: 500; */
-    /* margin: 16px 0 12px 0; */
-    /* display: block; */
-    /* max-width: 450px; */
-    /* min-width: 250px; */
+    line-height: 114.5%; 
     white-space: normal !important;
   }
 
@@ -1381,7 +1292,7 @@ pre {
 .form-container-3 {
   position: relative;
   top: -6rem;
-  left: 3.2rem;
+  // left: 3.2rem;
 
   .search-3 {
     display: flex;
@@ -1396,7 +1307,7 @@ pre {
 .form-container-4 {
   position: relative;
   top: -6rem;
-  left: 3.2rem;
+  // left: 3.2rem;
 
   .search-4 {
     display: flex;
@@ -1429,7 +1340,7 @@ pre {
   }
 
   td:nth-child(2) {
-    text-align: center;
+    text-align: left;
     max-width: 900px;
   }
 
@@ -1439,7 +1350,7 @@ pre {
     border: 1px solid #b9b9b9b5;
 
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem;
     font-style: normal;
@@ -1494,11 +1405,11 @@ pre {
   }
 
   td:nth-child(2) {
-    text-align: center;
+    text-align: left;
     width: 40%;
   }
   td:nth-child(3) {
-    text-align: center;
+    text-align: left;
     width: 20%;
   }
   td:nth-child(4) {
@@ -1511,7 +1422,7 @@ pre {
     border: 1px solid #b9b9b9b5;
 
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem;
     font-style: normal;
@@ -1772,7 +1683,7 @@ pre {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 3.2rem;
+  // padding: 0 3.2rem;
 }
 
 .risk-report-btn-box {
@@ -1915,7 +1826,11 @@ pre {
 }
 
 .itemHasError {
-  border: solid 2px red;
+  border: solid 2px red !important;
+}
+
+.itemIndicatorHasError {
+  border: solid 2px red !important;
 }
 
 
@@ -2001,16 +1916,19 @@ pre {
 .pooled {
   margin-bottom: 60px !important;
 }
+.p-0 {
+  padding: 0 !important;
+}
 .sub-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
-  margin-bottom: 30px;
-
-    width: 100%;
+  margin-top: -8px;
+  margin-bottom: 19px;
+  width: 100%;
   .sub-title {
-    bottom: -25px;
+    bottom: -60px;
+    padding: 0 1.8rem;
     position: relative;
     font-family: var(--mdc-typography-headline6-font-family, var(--mdc-typography-font-family, Roboto, sans-serif));
     font-size: 18px;
@@ -2193,8 +2111,8 @@ pre {
 
 
 .sub-title-2 {
-  bottom: -50px !important;
-
+  bottom: -66px !important;
+  padding: 0 2.2 rem;
 }
 
 .btns-sec {
@@ -2341,37 +2259,13 @@ pre {
     text-align: left;
   }
 
-  td:nth-child(1) {
-    text-align: center;
-    width: 30% !important;
-    padding: 2.3rem;
-  }
-
-  td:nth-child(2) {
-    width: 10% !important;
-    max-width: 100px !important;
-  }
-
-  td:nth-child(3) {
-    text-align: left;
-    width: 40% !important;
-    padding: 1.3rem;
-  }
-
-  td:nth-child(4) {
-    max-width: 100px !important;
-    width: 10% !important;
-  }
-
-  td:nth-child(5) {
-    width: 10% !important;
-  }
+  
  
   td {
     border: 1px solid #b9b9b9b5;
 
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     font-family: "Poppins", sans-serif !important;
     font-size: 1.3rem;
     font-style: normal;
@@ -2419,11 +2313,11 @@ pre {
   text-align: center !important;
 }
 
-.table-box-anaplan table th:first-child,
 .table-box-anaplan table td:first-child {
-  width: 300px !important;
-  max-width: 125px !important;
-  text-align: center !important;
+  width: 337px !important;
+  max-width: 337px !important;
+  padding: 10px;
+  text-align: left !important;
 }
 
 
@@ -2511,4 +2405,10 @@ pre {
 }
 ::ng-deep .mat-tab-body-wrapper {
   min-height: 100vh;
+}
+
+.aow-title {
+  padding: 0px 1.7rem !important;
+  margin-bottom: -70px;
+  font-weight: 600;
 }

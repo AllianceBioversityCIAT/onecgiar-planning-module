@@ -3,6 +3,7 @@ import { ClarisaCountry } from "./clarisa-country.entity";
 import { WorkPackage } from "./workPackage.entity";
 import { Initiative } from "./initiative.entity";
 import { Organization } from "./organization.entity";
+import { Phase } from "./phase.entity";
 
 @Entity('partner_countries')
 export class PartnerCountry {
@@ -26,6 +27,14 @@ export class PartnerCountry {
 
   @Column()
   wp_id: number;
+
+
+  @JoinColumn({ name: 'phase_id' })
+  @ManyToOne(() => Phase)
+  phase: Phase;
+
+  @Column({ nullable: true})
+  phase_id: number;
   
   @JoinColumn({ name: 'initiative_id' })
   @ManyToOne(() => Initiative)

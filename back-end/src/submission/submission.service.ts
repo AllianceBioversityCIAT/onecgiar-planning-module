@@ -37,6 +37,7 @@ import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { AnaplanService } from 'src/anaplan/anaplan.service';
+import { BudgetAssumptionsService } from 'src/budget-assumptions/budget-assumptions.service';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -66,6 +67,7 @@ export class SubmissionService {
     private initService: InitiativesService,
     private periodService: PeriodsService,
     private anaplanService: AnaplanService,
+    private budgetAssumptionsService: BudgetAssumptionsService,
     // @InjectRepository(Melia)
     // private meliaRepository: Repository<Melia>,
     @InjectRepository(CrossCutting)
@@ -585,24 +587,26 @@ export class SubmissionService {
     }
   }
 
-  async getSelectedCountry(resultId: number, initiative_id: string ) {
+  async getSelectedCountry(resultId: number, initiative_id: string, phase_id: number) { 
     return await this.partnerCountryRepository
     .createQueryBuilder("pc")
     .leftJoin("pc.organization", "org")
     .leftJoin("pc.country", "country")
     .leftJoin("pc.initiative", "initiative")
+    .leftJoin("pc.phase", "phase")
     .select("pc.result_id", "resultId")
     .addSelect("pc.center_code", "centerCode")
     .addSelect("org.acronym", "centerName")
     .addSelect("GROUP_CONCAT(country.name ORDER BY country.name)", "countries")
     .where("pc.result_id = :resultId", { resultId: resultId })
     .andWhere('initiative.official_code = :initiative_id', { initiative_id })
+    .andWhere('phase.id = :phase_id', { phase_id })
     .groupBy("pc.result_id")
     .addGroupBy("pc.center_code")
     .addGroupBy("org.acronym")
     .getRawMany();
 
-  }
+  } 
 
   async saveResultData(id, data: any, user) {
     const initiativeId = id;
@@ -674,7 +678,7 @@ export class SubmissionService {
         async (data) => {
           const history = this.historyRepository.create();
           history.item_name = title;
-          history.resource_property = value ? 'Checked period' : 'unchecked period';
+          history.resource_property = value ? 'Checked partner' : 'unchecked partner';
           history.old_value = newResultPeriodValue.value == true ? 'False' : 'True';
           history.new_value = value == true ? 'True' : 'False';
           history.user_id = user.id;
@@ -838,7 +842,7 @@ export class SubmissionService {
   }
   async saveResultDataValue(id, data: any, user) {
     const initiativeId = id;
-    // console.log('data' ,data)
+    console.log('data' ,data)
     const {
       partner_code,
       wp_id,
@@ -852,6 +856,19 @@ export class SubmissionService {
       parent_id,
       indicator_type
     } = data;
+
+    let budgetAssumptionsData = {
+      organization_code: partner_code,
+      item_id: item_id,
+      wp_id: wp_id,
+      type: type,
+      phase_id: phase_id
+    }
+    let budgetAssumptions = await this.budgetAssumptionsService.findOne(budgetAssumptionsData)
+
+    if(budget_value == 0 && budgetAssumptions) {
+      await this.budgetAssumptionsService.delete(budgetAssumptions.id);
+    }
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: initiativeId,
     });
@@ -1847,6 +1864,9 @@ export class SubmissionService {
   savedValuesForIndicator: any = null;
   displayBudgetValuesIndicator: any = {};
   displayBudgetValuesItemIndicator: any = {};
+  totalTargetsIndicatorPartners: any = {};
+  totalConsolidatedTargetPartner: any;
+
   async generateExcel(submissionId: any, initId: any, tocData: any, organization: any, showGeographicScope: boolean) { 
     this.perValues = {};
     this.perValuesSammary = {};
@@ -1864,6 +1884,7 @@ export class SubmissionService {
     this.sammary = {};
     this.summaryBudgets = {};
     this.totalTargetsIndicator = {};
+    this.totalTargetsIndicatorPartners = {};
     this.budgetValuesIndicatorSummary = {};
     this.displayBudgetValuesIndicator = {};
     this.displayBudgetValuesItemIndicator = {};
@@ -2359,9 +2380,11 @@ export class SubmissionService {
     this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
 
     this.setTotalTargetForIndicators();
-    // this.setTotalTargetForIndicatorsForPartners()
+    this.setTotalTargetForIndicatorsForPartners()
     this.setItemIndicatorAndBudget();
     this.sammaryCalc();
+    this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners);
+
     const firstKey = Object.keys(this.allData)[0];
     //sort first AOW
       const newCROSS = this.allData[firstKey].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
@@ -3714,37 +3737,83 @@ export class SubmissionService {
 
 
 
+    if(organization){
+    //  center Consolidated
+    const centerConsolidated = this.generateExcelCenterConsolidated(organization.code);
+    XLSX.utils.book_append_sheet(wb, centerConsolidated, 'summary');
 
-    
-    //  summary Consolidated
-    const summaryConsolidated = this.generateExcelSummaryConsolidated();
-    XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'new summary');
 
-    // HLO for summary
-    const summaryHighLevelOutput = this.generateExcelSummaryHLO();
-    XLSX.utils.book_append_sheet(wb, summaryHighLevelOutput, 'HLO');
+    // cenert Cross-Cutting
+    const centerCross = this.generateExcelCenterCrossCutting(organization.code);
+    XLSX.utils.book_append_sheet(wb, centerCross, 'Cross-Cutting');
 
-    // Outcome for summary
-    const summaryOutcome = this.generateExcelSummaryOutcome();
-    XLSX.utils.book_append_sheet(wb, summaryOutcome, 'Outcome');
 
-    // synergy programs for summary
-    const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
-    XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'synergy programs');
-    /********************************  For centers *****************************/
+    // HLO for center
+    const centerHighLevelOutput = this.generateExcelCenterHLO(organization.code);
+    XLSX.utils.book_append_sheet(wb, centerHighLevelOutput, 'HLO');
+
+    // Partners for centers
+    const partnersCenterSheet = this.generateExcelCenterPartner(organization.code);
+    XLSX.utils.book_append_sheet(wb, partnersCenterSheet, 'Partner');
+
+
     const data = await this.getActualTocs(this.initiative_data.official_code);
-    for(let partner of partners) {
-      const projectSheet = await this.generateExcelProject(data.projects,partner, 'project');
-      XLSX.utils.book_append_sheet(wb, projectSheet, partner.acronym + '-project');
 
-      const meliaSheet = await this.generateExcelProject(data.melias,partner, 'melia');
-      XLSX.utils.book_append_sheet(wb, meliaSheet, partner.acronym + '-melia');
+    if(data.projects.length) {
+      const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
+      XLSX.utils.book_append_sheet(wb, projectSheet, 'project');
     }
-    for(let partner of partners) {
-      const anaplanSheet = this.generateExcelAnaplan(partner);
-      XLSX.utils.book_append_sheet(wb, anaplanSheet, partner.acronym + '-Anaplan');
+   
+    if(data.melias.length) {
+      const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
+      XLSX.utils.book_append_sheet(wb, meliaSheet, 'melia');
     }
-    /********************************  For centers *****************************/
+
+    const anaplanSheet = this.generateExcelAnaplan(organization);
+    XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
+
+
+
+    } else {
+      //  summary Consolidated
+      const summaryConsolidated = this.generateExcelSummaryConsolidated();
+      XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'summary');
+
+      // HLO for summary
+      const summaryHighLevelOutput = this.generateExcelSummaryHLO();
+      XLSX.utils.book_append_sheet(wb, summaryHighLevelOutput, 'HLO');
+
+
+      // Outcome for summary
+      const summaryOutcome = this.generateExcelSummaryOutcome();
+      XLSX.utils.book_append_sheet(wb, summaryOutcome, 'Outcome');
+
+      // melia for summary
+      const summaryMelia = this.generateExcelSummaryMelia();
+      XLSX.utils.book_append_sheet(wb, summaryMelia, 'melia');
+
+      // project for summary
+      const summaryProject = this.generateExcelSummaryProject();
+      XLSX.utils.book_append_sheet(wb, summaryProject, 'project');
+
+      // summary Cross-Cutting
+      const summaryCross = this.generateExcelSummaryCrossCutting();
+      XLSX.utils.book_append_sheet(wb, summaryCross, 'Cross-Cutting');
+
+
+      // synergy programs for summary
+      const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
+      XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'synergy programs');
+
+      // Partners for summary
+      const partnersSummarySheet = this.generateExcelSummaryPartner();
+      XLSX.utils.book_append_sheet(wb, partnersSummarySheet, 'Partner');
+
+      const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
+      XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
+  
+    }
+    
 
     await XLSX.writeFile(
       wb,
@@ -4393,55 +4462,55 @@ export class SubmissionService {
       });
     });
   }
-  // setTotalTargetForIndicatorsForPartners() {
-  //   for (let partner of this.partners) {
-  //     if (!this.totalTargetsIndicatorPartners[partner.code]) {
-  //       this.totalTargetsIndicatorPartners[partner.code] = {};
-  //     }
-  //     for (let wp of this.actualWps) {
-  //       if (!this.totalTargetsIndicatorPartners[partner.code][wp.ost_wp.wp_official_code]) {
-  //         this.totalTargetsIndicatorPartners[partner.code][wp.ost_wp.wp_official_code] = {};
-  //       }
-  //     }
-  //   }
+  setTotalTargetForIndicatorsForPartners() {
+    for (let partner of this.partners) {
+      if (!this.totalTargetsIndicatorPartners[partner.code]) {
+        this.totalTargetsIndicatorPartners[partner.code] = {};
+      }
+      for (let wp of this.actualWps) {
+        if (!this.totalTargetsIndicatorPartners[partner.code][wp.ost_wp.wp_official_code]) {
+          this.totalTargetsIndicatorPartners[partner.code][wp.ost_wp.wp_official_code] = {};
+        }
+      }
+    }
    
-  //   for (let wp of this.actualWps) {
-  //     const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
+    for (let wp of this.actualWps) {
+      const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
     
-  //     for (let wpData of wpDataArray) {
-  //       const wpCode = wpData.ost_wp?.wp_official_code || wp.ost_wp.wp_official_code;
+      for (let wpData of wpDataArray) {
+        const wpCode = wpData.ost_wp?.wp_official_code || wp.ost_wp.wp_official_code;
     
-  //       for (let indicator of wpData.quantitative_indicators || []) {
-  //         const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
-  //           ? indicator.type.value
-  //           : 'Other';
+        for (let indicator of wpData.quantitative_indicators || []) {
+          const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
+            ? indicator.type.value
+            : 'Other';
     
-  //         for (let target of indicator.targets || []) {
-  //           for (let targetPartner of target.centers || []) {
-  //             const partnerCode = targetPartner.code;
+          for (let target of indicator.targets || []) {
+            for (let targetPartner of target.centers || []) {
+              const partnerCode = targetPartner.code;
     
-  //             if (!this.totalTargetsIndicatorPartners[partnerCode]) {
-  //               this.totalTargetsIndicatorPartners[partnerCode] = {};
-  //             }
+              if (!this.totalTargetsIndicatorPartners[partnerCode]) {
+                this.totalTargetsIndicatorPartners[partnerCode] = {};
+              }
     
-  //             if (!this.totalTargetsIndicatorPartners[partnerCode][wpCode]) {
-  //               this.totalTargetsIndicatorPartners[partnerCode][wpCode] = {};
-  //             }
+              if (!this.totalTargetsIndicatorPartners[partnerCode][wpCode]) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode] = {};
+              }
     
-  //             if (!this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType]) {
-  //               this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] = 0;
-  //             }
+              if (!this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType]) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] = 0;
+              }
     
-  //             const value = parseFloat(target[this.phase.reportingYear]); 
-  //             if (!isNaN(value)) {
-  //               this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+              const value = parseFloat(target[this.phase.reportingYear]); 
+              if (!isNaN(value)) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   setvalues(valuesToSet: any, perValuesToSet: any) {
     if (valuesToSet != null)
       Object.keys(this.values).forEach((code) => {
@@ -4807,6 +4876,56 @@ export class SubmissionService {
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
+  getTotalBudgetForEachPartner(budgets: { [key: string]: any }) {
+    return Object.entries(budgets)
+      .filter(([key]) => 
+        !key.includes('-project')
+      )
+      .reduce((sum, [, value]) => sum + Number(value || 0), 0)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  getTotalBudgetForEachPartnerPartner(budgets: { [key: string]: any }) {
+    return Object.entries(budgets)
+    .filter(([key]) => key.includes("-partners"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  getTotalBudgetForEachPartnerMelia(budgets: { [key: string]: any }) {
+    return Object.entries(budgets)
+    .filter(([key]) => key.includes("-melia"))
+    .reduce((sum, [_, value]) => sum + Number(value), 0)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  getTotalIndValuesByPartner(data: any): Record<string, Record<string, number>> {
+    if (!data) return {};
+  
+    const totals: Record<string, Record<string, number>> = {};
+  
+    Object.keys(data).forEach((partnerId) => {
+      totals[partnerId] = {};
+      const partner = data[partnerId];
+  
+      Object.keys(partner).forEach((category) => {
+        const categoryData = partner[category];
+  
+        if (typeof categoryData === 'object' && categoryData !== null) {
+          Object.keys(categoryData).forEach((indicator) => {
+            const value = categoryData[indicator];
+            if (typeof value === 'number') {
+              totals[partnerId][indicator] = (totals[partnerId][indicator] || 0) + value;
+            }
+          });
+        }
+      });
+    });
+    this.totalConsolidatedTargetPartner = totals;
+    console.log(totals)
+    return totals;
+  }
+  
   getCategory(category: string) {
     switch (category) {
       case "OUTPUT":
@@ -5295,6 +5414,146 @@ const totalRowIndex = rows.length + 1;
 
     return ws
   }
+  getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData && wpData[anaplanId] !== undefined) {
+        total += Number(wpData[anaplanId]) || 0;
+      }
+    }
+  
+    return total;
+  }
+  generateExcelSummaryAnaplan(){
+    const mainAccountLabels = this.anaplanLabels.map(d => d.label);
+    let header = this.actualWps.map(wp => wp.ost_wp.acronym);
+    header = ['Main Accounts', ...header, 'Total budget (USD)'];
+
+    const COLUMNS_COUNT = header.length;
+    const TOTAL_BUDGET_COLUMN_INDEX = COLUMNS_COUNT - 1;
+    const DATA_ROWS_COUNT = mainAccountLabels.length; 
+    const HEADER_ROW = 0;
+    const FIRST_DATA_ROW = HEADER_ROW + 1;
+    const SUB_TOTAL_ROW = FIRST_DATA_ROW + DATA_ROWS_COUNT; 
+    console.log(mainAccountLabels, header);
+
+    const ws = XLSX.utils.aoa_to_sheet([header]);
+
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: { top: { style: "thin" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+    };
+    
+    const subtotalHeaderStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+    
+    const subtotalCellStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      border: { top: { style: "medium" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+      numFmt: '0',
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+    
+    const dataCellStyle = {
+      alignment: { horizontal: "center", vertical: "center" },
+      border: { top: { style: "thin" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+      numFmt: '0',
+    };
+
+    let currentRow = FIRST_DATA_ROW;
+    const formulae = [];
+    const sheetData = [];
+
+    this.anaplanLabels.forEach(anaplan => {
+      const rowArray = [anaplan.label]; // Start with the static Main Account label
+      
+      this.actualWps.forEach((wp, colIndex) => {
+        const budgetValue = this.getAnaplanValueAcrossPartners(wp.ost_wp.wp_official_code, anaplan.id) || 0;
+        rowArray.push(budgetValue);
+      });
+      
+      rowArray.push(0); // Placeholder for Total Budget (USD)
+      sheetData.push(rowArray);
+
+      const startCell = XLSX.utils.encode_cell({ r: currentRow, c: 1 });
+      const endCell = XLSX.utils.encode_cell({ r: currentRow, c: TOTAL_BUDGET_COLUMN_INDEX - 1 }); 
+      const totalBudgetCell = XLSX.utils.encode_cell({ r: currentRow, c: TOTAL_BUDGET_COLUMN_INDEX }); 
+
+      formulae.push({ cell: totalBudgetCell, formula: `=SUM(${startCell}:${endCell})` });
+
+      currentRow++;
+    });
+
+    XLSX.utils.sheet_add_aoa(ws, sheetData, { origin: -1 });
+    const subTotalRowData: any = ['Sub-total'];
+
+    for (let C = 1; C < COLUMNS_COUNT; C++) {
+      const startCell = XLSX.utils.encode_cell({ r: FIRST_DATA_ROW, c: C });
+      const endCell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW - 1, c: C });
+      const subTotalCell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW, c: C });
+
+      formulae.push({ cell: subTotalCell, formula: `=SUM(${startCell}:${endCell})` });
+      subTotalRowData.push(0);
+    }
+
+    XLSX.utils.sheet_add_aoa(ws, [subTotalRowData], { origin: -1 });
+
+    formulae.forEach(({ cell, formula }) => {
+      if (!ws[cell]) ws[cell] = { t: 'n', v: 0 }; 
+      ws[cell].t = 'f';
+      ws[cell].f = formula;
+    });
+
+
+    for (let C = 0; C < COLUMNS_COUNT; ++C) {
+      const cell = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (ws[cell]) ws[cell].s = headerStyle;
+    }
+
+    // Data Cell Styling (Rows 1 to DATA_ROWS_COUNT) 
+    for (let R = FIRST_DATA_ROW; R < SUB_TOTAL_ROW; R++) {
+      for (let C = 0; C < COLUMNS_COUNT; C++) {
+        const cell = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cell]) {
+            ws[cell].s = dataCellStyle;
+        }
+      }
+    }
+
+    for (let C = 0; C < COLUMNS_COUNT; C++) {
+      const cell = XLSX.utils.encode_cell({ r: SUB_TOTAL_ROW, c: C });
+      if (C === 0) {
+        if (ws[cell]) ws[cell].s = subtotalHeaderStyle;
+      } else {
+        if (ws[cell]) ws[cell].s = subtotalCellStyle;
+      }
+    }
+
+    const colWidths = [
+      { wch: 25 }, // Main Accounts
+      ...Array(this.actualWps.length).fill({ wch: 10 }), // Dynamic AOW columns
+      { wch: 20 }  // Total budget (USD)
+    ];
+    ws['!cols'] = colWidths;
+
+    const colHeight = [
+      { hpt: 25 }, // Main Accounts
+      ...Array(mainAccountLabels.length).fill({ hpt: 20 }), // Dynamic AOW columns
+      { hpt: 20 }  // Total budget (USD)
+    ];
+    ws['!rows'] = colHeight;
+
+    return ws
+  }
 
   setTotalTargetForIndicators() {
     for (let wp of this.actualWps) {
@@ -5530,6 +5789,146 @@ const totalRowIndex = rows.length + 1;
   }
 
 
+  generateExcelCenterConsolidated(partner_code: number) {
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: { top: { style: "thin" }, right: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" } },
+    };
+  
+    const totalRowStyle = {
+      alignment: { horizontal: "center", vertical: "center" },
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+    };
+  
+    const numberCellStyle = {
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+
+    const ws_data = [
+      ['Area of Work', 'Pooled Funding', null, null, null, null, null, null, null, null, null, null, 'W3/ Bilateral Project (USD)'],
+      [null, 'Innovation Development', null, 'Knowledge product', null, 'Capacity Sharing', null, 'Others outputs', null, 'Partner budget', 'MELIA Studies budget', 'Total Pooled Funding budget (USD)', null],
+      [null, 'Target', 'Budget', 'Target', 'Budget', 'Target', 'Budget', 'Target', 'Budget', null, null, null, null],
+    ];
+
+    this.actualWps.forEach(wp => {
+      const row = [
+        wp.title,
+        this.totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 ,
+        this.budgetValuesIndicatorPartner[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 ,
+        this.totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 ,
+        this.budgetValuesIndicatorPartner[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0 ,
+        this.totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 ,
+        this.budgetValuesIndicatorPartner[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0 ,
+        this.totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 ,
+        this.budgetValuesIndicatorPartner[partner_code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0 ,
+        this.roundNumber(this.wp_budgets[partner_code][wp.ost_wp.wp_official_code + '-partners']) ?? 0,
+        this.roundNumber(this.wp_budgets[partner_code][wp.ost_wp.wp_official_code + '-melia']) ?? 0,
+        this.roundNumbers([
+          this.wp_budgets[partner_code][wp.ost_wp.wp_official_code],
+          this.wp_budgets[partner_code][wp.ost_wp.wp_official_code + '-melia'],
+          this.wp_budgets[partner_code][wp.ost_wp.wp_official_code + '-Cross-Cutting'],
+          this.wp_budgets[partner_code][wp.ost_wp.wp_official_code + '-partners']
+        ]) ?? 0,
+        this.roundNumber(this.wp_budgets[partner_code][wp.ost_wp.wp_official_code + '-project']) ?? 0,
+      ];
+      ws_data.push(row);
+    });
+    const totalRow = [
+      'Total',
+      this.getTotalIndAllValues(this.perAllValuesIndicator, 'Number of innovations (innovation development)'),
+      this.totalBudgetValuesIndicatorPartner[partner_code]?.['Number of innovations (innovation development)'] ?? 0,
+      this.getTotalIndAllValues(this.perAllValuesIndicator, 'Number of knowledge products'),
+      this.totalBudgetValuesIndicatorPartner[partner_code]?.['Number of knowledge products'] ?? 0,
+      this.getTotalIndAllValues(this.perAllValuesIndicator, 'Number of people trained (capacity sharing for development)'),
+      this.totalBudgetValuesIndicatorPartner[partner_code]?.['Number of people trained (capacity sharing for development)'] ?? 0,
+      this.getTotalIndAllValues(this.perAllValuesIndicator, 'custom-OUTPUT'),
+      this.totalConsolidatedTargetPartner[partner_code]?.['custom-OUTPUT'] ?? 0,
+      this.getTotalBudgetForEachPartnerMelia(this.wp_budgets[partner_code]),
+      this.getTotalBudgetForEachPartnerPartner(this.wp_budgets[partner_code]),
+      this.getTotalBudgetForEachPartner(this.wp_budgets[partner_code]),
+      this.getTotalBudgetForEachPartnerProject(this.wp_budgets[partner_code]),
+    ];
+    ws_data.push(totalRow);
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+
+    ws['!merges'] = [
+      // rowspan="3" for "Area of Work"
+      { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } },
+      // colspan="11" for "Pooled Funding"
+      { s: { r: 0, c: 1 }, e: { r: 0, c: 11 } },
+      // rowspan="3" for "W3/ Bilateral Project (USD)"
+      { s: { r: 0, c: 12 }, e: { r: 2, c: 12 } },
+      // colspan="2" for sub-headers
+      { s: { r: 1, c: 1 }, e: { r: 1, c: 2 } }, // Innovation Development
+      { s: { r: 1, c: 3 }, e: { r: 1, c: 4 } }, // Knowledge product
+      { s: { r: 1, c: 5 }, e: { r: 1, c: 6 } }, // Capacity Sharing
+      { s: { r: 1, c: 7 }, e: { r: 1, c: 8 } }, // Others outputs
+      // rowspan="2" for single headers
+      { s: { r: 1, c: 9 }, e: { r: 2, c: 9 } },  // Partner budget
+      { s: { r: 1, c: 10 }, e: { r: 2, c: 10 } },// MELIA Studies budget
+      { s: { r: 1, c: 11 }, e: { r: 2, c: 11 } },// Total Pooled Funding
+    ];
+
+    for (let R = 0; R < ws_data.length; ++R) {
+      for (let C = 0; C < ws_data[R].length; ++C) {
+          const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cell_address]) continue; // Skip empty cells from merges
+
+          // Apply header style to the first 3 rows
+          if (R < 3) {
+              ws[cell_address].s = headerStyle;
+          }
+          
+          // Apply number formatting to budget/numeric columns (skip headers)
+          const isNumericColumn = C === 2 || C === 4 || C === 6 || C === 8 || (C >= 9 && C <= 12);
+          if (R >= 3 && isNumericColumn) {
+              ws[cell_address].s = numberCellStyle;
+          }
+
+          // Apply total row style to the last row
+          if (R === ws_data.length - 1) {
+              // Combine total style with number style if applicable
+              ws[cell_address].s = isNumericColumn 
+                  ? { ...totalRowStyle, ...numberCellStyle } 
+                  : totalRowStyle;
+          }
+      }
+    }
+
+    const colHeight = [
+      { hpt: 15 },
+      { hpt: 15 },
+      { hpt: 15 },
+      ...Array(this.actualWps.length).fill({ hpt: 20 }),
+      { hpt: 25 }  // Total budget (USD)
+    ];
+    ws['!rows'] = colHeight;
+
+    ws['!cols'] = [
+      { wch: 30 }, // A: Area of Work
+      { wch: 12 }, // B: Target
+      { wch: 15 }, // C: Budget
+      { wch: 12 }, // D: Target
+      { wch: 15 }, // E: Budget
+      { wch: 12 }, // F: Target
+      { wch: 15 }, // G: Budget
+      { wch: 12 }, // H: Target
+      { wch: 15 }, // I: Budget
+      { wch: 25 }, // J: Partner budget
+      { wch: 25 }, // K: MELIA Studies budget
+      { wch: 35 }, // L: Total Pooled Funding
+      { wch: 30 }, // M: W3/ Bilateral Project
+  ];
+
+  return ws
+  }
+
+
   generateExcelSummaryHLO() {
     const headerStyle = {
       font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
@@ -5658,30 +6057,30 @@ const totalRowIndex = rows.length + 1;
                   merges.push({ s: { r: startRowForItem, c: 1 }, e: { r: startRowForItem + numIndicators - 1, c: 1 } });
                   merges.push({ s: { r: startRowForItem, c: 7 }, e: { r: startRowForItem + numIndicators - 1, c: 7 } });
               }
-          }else {
-            ws_data.push([
-              wpTitleCell,
-              item.title, 'No quantitative indicators available', null, null, null, null,
-              this.summaryBudgets[wpCode]?.[item.id] || 0,
-            ]);
-            merges.push({ s: { r: startRowForItem, c: 2 }, e: { r: startRowForItem, c: 6 } });
-            currentRowIndex++;
           }
+          // else  {
+          //   ws_data.push([
+          //     wpTitleCell,
+          //     item.title, 'No quantitative indicators available', null, null, null, null,
+          //     this.summaryBudgets[wpCode]?.[item.id] || 0,
+          //   ]);
+          //   merges.push({ s: { r: startRowForItem, c: 2 }, e: { r: startRowForItem, c: 6 } });
+          //   currentRowIndex++;
+          // }
         }
       });
 
-      // 4. Add the sub-total row for the work package
-      ws_data.push([
-          null, // Keep the first column empty
-          'HLO budget sub-total', null, null, null, null, null,
-          this.roundNumber(this.summaryBudgetsTotal[wpCode]) || 0,
-      ]);
-      merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 6 } });
-      currentRowIndex++;
-      
-      // 5. **Create the VERTICAL merge for the Work Package title**
-      const wpEndRow = currentRowIndex - 1; // The last row for this WP is the sub-total row
-      if (wpStartRow <= wpEndRow) {
+      if (currentRowIndex > wpStartRow) {
+        ws_data.push([
+            null,
+            'HLO budget sub-total', null, null, null, null, null,
+            this.roundNumber(this.summaryBudgetsTotal[wpCode]) || 0,
+        ]);
+        merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 6 } });
+        currentRowIndex++;
+      }
+      const wpEndRow = currentRowIndex - 1; 
+      if (currentRowIndex > wpStartRow) {
          merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
       }
     }
@@ -5748,6 +6147,227 @@ const totalRowIndex = rows.length + 1;
 
    
   }
+
+
+  generateExcelCenterHLO(partner_code: number) {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      border: {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' },
+      },
+    };
+    const subTotalRowStyle = {
+      font: { bold: true, color: { rgb: '000000' } },
+      fill: { fgColor: { rgb: 'E6E6E6' } }, 
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      alignment: { 
+          horizontal: 'center', 
+          vertical: 'center', 
+      }, 
+      border: {
+          top: { style: 'thin' }, bottom: { style: 'thin' },
+          left: { style: 'thin' }, right: { style: 'thin' },
+      }
+    };
+
+    const ws_data = [];
+    const merges = [];
+
+
+    ws_data.push([
+      'AOW', // Placeholder for the new vertical title column A
+      'High Level Output',
+      'Key Performance Indicators', null, null, null, null,
+      'Total Budget (USD)',
+    ]);
+    ws_data.push([
+      null, null, // Two placeholders now
+      'Description', 'Type', 'Geographic Location', 'Target', 'Budget (USD)', null,
+    ]);
+
+    // 2. Define Header Merges
+    merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }); // AOW
+    merges.push({ s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }); // High Level Output
+    merges.push({ s: { r: 0, c: 2 }, e: { r: 0, c: 6 } }); // Key Performance Indicators
+    merges.push({ s: { r: 0, c: 7 }, e: { r: 1, c: 7 } }); // Total Budget (USD)
+
+    let currentRowIndex = 2; // Start adding data from the 3rd row (index 2)
+
+
+    this.actualWps.forEach(wp => {
+      const wpCode = wp.ost_wp.wp_official_code;
+      const wpItems = this.partnersData[partner_code][wpCode] || [];
+      const isValidItem = wpItems.filter(d => d.category == 'OUTPUT');
+      // if (wpItems.length === 0) return; // Skip if no data
+
+      if(isValidItem.length){
+
+     
+      const wpStartRow = currentRowIndex; // Mark the starting row for this WP
+
+      // 3. Loop through items and build rows
+      wpItems.forEach((item, itemIndex) => {
+        if(item.category == 'OUTPUT') {
+          const startRowForItem = currentRowIndex;
+          const wpTitleCell = wp.ost_wp.acronym;
+
+          if (item.quantitative_indicators && item.quantitative_indicators.length > 0) {
+              const numIndicators = item.quantitative_indicators.length;
+              item.quantitative_indicators.forEach((indicator, indicatorIndex) => {
+                  const isFirstIndicator = (indicatorIndex === 0);
+                  let row;
+                  
+                  
+                  if (isFirstIndicator) {
+                      row = [
+                          wpTitleCell,
+                          item.title,
+                          indicator.description,
+                          indicator.type?.name || 'N/A',
+                          this.getScope(indicator, 'item'),
+                          this.getTargetValue(indicator?.targets),
+                          this.displayBudgetValuesIndicator[partner_code][wpCode]?.[item.id]?.[indicator?.id] || 0,
+                          this.displayBudgetValuesItemIndicator[partner_code][wpCode]?.[item.id] || 0,
+                      ];
+                  } else {
+                      row = [
+                          wpTitleCell, // This will always be null here
+                          null,
+                          indicator.description,
+                          indicator.type?.name || 'N/A',
+                          this.getScope(indicator, 'item'),
+                          this.getTargetValue(indicator?.targets),
+                          this.displayBudgetValuesIndicator[partner_code][wpCode]?.[item.id]?.[indicator?.id] || 0,
+                          null,
+                      ];
+                  }
+                  ws_data.push(row);
+                  currentRowIndex++;
+              });
+
+              // Rowspan for 'High Level Output' and 'Total Budget'
+              if (numIndicators > 1) {
+                  merges.push({ s: { r: startRowForItem, c: 1 }, e: { r: startRowForItem + numIndicators - 1, c: 1 } });
+                  merges.push({ s: { r: startRowForItem, c: 7 }, e: { r: startRowForItem + numIndicators - 1, c: 7 } });
+              }
+          }
+          // else {
+          //   ws_data.push([
+          //     wpTitleCell,
+          //     item.title, 'No quantitative indicators available', null, null, null, null,
+          //     this.displayBudgetValuesItemIndicator[partner_code][wpCode]?.[item.id] || 0,
+          //   ]);
+          //   merges.push({ s: { r: startRowForItem, c: 2 }, e: { r: startRowForItem, c: 6 } });
+          //   currentRowIndex++;
+          // }
+        }
+      });
+
+      if (currentRowIndex > wpStartRow) {
+        ws_data.push([
+            null,
+            'HLO budget sub-total', null, null, null, null, null,
+            this.wp_budgets[partner_code][wpCode] || 0,
+        ]);
+        merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 6 } });
+        currentRowIndex++;
+      }
+      const wpEndRow = currentRowIndex - 1; 
+      if (currentRowIndex > wpStartRow) {
+         merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
+      }
+    }
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!merges'] = merges;
+
+
+  ws['!cols'] = [
+    { wch: 8 },  // A: Narrow column for vertical WP title
+    { wch: 40 }, // B: High Level Output
+    { wch: 30 }, // C: Description
+    { wch: 30 }, // D: Type
+    { wch: 30 }, // E: Geographic Location
+    { wch: 10 }, // F: Target
+    { wch: 15 }, // G: Budget (USD)
+    { wch: 20 }, // H: Total Budget (USD)
+  ];
+
+
+  ws['!rows'] = []; 
+
+  for (let R = 0; R < ws_data.length; ++R) {
+    const isHeader = R < 2;
+    const isSubtotal = ws_data[R][1] === 'HLO budget sub-total';
+
+    if (isHeader) {
+      ws['!rows'][R] = { hpt: 30 };
+    } else if (isSubtotal) {
+      ws['!rows'][R] = { hpt: 25 };
+    } else {
+      ws['!rows'][R] = { hpt: 50 };
+    }
+
+    for (let C = 0; C < ws_data[R].length; ++C) {
+      const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = ws[cell_address];
+      if (!cell) continue; // 🟢 Skip empty cells safely
+  
+      if (R < 2) {
+        // Header rows (first two rows)
+        cell.s = headerStyle;
+      } else if (
+        ws_data[R][1] === 'HLO budget sub-total' // 🟢 Detect subtotal rows by value
+      ) {
+        cell.s = subTotalRowStyle;
+      } else {
+        cell.s = dataCellStyle;
+      }
+    }
+  }
+
+    merges.forEach(merge => {
+      // Find our vertical merges (column 0 to column 0)
+      if (merge.s.c === 0 && merge.e.c === 0) {
+          const cellAddress = XLSX.utils.encode_cell(merge.s);
+          if(ws[cellAddress]) {
+              ws[cellAddress].s = wpVerticalTitleStyle;
+          }
+      }
+    });
+    return ws
+
+   
+  }
+    
     
 
   generateExcelSummaryOutcome() {
@@ -5839,17 +6459,18 @@ const totalRowIndex = rows.length + 1;
   
           merges.push({ s: { r: startRowForItem, c: 1 }, e: { r: currentRowIndex - 1, c: 1 } });
   
-        } else {
-          ws_data.push([
-            wp.ost_wp.acronym,
-            item.title,
-            'No quantitative indicators available',
-            null,
-            null,
-          ]);
-          merges.push({ s: { r: startRowForItem, c: 2 }, e: { r: startRowForItem, c: 4 } });
-          currentRowIndex++;
-        }
+        } 
+        // else {
+        //   ws_data.push([
+        //     wp.ost_wp.acronym,
+        //     item.title,
+        //     'No quantitative indicators available',
+        //     null,
+        //     null,
+        //   ]);
+        //   merges.push({ s: { r: startRowForItem, c: 2 }, e: { r: startRowForItem, c: 4 } });
+        //   currentRowIndex++;
+        // }
       });
   
       const wpEndRow = currentRowIndex - 1;
@@ -6000,4 +6621,795 @@ const totalRowIndex = rows.length + 1;
   
     return ws;
   }
+
+
+
+
+  generateExcelSummaryPartner() {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const subTotalRowStyle = {
+      font: { bold: true, color: { rgb: "000000" } },
+      fill: { fgColor: { rgb: "E6E6E6" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const ws_data = [];
+    const merges = [];
+  
+    ws_data.push(["AOW", "Partner", "Center", "Geographic location", "Total Budget (USD)"]);
+    let currentRowIndex = 1; 
+  
+    this.actualWps.forEach((wp) => {
+      const wpCode = wp.ost_wp.wp_official_code + "-partners";
+      const wpItems = this.allData[wpCode] || [];
+  
+      const validPartners = wpItems.filter((item) => item.selectedCountries && item.selectedCountries.length > 0);
+      if (validPartners.length === 0) return;
+  
+      const wpStartRow = currentRowIndex;
+  
+      validPartners.forEach((item) => {
+        const startRowForItem = currentRowIndex;
+        const wpTitleCell = wp.ost_wp.acronym;
+  
+        if (item.selectedCountries && item.selectedCountries.length > 0) {
+          const numCountries = item.selectedCountries.length;
+  
+          item.selectedCountries.forEach((country, idx) => {
+            ws_data.push([
+              idx === 0 ? wpTitleCell : null,
+              idx === 0 ? item.name : null,
+              country.centerName,
+              country.countries || "N/A",
+              idx === 0 ? this.summaryBudgets[wpCode]?.[item.id] || 0 : null,
+            ]);
+            currentRowIndex++;
+          });
+  
+          // Merge partner name column (B)
+          if (numCountries > 1) {
+            merges.push({ s: { r: startRowForItem, c: 1 }, e: { r: startRowForItem + numCountries - 1, c: 1 } });
+            // Merge budget column (E)
+            merges.push({ s: { r: startRowForItem, c: 4 }, e: { r: startRowForItem + numCountries - 1, c: 4 } });
+          }
+        } 
+      });
+  
+      // ---- SUBTOTAL ROW ----
+      ws_data.push([
+        null,
+        "Contracted Partners budget sub-Total",
+        null,
+        null,
+        this.roundNumber(this.summaryBudgetsTotal[wpCode]) || 0,
+      ]);
+  
+      merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 3 } }); // Merge B-D for subtotal
+      currentRowIndex++;
+  
+      const wpEndRow = currentRowIndex - 1;
+      merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
+    });
+  
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws["!merges"] = merges;
+  
+    ws["!cols"] = [
+      { wch: 8 },  // A
+      { wch: 40 }, // B
+      { wch: 30 }, // C
+      { wch: 30 }, // D
+      { wch: 30 }, // E
+    ];
+  
+    ws["!rows"] = [];
+  
+    // ---- STYLING ----
+    for (let R = 0; R < ws_data.length; ++R) {
+      const isHeader = R === 0;
+      const isSubtotal = ws_data[R][1] === "Contracted Partners budget sub-Total";
+  
+      ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 50 };
+  
+      for (let C = 0; C < ws_data[R].length; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[cellAddress];
+        if (!cell) continue;
+  
+        if (isHeader) cell.s = headerStyle;
+        else if (isSubtotal) cell.s = subTotalRowStyle;
+        else cell.s = dataCellStyle;
+      }
+    }
+  
+    // ---- STYLE FOR WP VERTICAL TITLE ----
+    merges.forEach((merge) => {
+      if (merge.s.c === 0 && merge.e.c === 0) {
+        const cellAddress = XLSX.utils.encode_cell(merge.s);
+        if (ws[cellAddress]) ws[cellAddress].s = wpVerticalTitleStyle;
+      }
+    });
+  
+    return ws;
+  }
+
+  generateExcelCenterPartner(partner_code: any) {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const subTotalRowStyle = {
+      font: { bold: true, color: { rgb: "000000" } },
+      fill: { fgColor: { rgb: "E6E6E6" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const ws_data = [];
+    const merges = [];
+  
+    ws_data.push(["AOW", "Partner", "High level outputs", "Geographic location", "Total Budget (USD)"]);
+    let currentRowIndex = 1; 
+  
+    this.actualWps.forEach((wp) => {
+      const wpCode = wp.ost_wp.wp_official_code + "-partners";
+      const wpItems = this.partnersData[partner_code][wpCode] || [];
+  
+      const validPartners = wpItems
+      .filter(
+        (item) =>
+          item.selectedCountries &&
+          item.selectedCountries.length > 0 &&
+          item.selectedCountries.some((country) => country.centerCode === partner_code)
+      )
+      .map((item) => ({
+        ...item,
+        selectedCountries: item.selectedCountries.filter(
+          (country) => country.centerCode === partner_code
+        ),
+      }));
+      if (validPartners.length === 0) return;
+  
+      const wpStartRow = currentRowIndex;
+  
+      validPartners.forEach((item) => {
+        const startRowForItem = currentRowIndex;
+        const wpTitleCell = wp.ost_wp.acronym;
+  
+        if (item.selectedCountries && item.selectedCountries.length > 0) {
+          const numCountries = item.selectedCountries.length;
+  
+          item.selectedCountries.forEach((country, idx) => {
+            ws_data.push([
+              idx === 0 ? wpTitleCell : null,
+              idx === 0 ? item.name : null,
+
+              item.results,
+              country.countries || "N/A",
+              idx === 0 ? this.budgetValues[partner_code][wpCode]?.[item.id] || 0 : null,
+            ]);
+            currentRowIndex++;
+          });
+  
+          // Merge partner name column (B)
+          if (numCountries > 1) {
+            merges.push({ s: { r: startRowForItem, c: 1 }, e: { r: startRowForItem + numCountries - 1, c: 1 } });
+            // Merge budget column (E)
+            merges.push({ s: { r: startRowForItem, c: 4 }, e: { r: startRowForItem + numCountries - 1, c: 4 } });
+          }
+        } 
+      });
+  
+      ws_data.push([
+        null,
+        "Contracted Partners budget sub-Total",
+        null,
+        null,
+        this.wp_budgets[partner_code][wpCode] || 0,
+      ]);
+  
+      merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 3 } }); // Merge B-D for subtotal
+      currentRowIndex++;
+  
+      const wpEndRow = currentRowIndex - 1;
+      merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
+    });
+  
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws["!merges"] = merges;
+  
+    ws["!cols"] = [
+      { wch: 8 },  // A
+      { wch: 40 }, // B
+      { wch: 60 }, // C
+      { wch: 30 }, // D
+      { wch: 15 }, // E
+    ];
+  
+    ws["!rows"] = [];
+  
+    // ---- STYLING ----
+    for (let R = 0; R < ws_data.length; ++R) {
+      const isHeader = R === 0;
+      const isSubtotal = ws_data[R][1] === "Contracted Partners budget sub-Total";
+  
+      ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 70 };
+  
+      for (let C = 0; C < ws_data[R].length; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[cellAddress];
+        if (!cell) continue;
+  
+        if (isHeader) cell.s = headerStyle;
+        else if (isSubtotal) cell.s = subTotalRowStyle;
+        else cell.s = dataCellStyle;
+      }
+    }
+  
+    // ---- STYLE FOR WP VERTICAL TITLE ----
+    merges.forEach((merge) => {
+      if (merge.s.c === 0 && merge.e.c === 0) {
+        const cellAddress = XLSX.utils.encode_cell(merge.s);
+        if (ws[cellAddress]) ws[cellAddress].s = wpVerticalTitleStyle;
+      }
+    });
+  
+    return ws;
+  }
+  
+
+  generateExcelSummaryCrossCutting () {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const ws_data = [];
+    const merges = [];
+  
+    ws_data.push([
+      'AOW',
+      'Cost elements',
+      'Total budget (USD)',
+    ]);
+  
+  
+    let currentRowIndex = 1;
+  
+    this.actualWps.forEach(wp => {
+      const wpCode = wp.ost_wp.wp_official_code + '-Cross-Cutting';
+      const wpItems = this.allData[wpCode] || [];
+      if (!wpItems.length) return; // Skip if no data
+      const wpStartRow = currentRowIndex;
+
+  
+        wpItems.forEach(item => {
+    
+              const row = [
+                wp.ost_wp.acronym,
+                item.title,
+                this.summaryBudgets[wpCode][
+                  item.id
+                ]
+              ];
+              ws_data.push(row);
+              currentRowIndex++;
+        });
+        const wpEndRow = currentRowIndex - 1;
+        if (wpEndRow >= wpStartRow) {
+          merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
+        }
+    });
+  
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws['!merges'] = merges;
+  
+    ws['!cols'] = [
+      { wch: 10 }, // A: AOW
+      { wch: 40 }, 
+      { wch: 25 }, 
+    ];
+  
+    ws['!rows'] = [];
+    for (let R = 0; R < ws_data.length; ++R) {
+      const isHeader = R < 1;
+      ws['!rows'][R] = { hpt: isHeader ? 60 : 45 };
+  
+      for (let C = 0; C < ws_data[R].length; ++C) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[addr];
+        if (!cell) continue;
+        cell.s = isHeader ? headerStyle : dataCellStyle;
+      }
+    }
+  
+    merges.forEach(m => {
+      if (m.s.c === 0 && m.e.c === 0) {
+        const cellAddr = XLSX.utils.encode_cell(m.s);
+        if (ws[cellAddr]) ws[cellAddr].s = wpVerticalTitleStyle;
+      }
+    });
+  
+    return ws;
+  }
+
+
+
+  generateExcelCenterCrossCutting(partner_code: number) {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: '2B3C53' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: {
+        top: { style: 'thin' },
+        bottom: { style: 'thin' },
+        left: { style: 'thin' },
+        right: { style: 'thin' },
+      },
+    };
+  
+    const ws_data = [];
+    const merges = [];
+  
+    ws_data.push([
+      'AOW',
+      'Cross-Cutting',
+      'Description',
+      'Pooled Funded (USD)',
+    ]);
+  
+  
+    let currentRowIndex = 1;
+  
+    this.actualWps.forEach(wp => {
+      const wpCode = wp.ost_wp.wp_official_code + '-Cross-Cutting';
+      const wpItems = this.partnersData[partner_code][wpCode] || [];
+      if (!wpItems.length) return; // Skip if no data
+      const wpStartRow = currentRowIndex;
+
+  
+        wpItems.forEach(item => {
+              const row = [
+                wp.ost_wp.acronym,
+                item.title,
+                item.description,
+                this.budgetValues[partner_code][wpCode][
+                  item.id
+                ]
+              ];
+              ws_data.push(row);
+              currentRowIndex++;
+        });
+        const wpEndRow = currentRowIndex - 1;
+        if (wpEndRow >= wpStartRow) {
+          merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
+        }
+    });
+  
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws['!merges'] = merges;
+  
+    ws['!cols'] = [
+      { wch: 10 }, // A: AOW
+      { wch: 40 }, 
+      { wch: 25 }, 
+    ];
+  
+    ws['!rows'] = [];
+    for (let R = 0; R < ws_data.length; ++R) {
+      const isHeader = R < 1;
+      ws['!rows'][R] = { hpt: isHeader ? 60 : 45 };
+  
+      for (let C = 0; C < ws_data[R].length; ++C) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[addr];
+        if (!cell) continue;
+        cell.s = isHeader ? headerStyle : dataCellStyle;
+      }
+    }
+  
+    merges.forEach(m => {
+      if (m.s.c === 0 && m.e.c === 0) {
+        const cellAddr = XLSX.utils.encode_cell(m.s);
+        if (ws[cellAddr]) ws[cellAddr].s = wpVerticalTitleStyle;
+      }
+    });
+  
+    return ws;
+  }
+
+
+
+  generateExcelSummaryMelia() {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const subTotalRowStyle = {
+      font: { bold: true, color: { rgb: "000000" } },
+      fill: { fgColor: { rgb: "E6E6E6" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const ws_data = [];
+    const merges = [];
+  
+    ws_data.push([
+      "AOW",
+      "MELIA study",
+      "Supported outcomes",
+      "Geographic location",
+      "Total Budget (USD)",
+    ]);
+    let currentRowIndex = 1;
+  
+    this.actualWps.forEach((wp) => {
+      const wpCode = wp.ost_wp.wp_official_code + "-melia";
+      const wpItems = this.allData[wpCode] || [];
+  
+      if (wpItems.length === 0) return;
+  
+      const wpStartRow = currentRowIndex;
+  
+      wpItems.forEach((item) => {
+        ws_data.push([
+          wp.ost_wp.acronym,
+          item.title || "N/A",
+          item.supported_outcome || "N/A",
+          this.getScope(item, "melia") || "N/A",
+          this.summaryBudgets[wpCode]?.[item.id] || 0,
+        ]);
+  
+        currentRowIndex++;
+      });
+  
+      ws_data.push([
+        null,
+        "MELIA budget sub-total",
+        null,
+        null,
+        this.summaryBudgetsTotal[wpCode] || 0,
+      ]);
+  
+      merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 3 } });
+      currentRowIndex++;
+  
+      const wpEndRow = currentRowIndex - 1;
+      merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow , c: 0 } });
+    });
+  
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws["!merges"] = merges;
+  
+    ws["!cols"] = [
+      { wch: 8 },
+      { wch: 40 },
+      { wch: 30 },
+      { wch: 30 },
+      { wch: 25 },
+    ];
+  
+    ws["!rows"] = [];
+  
+    for (let R = 0; R < ws_data.length; ++R) {
+      const isHeader = R === 0;
+      const isSubtotal = ws_data[R][1] === "MELIA budget sub-total";
+  
+      ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 60 };
+  
+      for (let C = 0; C < ws_data[R].length; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[cellAddress];
+        if (!cell) continue;
+  
+        if (isHeader) cell.s = headerStyle;
+        else if (isSubtotal) cell.s = subTotalRowStyle;
+        else cell.s = dataCellStyle;
+      }
+    }
+  
+    merges.forEach((merge) => {
+      if (merge.s.c === 0 && merge.e.c === 0) {
+        const cellAddress = XLSX.utils.encode_cell(merge.s);
+        if (ws[cellAddress]) ws[cellAddress].s = wpVerticalTitleStyle;
+      }
+    });
+  
+    return ws;
+  }
+
+
+  generateExcelSummaryProject() {
+    const headerStyle = {
+      font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const dataCellStyle = {
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const subTotalRowStyle = {
+      font: { bold: true, color: { rgb: "000000" } },
+      fill: { fgColor: { rgb: "E6E6E6" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const wpVerticalTitleStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "2B3C53" } },
+      alignment: { horizontal: "center", vertical: "center" },
+      border: {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+      },
+    };
+  
+    const ws_data = [];
+    const merges = [];
+  
+    ws_data.push([
+      "AOW",
+      "Project title",
+      "High Level Output title",
+      "W3/Bilateral Project (USD)"
+    ]);
+
+    let currentRowIndex = 1;
+  
+    this.actualWps.forEach((wp) => {
+      const wpCode = wp.ost_wp.wp_official_code + "-project";
+      const wpItems = this.allData[wpCode] || [];
+  
+      if (wpItems.length === 0) return;
+  
+      const wpStartRow = currentRowIndex;
+  
+      wpItems.forEach((item) => {
+        ws_data.push([
+          wp.ost_wp.acronym,
+          item.name || "N/A",
+          item.result || "N/A",
+          this.summaryBudgets[wpCode]?.[item.id] || 0
+        ]);
+  
+        currentRowIndex++;
+      });
+  
+      ws_data.push([
+        null,
+        "W3/Bilateral budget sub-total",
+        null,
+        this.summaryBudgetsTotal[wpCode] || 0,
+      ]);
+  
+      merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 2 } });
+      currentRowIndex++;
+  
+      const wpEndRow = currentRowIndex - 1;
+      merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow , c: 0 } });
+    });
+  
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    ws["!merges"] = merges;
+  
+    ws["!cols"] = [
+      { wch: 8 },
+      { wch: 40 },
+      { wch: 30 },
+      { wch: 30 },
+      { wch: 25 },
+    ];
+  
+    ws["!rows"] = [];
+  
+    for (let R = 0; R < ws_data.length; ++R) {
+      const isHeader = R === 0;
+      const isSubtotal = ws_data[R][1] === "W3/Bilateral budget sub-total";
+  
+      ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 60 };
+  
+      for (let C = 0; C < ws_data[R].length; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[cellAddress];
+        if (!cell) continue;
+  
+        if (isHeader) cell.s = headerStyle;
+        else if (isSubtotal) cell.s = subTotalRowStyle;
+        else cell.s = dataCellStyle;
+      }
+    }
+  
+    merges.forEach((merge) => {
+      if (merge.s.c === 0 && merge.e.c === 0) {
+        const cellAddress = XLSX.utils.encode_cell(merge.s);
+        if (ws[cellAddress]) ws[cellAddress].s = wpVerticalTitleStyle;
+      }
+    });
+  
+    return ws;
+  }
+  
 }

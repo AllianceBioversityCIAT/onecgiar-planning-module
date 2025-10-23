@@ -1,8 +1,9 @@
 <section class="section-risk-management-component">
   <div class="risk-management-container">
     <div class="risk-management-content">
+     
       <app-search-init (filters)="filter($event)"> </app-search-init>
-
+      <span>Selected Phase: {{ activePhase.name}}</span>
       <div class="table-box">
         <div class="table-box mat-elevation-z8">
           <table mat-table [dataSource]="dataSource">
@@ -222,7 +223,7 @@
           </table>
           <div class="glossary-content-container user-management-paginator-box">
             <mat-paginator
-              [pageSizeOptions]="[10, 20, 30, 50, 100]"
+              [pageSizeOptions]="[20, 30, 50, 100]"
               [length]="length"
               [pageIndex]="pageIndex - 1"
               (page)="pagination($event)"

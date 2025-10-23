@@ -27,6 +27,10 @@ export class Organization {
   @Column()
   acronym: string;
 
+  @ApiProperty()
+  @Column({default:false})
+  disabled: boolean;
+
   @ManyToMany(() => Initiative, (initiative) => initiative.organizations)
   initiatives: Initiative[];
 

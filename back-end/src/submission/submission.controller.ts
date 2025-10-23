@@ -266,6 +266,7 @@ export class SubmissionController {
                 
                 if (items.quantitative_indicators?.length && (items.category == 'OUTPUT' || items.category == 'OUTCOME')) {
                   const sumPooledFundedByType: Record<string, number> = {};
+                  let pooledCenters=[];
                   const sumProjectByType: Record<string, any> = {};
 
                   for (const indicator of items.quantitative_indicators) {
@@ -276,7 +277,9 @@ export class SubmissionController {
                       indicator.id = indicator.related_node_id
                     }
                     indicatorIds.push(indicator.id);
+                
                     for (const target of indicator.targets) {
+                      pooledCenters =[ ...pooledCenters , ...target.centers]
                           const value = parseFloat(target[activePhase.reportingYear]); 
                           if (!isNaN(value)) {
                             if(indicatorType == 'custom')
@@ -285,8 +288,10 @@ export class SubmissionController {
                           }
                     }
                   }
-    
+                
+         
                   items.pooled_funded_indicator_values = sumPooledFundedByType;
+                  items.pooled_centers = [...new Set(pooledCenters)]
                   items.projects_indicator_values = sumProjectByType;
 
                 }
@@ -298,33 +303,54 @@ export class SubmissionController {
       
 
             const meliaMap = new Map<string, any>();
+// helper: escape any HTML in titles (safe rendering)
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 
-            for (let data of filteredData) {
-              for (let melia of melias) {
-                const isLinked = data.melias?.some((m: any) =>
-                  typeof m === 'object' ? m.id === melia.id : m === melia.id
-                );
+for (let data of filteredData) {
+  for (let melia of melias) {
+    const isLinked = data.melias?.some((m: any) =>
+      typeof m === 'object' ? m.id === melia.id : m === melia.id
+    );
 
-                if (isLinked) {
-                  const key = `${melia.id}_${data.group}`;
-                  if (meliaMap.has(key)) {
-                    const existing = meliaMap.get(key);
-                    if (!existing.supported_outcome.includes(data.title)) {
-                      existing.supported_outcome += ', ' + data.title;
-                    }
-                  } else {
-                    meliaMap.set(key, {
-                      id: melia.id,
-                      parent_id: data.group,
-                      supported_outcome: data.title,
-                      category: 'Melia',
-                      ...melia,
-                    });
-                  }
-                }
-              }
+    if (isLinked) {
+      const key = `${melia.id}_${data.group}`;
+
+      if (meliaMap.has(key)) {
+        const existing = meliaMap.get(key);
+
+        // ensure we have a Set to avoid duplicates
+        if (!(existing.supported_outcome instanceof Set)) {
+          const arr = String(existing.supported_outcome || '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+          existing.supported_outcome = new Set(arr);
+        }
+
+        (existing.supported_outcome as Set<string>).add(data.title);
+      } else {
+        meliaMap.set(key, {
+          id: melia.id,
+          parent_id: data.group,
+          supported_outcome: new Set<string>([data.title]),
+          category: 'Melia',
+          ...melia,
+        });
+      }
+    }
+  }
+}
+
+            // When you need HTML for display:
+            for (const [, entry] of meliaMap) {
+              const items = [...(entry.supported_outcome as Set<string>)];
+              entry.supported_outcome = `
+                <ul class="tdul">
+                  ${items.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+                </ul>
+              `;
             }
-
             const newMelias = Array.from(meliaMap.values());
 
             for (const melia of newMelias) {
@@ -412,7 +438,7 @@ export class SubmissionController {
                 for (const partner of data.partners ?? []) {
                   const key = `${partner.code}_${data.group}`;
                   const title = data.title?.trim();
-                  const selectedCountries = await this.submissionService.getSelectedCountry(partner.code , id);
+                  const selectedCountries = await this.submissionService.getSelectedCountry(partner.code , id, activePhase.id);
                   if (partnersMap.has(key)) {
                     const existing = partnersMap.get(key);
                     const titleSet = new Set(

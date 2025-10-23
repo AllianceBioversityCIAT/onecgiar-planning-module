@@ -46,6 +46,7 @@ export class PhasesService {
       where: {
         name: query?.name ? ILike(`%${query?.name}%`) : null,
       },
+      order: {active: 'DESC', id: 'DESC' },
       relations: ['previousPhase'] 
     });
   }

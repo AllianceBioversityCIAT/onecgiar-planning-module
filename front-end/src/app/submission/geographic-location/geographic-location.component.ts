@@ -25,6 +25,9 @@ export class GeographicLocationComponent implements OnInit {
   filteredCountries: any[] = [];
 
   ngOnInit() {
+    this.countries = [...this.countries].sort((a, b) =>
+      a.name.trim().toLowerCase().localeCompare(b.name.trim().toLowerCase())
+    );
     this.filteredCountries = this.countries;
     this.filterSavedCountries();
 
@@ -70,14 +73,4 @@ export class GeographicLocationComponent implements OnInit {
       this.savedCountries?.map((s) => s.country) || [];
   }
 
-  applyFilter(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const value = input.value?.toLowerCase() || '';
-    console.log(value)
-    console.log(this.filteredCountries)
-    this.filteredCountries = this.countries.filter(c =>
-      c.name.toLowerCase().startsWith(value) ||
-      c.name.toLowerCase().includes(value)
-    );
-  }
 }

@@ -16,9 +16,9 @@ export class BudgetAssumptionsController {
     }
 
     @ApiBearerAuth()
-    @Get('all')
-    findAll() {
-      return this.service.findAll();
+    @Get('all/:phase_id')
+    findAll(@Param('phase_id') id: number) {
+      return this.service.findAll(id);
     }
   
 

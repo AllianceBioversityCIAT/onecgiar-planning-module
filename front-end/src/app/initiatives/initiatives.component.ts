@@ -33,7 +33,9 @@ export class InitiativesComponent implements OnInit {
   dataSource: MatTableDataSource<any>;
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
-
+activePhase: any={
+  name: '',
+};
   constructor(
     private initiativesService: InitiativesService,
     private authService: AuthService,
@@ -61,10 +63,12 @@ export class InitiativesComponent implements OnInit {
   }
   user: any;
   length!: number;
-  pageSize: number = 10;
+  pageSize: number = 20;
   pageIndex: number = 1;
   allfilters: any;
   async ngOnInit() {
+
+   this.activePhase=  await this.phasesService.getActivePhase();
     if (this.authService.getLoggedInUser())
       await this.getInitiatives();
     else
@@ -96,7 +100,7 @@ export class InitiativesComponent implements OnInit {
   filter(filters: any) {
     this.allfilters = filters;
     this.pageIndex = 1;
-    this.pageSize = 10;
+    this.pageSize = 20;
     this.getInitiatives(filters);
     this.paginator.pageSize = 0;
   }

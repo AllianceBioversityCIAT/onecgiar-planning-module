@@ -1,17 +1,17 @@
-import { Component, Inject, OnInit } from "@angular/core";
-import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
-import { ToastrService } from "ngx-toastr";
-import { OrganizationsService } from "src/app/services/organizations.service";
+import { Component, Inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
+import { OrganizationsService } from 'src/app/services/organizations.service';
 
 export interface DialogData {
   code: string;
 }
 
 @Component({
-  selector: "app-organization-dialog",
-  templateUrl: "./organization-dialog.component.html",
-  styleUrls: ["./organization-dialog.component.scss"],
+  selector: 'app-organization-dialog',
+  templateUrl: './organization-dialog.component.html',
+  styleUrls: ['./organization-dialog.component.scss'],
 })
 export class OrganizationDialogComponent implements OnInit {
   organizationCode: string = '0';
@@ -36,10 +36,12 @@ export class OrganizationDialogComponent implements OnInit {
       name: [null, Validators.required],
       acronym: [null, Validators.required],
       code: [null, Validators.required],
+      disabled: [false, Validators.required],
     });
     if (this.organizationCode != '0') {
-      let organizationValues =
-        await this.organizationsService.getOrganization(this.organizationCode);
+      let organizationValues = await this.organizationsService.getOrganization(
+        this.organizationCode
+      );
       this.organizationForm.setValue({
         ...organizationValues,
       });
@@ -55,8 +57,8 @@ export class OrganizationDialogComponent implements OnInit {
         .then(
           (data) => {
             if (this.organizationCode == '0')
-              this.toast.success("Organization added successfully");
-            else this.toast.success("Organization updated successfully");
+              this.toast.success('Organization added successfully');
+            else this.toast.success('Organization updated successfully');
 
             this.dialogRef.close({ submitted: true });
           },

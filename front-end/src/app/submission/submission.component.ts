@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, ViewChild } from "@angular/core";
 
 import { SubmissionService } from "../services/submission.service";
 import { AppSocket } from "../socket.service";
@@ -34,6 +34,7 @@ import { BudgetAssumptionsService } from "../services/budget-assumptions.service
 import { AnaplanService } from "../services/anaplan.service";
 import { ClarisaCountryService } from "../services/clarisa-country.service";
 import { MatTabGroup } from "@angular/material/tabs";
+import { Location } from "@angular/common";
 
 @Component({
   selector: "app-submission",
@@ -64,6 +65,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     private budgetAssumptionsService: BudgetAssumptionsService,
     private anaplanService: AnaplanService,
     private countryService: ClarisaCountryService,
+    private location: Location,
+    private cdr: ChangeDetectorRef
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -135,6 +138,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   partnersValidate: any = {};
   centerHasError: any = {};
   itemHasError: any = {};
+  itemIndicatorHasError: any = {};
   tocSubmissionData: any;
   check(values: any, code: string, id: number, item_id: string) {
     if (values[code] && values[code][id] && values[code][id][item_id]) {
@@ -233,6 +237,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   
   timeCalc: any;
   async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean, item_type: string | null = null, socket: boolean) {
+
+    console.log("changeCalc called");
     if (this.timeCalc) clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
       let percentValue = 0;
@@ -316,11 +322,13 @@ export class SubmissionComponent implements OnInit, OnDestroy {
    
       this.sammaryCalc();
       this.validateCenter(partner_code, false);
-    }, 1250); 
-    this.initiative_data = await this.submissionService.getInitiative(
+
+      this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
     this.getInitStatus(this.initiative_data);
+    }, 1250); 
+   
     // localStorage.setItem('initiatives', JSON.stringify(this.values));
   } 
 
@@ -383,6 +391,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
   budgetTime: any;
   async wpBudgetChange(partner_code: any, wp_id: any, budget: any, refresh: boolean) {
+    console.log(' sdasdasd =>>>>>>>',budget);
     if (this.budgetTime) clearTimeout(this.budgetTime);
     this.budgetTime = setTimeout(async () => {
       const result = await this.submissionService.saveWpBudget(this.params.id, {
@@ -409,7 +418,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           );
           this.getInitStatus(this.initiative_data);
         }
-    }, 1000);
+    }, 1250);
   }
 
   percentValue(value: number, totalBudget: number) {
@@ -542,33 +551,44 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.updatePath(organization);
   }
   updatePath(tab: any) {
-    this.router.navigate(
-      [], // Remain on current route
-      {
-        relativeTo: this.activatedRoute,
-        queryParams: {
-          tab: tab.index,
-          AOW: this.selectedTabIndexAOW,
-        },
-        queryParamsHandling: "merge", // Merge new params with existing params
-      }
-    );
+    this.location.replaceState(
+    this.router.url.split('?')[0], // keep current path
+    `tab=${tab.index}&AOW=${this.selectedTabIndexAOW}`        // new query params
+  );
+  this.selectedTabIndex = tab.index;
   }
-  tabChangedAOW(aow: any) {
-    this.updateChildPath(aow.index);
-    setTimeout(() => window.scrollTo({ top: this.currentScroll }));
+  // tabChangedAOW(aow: any) {
+  //   this.updateChildPath(aow.index);
+  // }
+  // updateChildPath(index: any) {
+  //    this.location.replaceState(
+  //   this.router.url.split('?')[0], // keep current path
+  //   `tab=${this.selectedTabIndex}&AOW=${index}`        // new query params
+  //  );
+  //  this.selectedTabIndexAOW = index;
+  // }
+
+  isUpdatingTab = false;
+
+  tabChangedAOW(event: any) {
+    if (this.isUpdatingTab) return;
+  
+    const newIndex = event.index;
+  
+    this.isUpdatingTab = true;
+  
+    this.updateURL(newIndex);
+  
+    setTimeout(() => {
+      this.selectedTabIndexAOW = newIndex;
+      this.isUpdatingTab = false;
+    });
   }
-  updateChildPath(index: any) {
-    this.selectedTabIndexAOW = index;
-    this.router.navigate(
-      [],
-      {
-        relativeTo: this.activatedRoute,
-        queryParams: {
-          AOW: index,
-        },
-        queryParamsHandling: "merge",
-      }
+  
+  updateURL(newIndex: number) {
+    this.location.replaceState(
+      this.router.url.split('?')[0],
+      `tab=${this.selectedTabIndex}&AOW=${newIndex}`
     );
   }
   async changes(
@@ -1039,7 +1059,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.partnersValidate = {};
     this.centerHasError = {};
     this.itemHasError = {};
-
+    this.itemIndicatorHasError = {};
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
@@ -1060,9 +1080,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.code
     );
 
-    this.partnersMelia = this.partnersProjectMelia.melias;
-    this.partnersProject = this.partnersProjectMelia.projects;
-
+    this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
+    this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
+    
  
       const cross_data = await this.submissionService.getCrossByInitiative(
         this.params.id
@@ -1279,13 +1299,24 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.centerHasError[partner.code] = false;
       if (!this.itemHasError[partner.code])
         this.itemHasError[partner.code] = {};
+      if (!this.itemIndicatorHasError[partner.code])
+        this.itemIndicatorHasError[partner.code] = {};
+
+      for(let wp of this.actualWps) {
+        if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code]) {
+          this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code] = {};
+        }
+
+        this.anaplanLabels.forEach((element) => {
+          if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id] =
+              0;
+        });
+      }
 
       for (let wp of this.wps) {
         if (!this.wp_budgets[partner.code][wp.ost_wp.wp_official_code])
           this.wp_budgets[partner.code][wp.ost_wp.wp_official_code] = null;
-        if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code]) {
-          this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code] = {};
-        }
         if (!this.toggleValues[partner.code][wp.ost_wp.wp_official_code])
           this.toggleValues[partner.code][wp.ost_wp.wp_official_code] = false;
         if (!this.budgetValues[partner.code][wp.ost_wp.wp_official_code])
@@ -1315,6 +1346,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.summaryBudgetsTotal[wp.ost_wp.wp_official_code] = 0;
         if (!this.itemHasError[partner.code][wp.ost_wp.wp_official_code])
           this.itemHasError[partner.code][wp.ost_wp.wp_official_code] = {};
+        if (!this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code])
+          this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code] = {};
 
         const result = await this.getDataForWp(
           wp.id,
@@ -1323,10 +1356,19 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           wp.ost_wp.acronym,
           wp.category
         );
+     
+        console.log('RESULT', )
+        
         if (result.length) {
           if (!this.partnersData[partner.code])
             this.partnersData[partner.code] = {};
+
+         const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
+          if(filterd_results.length > 0 && this.toggleIndicatorValues)
+          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d.pooled_centers.map((d:any)=>d.code).includes(partner.code))];
+         else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
+          // this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
         }
 
         if (!this.perValuesSammary[wp.ost_wp.wp_official_code])
@@ -1347,11 +1389,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               false;
         });
 
-        this.anaplanLabels.forEach((element) => {
-          if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id])
-            this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id] =
-              0;
-        });
+   
         result.forEach((item: any) => {
           if (item.category !== "OUTCOME" && item.category !== "OUTPUT") {
             this.check(
@@ -1413,8 +1451,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.noValuesAssigned[partner.code][wp.ost_wp.wp_official_code][
             item.id
           ] = false;
-          this.itemHasError[partner.code][wp.ost_wp.wp_official_code][item.id] =
-            false;
+          this.itemHasError[partner.code][wp.ost_wp.wp_official_code][item.id] = false;
+
+          this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id] = {};
+          if(item?.quantitative_indicators?.length) {
+            item?.quantitative_indicators.forEach((indicator: any) =>{
+              this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] = false;
+            });
+          }
+
           if (!this.summaryBudgets[wp.ost_wp.wp_official_code][item.id])
             this.summaryBudgets[wp.ost_wp.wp_official_code][item.id] = 0;
           if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id])
@@ -1528,6 +1573,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
     this.setvaluesForIndicators(this.savedValuesForIndicator);
     this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
+    console.log('allBudgetAssumptions', this.allBudgetAssumptions);
 
     this.setTotalTargetForIndicators();
     this.setTotalTargetForIndicatorsForPartners()
@@ -1548,7 +1594,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         .sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
       this.allData["IPSR"] = newIPSR;
     }
-      
+ 
     const firstKey = Object.keys(this.allData)[0];
     //sort first AOW
       const newCROSS = this.allData[firstKey].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
@@ -1557,21 +1603,26 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log('allBudgetAssumptions', this.allBudgetAssumptions)
+    console.log('actualWps', this.actualWps)
     
 
     //sort WP titles
-    this.wps.forEach((d: any) => {
-      if (d.category == "WP") {
-        let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
-          .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+    // this.wps.forEach((d: any) => {
+    //   if (d.category == "WP") {
+    //     let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+    //       .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-        let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-          .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+    //     let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+    //       .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
 
-        this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
-      }
-    })
+    //     this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+    //   }
+    // })
+
+  this.sort(this.allData);
+  this.sort(this.partnersData);
+
+
   }
   savedValues: any = null;
   savedValuesForIndicator: any = null;
@@ -1629,7 +1680,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id
     );
     this.clarisaCountries = await this.countryService.getAll();
-    this.allCenterCountryValues = await this.countryService.getAllValues();
+    this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
 
     this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.initiative_data.synchronized == true ? this.params.code : this.params.id)
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
@@ -1735,7 +1786,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       'custom-OUTCOME'
     ];
 
-    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
@@ -1792,7 +1843,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       }
       this.sammaryCalc();
     });
-    this.socket.on("setDataValue-" + this.params.id, (data: any) => {
+    this.socket.on("setDataValue-" + this.params.id, async (data: any) => {
       const { partner_code, wp_id, item_id, value, no_budget } = data;
       this.values[partner_code][wp_id][item_id] = value;
       this.displayValues[partner_code][wp_id][item_id] = Math.round(value);
@@ -1803,17 +1854,28 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.budgetValues[partner_code][wp_id][item_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] =
         Math.round(budgetValue);
+      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+      this.hasBudgetAssumptions(partner_code, item_id, wp_id);
+      this.hasBudgetAssumptionsSummary(item_id, wp_id);
+
       this.noValuesAssigned[partner_code][wp_id][item_id] = no_budget;
       this.sammaryCalc();
+      this.cdr.detectChanges();
+
     });
-    this.socket.on("setDataValueForIndicator-" + this.params.id, (data: any) => {
+    this.socket.on("setDataValueForIndicator-" + this.params.id, async (data: any) => {
       const { partner_code, wp_id, item_id, indicator_id, budgetValue, subTotalBudgetIndicator } = data;
       this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
+      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+      this.hasBudgetAssumptions(partner_code, item_id, wp_id);
+      this.hasBudgetAssumptionsSummary(item_id, wp_id);
 
       this.setItemIndicatorAndBudget();
       this.sammaryCalc();
       this.recomputeIndicatorBudgetTotals();
+      this.cdr.detectChanges();
+
     });
     this.socket.on("setDataBudget-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, budget } = data;
@@ -1831,10 +1893,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     this.socket.on("setDataAnaplan", (data: any) => {
       if (this.params.id == data.initiative_id) {
-        this.anaplanBudgets[data.organization_code][data.wp_id][data.anaplan_id] = data.value;
-        this.getWpTotals(data.organization_code, data.wp_id);
-        this.getTotalsByAnaplan(data.organization_code, data.anaplan_id);
-        this.getAnaplanTotal(data.organization_code);
+        this.anaplanBudgets[data.organization.code][data.wp_id][data.anaplan_id] = data.value;
+        this.getWpTotals(data.organization.code, data.wp_id);
+        this.getTotalsByAnaplan(data.organization.code, data.anaplan_id);
+        this.getAnaplanTotal(data.organization.code);
       }
     });
     this.socket.on("validateOfCenter", (data: any) => {
@@ -1937,41 +1999,89 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   //set values for item-indicator and budget (front-end)
+  // setItemIndicatorAndBudget() {
+  //   Object.keys(this.displayBudgetValuesIndicator).forEach((code) => {
+  //     Object.keys(this.displayBudgetValuesIndicator[code]).forEach((wp_id) => {
+  //       Object.keys(this.displayBudgetValuesIndicator[code][wp_id]).forEach((item_id) => {
+  //         let sum = 0;
+  //         let total = 0;
+    
+  //         Object.keys(this.displayBudgetValuesIndicator[code][wp_id][item_id]).forEach((indicator_id) => {
+  //           const value = this.displayBudgetValuesIndicator[code][wp_id][item_id][indicator_id];
+  //           sum += Number(value) || 0; 
+  //         });
+    
+  //         if (!this.displayBudgetValuesItemIndicator[code]) {
+  //           this.displayBudgetValuesItemIndicator[code] = {};
+  //         }
+  //         if (!this.displayBudgetValuesItemIndicator[code][wp_id]) {
+  //           this.displayBudgetValuesItemIndicator[code][wp_id] = {};
+  //         }
+    
+  //         this.displayBudgetValuesItemIndicator[code][wp_id][item_id] = sum;
+
+  //         this.budgetValues[code][wp_id][item_id] = sum;
+  //         this.displayBudgetValues[code][wp_id][item_id] = sum;
+
+
+  //         Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach(val => {
+  //           if (typeof val === "number") {
+  //             total += Number(val) || 0;
+  //           } 
+  //         });
+  //         this.wp_budgets[code][wp_id] = total;
+  //       });
+  //     });
+  //   });
+  // }
+
   setItemIndicatorAndBudget() {
+    if (!this.displayBudgetValuesIndicator) return;
+  
     Object.keys(this.displayBudgetValuesIndicator).forEach((code) => {
-      Object.keys(this.displayBudgetValuesIndicator[code]).forEach((wp_id) => {
-        Object.keys(this.displayBudgetValuesIndicator[code][wp_id]).forEach((item_id) => {
+      const orgObj = this.displayBudgetValuesIndicator[code];
+      if (!orgObj) return;
+  
+      Object.keys(orgObj).forEach((wp_id) => {
+        const wpObj = orgObj[wp_id];
+        if (!wpObj) return;
+  
+        Object.keys(wpObj).forEach((item_id) => {
+          const itemObj = wpObj[item_id];
+          if (!itemObj) return;
+  
           let sum = 0;
           let total = 0;
-    
-          Object.keys(this.displayBudgetValuesIndicator[code][wp_id][item_id]).forEach((indicator_id) => {
-            const value = this.displayBudgetValuesIndicator[code][wp_id][item_id][indicator_id];
-            sum += Number(value) || 0; 
+  
+          Object.keys(itemObj).forEach((indicator_id) => {
+            const value = itemObj[indicator_id];
+            sum += Number(value) || 0;
           });
-    
-          if (!this.displayBudgetValuesItemIndicator[code]) {
-            this.displayBudgetValuesItemIndicator[code] = {};
-          }
-          if (!this.displayBudgetValuesItemIndicator[code][wp_id]) {
-            this.displayBudgetValuesItemIndicator[code][wp_id] = {};
-          }
-    
+  
+          this.displayBudgetValuesItemIndicator[code] ??= {};
+          this.displayBudgetValuesItemIndicator[code][wp_id] ??= {};
+          this.budgetValues[code] ??= {};
+          this.budgetValues[code][wp_id] ??= {};
+          this.displayBudgetValues[code] ??= {};
+          this.displayBudgetValues[code][wp_id] ??= {};
+          this.wp_budgets[code] ??= {};
+  
           this.displayBudgetValuesItemIndicator[code][wp_id][item_id] = sum;
-
           this.budgetValues[code][wp_id][item_id] = sum;
           this.displayBudgetValues[code][wp_id][item_id] = sum;
-
-
-          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach(val => {
+  
+          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach((val) => {
             if (typeof val === "number") {
               total += Number(val) || 0;
-            } 
+            }
           });
+  
           this.wp_budgets[code][wp_id] = total;
         });
       });
     });
   }
+  
   setvalues(valuesToSet: any, perValuesToSet: any, noBudget: any) {
     if (valuesToSet != null)
       Object.keys(this.values).forEach((code) => {
@@ -2047,15 +2157,37 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.getAllMeliasLength()
   }
 
+  // setvaluesForIndicators(data: any[]) { 
+  //   const indicatorIds = this.results[this.results.length - 1].indicator_ids;
+  //   const ids = Object.values(indicatorIds);
+  //   const filtered = data.filter(item => ids.includes(item.result_uuid));
+  //   for(let value of filtered) {
+  //     this.displayBudgetValuesIndicator[value.organization_code][value.workPackage.wp_official_code][value.parent_id][value.result_uuid] = Number(value.budget);      
+  //   }
+  //   this.sammaryCalc();
+  // } 
+
   setvaluesForIndicators(data: any[]) {
     const indicatorIds = this.results[this.results.length - 1].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
-    for(let value of filtered) {
-      this.displayBudgetValuesIndicator[value.organization_code][value.workPackage.wp_official_code][value.parent_id][value.result_uuid] = Number(value.budget);      
+  
+    for (let value of filtered) {
+      const org = value.organization_code;
+      const wp = value.workPackage.wp_official_code;
+      const parent = value.parent_id;
+      const result = value.result_uuid;
+  
+      this.displayBudgetValuesIndicator[org] ??= {};
+      this.displayBudgetValuesIndicator[org][wp] ??= {};
+      this.displayBudgetValuesIndicator[org][wp][parent] ??= {};
+  
+      this.displayBudgetValuesIndicator[org][wp][parent][result] = Number(value.budget);
     }
+  
     this.sammaryCalc();
   }
+  
 
   setPartnervaluesForIndicators(data: any[]) {  
     const indicatorIds = this.results[this.results.length - 1].indicator_ids;
@@ -2592,10 +2724,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     let valid = true;
     let message = "";
     Object.keys(this.partnersData[partner_code]).forEach((wp_id) => {
-      let result = this.validateWp(partner_code, wp_id);
-      if (!result.valid) {
-        valid = result.valid;
-        message = result.message;
+      for(let wp of this.actualWps){
+        let result = this.validateWp(partner_code, wp_id, wp.ost_wp.wp_official_code);
+        if (!result.valid) {
+          valid = result.valid;
+          message = result.message;
+        }
       }
     });
     if (is_mark) {
@@ -2609,7 +2743,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     };
   }
 
-  validateWp(partner_code: any, wp_id: any) { 
+  validateWp(partner_code: any, wp_id: any, wp_official_code: string) { 
     const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting '];
     const isIncluded = validateWp.some(item => wp_id.toLowerCase().includes(item.toLowerCase()));
 
@@ -2617,6 +2751,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     let wpChecked = false;
     let message = "";
     let hasBudget = false;
+    const relatedBudgets = [
+      this.wp_budgets[partner_code]?.[wp_official_code],
+      this.wp_budgets[partner_code]?.[wp_official_code + '-melia'],
+      this.wp_budgets[partner_code]?.[wp_official_code + '-Cross-Cutting'],
+      this.wp_budgets[partner_code]?.[wp_official_code + '-partners']
+    ];
+    const totalRelatedBudget = this.roundNumbers(relatedBudgets);
+    const wpTotal = this.getWpTotals(partner_code, wp_official_code);
+
     let total: any = Object.values(this.budgetValues[partner_code][wp_id]).reduce((sum: any, val: any) => sum + val, 0);
     if (!this.partnersData[partner_code][wp_id]) {
       return {
@@ -2645,6 +2788,38 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     //     if (perChecked) wpChecked = true;
     //   }
     // });
+
+    this.partnersData[partner_code][wp_id].forEach((item: any) => {
+      if (item.category == 'OUTPUT') {
+        if(item.quantitative_indicators) {
+          item.quantitative_indicators.forEach((indicator: any) => {
+              const hasBudgetAssumptions = this.hasBudgetAssumptions(partner_code, indicator.id, wp_id);
+              const budgetIndicator = this.displayBudgetValuesIndicator[partner_code][wp_id][item.id][indicator.id];
+    
+              if(budgetIndicator && !hasBudgetAssumptions) {
+                valid = false;
+                this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = true;
+                message = "There is a budget without budjet assumption"
+              } else {
+                this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = false;
+              }
+          });
+        }
+      } else {
+        const hasBudgetAssumptions = this.hasBudgetAssumptions(partner_code, item.id, wp_id);
+        const budgetItem = this.displayBudgetValues[partner_code][wp_id][item.id];
+
+        if(budgetItem && !hasBudgetAssumptions) {
+          valid = false;
+          this.itemHasError[partner_code][wp_id][item.id] = true;
+          message = "There is a budget without budjet assumption"
+        } else {
+          this.itemHasError[partner_code][wp_id][item.id] = false;
+        }
+      }
+    });
+
+
     if(isIncluded){
       this.errors[partner_code][wp_id] = null;
       if (
@@ -2655,7 +2830,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.errors[partner_code][wp_id] =
           "There is a work package with a budget not disaggregated";
         message = "There is a work package with a budget not disaggregated";
-      } else if (
+      } else if (Math.round(totalRelatedBudget) !== Math.round(wpTotal)) {
+        valid = false;
+
+        this.errors[partner_code][wp_id] =
+          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Sub-total of each AOW Anaplan.";
+        message =
+          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Sub-total of each AOW Anaplan.";
+      }  else if (
         // wpChecked &&
         // hasBudget &&
         (Math.round(total) !== 0 &&  Number(this.wp_budgets[partner_code][wp_id]) !== 0)
@@ -3018,13 +3200,14 @@ totalConsolidatedTargetPartner: any;
     }
   }
 
-  openBudgetAssumptionsDialog(partner: number, item_id: string, wp_id: string, budget: number, type: string) {
+  openBudgetAssumptionsDialog(partner: number, item_id: string, wp_id: string, budget: number, type: string, parent_id: any) { 
     const data ={ 
       organization_code: partner,
       item_id: item_id,
       wp_id: wp_id,
       item_budget: budget,
-      type: type
+      type: type,
+      phase_id: this.phase.id
     }
     this.dialog
     .open(BudgetAssumptionsComponent, {
@@ -3038,11 +3221,24 @@ totalConsolidatedTargetPartner: any;
     }).afterClosed()
     .subscribe(async dialogResult => {
       if (dialogResult) {
-        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll();
+        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
         this.hasBudgetAssumptions(dialogResult.data.organization_code, dialogResult.data.item_id, dialogResult.data.wp_id);
+        if(parent_id)
+          this.itemIndicatorHasError[partner][wp_id][parent_id][item_id] = false;
+        else
+          this.itemHasError[partner][wp_id][item_id] = false;
       }
     });
-  } 
+  }  
+
+  selectIfZero(event: FocusEvent) {
+    const input = event.target as HTMLInputElement;
+    const value = parseFloat(input.value.replace(/,/g, ''));
+    if (value === 0 || isNaN(value)) {
+      input.select();
+    }
+  }
+  
 
   openBudgetAssumptionsDialogSummary(item_id: string) {
     console.log(item_id)
@@ -3070,18 +3266,18 @@ totalConsolidatedTargetPartner: any;
     }, 0);
   }
 
-  hasBudgetAssumptions(partnerCode: string, itemId: number, wpId: string): boolean {
+  hasBudgetAssumptions(partnerCode: number, itemId: any, wpId: string): boolean {
     return this.allBudgetAssumptions.some(a =>
-      a.organization_code === partnerCode &&
-      a.item_id === itemId &&
-      a.wp_id === wpId
+      a.organization_code == partnerCode &&
+      a.item_id == itemId &&
+      a.wp_id == wpId
     );
   }
 
   hasBudgetAssumptionsSummary(itemId: number, wpId: string): boolean { 
     return this.allBudgetAssumptions.some(a =>
-      a.item_id === itemId &&
-      a.wp_id === wpId
+      a.item_id == itemId &&
+      a.wp_id == wpId
     );
   } 
 
@@ -3092,10 +3288,10 @@ totalConsolidatedTargetPartner: any;
     }
   }
   
-  anaplanCalc(organization_code: number, anaplan_id: number, wp_id: number) {
-    const value = this.anaplanBudgets[organization_code][wp_id][anaplan_id];
+  anaplanCalc(organization: any, anaplan_id: number, wp_id: number) {
+    const value = this.anaplanBudgets[organization.code][wp_id][anaplan_id];
     const initiative_id = this.initiative_data.id;
-    const data = { organization_code, anaplan_id, wp_id, value, initiative_id};
+    const data = { organization, anaplan_id, wp_id, value, initiative_id};
   
     clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
@@ -3103,7 +3299,7 @@ totalConsolidatedTargetPartner: any;
           () => {
             this.socket.emit("setDataAnaplan", {
               initiative_id,
-              organization_code,
+              organization,
               wp_id,
               anaplan_id,
               value,
@@ -3200,4 +3396,104 @@ totalConsolidatedTargetPartner: any;
       }
     )
   }
+
+  getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData && wpData[anaplanId] !== undefined) {
+        total += Number(wpData[anaplanId]) || 0;
+      }
+    }
+  
+    return total;
+  }
+
+
+  getTotalByAnaplanId(anaplanId: number): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      for (const wpCode in partnerData) {
+        const wpData = partnerData[wpCode];
+        if (wpData && wpData[anaplanId] !== undefined) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+
+
+
+
+  getWpTotalsAcrossPartners(wpCode: string): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData) {
+        for (const anaplanId in wpData) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+  
+  getSummaryTotalAnaplan(): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      for (const wpCode in partnerData) {
+        const wpData = partnerData[wpCode];
+        for (const anaplanId in wpData) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+
+  haveHLO(data: any[]) {
+    return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+  }
+
+  haveselectedCountry(data: any[]) {
+    return data.some(item => item.selectedCountries.length);
+  }
+  sort(obj: any): void {
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+  
+      if (Array.isArray(value)) {
+        value.sort((a, b) => {
+          const textA = (a.name || a.title || '').toLowerCase();
+          const textB = (b.name || b.title || '').toLowerCase();
+          return textA.localeCompare(textB);
+        });
+      } else if (typeof value === 'object' && value !== null) {
+        this.sort(value);
+      }
+    });
+  }
+  sortByNameOrTitle(arr: any[]): any[] {
+    if (!Array.isArray(arr)) return arr;
+  
+    return [...arr].sort((a, b) => {
+      const textA = (a.name || a.title || '').trim().toLowerCase();
+      const textB = (b.name || b.title || '').trim().toLowerCase();
+      return textA.localeCompare(textB);
+    });
+  }
+  
+  
 }
