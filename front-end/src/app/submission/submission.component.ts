@@ -1083,7 +1083,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
     this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
     
- 
+    this.partnersMelia.forEach((melia: any) => {
+      if (melia.results && Array.isArray(melia.results)) {
+        melia.results.forEach((result: any) => {
+          const wp = result?.group?.ost_wp;
+          if (wp?.acronym === 'AOW00') {
+            wp.wp_official_code = 'CROSS';
+          }
+        });
+      }
+    });
+    
       const cross_data = await this.submissionService.getCrossByInitiative(
         this.params.id
       );
@@ -1576,7 +1586,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     console.log('allBudgetAssumptions', this.allBudgetAssumptions);
 
     this.setTotalTargetForIndicators();
-    this.setTotalTargetForIndicatorsForPartners()
+    this.setTotalTargetForIndicatorsForPartners();
     this.setItemIndicatorAndBudget();
     this.sammaryCalc();
     this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners);
@@ -1603,8 +1613,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     
 
     console.log(this.allData)
-    console.log('actualWps', this.actualWps)
-    
+    console.log('displayBudgetValues', this.displayBudgetValues)
+    console.log('partnersMelia', this.partnersMelia)
+    console.log('partnersMelia', this.partnersProject)
+
 
     //sort WP titles
     // this.wps.forEach((d: any) => {
