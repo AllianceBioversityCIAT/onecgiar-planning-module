@@ -1721,7 +1721,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         roles[0].role == ROLES.LEAD ||
         roles[0].role == ROLES.COORDINATOR ||
         roles[0].role == ROLES.CoLeader ||
-        roles[0].role == ROLES.MELIA_Focal_Point ||
         roles[0].role == ROLES.Financial_Focal_Point ||
         this.user.role == "admin"
       ) {
@@ -2930,8 +2929,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.user_info.role == "admin" ||
       this.my_roles?.includes(ROLES.LEAD) ||
       this.my_roles?.includes(ROLES.COORDINATOR) ||
-      this.my_roles?.includes(ROLES.CoLeader) ||
-      this.my_roles?.includes(ROLES.MELIA_Focal_Point)
+      this.my_roles?.includes(ROLES.CoLeader) 
     );
   }
   markAsValid() {
