@@ -2847,9 +2847,9 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         valid = false;
 
         this.errors[partner_code][wp_id] =
-          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Sub-total of each AOW Anaplan.";
+          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
         message =
-          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Sub-total of each AOW Anaplan.";
+          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
       }  else if (
         // wpChecked &&
         // hasBudget &&

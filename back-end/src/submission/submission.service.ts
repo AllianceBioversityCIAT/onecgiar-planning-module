@@ -5161,9 +5161,9 @@ const totalRowIndex = rows.length + 1;
 
   let totalLabel = '';
   if(type == 'project')
-    totalLabel = "W3/Bilateral projects sub-total";
+    totalLabel = "W3/Bilateral projects Subtotal";
   else
-    totalLabel = "MELIA Studies Budget Sub-total";
+    totalLabel = "MELIA Studies Budget Subtotal";
 
   XLSX.utils.sheet_add_aoa(ws, [[totalLabel, null, null, null, null]], { origin: -1 });
 
@@ -5341,7 +5341,7 @@ const totalRowIndex = rows.length + 1;
     });
 
     XLSX.utils.sheet_add_aoa(ws, sheetData, { origin: -1 });
-    const subTotalRowData: any = ['Sub-total'];
+    const subTotalRowData: any = ['Subtotal'];
 
     for (let C = 1; C < COLUMNS_COUNT; C++) {
       const startCell = XLSX.utils.encode_cell({ r: FIRST_DATA_ROW, c: C });
@@ -5484,7 +5484,7 @@ const totalRowIndex = rows.length + 1;
     });
 
     XLSX.utils.sheet_add_aoa(ws, sheetData, { origin: -1 });
-    const subTotalRowData: any = ['Sub-total'];
+    const subTotalRowData: any = ['Subtotal'];
 
     for (let C = 1; C < COLUMNS_COUNT; C++) {
       const startCell = XLSX.utils.encode_cell({ r: FIRST_DATA_ROW, c: C });
@@ -6063,7 +6063,7 @@ const totalRowIndex = rows.length + 1;
       if (currentRowIndex > wpStartRow) {
         ws_data.push([
             null,
-            'HLO budget sub-total', null, null, null, null, null,
+            'HLO budget Subtotal', null, null, null, null, null,
             this.roundNumber(this.summaryBudgetsTotal[wpCode]) || 0,
         ]);
         merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 6 } });
@@ -6096,7 +6096,7 @@ const totalRowIndex = rows.length + 1;
 
   for (let R = 0; R < ws_data.length; ++R) {
     const isHeader = R < 2;
-    const isSubtotal = ws_data[R][1] === 'HLO budget sub-total';
+    const isSubtotal = ws_data[R][1] === 'HLO budget Subtotal';
 
     if (isHeader) {
       ws['!rows'][R] = { hpt: 30 };
@@ -6115,7 +6115,7 @@ const totalRowIndex = rows.length + 1;
         // Header rows (first two rows)
         cell.s = headerStyle;
       } else if (
-        ws_data[R][1] === 'HLO budget sub-total' // 🟢 Detect subtotal rows by value
+        ws_data[R][1] === 'HLO budget Subtotal' // 🟢 Detect subtotal rows by value
       ) {
         cell.s = subTotalRowStyle;
       } else {
@@ -6283,7 +6283,7 @@ const totalRowIndex = rows.length + 1;
       if (currentRowIndex > wpStartRow) {
         ws_data.push([
             null,
-            'HLO budget sub-total', null, null, null, null, null,
+            'HLO budget Subtotal', null, null, null, null, null,
             this.wp_budgets[partner_code][wpCode] || 0,
         ]);
         merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 6 } });
@@ -6316,7 +6316,7 @@ const totalRowIndex = rows.length + 1;
 
   for (let R = 0; R < ws_data.length; ++R) {
     const isHeader = R < 2;
-    const isSubtotal = ws_data[R][1] === 'HLO budget sub-total';
+    const isSubtotal = ws_data[R][1] === 'HLO budget Subtotal';
 
     if (isHeader) {
       ws['!rows'][R] = { hpt: 30 };
@@ -6335,7 +6335,7 @@ const totalRowIndex = rows.length + 1;
         // Header rows (first two rows)
         cell.s = headerStyle;
       } else if (
-        ws_data[R][1] === 'HLO budget sub-total' // 🟢 Detect subtotal rows by value
+        ws_data[R][1] === 'HLO budget Subtotal' // 🟢 Detect subtotal rows by value
       ) {
         cell.s = subTotalRowStyle;
       } else {
@@ -6707,7 +6707,7 @@ const totalRowIndex = rows.length + 1;
       // ---- SUBTOTAL ROW ----
       ws_data.push([
         null,
-        "Contracted Partners budget sub-Total",
+        "Contracted Partners budget Subtotal",
         null,
         null,
         this.roundNumber(this.summaryBudgetsTotal[wpCode]) || 0,
@@ -6736,7 +6736,7 @@ const totalRowIndex = rows.length + 1;
     // ---- STYLING ----
     for (let R = 0; R < ws_data.length; ++R) {
       const isHeader = R === 0;
-      const isSubtotal = ws_data[R][1] === "Contracted Partners budget sub-Total";
+      const isSubtotal = ws_data[R][1] === "Contracted Partners budget Subtotal";
   
       ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 50 };
   
@@ -6866,7 +6866,7 @@ const totalRowIndex = rows.length + 1;
   
       ws_data.push([
         null,
-        "Contracted Partners budget sub-Total",
+        "Contracted Partners budget Subtotal",
         null,
         null,
         this.wp_budgets[partner_code][wpCode] || 0,
@@ -6895,7 +6895,7 @@ const totalRowIndex = rows.length + 1;
     // ---- STYLING ----
     for (let R = 0; R < ws_data.length; ++R) {
       const isHeader = R === 0;
-      const isSubtotal = ws_data[R][1] === "Contracted Partners budget sub-Total";
+      const isSubtotal = ws_data[R][1] === "Contracted Partners budget Subtotal";
   
       ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 70 };
   
@@ -7216,7 +7216,7 @@ const totalRowIndex = rows.length + 1;
   
       ws_data.push([
         null,
-        "MELIA budget sub-total",
+        "MELIA budget Subtotal",
         null,
         null,
         this.summaryBudgetsTotal[wpCode] || 0,
@@ -7244,7 +7244,7 @@ const totalRowIndex = rows.length + 1;
   
     for (let R = 0; R < ws_data.length; ++R) {
       const isHeader = R === 0;
-      const isSubtotal = ws_data[R][1] === "MELIA budget sub-total";
+      const isSubtotal = ws_data[R][1] === "MELIA budget Subtotal";
   
       ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 60 };
   
@@ -7350,7 +7350,7 @@ const totalRowIndex = rows.length + 1;
   
       ws_data.push([
         null,
-        "W3/Bilateral budget sub-total",
+        "W3/Bilateral budget Subtotal",
         null,
         this.summaryBudgetsTotal[wpCode] || 0,
       ]);
@@ -7377,7 +7377,7 @@ const totalRowIndex = rows.length + 1;
   
     for (let R = 0; R < ws_data.length; ++R) {
       const isHeader = R === 0;
-      const isSubtotal = ws_data[R][1] === "W3/Bilateral budget sub-total";
+      const isSubtotal = ws_data[R][1] === "W3/Bilateral budget Subtotal";
   
       ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 60 };
   

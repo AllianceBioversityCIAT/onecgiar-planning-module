@@ -247,7 +247,7 @@
 
               <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
               <div class="card-title-3 m-b-t">
-                Toc version ID: {{ this.tocSubmissionData.version }}
+                ToC version ID: {{ this.tocSubmissionData.version }}
               </div>
               <div class="init-status">
                 <span> PORB is</span>
@@ -1022,7 +1022,7 @@
 
               <div class="card-title-3">{{ this.phase.name }}</div>
               <div class="card-title-3 m-b-t">
-                Toc version ID: {{ this.tocSubmissionData.version }}
+                ToC version ID: {{ this.tocSubmissionData.version }}
               </div>
               <div class="init-status">
                 <span> PORB is</span>
@@ -2098,7 +2098,7 @@
 
               <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
               <div class="card-title-3 m-b-t">
-                Toc version ID: {{ this.tocSubmissionData.version }}
+                ToC version ID: {{ this.tocSubmissionData.version }}
               </div>
               <div [ngClass]="{
                 'approved': getStatus() === 'Approved',
@@ -2458,7 +2458,7 @@
                     </ng-container>
                     <tr class="total">
                       <td [attr.colspan]="6">
-                        <div class="subtotal">HLO budget sub-total</div>
+                        <div class="subtotal">HLO budget Subtotal</div>
                       </td>
 
                      <!-- <ng-container *ngFor="let type of highLevelOutputIndicatorTypes">
@@ -2632,7 +2632,7 @@
                   </ng-container>
                   <tr class="total">
                     <td [attr.colspan]="3">
-                      <div class="subtotal">MELIA budget sub-total</div>
+                      <div class="subtotal">MELIA budget Subtotal</div>
                     </td>
                     <!-- <ng-container *ngFor="let per of period">
                       <td>
@@ -2903,7 +2903,7 @@
                   </ng-container>
                   <tr class="total">
                     <td [attr.colspan]="2">
-                      <div class="subtotal">Cross-cutting costs sub-total</div>
+                      <div class="subtotal">Cross-cutting costs Subtotal</div>
                     </td>
                     <!-- <ng-container *ngFor="let per of period">
                       <td>
@@ -3065,7 +3065,7 @@
                   </ng-container>
                   <tr class="total">
                     <td [attr.colspan]="2">
-                      <div class="subtotal">W3/Bilateral budget sub-total</div>
+                      <div class="subtotal">W3/Bilateral budget Subtotal</div>
                     </td>
                     <!-- <ng-container *ngFor="let per of period">
                       <td>
@@ -3252,7 +3252,7 @@
                   </ng-container>
                   <tr class="total">
                     <td [attr.colspan]="3">
-                      <div class="subtotal">Contracted Partners budget sub-Total</div>
+                      <div class="subtotal">Contracted Partners budget Subtotal</div>
                     </td>
                     <td class="talign-center">
                       {{
@@ -3352,7 +3352,7 @@
           
                     <tfoot>
                       <tr class="total">
-                        <td><div class="subtotal">Sub-total</div></td>
+                        <td><div class="subtotal">Subtotal</div></td>
           
                         <td *ngFor="let wp of actualWps" class="text-right">
                           {{ getWpTotalsAcrossPartners(wp.ost_wp.wp_official_code) }}
@@ -3537,7 +3537,7 @@
 
             <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
             <div class="card-title-3 m-b-t">
-              Toc version ID: {{ this.tocSubmissionData.version }}
+              ToC version ID: {{ this.tocSubmissionData.version }}
             </div>
             <div [ngClass]="{
               'approved': getStatus() === 'Approved',
@@ -3769,7 +3769,7 @@
                 </ng-container>
                   <tr class="total">
                     <td [colSpan]="6">
-                      <div class="subtotal">HLO budget sub-total</div>
+                      <div class="subtotal">HLO budget Subtotal</div>
                     </td>
                    
                     <td class="talign-center">
@@ -3980,7 +3980,7 @@
                   error: errors[partner.code][wp.ost_wp.wp_official_code + '-partners']
                 }">
                   <tr>
-                      <th>partners</th>
+                      <th>Partners title</th>
                       <th>High level outputs</th>
                       <th>Contracted Partners</th>
                       <th>Geographic location</th>
@@ -4258,7 +4258,7 @@
                     <tfoot>
                       <tr class="total">
                         <td>
-                          <div class="subtotal">Sub-total</div>
+                          <div class="subtotal">Subtotal</div>
                         </td>
                         <td *ngFor="let wp of actualWps?.slice(0, 1)">
                           {{ getWpTotals(partner.code ,wp.ost_wp.wp_official_code) }}
@@ -4392,7 +4392,7 @@
 
               <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
               <div class="card-title-3 m-b-t">
-                Toc version ID: {{ this.tocSubmissionData.version }}
+                ToC version ID: {{ this.tocSubmissionData.version }}
               </div>
               <div [ngClass]="{
                 'approved': getStatus() === 'Approved',
@@ -4977,7 +4977,7 @@
                   </ng-container>
                     <tr class="total">
                       <td [colSpan]="6">
-                        <div class="subtotal">HLO budget sub-total</div>
+                        <div class="subtotal">HLO budget Subtotal</div>
                       </td>
                       <!-- <td>
                         {{
@@ -5833,7 +5833,7 @@
                     error: errors[partner.code][wp.ost_wp.wp_official_code + '-partners']
                   }">
                     <tr>
-                        <th>partners</th>
+                        <th>Partners title</th>
                         <th>High level outputs</th>
                         <th>Contracted Partners</th>
                         <th>Geographic location</th>
@@ -6238,7 +6238,7 @@
                   </ng-container>
                     <tr class="total">
                       <td [colSpan]="4">
-                        <div class="subtotal">W3/Bilateral projects sub-total</div>
+                        <div class="subtotal">W3/Bilateral projects Subtotal</div>
                       </td>
                   
                       <td class="talign-center">
@@ -6444,7 +6444,7 @@
                   </ng-container>
                     <tr class="total">
                       <td [colSpan]="4">
-                        <div class="subtotal">MELIA studies budget sub-total</div>
+                        <div class="subtotal">MELIA studies budget Subtotal</div>
                       </td>
                   
                       <td class="talign-center">
@@ -6538,7 +6538,7 @@
                       <tfoot>
                         <tr class="total">
                           <td>
-                            <div class="subtotal">Sub-total</div>
+                            <div class="subtotal">Subtotal</div>
                           </td>
                           <td *ngFor="let wp of actualWps">
                             {{ getWpTotals(partner.code ,wp.ost_wp.wp_official_code) }}
