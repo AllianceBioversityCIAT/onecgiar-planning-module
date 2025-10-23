@@ -22,7 +22,6 @@ import { ToastrService } from "ngx-toastr";
 })
 export class InitiativesComponent implements OnInit {
   displayedColumns: string[] = [
-    "id",
     "official_code",
     "name",
     "my_role",

@@ -48,7 +48,6 @@ export class SearchInitComponent {
       status: [null],
     });
     this.filterForm.valueChanges.subscribe(() => {
-      console.log(this.filterForm.value);
       if (time) clearTimeout(time);
       time = setTimeout(() => {
         this.filters.emit(this.filterForm.value);
