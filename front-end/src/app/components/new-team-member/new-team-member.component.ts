@@ -20,7 +20,6 @@ export enum ROLES {
   COORDINATOR = "Coordinator",
   CONTRIBUTOR = "Contributor",
   CoLeader = "Co-leader",
-  MELIA_Focal_Point = "MELIA Focal Point",
   Financial_Focal_Point = "Financial Focal Point"
 }
 
