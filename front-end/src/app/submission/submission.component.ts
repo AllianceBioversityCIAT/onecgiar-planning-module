@@ -3247,7 +3247,7 @@ totalConsolidatedTargetPartner: any;
     const input = event.target as HTMLInputElement;
     const value = parseFloat(input.value.replace(/,/g, ''));
     if (value === 0 || isNaN(value)) {
-      input.select();
+        setTimeout(() => input.select(), 150);
     }
   }
   

@@ -3714,7 +3714,7 @@
                                   indicator?.type?.value
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)" 
                               [(ngModel)]="
                                 displayBudgetValuesIndicator[partner.code][
                                   wp.ost_wp.wp_official_code
@@ -3868,7 +3868,7 @@
                                   true
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                               [(ngModel)]="
                                 budgetValues[partner.code][
                                   wp.ost_wp.wp_official_code + '-Cross-Cutting'
@@ -3903,7 +3903,7 @@
                                   true
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                               [(ngModel)]="
                                 displayBudgetValues[partner.code][
                                   wp.ost_wp.wp_official_code + '-Cross-Cutting'
@@ -4092,7 +4092,7 @@
                                 true
                               )
                             "
-                            (focus)="selectIfZero($event)"
+                            (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                             [(ngModel)]="
                               budgetValues[partner.code][
                                 wp.ost_wp.wp_official_code + '-partners'
@@ -4131,7 +4131,7 @@
                                 true
                               )
                             "
-                            (focus)="selectIfZero($event)"
+                            (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                             [(ngModel)]="
                               displayBudgetValues[partner.code][
                                 wp.ost_wp.wp_official_code + '-partners'
@@ -4236,7 +4236,7 @@
                                 thousandSeparator=","
                                 [(ngModel)]="anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][anaplan.id]"
                                 (keyup)="anaplanCalc(partner,anaplan.id, wp.ost_wp.wp_official_code)"
-                                (focus)="selectIfZero($event)"
+                                (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                                 [disabled]="
                                   partnersStatus[partner.code] ||
                                   initStatus == 'Pending' ||
@@ -4806,7 +4806,7 @@
                                     indicator?.type?.value
                                   )
                                 "
-                                (focus)="selectIfZero($event)"
+                                (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                                 [(ngModel)]="
                                   displayBudgetValuesIndicator[partner.code][
                                     wp.ost_wp.wp_official_code
@@ -5459,7 +5459,7 @@
                                     true
                                   )
                                 "
-                                (focus)="selectIfZero($event)"
+                                (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                                 [(ngModel)]="
                                   budgetValues[partner.code][
                                     wp.ost_wp.wp_official_code + '-Cross-Cutting'
@@ -5494,7 +5494,7 @@
                                     true
                                   )
                                 "
-                                (focus)="selectIfZero($event)"
+                                (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                                 [(ngModel)]="
                                   displayBudgetValues[partner.code][
                                     wp.ost_wp.wp_official_code + '-Cross-Cutting'
@@ -5945,7 +5945,7 @@
                                   true
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                               [(ngModel)]="
                                 budgetValues[partner.code][
                                   wp.ost_wp.wp_official_code + '-partners'
@@ -5984,7 +5984,7 @@
                                   true
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                               [(ngModel)]="
                                 displayBudgetValues[partner.code][
                                   wp.ost_wp.wp_official_code + '-partners'
@@ -6149,7 +6149,7 @@
                                   true
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                               [(ngModel)]="
                                 budgetValues[partner.code][
                                 result?.group?.ost_wp?.wp_official_code + '-project'
@@ -6184,7 +6184,7 @@
                                   true
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                               [(ngModel)]="
                                 displayBudgetValues[partner.code][
                                 result?.group?.ost_wp?.wp_official_code + '-project'
@@ -6349,7 +6349,7 @@
                                   true
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                               [(ngModel)]="
                                 budgetValues[partner.code][
                                 result?.group?.ost_wp?.wp_official_code + '-melia'
@@ -6384,7 +6384,7 @@
                                   true
                                 )
                               "
-                              (focus)="selectIfZero($event)"
+                              (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                               [(ngModel)]="
                                 displayBudgetValues[partner.code][
                                 result?.group?.ost_wp?.wp_official_code + '-melia'
@@ -6514,7 +6514,7 @@
                                   thousandSeparator=","
                                   [(ngModel)]="anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][anaplan.id]"
                                   (keyup)="anaplanCalc(partner,anaplan.id, wp.ost_wp.wp_official_code)"
-                                  (focus)="selectIfZero($event)"
+                                  (focus)="selectIfZero($event)" (mousedown)="selectIfZero($event)"
                                   [disabled]="
                                     partnersStatus[partner.code] ||
                                     initStatus == 'Pending' ||
