@@ -89,13 +89,6 @@ export class SubmissionController {
     return this.submissionService.updateLatestSubmitionStatus(id, data, req.user)
   }
 
-  @Patch('validatePORB/:id')
-  @ApiBearerAuth()
-  @ApiBody({ type: markPORBAsValid })
-  @ApiBearerAuth()
-  markPORBAsValid(@Param('id') id, @Body() data, @Request() req) {
-    return this.submissionService.markPORBAsValid(id, data, req.user)
-  }
 
   @Post('save/:id')
   @ApiBearerAuth()

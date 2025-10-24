@@ -2938,46 +2938,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.my_roles?.includes(ROLES.CoLeader)
     );
   }
-  canMarkAsValid() {
-    return (
-      this.user_info.role == "admin" ||
-      this.my_roles?.includes(ROLES.LEAD) ||
-      this.my_roles?.includes(ROLES.COORDINATOR) ||
-      this.my_roles?.includes(ROLES.CoLeader) 
-    );
-  }
-  markAsValid() {
-    this.dialog
-    .open(DeleteConfirmDialogComponent, {
-      data: {
-        title: "Mark this PORB as valid",
-        message: `Are you sure you want to Mark this PORB as valid ?`,
-      },
-    })
-    .afterClosed()
-    .subscribe(async (dialogResult) => {
-      if (dialogResult == true) {
-        await this.submissionService.markAsValid(
-          this.initiative_data.id,
-          { is_valid: true, initiative_id: this.initiative_data.id }
-        ).then(
-          async () => {
-            this.initiative_data = await this.submissionService.getInitiative(
-              this.params.id
-            );
-            this.socket.emit('markPORBAsValid', {
-              initiative_data: this.initiative_data
-            });
-            await this.InitData();
-            this.toastrService.success("PORB marked as valid");
-          }, (error) => {
-            this.toster.error('Connection Error', undefined, { disableTimeOut: true });
-          }
-        );
-      }
-    });
-  }
-
   getStatus() {
     return  this.initiative_data.last_submitted_at != null &&
     this.initiative_data.last_update_at ==

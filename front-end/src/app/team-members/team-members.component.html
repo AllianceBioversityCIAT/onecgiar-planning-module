@@ -125,7 +125,7 @@
           <ng-container matColumnDef="organizations">
             <th mat-header-cell *matHeaderCellDef>Granted access</th>
             <td mat-cell *matCellDef="let element">
-              {{ element.organizations | grantedAccessPipe:element.role  }}
+              {{ element.organizations | grantedAccessPipe  }}
             </td>
           </ng-container>
 
