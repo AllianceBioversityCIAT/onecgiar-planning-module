@@ -3173,13 +3173,18 @@ totalConsolidatedTargetPartner: any;
   }
 
   openBudgetAssumptionsDialog(partner: number, item_id: string, wp_id: string, budget: number, type: string, parent_id: any) { 
+    console.log('partnersStatus', this.partnersStatus[partner])
+ const  disbaled= this.partnersStatus[partner] || this.initStatus == 'Pending' || this.initStatus == 'Approved';
+                                  
+    
     const data ={ 
       organization_code: partner,
       item_id: item_id,
       wp_id: wp_id,
       item_budget: budget,
       type: type,
-      phase_id: this.phase.id
+      phase_id: this.phase.id,
+      disbaled: disbaled
     }
     this.dialog
     .open(BudgetAssumptionsComponent, {

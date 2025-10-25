@@ -1,6 +1,17 @@
-@import "../../sass/pages/admin-module/user-management";
-@import "../../sass/layout/admin-module/user-management";
+.head {
+    background: linear-gradient(to right, #2a2e45, #212537);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
+    .title {
+        padding: 12px;
+        font-size: 17px;
+        font-weight: 500;
+    }
+
+}
 .indicators-container {
   display: flex;
   flex-direction: column;
@@ -18,7 +29,6 @@
   .content {
     display: flex;
     flex-direction: column;
-    gap: 10rem;
     .full-width {
       width: 100%;
     }

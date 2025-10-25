@@ -20,8 +20,10 @@ export class BudgetAssumptionsComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any,
     private toast: ToastrService
   ) {}
-
+    disabled: boolean = false;
   async ngOnInit() {
+    this.disabled=this.data.data.disbaled;
+   
     this.setForm();
     await this.getData();
     if (this.budget_assumptions) {
@@ -29,6 +31,11 @@ export class BudgetAssumptionsComponent implements OnInit {
         budget_assumptions: this.budget_assumptions.budget_assumptions,
       });
     }
+    if(this.disabled)
+    this.Form.get('budget_assumptions')?.disable();
+    else
+     this.Form.get('budget_assumptions')?.enable();
+     
   }
 
   async getData() {
@@ -64,5 +71,8 @@ export class BudgetAssumptionsComponent implements OnInit {
         }
       );
     }
+  }
+   onClose(): void {
+    this.dialogRef.close();
   }
 }
