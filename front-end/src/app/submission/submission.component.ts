@@ -642,14 +642,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         is_project: category == "Project" ? true : false
       }
     );
-    if (
-      !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
-        true
-      )
-    ) {
+    if (!event.checked && (this.budgetValues[partner_code][wp_id][item_id] || this.displayBudgetValues[partner_code][wp_id][item_id])) {
+      this.budgetValues[partner_code][wp_id][item_id] = 0;
+      this.displayBudgetValues[partner_code][wp_id][item_id] = 0;
       this.values[partner_code][wp_id][item_id] = 0;
       this.displayValues[partner_code][wp_id][item_id] = 0;
-      // this.changeCalc(partner_code, wp_id, item_id, title, "percent", true);
+      this.changeCalc(partner_code, wp_id, item_id, title, "percent", false, 'PARTNER', true);
     }
     if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (this.values[partner_code][wp_id][item_id] == 0 && this.displayValues[partner_code][wp_id][item_id] == 0)){
       this.values[partner_code][wp_id][item_id] = null;
