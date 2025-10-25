@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Request,
+  Res,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -41,6 +42,7 @@ import {
   updateStatus,
 } from 'src/DTO/submission.dto';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
+import { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @ApiTags('submission')
 @Controller('submission')
@@ -512,12 +514,12 @@ for (let data of filteredData) {
 
   @Get('excel/:id')
   @ApiBearerAuth()
-  async excel(@Param('id') id) {
-    return await this.submissionService.generateExcel(id, null, null, null,true);
+  async excel(@Param('id') id , @Res({ passthrough: true }) res: Response) {
+    return await this.submissionService.generateExcel(id, null, null, null,true,res);
   }
   @Get('excelCurrent/:id')
   @ApiBearerAuth()
-  async excelCurrent(@Param('id') initId) {
+  async excelCurrent(@Param('id') initId , @Res({ passthrough: true }) res: Response) {
     const init = await this.initService.findOne(initId);
     const toc_data = this.getTocs(init.synchronized == true ? init.official_code : initId);
     return await this.submissionService.generateExcel(
@@ -525,12 +527,13 @@ for (let data of filteredData) {
       initId,
       toc_data,
       null,
-      true
+      true,
+      res
     );
   }
   @Post('excelCurrentCenter')
   @ApiBearerAuth()
-  async excelCurrentCenter(@Body() data: any) {
+  async excelCurrentCenter(@Body() data: any , @Res({ passthrough: true }) res: Response) {
     const init = await this.initService.findOne(data.initId);
     const toc_data = this.getTocs(init.synchronized == true ? init.official_code : data.initId);
     return await this.submissionService.generateExcel(
@@ -538,7 +541,8 @@ for (let data of filteredData) {
       data.initId,
       toc_data,
       data.organization,
-      false
+      false,
+      res
     );
   }
 }

@@ -50,30 +50,81 @@ export class SubmissionService {
   }
 
 
-  async excel(id: any) {
-    const data = await firstValueFrom(
-      this.http.get(environment.api_url+'/submission/excel/' + id, { responseType: 'blob' }).pipe(map((d: Blob) => d))
-    );
-    saveAs(data, 'Planning.xlsx');
-  }
+async excel(id: any) {
+  const response = await firstValueFrom(
+    this.http.get(environment.api_url + '/submission/excel/' + id, {
+      responseType: 'blob',
+      observe: 'response',
+    })
+  );
 
-  async excelCurrent(id: any) {
-    const data = await firstValueFrom(
-      this.http.get(environment.api_url+'/submission/excelCurrent/' + id, { responseType: 'blob' }).pipe(map((d: Blob) => d))
-    );
-    saveAs(data, 'Planning.xlsx');
-  }
+  const blob = response.body as Blob;
 
-  async excelCurrentForCenter(initId: any , organization:any) {
-    const data = {
-      organization: organization,
-      initId: initId
+  // Try to extract filename from the header
+  const contentDisposition = response.headers.get('Content-Disposition');
+  let filename = 'Planning.xlsx';
+
+  if (contentDisposition) {
+    const match = contentDisposition.match(/filename="?([^"]+)"?/);
+    if (match && match[1]) {
+      filename = match[1];
     }
-    const result = await firstValueFrom(
-      this.http.post(environment.api_url+'/submission/excelCurrentCenter/' , data, {responseType: 'blob'}).pipe(map((d: Blob) => d))
-    );
-    saveAs(result, 'Planning.xlsx');
   }
+
+  saveAs(blob, filename);
+}
+
+async excelCurrent(id: any) {
+  const response = await firstValueFrom(
+    this.http.get(environment.api_url + '/submission/excelCurrent/' + id, {
+      responseType: 'blob',
+      observe: 'response',
+    })
+  );
+
+  const blob = response.body as Blob;
+
+  // Try to extract filename from the header
+  const contentDisposition = response.headers.get('Content-Disposition');
+  let filename = 'Planning.xlsx';
+
+  if (contentDisposition) {
+    const match = contentDisposition.match(/filename="?([^"]+)"?/);
+    if (match && match[1]) {
+      filename = match[1];
+    }
+  }
+
+  saveAs(blob, filename);
+}
+  async excelCurrentForCenter(initId: any, organization: any) {
+  const data = { organization, initId };
+
+  // Get the full HTTP response, not just the blob
+  const response = await firstValueFrom(
+    this.http.post(environment.api_url + '/submission/excelCurrentCenter/', data, {
+      responseType: 'blob',
+      observe: 'response',
+    })
+  );
+
+  // Extract the Blob (file data)
+  const blob = response.body as Blob;
+
+  // Extract the filename from Content-Disposition header
+  const contentDisposition = response.headers.get('Content-Disposition');
+  let filename = 'Planning.xlsx';
+  console.log('Filename from header:', response.headers);
+  if (contentDisposition) {
+    const match = contentDisposition.match(/filename="?([^"]+)"?/);
+    console.log('Filename from header:', match);
+    if (match && match[1]) {
+      filename = match[1];
+    }
+  }
+  // Save the file with the extracted filename
+  saveAs(blob, filename);
+}
 
   async cancelSubmission(id: number, data: any) {
     return firstValueFrom(

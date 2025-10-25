@@ -38,6 +38,7 @@ import { AxiosError } from 'axios';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { AnaplanService } from 'src/anaplan/anaplan.service';
 import { BudgetAssumptionsService } from 'src/budget-assumptions/budget-assumptions.service';
+import { Response } from 'express';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -1867,7 +1868,7 @@ export class SubmissionService {
   totalTargetsIndicatorPartners: any = {};
   totalConsolidatedTargetPartner: any;
 
-  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any, showGeographicScope: boolean) { 
+  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any, showGeographicScope: boolean,res: Response) { 
     this.perValues = {};
     this.perValuesSammary = {};
     this.perValuesSammaryForPartner = {};
@@ -2513,7 +2514,7 @@ export class SubmissionService {
     //   partnersData = this.getPartnersData(this.wps, this.indicatorTypes, partners, organization);
 
     // const merges = [];
-    const file_name = 'All-planning-.xlsx';
+    let file_name = 'Planning';
 
     var wb = XLSX.utils.book_new();
 
@@ -3813,27 +3814,39 @@ export class SubmissionService {
       XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
   
     }
-    
+    (wb.Workbook as any) = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
+    if(organization)
+      file_name =  organization?.acronym? file_name+`_${this.initiative_data?.official_code}_${organization.acronym}` : file_name+ '_'+ this.initiative_data?.official_code;
+    else 
+      file_name = file_name +'_'+ this.initiative_data?.official_code
 
     await XLSX.writeFile(
       wb,
-      join(process.cwd(), 'generated_files', file_name),
+      join(process.cwd(), 'generated_files', `${file_name}.xlsx`),
       { cellStyles: true },
     );
     const file = createReadStream(
-      join(process.cwd(), 'generated_files', file_name),
+      join(process.cwd(), 'generated_files', `${file_name}.xlsx`),
     );
 
     setTimeout(async () => {
       try {
-        unlink(join(process.cwd(), 'generated_files', file_name), null);
+        unlink(join(process.cwd(), 'generated_files', `${file_name}.xlsx`), null);
       } catch (e) { }
     }, 9000);
-              
-    return new StreamableFile(file, {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      disposition: `attachment; filename="${file_name}"`,
-    });
+  res.setHeader(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  );
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="${file_name}.xlsx"`,
+  );
+  res.setHeader(
+    'Access-Control-Expose-Headers',
+    'Content-Disposition',
+  );         
+    return new StreamableFile(file);
 
     // return {
     //   ConsolidatedData: ConsolidatedData,

@@ -349,6 +349,7 @@ export class InitiativesService {
       this.autofitColumnsXlsx(finaldata, ws);
 
       XLSX.utils.book_append_sheet(wb, ws, 'Initiative');
+       (wb.Workbook as any) = { fullCalcOnLoad: 1 };
       await XLSX.writeFile(
         wb,
         join(process.cwd(), 'generated_files', file_name),
@@ -839,7 +840,7 @@ export class InitiativesService {
     this.appendStyleForXlsx(ws);
 
     this.autofitColumnsXlsx(finaldata, ws);
-
+ (wb.Workbook as any) = { fullCalcOnLoad: 1 };
     await XLSX.writeFile(
       wb,
       join(process.cwd(), 'generated_files', file_name),
