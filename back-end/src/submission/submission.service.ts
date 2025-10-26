@@ -1868,7 +1868,7 @@ export class SubmissionService {
   totalTargetsIndicatorPartners: any = {};
   totalConsolidatedTargetPartner: any;
 
-  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any, showGeographicScope: boolean,res: Response) { 
+  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any, showGeographicScope: boolean,res: Response, anaplan: boolean) { 
     this.perValues = {};
     this.perValuesSammary = {};
     this.perValuesSammaryForPartner = {};
@@ -3738,44 +3738,44 @@ export class SubmissionService {
 
 
 
-    if(organization){
-    //  center Consolidated
-    const centerConsolidated = this.generateExcelCenterConsolidated(organization.code);
-    XLSX.utils.book_append_sheet(wb, centerConsolidated, 'summary');
+  if(organization && !anaplan){
+  //  center Consolidated
+  const centerConsolidated = this.generateExcelCenterConsolidated(organization.code);
+  XLSX.utils.book_append_sheet(wb, centerConsolidated, 'summary');
 
 
-    // cenert Cross-Cutting
-    const centerCross = this.generateExcelCenterCrossCutting(organization.code);
-    XLSX.utils.book_append_sheet(wb, centerCross, 'Cross-Cutting');
+  // cenert Cross-Cutting
+  const centerCross = this.generateExcelCenterCrossCutting(organization.code);
+  XLSX.utils.book_append_sheet(wb, centerCross, 'Cross-Cutting');
 
 
-    // HLO for center
-    const centerHighLevelOutput = this.generateExcelCenterHLO(organization.code);
-    XLSX.utils.book_append_sheet(wb, centerHighLevelOutput, 'HLO');
+  // HLO for center
+  const centerHighLevelOutput = this.generateExcelCenterHLO(organization.code);
+  XLSX.utils.book_append_sheet(wb, centerHighLevelOutput, 'HLO');
 
-    // Partners for centers
-    const partnersCenterSheet = this.generateExcelCenterPartner(organization.code);
-    XLSX.utils.book_append_sheet(wb, partnersCenterSheet, 'Partner');
-
-
-    const data = await this.getActualTocs(this.initiative_data.official_code);
-
-    if(data.projects.length) {
-      const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
-      XLSX.utils.book_append_sheet(wb, projectSheet, 'project');
-    }
-   
-    if(data.melias.length) {
-      const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
-      XLSX.utils.book_append_sheet(wb, meliaSheet, 'melia');
-    }
-
-    const anaplanSheet = this.generateExcelAnaplan(organization);
-    XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
+  // Partners for centers
+  const partnersCenterSheet = this.generateExcelCenterPartner(organization.code);
+  XLSX.utils.book_append_sheet(wb, partnersCenterSheet, 'Partner');
 
 
+  const data = await this.getActualTocs(this.initiative_data.official_code);
 
-    } else {
+  if(data.projects.length) {
+    const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
+    XLSX.utils.book_append_sheet(wb, projectSheet, 'project');
+  }
+  
+  if(data.melias.length) {
+    const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
+    XLSX.utils.book_append_sheet(wb, meliaSheet, 'melia');
+  }
+
+  const anaplanSheet = this.generateExcelAnaplan(organization);
+  XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
+
+
+
+  } else  if(!organization && !anaplan){
       //  summary Consolidated
       const summaryConsolidated = this.generateExcelSummaryConsolidated();
       XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'summary');
@@ -3813,7 +3813,13 @@ export class SubmissionService {
       const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
       XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
   
-    }
+  } else if(organization && anaplan) {
+    const anaplanSheet = this.generateExcelAnaplan(organization);
+    XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
+  } else if(!organization && anaplan) {
+    const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
+    XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
+  }
     (wb.Workbook as any) = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
     if(organization)
       file_name =  organization?.acronym? file_name+`_${this.initiative_data?.official_code}_${organization.acronym}` : file_name+ '_'+ this.initiative_data?.official_code;

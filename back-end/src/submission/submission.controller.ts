@@ -515,7 +515,7 @@ for (let data of filteredData) {
   @Get('excel/:id')
   @ApiBearerAuth()
   async excel(@Param('id') id , @Res({ passthrough: true }) res: Response) {
-    return await this.submissionService.generateExcel(id, null, null, null,true,res);
+    return await this.submissionService.generateExcel(id, null, null, null,true,res, false);
   }
   @Get('excelCurrent/:id')
   @ApiBearerAuth()
@@ -528,7 +528,24 @@ for (let data of filteredData) {
       toc_data,
       null,
       true,
-      res
+      res,
+      false
+    );
+  }
+
+  @Post('excelAnaplan')
+  @ApiBearerAuth()
+  async excelAnaplan(@Body() data: any , @Res({ passthrough: true }) res: Response) {
+    const init = await this.initService.findOne(data.initId);
+    const toc_data = this.getTocs(init.synchronized == true ? init.official_code : data.initId);
+    return await this.submissionService.generateExcel(
+      null,
+      data.initId,
+      toc_data,
+      data?.organization,
+      true,
+      res,
+      true
     );
   }
   @Post('excelCurrentCenter')
@@ -542,7 +559,8 @@ for (let data of filteredData) {
       toc_data,
       data.organization,
       false,
-      res
+      res,
+      false
     );
   }
 }

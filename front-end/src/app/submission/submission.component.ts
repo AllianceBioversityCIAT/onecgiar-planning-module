@@ -2891,6 +2891,10 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     await this.submissionService.excelCurrent(this.params.id);
   }
 
+  async excelAnaplan(partner: any) {
+    await this.submissionService.excelAnaplan(this.params.id, partner);
+  }
+
   async excelCenters() {
     await this.submissionService.excelCurrentForCenter(
       this.params.id,
