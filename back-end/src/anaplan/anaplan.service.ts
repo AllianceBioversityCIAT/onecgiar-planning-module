@@ -67,7 +67,7 @@ export class AnaplanService {
     let record = await this.anaplanValuesRepo.findOne({
       where: {
         initiative_id: data.initiative_id,
-        organization_code: data.organization_code,
+        organization_code: data.organization.code,
         anaplan_id: data.anaplan_id,
         workPackage: workPackageObject,
       },
