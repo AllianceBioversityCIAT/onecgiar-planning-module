@@ -4099,7 +4099,7 @@
   
                     <ng-container
                       *ngFor="
-                        let item of partnersProject
+                        let item of partnerProjects[partner.code]
                       "
                     >
                     <ng-container *ngFor="let result of item.results; let i = index">

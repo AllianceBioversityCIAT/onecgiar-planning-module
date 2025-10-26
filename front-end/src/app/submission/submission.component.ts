@@ -1018,6 +1018,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   tocIncompleteData: boolean = false;
   partnersMelia:any;
   partnersProject:any;
+  partnerProjects:any = {}
   partnersProjectMelia:any;
   async InitData() {
     this.loading = true;
@@ -1084,7 +1085,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
     this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
     this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
-    
+
+    for(let partner of this.partners){
+      if(this.toggleIndicatorValues)
+      this.partnerProjects[partner.code] = this.partnersProject.filter((project: any) => project.center.code === partner.code);
+    else
+      this.partnerProjects[partner.code] = this.partnersProject
+    }
+
     this.partnersMelia.forEach((melia: any) => {
       if (melia.results && Array.isArray(melia.results)) {
         melia.results.forEach((result: any) => {
