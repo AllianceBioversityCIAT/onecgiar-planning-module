@@ -189,8 +189,7 @@
           <div
             class="approved-status-msg"
             *ngIf="
-              initStatus == 'Approved' &&
-              (initUser?.role == 'Coordinator' || initUser?.role == 'Leader')
+              initStatus == 'Approved'
             "
           >
             Please contact admin (PCU) if you would like to make any changes to
@@ -1622,7 +1621,7 @@
         <div
           class="pendding-status-msg"
           *ngIf="
-            (initStatus == 'Pending' || initStatus == 'Approved') &&
+            initStatus == 'Pending'  &&
             initUser?.role == 'Contributor'
           "
         >
@@ -1632,8 +1631,7 @@
         <div
           class="approved-status-msg"
           *ngIf="
-            initStatus == 'Approved' &&
-            (initUser?.role == 'Coordinator' || initUser?.role == 'Leader')
+            initStatus == 'Approved'
           "
         >
           Please contact admin (PCU) if you would like to make any changes to
@@ -2466,7 +2464,7 @@
           <div
             class="pendding-status-msg"
             *ngIf="
-              (initStatus == 'Pending' || initStatus == 'Approved') &&
+              initStatus == 'Pending'  &&
               initUser?.role == 'Contributor'
             "
           >
@@ -2476,8 +2474,7 @@
           <div
             class="approved-status-msg"
             *ngIf="
-              initStatus == 'Approved' &&
-              (initUser?.role == 'Coordinator' || initUser?.role == 'Leader')
+              initStatus == 'Approved'
             "
           >
             Please contact admin (PCU) if you would like to make any changes to
