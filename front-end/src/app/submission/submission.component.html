@@ -1808,7 +1808,7 @@
 
                       <td class="talign-center" style="width: 10% !important" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                         {{
-                        displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]
+                        displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]  | number : "1.2-2"
                         }}
                         
                       </td>
@@ -1824,7 +1824,7 @@
                    
                     <td class="talign-center">
                       {{
-                        wp_budgets[partner.code][wp.ost_wp.wp_official_code]
+                        wp_budgets[partner.code][wp.ost_wp.wp_official_code]  | number : "1.2-2"
                       }}
                       
                     </td>
@@ -2911,7 +2911,7 @@
   
                         <td class="talign-center" style="width: 10% !important" *ngIf="i === 0"  [attr.rowspan]="item.quantitative_indicators.length || 1">
                           {{
-                          displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]
+                          displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][item.id]  | number : "1.2-2"
                           }}
                           <!-- <mat-form-field
                             class="form-dialog-content__field"
@@ -3020,7 +3020,7 @@
                        </ng-container> -->
                       <td class="talign-center">
                         {{
-                          wp_budgets[partner.code][wp.ost_wp.wp_official_code]
+                          wp_budgets[partner.code][wp.ost_wp.wp_official_code]  | number : "1.2-2"
                         }}
                         <!-- <div class="form">
                           <mat-form-field

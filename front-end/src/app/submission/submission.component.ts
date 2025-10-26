@@ -1709,12 +1709,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.params.id
     );
     const tab = this.activatedRoute.snapshot.queryParamMap.get('tab');
-    if (tab && this.initiative_data.is_valid && this.initUser?.role !== 'MELIA Focal Point') {
+    if (tab) {
       this.selectedTabIndex = tab ? +tab : 0;
 
     } 
     const aowTab = this.activatedRoute.snapshot.queryParamMap.get('AOW');
-    if (aowTab && this.initiative_data.is_valid && this.initUser?.role !== 'MELIA Focal Point') {
+    if (aowTab) {
       this.selectedTabIndexAOW = aowTab ? +aowTab : 0;
     } 
     this.my_roles = this.InitiativeUsers.filter(
