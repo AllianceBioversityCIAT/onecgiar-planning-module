@@ -73,7 +73,30 @@ async excel(id: any) {
 
   saveAs(blob, filename);
 }
-
+  async excelAnaplan(initId: any, organization: any) {
+    const data = { organization, initId };
+  
+    const response = await firstValueFrom(
+      this.http.post(environment.api_url + '/submission/excelAnaplan/', data, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+    );
+  
+    const blob = response.body as Blob;
+  
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'Planning.xlsx';
+    console.log('Filename from header:', response.headers);
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      console.log('Filename from header:', match);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+    saveAs(blob, filename);
+  }
 async excelCurrent(id: any) {
   const response = await firstValueFrom(
     this.http.get(environment.api_url + '/submission/excelCurrent/' + id, {
