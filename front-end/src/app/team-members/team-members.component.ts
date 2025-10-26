@@ -77,10 +77,10 @@ export class TeamMembersComponent {
       this.router.navigate(['/denied'], { skipLocationChange: true });
 
 
-    this.title.setTitle("Manage initiative team");
+    this.title.setTitle("Team members");
     this.meta.updateTag({
       name: "description",
-      content: "Manage initiative team",
+      content: "Team members",
     });
   }
 
