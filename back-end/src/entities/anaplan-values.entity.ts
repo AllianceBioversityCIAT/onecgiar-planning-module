@@ -10,6 +10,7 @@ import { Anaplan } from './anaplan.entity';
 import { Organization } from './organization.entity';
 import { WorkPackage } from './workPackage.entity';
 import { Initiative } from './initiative.entity';
+import { Phase } from './phase.entity';
 
   @Entity()
   export class AnaplanValues {
@@ -49,4 +50,11 @@ import { Initiative } from './initiative.entity';
 
     @Column()
     initiative_id: number;
+
+    @Column({ nullable: false })
+    phase_id: number;
+
+    @JoinColumn({ name: 'phase_id' })
+    @ManyToOne(() => Phase, (phase) => phase.anaplan_values)
+    phase: Phase;
   }  

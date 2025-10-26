@@ -68,6 +68,7 @@ export class AnaplanService {
       where: {
         initiative_id: data.initiative_id,
         organization_code: data.organization.code,
+        phase_id: data.phase_id,
         anaplan_id: data.anaplan_id,
         workPackage: workPackageObject,
       },
@@ -94,6 +95,7 @@ export class AnaplanService {
       const newRecord = this.anaplanValuesRepo.create({
         initiative_id: data.initiative_id,
         organization_code: data.organization.code,
+        phase_id: data.phase_id,
         anaplan_id: data.anaplan_id,
         wp_id: workPackageObject.wp_id,
         value: data.value,

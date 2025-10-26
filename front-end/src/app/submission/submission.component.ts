@@ -3282,7 +3282,7 @@ totalConsolidatedTargetPartner: any;
   
     clearTimeout(this.timeCalc);
     this.timeCalc = setTimeout(async () => {
-        await this.anaplanService.createOrUpdate(data).then(
+        await this.anaplanService.createOrUpdate({...data,phase_id:this.phase.id}).then(
           () => {
             this.socket.emit("setDataAnaplan", {
               initiative_id,
