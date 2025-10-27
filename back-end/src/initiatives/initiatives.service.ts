@@ -652,7 +652,8 @@ export class InitiativesService {
           if (
             data.role == 'Coordinator' ||
             data.role == 'Contributor' ||
-            data.role == 'Co-leader'
+            data.role == 'Co-leader'   ||
+            data.role =='Financial Focal Point'
           ) {
             this.emailService.sendEmailTobyVarabel(
               user,

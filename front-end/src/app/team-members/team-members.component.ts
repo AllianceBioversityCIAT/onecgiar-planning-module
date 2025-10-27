@@ -90,6 +90,7 @@ export class TeamMembersComponent {
       this.user_info.role == "admin" ||
       this.my_roles?.includes(ROLES.LEAD) ||
       this.my_roles?.includes(ROLES.COORDINATOR) ||
+       this.my_roles?.includes(ROLES.Financial_Focal_Point) ||
       this.my_roles?.includes(ROLES.CoLeader)
     );
   }

@@ -118,7 +118,7 @@ export class SubmissionService {
 
           const usersRole = [];
           init.roles.filter(d => {
-            if (d.role == 'Leader' || d.role == 'Coordinator') {
+            if (d.role == 'Leader' || d.role == 'Coordinator' || 'Financial Focal Point') {
               usersRole.push(d);
             } else if (d.role == 'Contributor') {
               d.organizations.filter(x => {
@@ -186,7 +186,7 @@ export class SubmissionService {
 
           const usersRole = [];
           init.roles.filter(d => {
-            if (d.role == 'Leader' || d.role == 'Coordinator') {
+            if (d.role == 'Leader' || d.role == 'Coordinator' || 'Financial Focal Point') {
               usersRole.push(d);
             } else if (d.role == 'Contributor') {
               d.organizations.filter(x => {
@@ -235,7 +235,7 @@ export class SubmissionService {
             id: id,
             initiative: {
               roles: {
-                role: In(['Leader', 'Coordinator'])
+                role: In(['Leader', 'Coordinator','Financial Focal Point'])
               }
             }
           },
@@ -441,7 +441,7 @@ export class SubmissionService {
           where: {
             id: initiative_id,
             roles: {
-              role: In(['Leader', 'Coordinator'])
+              role: In(['Leader', 'Coordinator','Financial Focal Point'])
             }
           },
           relations: ['roles', 'roles.user']
