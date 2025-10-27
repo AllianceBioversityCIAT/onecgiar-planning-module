@@ -2412,3 +2412,50 @@ pre {
   margin-bottom: -70px;
   font-weight: 600;
 }
+
+
+/* the inner sticky bar style */
+.sticky-target {
+  background-color: #ffffff;
+  transition: all 0.25s ease;
+}
+.tab-title{
+  display: none;
+}
+/* when active */
+.is-sticky .sticky-target {
+  max-width: 180rem;
+    padding: 0 3.2rem;
+    margin: 0 auto;
+  position: fixed;
+  height: 84px;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  .risk-report-title-box__title{
+    display: none;
+  }
+.form-container-4{
+ position: relative;
+    top: -9rem;
+    left: 24px;
+}
+
+.form-container-3{
+ position: relative;
+    top: -9rem;
+    left: 24px;
+}
+.tab-title{
+  display: block;
+}
+.tab-version{
+  display: none;
+}
+.tab-phase{
+  display: none;
+}
+ 
+}

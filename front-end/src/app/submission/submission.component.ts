@@ -40,7 +40,7 @@ import { DecimalPipe, Location } from "@angular/common";
   selector: "app-submission",
   templateUrl: "./submission.component.html",
   styleUrls: ["./submission.component.scss"],
-   providers: [DecimalPipe] 
+  providers: [DecimalPipe] 
 })
 export class SubmissionComponent implements OnInit, OnDestroy {
   title = "planning";

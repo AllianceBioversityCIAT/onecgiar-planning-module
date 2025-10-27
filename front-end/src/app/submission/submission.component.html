@@ -61,7 +61,8 @@
       <mat-tab label="Summary">
         <mat-card *ngIf="!loading && !tocIncompleteData">
           
-
+<div stickyOnScroll class="sticky-wrapper">
+  <div class="sticky-target">
           <div class="risk-report-box">
             <div class="risk-report-title-box">
               <h1 class="risk-report-title-box__title">
@@ -88,7 +89,7 @@
                   mat-raised-button
                   (click)="excel()"
                 >
-                  Export Excel
+                  Export Excel ss
                 </button>
               </div>
 
@@ -164,10 +165,14 @@
                 >
               </div>
 
-              <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
-              <div class="card-title-3 m-b-t">
+              <div class="tab-phase card-title-3 m-b-t">{{ this.phase.name }}</div>
+              <div class="tab-version card-title-3 m-b-t">
                 ToC version ID: {{ this.tocSubmissionData.version }}
               </div>
+              <div class="tab-title card-title-3 m-b-t">
+                Section: Summary
+              </div>
+              
               <div [ngClass]="{
                 'approved': getStatus() === 'Approved',
                 'rejected': getStatus() === 'Rejected',
@@ -186,6 +191,8 @@
               </div>
             </form>
           </div>
+          </div>
+</div>
           <div
             class="approved-status-msg"
             *ngIf="
@@ -1516,6 +1523,7 @@
       </ng-template>
 
       <mat-card *ngIf="!loading && !tocIncompleteData">
+
         <div class="risk-report-box">
           <div class="risk-report-title-box">
             <h1 class="risk-report-title-box__title">
@@ -1617,7 +1625,8 @@
             </span>
             </div>
           </form>
-        </div>
+
+      </div>
         <div
           class="pendding-status-msg"
           *ngIf="
@@ -2358,6 +2367,8 @@
         </ng-template>
 
         <mat-card *ngIf="!loading && !tocIncompleteData">
+            <div stickyOnScroll class="sticky-wrapper">
+  <div class="sticky-target">
           <div class="risk-report-box">
             <div class="risk-report-title-box">
               <h1 class="risk-report-title-box__title">
@@ -2438,9 +2449,9 @@
                   {{ initiative_data.name }}</mat-card-subtitle
                 >
               </div>
-
-              <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
-              <div class="card-title-3 m-b-t">
+              <div class="tab-title card-title-3 m-b-t">Center: {{ partner.acronym }}</div>
+              <div class="tab-phase card-title-3 m-b-t">{{ this.phase.name }}</div>
+              <div class="tab-version card-title-3 m-b-t">
                 ToC version ID: {{ this.tocSubmissionData.version }}
               </div>
               <div [ngClass]="{
@@ -2461,6 +2472,8 @@
               </div>
             </form>
           </div>
+        </div>
+        </div>
           <div
             class="pendding-status-msg"
             *ngIf="
