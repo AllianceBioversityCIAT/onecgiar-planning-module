@@ -33,6 +33,7 @@ import { History } from 'src/entities/history.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { AnaplanModule } from 'src/anaplan/anaplan.module';
 import { BudgetAssumptionsModule } from 'src/budget-assumptions/budget-assumptions.module';
+import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 
 @Module({
   imports: [
@@ -55,7 +56,8 @@ import { BudgetAssumptionsModule } from 'src/budget-assumptions/budget-assumptio
       Email,
       Variable,
       History,
-      PartnerCountry
+      PartnerCountry,
+      AnaplanValues
     ]),
     HttpModule,
     CacheModule.register(),

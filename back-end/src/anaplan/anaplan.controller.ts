@@ -21,6 +21,12 @@ export class AnaplanController {
     }
 
     @ApiBearerAuth()
+    @Get('all-values/:initiative_id/version/:version_id')
+    findAllValuesVersion(@Param('initiative_id') id: number, @Param('version_id') version_id: number) {
+      return this.service.findAllValuesVersion(id, version_id);
+    }
+
+    @ApiBearerAuth()
     @Post()
     create(@Body() body, @Request() req) {
       return this.service.createOrUpdate(body, req.user);

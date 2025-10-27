@@ -22,6 +22,12 @@ export class AnaplanService {
     ).catch((e) => false);
   }
 
+  async getAllValuesVersion(initiative_id: number, version_id: number) {
+    return firstValueFrom(
+      this.http.get(environment.api_url+"/anaplan/all-values/" + initiative_id + "/version/" + version_id).pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
 
   createOrUpdate(data: any) {
     return firstValueFrom(

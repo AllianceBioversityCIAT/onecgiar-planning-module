@@ -106,13 +106,17 @@ export class SubmissionController {
   ) {
     const init = await this.initService.findOne(id);
     const json = await this.getTocs(init.synchronized == true ? init.official_code : id);
+    const meliaProject = await this.getActualTocs(init.official_code)
+    const mergedJson = [
+      ...json,
+      { melias: meliaProject.melias, projects: meliaProject.projects }
+    ];
     const tocSubmissionData = await this.submissionService.getTocSubmissionData(init.synchronized == true ? init.official_code : id);
-
     return this.submissionService.createNew(
       req.user.id,
       id,
       phase_id,
-      JSON.stringify(json),
+      JSON.stringify(mergedJson),
       tocSubmissionData
     );
   }
@@ -198,8 +202,20 @@ export class SubmissionController {
     description: '',
     type: getSaved,
   })
+  //for Submission
   async getSavedIndicator(@Param('id') id, @Param('phaseId') phaseId) {
     return this.submissionService.getSavedIndicator(id, phaseId);
+  }
+
+  @Get('save-indicator/:id/phaseId/:phaseId/version/:version_id')
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    description: '',
+    type: getSaved,
+  })
+  //for version
+  async getSavedIndicatorVersion(@Param('id') id, @Param('phaseId') phaseId, @Param('version_id') version_id) {
+    return this.submissionService.getSavedIndicatorForVersion(id, phaseId, version_id);
   }
 
   @Get('initiative_id/:initiative_id')

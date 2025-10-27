@@ -15,6 +15,7 @@ import { Result } from './result.entity';
 import { CrossCutting } from './cross-cutting.entity';
 import { IpsrValue } from './ipsr-value.entity';
 import { WpBudget } from './wp-budget.entity';
+import { AnaplanValues } from './anaplan-values.entity';
 // import { InitiativeMelia } from './initiative-melia.entity';
 export enum SubmissionStatus {
   APPROVED = 'Approved',
@@ -45,6 +46,9 @@ export class Submission {
 
   @OneToMany(() => Result, (result) => result.submission)
   results: Result[];
+
+  @OneToMany(() => AnaplanValues, (anaplanValues) => anaplanValues.submission)
+  anaplan_values: AnaplanValues[];
 
   @CreateDateColumn({
     type: 'timestamp',

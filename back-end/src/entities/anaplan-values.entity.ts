@@ -11,6 +11,7 @@ import { Organization } from './organization.entity';
 import { WorkPackage } from './workPackage.entity';
 import { Initiative } from './initiative.entity';
 import { Phase } from './phase.entity';
+import { Submission } from './submission.entity';
 
   @Entity()
   export class AnaplanValues {
@@ -35,6 +36,13 @@ import { Phase } from './phase.entity';
 
     @Column()
     organization_code: number;
+
+    @ManyToOne(() => Submission, (submission) => submission.anaplan_values)
+    @JoinColumn({ name: 'submission_id' })
+    submission: Submission;
+  
+    @Column({ nullable: true })
+    submission_id: number;
 
 
     @JoinColumn({ name: 'wp_id' })

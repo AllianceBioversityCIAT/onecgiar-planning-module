@@ -343,7 +343,14 @@ async excelCurrent(id: any) {
     ).catch((e) => false);
   }
 
-  async getSavedDataIndicator(id: number, phaseId: any) {
+  // for version
+  async getSavedDataIndicatorVersion(id: number, phaseId: any, version_id: number) {
+    return firstValueFrom(
+      this.http.get(environment.api_url+'/submission/save-indicator/' + id + '/phaseId/' + phaseId + '/version/' + version_id).pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
+  async getSavedDataIndicatorForSubmission(id: number, phaseId: any) {
     return firstValueFrom(
       this.http.get(environment.api_url+'/submission/save-indicator/' + id + '/phaseId/' + phaseId).pipe(map((d: any) => d))
     ).catch((e) => false);

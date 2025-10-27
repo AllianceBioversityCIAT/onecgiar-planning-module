@@ -1584,7 +1584,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.savedValues.no_budget
     );
 
-    this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicator(
+    this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicatorForSubmission(
       this.params.id,
       this.phase.id
     );
@@ -2268,7 +2268,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   }
 
   async recomputeIndicatorBudgetTotals() {
-    this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicator(
+    this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicatorForSubmission(
       this.params.id,
       this.phase.id
     );
