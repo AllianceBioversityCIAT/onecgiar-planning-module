@@ -1,0 +1,44 @@
+name: Trigger Jenkins Jobs Prod
+
+on:
+  push:
+    branches:
+      - production-v2
+  pull_request:
+    branches:
+      - production-v2
+  workflow_dispatch:
+
+jobs:
+  trigger-jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Definir variables
+        run: |
+          echo "JENKINS_BASE=https://automation.prms.cgiar.org" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+          echo "JOBS=prms-planning-prod" >> $GITHUB_ENV
+
+      - name: Disparar jobs en Jenkins
+        env:
+          JENKINS_BASE: ${{ env.JENKINS_BASE }}
+          JENKINS_USERNAME: ${{ secrets.JENKINS_USERNAME }}
+          JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
+          JOBS: ${{ env.JOBS }}
+        run: |
+          set -euo pipefail
+          for JOB in $JOBS; do
+            URL="${JENKINS_BASE}/job/${JOB}/build"
+            echo "→ running: $URL"
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              --user "${JENKINS_USERNAME}:${JENKINS_API_TOKEN}" \
+              "$URL")
+
+            if [ "$HTTP_STATUS" -ge 400 ]; then
+              echo "✗ Failed $JOB (HTTP $HTTP_STATUS)"
+              exit 1
+            else
+              echo "✓ OK $JOB (HTTP $HTTP_STATUS)"
+            fi
+          done
