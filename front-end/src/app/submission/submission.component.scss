@@ -2437,25 +2437,15 @@ pre {
   .risk-report-title-box__title{
     display: none;
   }
-.form-container-4{
+.form-container-4,.form-container-3{
  position: relative;
-    top: -9rem;
-    left: 24px;
-}
-
-.form-container-3{
- position: relative;
-    top: -9rem;
+    top: -8rem;
     left: 24px;
 }
 .tab-title{
   display: block;
 }
-.tab-version{
+.tab-version,.tab-phase,.tab-program{
   display: none;
 }
-.tab-phase{
-  display: none;
-}
- 
 }

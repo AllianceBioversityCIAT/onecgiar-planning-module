@@ -4,13 +4,15 @@ import {
   Renderer2,
   OnInit,
   OnDestroy,
-  AfterViewInit
+  AfterViewInit,
 } from '@angular/core';
 
 @Directive({
-  selector: '[stickyOnScroll]'
+  selector: '[stickyOnScroll]',
 })
-export class StickyOnScrollDirective implements OnInit, AfterViewInit, OnDestroy {
+export class StickyOnScrollDirective
+  implements OnInit, AfterViewInit, OnDestroy
+{
   private observer?: IntersectionObserver;
   private wrapperEl: HTMLElement;
   private stickyEl: HTMLElement | null;
@@ -27,34 +29,34 @@ export class StickyOnScrollDirective implements OnInit, AfterViewInit, OnDestroy
     // Keep wrapper in layout flow
     this.renderer.setStyle(this.wrapperEl, 'position', 'relative');
   }
+  private startObserver() {
+    this.observer = new IntersectionObserver(
+      ([entry]) => {
+        this.updateState(entry);
+      },
+      { threshold: [1] }
+    );
 
+    this.observer.observe(this.wrapperEl);
+
+    // run initial state check once we have placeholderHeight
+    const rect = this.wrapperEl.getBoundingClientRect();
+    const initialRatio = this.computeInitialRatio(rect);
+    this.updateState({
+      intersectionRatio: initialRatio,
+    } as IntersectionObserverEntry);
+  }
   ngAfterViewInit(): void {
     // 🕒 Delay setup by 5 seconds to allow layout to stabilize
     this.timeoutId = setTimeout(() => {
       // Measure sticky element height
-      if (this.stickyEl) {
-        this.stickyHeight = this.stickyEl.getBoundingClientRect().height;
-      }
-
-      // Set up IntersectionObserver
-      this.observer = new IntersectionObserver(
-        ([entry]) => {
-          this.updateState(entry);
-        },
-        { threshold: [0.2] }
-      );
-
-      this.observer.observe(this.wrapperEl);
-
-      // Initial check after delay
-      const rect = this.wrapperEl.getBoundingClientRect();
-      const initialRatio = this.computeInitialRatio(rect);
-      this.updateState({ intersectionRatio: initialRatio } as IntersectionObserverEntry);
-    }, 1000); // 5 seconds
+      this.startObserver();
+    }, 2000); // 5 seconds
   }
-
+  private placeholderHeight = 0;
   private computeInitialRatio(rect: DOMRect): number {
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight;
     const visibleTop = Math.max(rect.top, 0);
     const visibleBottom = Math.min(rect.bottom, viewportHeight);
     const visibleHeight = Math.max(visibleBottom - visibleTop, 0);
@@ -73,15 +75,22 @@ export class StickyOnScrollDirective implements OnInit, AfterViewInit, OnDestroy
   }
 
   private activateSticky() {
+    this.placeholderHeight = this.wrapperEl.getBoundingClientRect().height;
     this.isActive = true;
-    this.renderer.addClass(this.wrapperEl, 'is-sticky');
+    console.log('activateSticky called', this.placeholderHeight);
 
-    if (this.stickyHeight > 0) {
-      this.renderer.setStyle(this.wrapperEl, 'height', this.stickyHeight + 'px');
+    if (this.placeholderHeight > 0) {
+      this.renderer.addClass(this.wrapperEl, 'is-sticky');
+      this.renderer.setStyle(
+        this.wrapperEl,
+        'height',
+        this.placeholderHeight + 'px'
+      );
     }
   }
 
   private deactivateSticky() {
+    console.log('deactivateSticky called');
     this.isActive = false;
     this.renderer.removeClass(this.wrapperEl, 'is-sticky');
     this.renderer.removeStyle(this.wrapperEl, 'height');
