@@ -2234,12 +2234,12 @@ pre {
 }
 
 .normal-icon {
-  opacity: 1;
+  filter: brightness(0) saturate(100%);
   cursor: pointer;
 }
 
 .half-opacity-icon {
-  opacity: 0.5;
+    opacity: 1;
   cursor: pointer;
 }
 
