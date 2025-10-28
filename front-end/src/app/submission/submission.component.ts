@@ -2670,7 +2670,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe(async (dialogResult) => {
         if (dialogResult == true) {
-          if (this.validate()) {
             this.loading = true;
             await this.submissionService.submit(this.params.id, {
               phase_id: this.phase.id,
@@ -2696,7 +2695,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               }
             );
             this.loading = false;
-          }
         }
       });
   }
@@ -2711,46 +2709,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     return incompleteCenters;
   }
 
-
-
-  validate() {
-    let valid = true;
-    let message = "";
-    Object.keys(this.partnersData).forEach((partner_code) => {
-      let result = this.validateCenter(partner_code, false);
-      if (!result.valid) {
-        valid = result.valid;
-        message = result.message;
-      }
-    });
-    if (!valid) {
-      this.toastrService.error(message, "Submission failed");
-    }
-    return valid;
-  }
-
-  validateCenter(partner_code: any, is_mark = false) {
-    let valid = true;
-    let message = "";
-    Object.keys(this.partnersData[partner_code]).forEach((wp_id) => {
-      for(let wp of this.actualWps){
-        let result = this.validateWp(partner_code, wp_id, wp.ost_wp.wp_official_code);
-        if (!result.valid) {
-          valid = result.valid;
-          message = result.message;
-        }
-      }
-    });
-    if (is_mark) {
-      if (!valid) this.toastrService.error(message, "Complete failed");
-      this.centerStatusService.validPartner.next(valid);
-    }
-    this.centerHasError[partner_code] = !valid;
-    return {
-      valid: valid,
-      message: message,
-    };
-  }
 
   // validateWp(partner_code: any, wp_id: any, wp_official_code: string) { 
   //   const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting '];
@@ -2908,7 +2866,28 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   //       message: message,
   //     };
   // } 
-
+ validateCenter(partner_code: any, is_mark = false) {
+    let valid = true;
+    let message = "";
+    Object.keys(this.partnersData[partner_code]).forEach((wp_id) => {
+      for(let wp of this.actualWps){
+        let result = this.validateWp(partner_code, wp_id, wp.ost_wp.wp_official_code);
+        if (!result.valid) {
+          valid = result.valid;
+          message = result.message;
+        }
+      }
+    });
+    if (is_mark) {
+      if (!valid) this.toastrService.error(message, "Complete failed");
+      this.centerStatusService.validPartner.next(valid);
+    }
+    this.centerHasError[partner_code] = !valid;
+    return {
+      valid: valid,
+      message: message,
+    };
+  }
   validateWp(partner_code: any, wp_id: any, wp_official_code: string) {
     const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting'];
     const isIncluded = validateWp.some(item =>
@@ -2948,7 +2927,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
               if(budgetIndicator && !hasBudgetAssumptions) {
                 valid = false;
                 this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = true;
-                message = "There is a budget without budjet assumption"
+                message = "There is a budget without assumption"
               } else {
                 this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = false;
               }
@@ -2993,20 +2972,16 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       let newMessage = "";
   
       this.errors[partner_code] = this.errors[partner_code] || {};
+  if(partner_code == 52)
+   console.log(partner_code,wp_official_code,Math.round(totalRelatedBudget) , Math.round(wpTotal))
   
-      if (
-        this.totals[partner_code][wp_id] == 0 &&
-        (this.wp_budgets[partner_code][wp_id] != 0 &&
-          this.wp_budgets[partner_code][wp_id] != null)
-      ) {
-        valid = false;
-        newMessage = "There is a work package with a budget not disaggregated";
-      }
-  
-      else if (Math.round(totalRelatedBudget) !== Math.round(wpTotal)) {
+     if (Math.round(totalRelatedBudget) !== Math.round(wpTotal)) {
+       if(partner_code == 52)
+      console.log('Budget mismatch for:', partner_code, wp_official_code, Math.round(totalRelatedBudget), Math.round(wpTotal));
         valid = false;
         newMessage =
           "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
+           this.errors[partner_code][wp_id] = newMessage;
       }
   
       else if (
@@ -3016,6 +2991,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         if (Math.round(total) !== Number(this.wp_budgets[partner_code][wp_id])) {
           valid = false;
           newMessage = "Results budget must be equal total budget";
+           this.errors[partner_code][wp_id] = newMessage;
         }
       }
   
@@ -3025,14 +3001,15 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       ) {
         valid = false;
         newMessage = "There is a work package without a total budget assigned";
+        this.errors[partner_code][wp_id] = newMessage;
+        
       }
   
       if (newMessage) {
         message += (message ? " | " : "") + newMessage;
-        this.errors[partner_code][wp_id] = message;
+        
       }
     }
-  
     return {
       valid: valid,
       message: message,
@@ -3458,7 +3435,7 @@ totalConsolidatedTargetPartner: any;
         0
       );
     });
-    return this.decimalPipe.transform(totals[wp], '1.2-2');;
+    return totals[wp];
   }
   
   getTotalsByAnaplan(partnerCode: number, anaplan_id:number) {
