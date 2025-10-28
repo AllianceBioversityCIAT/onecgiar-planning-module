@@ -1514,9 +1514,6 @@
         <mat-icon *ngIf="partnersStatus[partner.code]"
           >check_circle_outline</mat-icon
         >
-        <mat-icon *ngIf="partnersValidate[partner.code]"
-          >check_circle_outline</mat-icon
-        >
         <mat-icon *ngIf="centerHasError[partner.code]" style="color: red"
           >error_outline</mat-icon
         >
@@ -2356,9 +2353,6 @@
             partner?.acronym ? partner?.acronym : partner?.name
           }}</span>
           <mat-icon *ngIf="partnersStatus[partner.code]"
-            >check_circle_outline</mat-icon
-          >
-          <mat-icon *ngIf="partnersValidate[partner.code]"
             >check_circle_outline</mat-icon
           >
           <mat-icon *ngIf="centerHasError[partner.code]" style="color: red"
