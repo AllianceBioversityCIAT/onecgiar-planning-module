@@ -231,16 +231,13 @@ export class SubmissionService {
     return { message: 'Data Saved' };
   }
   async updateStatusBySubmittionID(id, data, user) {
+
     return await this.submissionRepository.update(id, data).then(
       async () => {
+
         const submission = await this.submissionRepository.findOne({
           where: {
             id: id,
-            initiative: {
-              roles: {
-                role: In(['Leader', 'Coordinator','Financial Focal Point'])
-              }
-            }
           },
           relations: ['initiative', 'initiative.roles', 'initiative.roles.user']
         });
