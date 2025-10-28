@@ -40,6 +40,7 @@ import { AnaplanService } from 'src/anaplan/anaplan.service';
 import { BudgetAssumptionsService } from 'src/budget-assumptions/budget-assumptions.service';
 import { Response } from 'express';
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
+import { Constants } from 'src/entities/constants.entity';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -82,6 +83,8 @@ export class SubmissionService {
     private partnerCountryRepository: Repository<PartnerCountry>,
     private emailService: EmailService,
     private readonly httpService: HttpService,
+    @InjectRepository(Constants)  private constantsRepository: Repository<Constants>
+    
   ) { }
   sort(query) {
     if (query?.sort) {
@@ -879,7 +882,6 @@ export class SubmissionService {
   }
   async saveResultDataValue(id, data: any, user) {
     const initiativeId = id;
-    console.log('data' ,data)
     const {
       partner_code,
       wp_id,
@@ -1535,9 +1537,6 @@ export class SubmissionService {
        
         data = (this.partnersData[partner.code][wp?.ost_wp?.wp_official_code] || [])?.map(
           (d: any) => {
-            // console.log(d.id,partner.code,this.displayBudgetValues[partner.code][
-            //   wp.ost_wp.wp_official_code
-            // ][d.id])
             let obj: any = {};
             obj['id'] = d.id;
             obj['WP_Results'] = d?.initiativeMelia?.meliaType?.name
@@ -2454,1323 +2453,12 @@ export class SubmissionService {
     //   this.wps = this.wps.filter(d => d.id != 'IPSR')
     // }
 
-    const { ConsolidatedData } = this.getConsolidatedData(
-      this.actualWps,
-      this.indicatorTypes
-    );
-
     this.GeographicScopeWp = this.wps.filter((d: any) => d.category == 'Geographic-Scope');
     this.partnersWp = this.wps.filter((d: any) => d.category == 'partners');
 
-    // this.wps = this.wps.filter((d: any) => d.category == 'WP' || d.category == 'Projects' || d.category == 'Cross Cutting' || d.category == 'melia');
-
-
-    // //sort WPS
-    // const aows = this.wps.filter(item => /^AOW\d{2}/.test(item.title)).sort((a, b) => {
-    //   const numA = parseInt(a.title.match(/^AOW(\d{2})/)[1]);
-    //   const numB = parseInt(b.title.match(/^AOW(\d{2})/)[1]);
-    //   return numA - numB;
-    // });
-    
-    // const firstProject = this.wps.find(item => /^(SP\d{2})-AOW\d{2}-project$/.test(item.title));
-    // const spCode = firstProject ? firstProject.title.match(/^(SP\d{2})/)[1] : 'SP02';
-    
-    // const projects = this.wps.filter(item =>
-    //   new RegExp(`^${spCode}-AOW\\d{2}-project$`).test(item.title)
-    // );
-    // const crossProject = this.wps.find(item => item.title === "CROSS-project");
-    // const totalItem = this.wps.find(item => item.title === "Total");
-    
-    // const sorted = [];
-    
-    // aows.forEach(aow => {
-    //   const number = aow.title.match(/^AOW(\d{2})/)[1];
-    //   sorted.push(aow);
-    
-    //   if (number === "00" && crossProject) {
-    //     sorted.push(crossProject);
-    //   }
-    
-    //   const relatedProject = projects.find(p => p.title.includes(`AOW${number}`));
-    //   if (relatedProject) {
-    //     sorted.push(relatedProject);
-    //   }
-    // });
-    
-    // if (totalItem) {
-    //   sorted.push(totalItem);
-    // }
-
-    // Filter relevant categories
-    // this.wps = this.wps.filter((d: any) =>
-    //   ['WP', 'Projects', 'Cross Cutting', 'melia'].includes(d.category)
-    // );
-
-// const groupedMap = new Map<string, any[]>();
-
-// for (const wp of this.wps) {
-//   const code = wp.ost_wp?.wp_official_code || '';
-//   const base = code.replace(/-(melia|project|Cross-Cutting)$/, '');
-
-//   if (!groupedMap.has(base)) {
-//     groupedMap.set(base, []);
-//   }
-//   groupedMap.get(base).push(wp);
-// }
-
-// const suffixOrder = ['','-melia','-Cross-Cutting','-project'];
-// const sortedWps: any[] = [];
-
-// for (const base of Array.from(groupedMap.keys()).sort()) {
-//   const group = groupedMap.get(base)!;
-
-//   const ordered = suffixOrder.map(suffix =>
-//     group.find(wp => wp.ost_wp?.wp_official_code === base + suffix)
-//   ).filter(Boolean); 
-
-//   sortedWps.push(...ordered);
-// }
-
-// this.wps = sortedWps;
-
-
-    // let { lockupArray } = this.getConsolidatedData(this.wps, this.indicatorTypes);
-
-
-    // let allData = this.getAllData(this.wps, this.indicatorTypes);
-    // let allDataGeo = await this.getAllDataForGeoAndPartner(this.GeographicScopeWp, [this.period[0]], partners, submissionId);
-    // let allDataPartner = await this.getAllDataForGeoAndPartner(this.partnersWp, [this.period[0]], partners, submissionId);
-    // const lockupArrayForGeo = this.GeographicScopeWp.map((d:any) => d.ost_wp.wp_official_code);
-    // const lockupArrayForPartner = this.partnersWp.map((d:any) => d.ost_wp.wp_official_code);
-
-    // let partnersData;
-    // if (!organization)
-    //   partnersData = this.getPartnersData(this.wps, this.indicatorTypes, partners, null);
-    // else
-    //   partnersData = this.getPartnersData(this.wps, this.indicatorTypes, partners, organization);
-
-    // const merges = [];
     let file_name = 'Planning';
 
     var wb = XLSX.utils.book_new();
-
-    // ConsolidatedData.forEach((object) => {
-    //   delete object['wp_official_code'];
-    // });
-
-    // merges.push({
-    //   s: { c: 0, r: 0 },
-    //   e: { c: 3 + this.indicatorTypesTitles.length + 1, r: 0 },
-    // });
-    // merges.push({
-    //   s: { c: 0, r: 1 },
-    //   e: { c: 3 + this.indicatorTypesTitles.length + 1, r: 1 },
-    // });
-    // merges.push({
-    //   s: { c: 0, r: 2 },
-    //   e: { c: 1, r: 5 },
-    // });
-    // merges.push({
-    //   s: { c: 2, r: 3 },
-    //   e: { c: 2, r: 5 },
-    // });
-    // merges.push({
-    //   s: { c: 2, r: 2 },
-    //   e: { c: 4 + this.indicatorTypesTitles.length, r: 2 },
-    // });
-    // merges.push({
-    //   s: { c: 3, r: 3 },
-    //   e: { c: 2 + this.indicatorTypesTitles.length, r: 4 },
-    // });
-    // merges.push({
-    //   s: { c: 2 + this.indicatorTypesTitles.length + 1, r: 3 },
-    //   e: { c: 2 + this.indicatorTypesTitles.length + 2, r: 4 },
-    // });
-
-
-    // if (!organization) {
-    //   let ArrayOfArrays = [
-    //     ...this.getHeader(submission, 'CONSOLIDATED', this.initiative_data),
-    //     ...ConsolidatedData.map((d_, total_index) => [
-    //       {
-    //         v: 'Total Program',
-    //         s: {
-    //           fill: { fgColor: { rgb: '454962' } },
-    //           font: { color: { rgb: 'ffffff' } },
-    //           alignment: {
-    //             horizontal: 'center',
-    //             vertical: 'center',
-    //             wrapText: true,
-    //           },
-    //         },
-    //       },
-    //       ...Object.values(d_).map((d, index) => {
-    //         if (index == 0 && total_index != ConsolidatedData.length - 1)
-    //           return {
-    //             v: d,
-    //             s: {
-    //               alignment: {
-    //                 horizontal: 'center',
-    //                 vertical: 'top',
-    //                 wrapText: true,
-    //               },
-    //             },
-    //           };
-    //         else if (total_index == ConsolidatedData.length - 1)
-    //           return {
-    //             v: d,
-    //             s: {
-    //               fill: { fgColor: { rgb: '454962' } },
-    //               font: { color: { rgb: 'ffffff' } },
-    //               alignment: {
-    //                 horizontal: 'center',
-    //                 vertical: 'center',
-    //               },
-    //             },
-    //           };
-    //         else if (index == Object.values(d_).length - 1)
-    //           return {
-    //             v: d,
-    //             s: {
-    //               fill: { fgColor: { rgb: '454962' } },
-    //               font: { color: { rgb: 'ffffff' } },
-    //               alignment: {
-    //                 horizontal: 'center',
-    //                 vertical: 'center',
-    //               },
-    //             },
-    //           };
-    //         else
-    //           return {
-    //             v: d,
-    //             s: {
-    //               alignment: {
-    //                 horizontal: 'center',
-    //                 vertical: 'center',
-    //               },
-    //             },
-    //           };
-    //       }),
-    //     ]),
-    //   ];
-
-    //   merges.push({
-    //     s: { c: 0, r: 6 },
-    //     e: { c: 0, r: 6 + ConsolidatedData.length - 1 },
-    //   });
-    //   merges.push({
-    //     s: { c: 1, r: 6 + ConsolidatedData.length - 1 },
-    //     e: { c: 2, r: 6 + ConsolidatedData.length - 1 },
-    //   });
-    //   for (let data of allData) {
-    //     data.forEach((object) => {
-    //       delete object['id'];
-    //     });
-    //   }
-
-
-    //   allData = allData.map(group => this.sortByType(group));
-
-    //   let rowStart = ArrayOfArrays.length;
-    //   for (let i = 0; i < lockupArray.length - 1; i++) {
-    //     ArrayOfArrays.push(
-    //       ...allData[i].map((d_, total_index) => [
-    //         {
-    //           v: lockupArray[i],
-    //           s: {
-    //             fill: { fgColor: { rgb: '454962' } },
-    //             font: { color: { rgb: 'ffffff' } },
-    //             alignment: {
-    //               horizontal: 'center',
-    //               vertical: 'center',
-    //               wrapText: true,
-    //             },
-    //           },
-    //         },
-    //         ...Object.values(d_).map((d, index) => {
-    //           if (index == 0 && total_index != allData[i].length - 1)
-    //             return {
-    //               v: String(d),
-    //               s: {
-    //                 alignment: {
-    //                   horizontal: 'center',
-    //                   vertical: 'top',
-    //                   wrapText: true,
-    //                 },
-    //               },
-    //             };
-    //           else if (total_index == allData[i].length - 1)
-    //             return { //subtotal
-    //               v: d,
-    //               s: {
-    //                 fill: { fgColor: { rgb: '454962' } },
-    //                 font: { color: { rgb: 'ffffff' } },
-    //                 alignment: {
-    //                   horizontal: 'center',
-    //                   vertical: 'center',
-    //                 },
-    //               },
-    //             };
-    //           else if (index == Object.values(d_).length - 1)
-    //             return {
-    //               v: d,
-    //               s: {
-    //                 fill: { fgColor: { rgb: '454962' } },
-    //                 font: { color: { rgb: 'ffffff' } },
-    //                 alignment: {
-    //                   horizontal: 'center',
-    //                   vertical: 'center',
-    //                 },
-    //               },
-    //             };
-    //           else if ((index > 1 && index <= this.indicatorTypesTitles.length + 1) && (d_.Type == "Cross Cutting" || d_.Type == "MELIA Studies") && total_index != allData[i].length - 1)
-    //             return {
-    //               v: '',
-    //               s: {
-    //                 fill: { fgColor: { rgb: '808080' } }
-    //               },
-    //             };
-    //           else if ((index > 4 && index <= this.indicatorTypesTitles.length + 1) && (d_.Type == "Intermediate Outcome" || d_.Type == "2030 Outcome") && total_index != allData[i].length - 1)
-    //             return {
-    //               v: '',
-    //               s: {
-    //                 fill: { fgColor: { rgb: '808080' } }
-    //               },
-    //             };
-    //           else if ((index > 1 && index <= this.highLevelOutputIndicatorTypes.length || index == this.indicatorTypesTitles.length + 1) && d_.Type == "High Level Output" && total_index != allData[i].length - 1)
-    //             return {
-    //               v: '',
-    //               s: {
-    //                 fill: { fgColor: { rgb: '808080' } }
-    //               },
-    //             };
-    //           else
-    //             return {
-    //               v: String(d),
-    //               s: {
-    //                 alignment: {
-    //                   horizontal: 'center',
-    //                   vertical: 'center',
-    //                 },
-    //               },
-    //             };
-    //           return d;
-    //         }),
-    //       ]),
-    //     );
-
-    //     merges.push({
-    //       s: { c: 0, r: rowStart },
-    //       e: { c: 0, r: ArrayOfArrays.length - 1 },
-    //     });
-    //     merges.push({
-    //       s: { c: 1, r: ArrayOfArrays.length - 1 },
-    //       e: { c: 2, r: ArrayOfArrays.length - 1 },
-    //     });
-    //     rowStart = ArrayOfArrays.length;
-    //   }
-
-    //   const ws = XLSX.utils.aoa_to_sheet(ArrayOfArrays);
-
-
-    //   const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
-    //   const rowCount = range.e.r;
-    //   const columnCount = range.e.c;
-
-
-
-    //   let budget_for_Total_Initiative;
-    //   for (let row = 0; row <= rowCount; row++) {
-    //     for (let col = 0; col <= columnCount; col++) {
-    //       let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-    //       //get Total Initiative budget (cellRef)
-    //       if (col == columnCount && row == this.actualWps.length + 1 + 5) {
-    //         budget_for_Total_Initiative = cellRef
-    //       }
-    //     }
-    //   }
-
-
-    //   let budget_for_each_wp;
-    //   for (let row = 0; row <= rowCount; row++) {
-    //     // for (let col = 0; col <= columnCount; col++) {
-    //       let cellRefForBudgetUsd = XLSX.utils.encode_cell({ r: row, c: columnCount });
-    //       let cellRefForBudgetUsdProject = XLSX.utils.encode_cell({ r: row, c: columnCount - 1 });
-
-    //       //calculate Budgets (USD) for (Summary)
-    //       if (row > 5) {
-    //         ws[cellRefForBudgetUsd] = {
-    //           t: 'n',
-    //           f: '=' + partners.map(d => `'${d.acronym}'!${cellRefForBudgetUsd}+ `).join().replaceAll(',', '').slice(0, -2),
-    //           z: "#,##0",
-    //           s: {
-    //             fill: { fgColor: { rgb: '454962' } },
-    //             font: { color: { rgb: 'ffffff' } },
-    //             alignment: {
-    //               horizontal: 'center',
-    //               vertical: 'center',
-    //             },
-    //           },
-    //         }
-    //       }
-
-    //       //calculate Budgets (USD) for project (Summary)
-    //       if (row > 5 && row <= this.actualWps.length + 6) {
-    //         ws[cellRefForBudgetUsdProject] = {
-    //           t: 'n',
-    //           f: '=' + partners.map(d => `'${d.acronym}'!${cellRefForBudgetUsdProject}+ `).join().replaceAll(',', '').slice(0, -2),
-    //           z: "#,##0",
-    //           s: {
-    //             fill: { fgColor: { rgb: '454962' } },
-    //             font: { color: { rgb: 'ffffff' } },
-    //             alignment: {
-    //               horizontal: 'center',
-    //               vertical: 'center',
-    //             },
-    //           },
-    //         }
-    //       }
-
-
-    //       //get  budget cellRef for each wp in Total Initiative && calculate percentage for Total Initiative (Summary)
-    //       // if ((col == columnCount || col == columnCount - 1) && (row > 5 && row <= this.actualWps.length + 1 + 5)) {
-    //       //   if (col == columnCount) {
-    //       //     budget_for_each_wp = cellRef;
-    //       //     cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
-    //       //     ws[cellRef] = {
-    //       //       t: 'n',
-    //       //       f: `=${budget_for_each_wp}/${budget_for_Total_Initiative}/100*100`,
-    //       //       z: "0.00%;[Red]-0.00%",
-    //       //       s: {
-    //       //         fill: { fgColor: { rgb: '454962' } },
-    //       //         font: { color: { rgb: 'ffffff' } },
-    //       //         alignment: {
-    //       //           horizontal: 'center',
-    //       //           vertical: 'center',
-    //       //         },
-    //       //       },
-    //       //     }
-    //       //   }
-    //       // }
-    //     // }
-    //   }
-
-
-
-
-    //   let wpBudgets;
-    //   let startRow = this.actualWps.length + 1 + 5;
-    //   for (let wp of this.wps) {
-    //     for (let row = 0; row <= rowCount; row++) {
-    //         let cellRef = XLSX.utils.encode_cell({ r: row, c: columnCount - 1 });
-    //         //calculate percentage for each AOW in summary
-    //         if ((row > startRow && row <= this.allData[wp.ost_wp.wp_official_code].length + 1 + startRow)) {
-    //             wpBudgets = cellRef;
-    //             ws[cellRef] = {
-    //               t: 's',
-    //               v: "",
-    //               s: {
-    //                 fill: { fgColor: { rgb: '454962' } },
-    //                 font: { color: { rgb: 'ffffff' } },
-    //                 alignment: {
-    //                   horizontal: 'center',
-    //                   vertical: 'center',
-    //                 },
-    //               },
-    //             }
-    //         }
-    //     }
-    //     startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
-    //   }
-
-
-
-
-
-    //   /*generate formula for checks period in (summary)*/
-    //   // let startPeriodColumn = 3;
-    //   // let endPeriodColumn = startPeriodColumn + this.period.length;
-    //   // let startPeriodRows = 6;
-    //   // for (let row = startPeriodRows; row <= rowCount; row++) {
-    //   //   for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-    //   //     let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-
-    //   //     let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
-
-    //   //     ws[cellRef] = {
-    //   //       t: 'n',
-    //   //       f: `=IF(OR(${formula}),"X","")`,
-    //   //       s: {
-    //   //         alignment: {
-    //   //           horizontal: 'center',
-    //   //           vertical: 'center',
-    //   //         },
-    //   //       },
-    //   //     }
-    //   //   }
-    //   // }
-
-
-
-
-
-    //   // let lastRows = [this.actualWps.length + 6]
-    //   // for (let wp of this.wps) {
-    //   //   lastRows.push(this.allData[wp.ost_wp.wp_official_code].length + 1);
-    //   // }
-
-
-
-    //   // let newValueslastRows = lastRows.map((curr, i, array) => {
-    //   //   return array[i] += array[i - 1] ? array[i - 1] : 0
-    //   // })
-
-
-    //   // for (let lastRowForeachWp of newValueslastRows) {
-    //   //   for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-
-    //   //     let cellRef = XLSX.utils.encode_cell({ r: lastRowForeachWp, c: col });
-
-    //   //     let formula = partners.map(d => `'${d.acronym}'!${cellRef}="X"`).join();
-
-    //   //     ws[cellRef] = {
-    //   //       t: 'n',
-    //   //       f: `=IF(OR(${formula}),"X","")`,
-    //   //       s: {
-    //   //         fill: { fgColor: { rgb: '454962' } },
-    //   //         font: { color: { rgb: 'ffffff' } },
-    //   //         alignment: {
-    //   //           horizontal: 'center',
-    //   //           vertical: 'center',
-    //   //         },
-    //   //       },
-    //   //     }
-
-
-    //   //   }
-    //   // }
-    //   /*generate formula for checks period in (summary)*/
-
-    //   ws['!merges'] = merges;
-    //   ws['!cols'] = [{ wpx: 120 }, { wpx: 320 }, { wpx: 80 }];
-    //   ws['!rows'] = [];
-    //   ws['!rows'] = [{ hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }];
-
-    //   for (let i = 6; i < ArrayOfArrays.length; i++) {
-    //     ws['!rows'].push({
-    //       hpt: 75
-    //     })
-    //   }
-
-    //   XLSX.utils.book_append_sheet(wb, ws, 'Summary');
-    // }
-    // let indexPartner = 0;
-
-    // for (let partner of partnersData) {
-    //   partner.forEach((par) => {
-    //     par?.forEach((object) => {
-    //       delete object['id'];
-    //     });
-    //   });
-    // }
-    // if (organization)
-    //   partners = partners.filter((d: any) => d.code == organization.code);
-    // partners = partners.sort((a: any, b: any) => a?.acronym?.toLowerCase().localeCompare(b?.acronym?.toLowerCase()))
-    // for (let partner of partners) {
-    //   let mergesPartners = [];
-    //   let ArrayOfArrays;
-    //   let Header;
-    //   if (initId)
-    //     Header = this.getHeader(null, partner.acronym, this.initiative_data);
-    //   else
-    //     Header = this.getHeader(submission, partner.acronym, null);
-
-    //   let { ConsolidatedDataForPartners } = this.getConsolidatedDataForPartners(
-    //     this.actualWps,
-    //     this.indicatorTypes,
-    //     partner.code
-    //   );
-    //   ConsolidatedDataForPartners.forEach((object) => {
-    //     delete object['wp_official_code'];
-    //   });
-
-
-      // ArrayOfArrays = [
-      //   ...Header,
-      //   ...ConsolidatedDataForPartners.map((d_, total_index) => [
-      //     {
-      //       v: `Total Center`,
-      //       s: {
-      //         fill: { fgColor: { rgb: '454962' } },
-      //         font: { color: { rgb: 'ffffff' } },
-      //         alignment: {
-      //           horizontal: 'center',
-      //           vertical: 'center',
-      //           wrapText: true,
-      //         },
-      //       },
-      //     },
-      //     ...Object.values(d_).map((d, index) => {
-      //       if (index == 0 && total_index != ConsolidatedDataForPartners.length - 1)
-      //         return {
-      //           v: d,
-      //           s: {
-      //             alignment: {
-      //               horizontal: 'center',
-      //               vertical: 'top',
-      //               wrapText: true,
-      //             },
-      //           },
-      //         };
-      //       else if (total_index == ConsolidatedDataForPartners.length - 1)
-      //         return {
-      //           v: d,
-      //           s: {
-      //             fill: { fgColor: { rgb: '454962' } },
-      //             font: { color: { rgb: 'ffffff' } },
-      //             alignment: {
-      //               horizontal: 'center',
-      //               vertical: 'center',
-      //             },
-      //           },
-      //         };
-      //       else if (index == Object.values(d_).length - 1)
-      //         return {
-      //           v: d,
-      //           s: {
-      //             fill: { fgColor: { rgb: '454962' } },
-      //             font: { color: { rgb: 'ffffff' } },
-      //             alignment: {
-      //               horizontal: 'center',
-      //               vertical: 'center',
-      //             },
-      //           },
-      //         };
-      //       else
-      //         return {
-      //           v: d,
-      //           s: {
-      //             alignment: {
-      //               horizontal: 'center',
-      //               vertical: 'center',
-      //             },
-      //           },
-      //         };
-      //     }),
-      //   ]),
-      // ];
-
-
-
-
-      // mergesPartners.push({
-      //   s: { c: 0, r: 6 },
-      //   e: { c: 0, r: 6 + ConsolidatedDataForPartners.length - 1 },
-      // });
-      // mergesPartners.push({
-      //   s: { c: 1, r: 6 + ConsolidatedDataForPartners.length - 1 },
-      //   e: { c: 2, r: 6 + ConsolidatedDataForPartners.length - 1 },
-      // });
-
-
-
-
-
-
-
-      // let rowStart = ArrayOfArrays.length;
-      // for (let i = 0; i < lockupArray.length - 1; i++) {
-      //   partnersData[indexPartner][i] = this.sortByType(partnersData[indexPartner][i]);
-      //   ArrayOfArrays?.push(
-      //     ...partnersData[indexPartner][i]?.map((d_, total_index) => [
-      //       {
-      //         v: String(lockupArray[i]),
-      //         s: {
-      //           fill: { fgColor: { rgb: '454962' } },
-      //           font: { color: { rgb: 'ffffff' } },
-      //           alignment: {
-      //             horizontal: 'center',
-      //             vertical: 'center',
-      //             wrapText: true,
-      //           },
-      //         },
-      //       },
-      //       ...Object.values(d_).map((d, index) => {
-      //         if (index == 0 && total_index != partnersData[indexPartner][i].length - 1)
-      //           return {
-      //             v: String(d),
-      //             s: {
-      //               alignment: {
-      //                 horizontal: 'center',
-      //                 vertical: 'top',
-      //                 wrapText: true,
-      //               },
-      //             },
-      //           };
-      //         if (total_index == partnersData[indexPartner][i].length - 1)
-      //           return {
-      //             v: String(d),
-      //             s: {
-      //               fill: { fgColor: { rgb: '454962' } },
-      //               font: { color: { rgb: 'ffffff' } },
-      //               alignment: {
-      //                 horizontal: 'center',
-      //                 vertical: 'center',
-      //               },
-      //             },
-      //           };
-      //         else if (index == Object.values(d_).length - 1 || index == Object.values(d_).length - 2)
-      //           return {
-      //             v: d,
-      //             s: {
-      //               fill: { fgColor: { rgb: '454962' } },
-      //               font: { color: { rgb: 'ffffff' } },
-      //               alignment: {
-      //                 horizontal: 'center',
-      //                 vertical: 'center',
-      //               },
-      //             },
-      //           };
-      //           else if ((index > 1 && index <= this.indicatorTypesTitles.length + 1) && (d_.Type == "Cross Cutting" || d_.Type == "MELIA Studies") && total_index != partnersData[indexPartner][i].length - 1)
-      //             return {
-      //               v: '',
-      //               s: {
-      //                 fill: { fgColor: { rgb: '808080' } }
-      //               },
-      //             };
-      //           else if ((index > 4 && index <= this.indicatorTypesTitles.length + 1) && (d_.Type == "Intermediate Outcome" || d_.Type == "2030 Outcome") && total_index != partnersData[indexPartner][i].length - 1)
-      //             return {
-      //               v: '',
-      //               s: {
-      //                 fill: { fgColor: { rgb: '808080' } }
-      //               },
-      //             };
-      //           else if ((index > 1 && index <= this.highLevelOutputIndicatorTypes.length || index == this.indicatorTypesTitles.length + 1) && d_.Type == "High Level Output" && total_index != partnersData[indexPartner][i].length - 1)
-      //             return {
-      //               v: '',
-      //               s: {
-      //                 fill: { fgColor: { rgb: '808080' } }
-      //               },
-      //             };
-      //         else {
-      //           return {
-      //             v: String(d),
-      //             s: {
-      //               alignment: {
-      //                 horizontal: 'center',
-      //                 vertical: 'center',
-      //               },
-      //             },
-      //           };
-      //         }
-      //       }),
-      //     ]),
-      //   );
-
-      //   mergesPartners.push({
-      //     s: { c: 0, r: rowStart },
-      //     e: { c: 0, r: ArrayOfArrays.length - 1 },
-      //   });
-      //   mergesPartners.push({
-      //     s: { c: 1, r: ArrayOfArrays.length - 1 },
-      //     e: { c: 2, r: ArrayOfArrays.length - 1 },
-      //   });
-
-      //   rowStart = ArrayOfArrays.length;
-      // }
-
-      // mergesPartners.push({
-      //   s: { c: 0, r: 0 },
-      //   e: { c: 3 + this.indicatorTypesTitles.length + 1, r: 0 },
-      // });
-      // mergesPartners.push({
-      //   s: { c: 0, r: 1 },
-      //   e: { c: 3 + this.indicatorTypesTitles.length + 1, r: 1 },
-      // });
-      // mergesPartners.push({
-      //   s: { c: 0, r: 2 },
-      //   e: { c: 1, r: 5 },
-      // });
-      // mergesPartners.push({
-      //   s: { c: 2, r: 3 },
-      //   e: { c: 2, r: 5 },
-      // });
-      // mergesPartners.push({
-      //   s: { c: 2, r: 2 },
-      //   e: { c: 4 + this.indicatorTypesTitles.length, r: 2 },
-      // });
-      // mergesPartners.push({
-      //   s: { c: 3, r: 3 },
-      //   e: { c: 2 + this.indicatorTypesTitles.length, r: 4 },
-      // });
-      // mergesPartners.push({
-      //   s: { c: 2 + this.indicatorTypesTitles.length + 1, r: 3 },
-      //   e: { c: 2 + this.indicatorTypesTitles.length + 2, r: 4 },
-      // });
-
-      // const ws = XLSX.utils.aoa_to_sheet(ArrayOfArrays);
-
-      // ws['!merges'] = mergesPartners;
-      // ws['!cols'] = [{ wpx: 120 }, { wpx: 320 }, { wpx: 80 }];
-      // ws['!rows'] = [];
-      // ws['!rows'] = [{ hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }, { hpt: 20 }];
-
-      // for (let i = 6; i < ArrayOfArrays.length; i++) {
-      //   ws['!rows'].push({
-      //     hpt: 75
-      //   })
-      // }
-
-
-
-
-
-
-      // let arrayOfCellRefWpBudgets
-      // const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
-      // const rowCount = range.e.r;
-      // const col = range.e.c;
-      // let startRow = this.actualWps.length + 2 + 5;
-      // let _row = 6;
-      // let _rowForProjects = 6;
-      // let cellRef;
-      // let startRowForPartner = this.actualWps.length + 2 + 5;
-      // for (let wp of this.actualWps) {
-      //   //calculate total budget for each center (total center)
-      //   const code = wp.ost_wp.wp_official_code;
-
-      //   if(wp.category !== "Projects") {
-      //     // arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRow, ws);
-      //     arrayOfCellRefWpBudgets = this.newgetCellRefBudgets([
-      //       this.allData[code],
-      //       this.allData[code + '-melia'],
-      //       this.allData[code + '-Cross-Cutting']
-      //     ], startRow, ws);
-      //     let totalRows = 0;
-      //     if (this.allData[code]) totalRows += this.allData[code].length + 1;
-      //     if (this.allData[code + '-melia']) totalRows += this.allData[code + '-melia'].length + 1;
-      //     if (this.allData[code + '-Cross-Cutting']) totalRows += this.allData[code + '-Cross-Cutting'].length + 1;
-      //     if (this.allData[code + '-project']) totalRows += this.allData[code + '-project'].length + 1;
-      //     cellRef = XLSX.utils.encode_cell({ r: _row++, c: col });
-      //     ws[cellRef] = {
-      //       t: 'n',
-      //       f: '=' + arrayOfCellRefWpBudgets.replace('1- ', ''),
-      //       z: "#,##0",
-      //       s: {
-      //         fill: { fgColor: { rgb: '454982' } },
-      //         font: { color: { rgb: 'ffffff' } },
-      //         alignment: {
-      //           horizontal: 'center',
-      //           vertical: 'center',
-      //         },
-      //       },
-      //     }
-      //     startRow += totalRows;
-      //     // startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
-      //   } else {
-      //     arrayOfCellRefWpBudgets = this.getCellRefBudgets(this.allData[code], startRow, ws);
-      //     cellRef = XLSX.utils.encode_cell({ r: _rowForProjects++, c: col - 1 });
-      //     ws[cellRef] = {
-      //       t: 'n',
-      //       f: '=' + arrayOfCellRefWpBudgets,
-      //       z: "#,##0",
-      //       s: {
-      //         fill: { fgColor: { rgb: '454962' } },
-      //         font: { color: { rgb: 'ffffff' } },
-      //         alignment: {
-      //           horizontal: 'center',
-      //           vertical: 'center',
-      //         },
-      //       },
-      //     }
-      //     if (this.allData[code]) {
-      //       startRow += this.allData[code].length + 1;
-      //     }
-      //     // startRow += this.allData[wp.ost_wp.wp_official_code].length + 1;
-      //   }
-      // }
-
-      // for (let wp of this.wps) {
-      //   //calculate percentage  for each wp (partner)
-      //   for (let row = startRowForPartner; row <= rowCount; row++) {
-      //     const cellRefPercentageForPartner = XLSX.utils.encode_cell({ r: row, c: col - 1 });
-      //     const cellRefBudgetForPartner = XLSX.utils.encode_cell({ r: row, c: col });
-      //     const wpTotalBudgets = this.getWpTotalBudgetsForPartner(this.allData[wp.ost_wp.wp_official_code], startRowForPartner, ws)
-      //     const sumFormula = this.getCellRefBudgets(this.allData[wp.ost_wp.wp_official_code], startRowForPartner, ws);
-      //     //all cell for calculate percentage  for each wp (partner)
-      //     // ws[cellRefPercentageForPartner] = {
-      //     //   t: 'n',
-      //     //   f: `=IFERROR(${cellRefBudgetForPartner}/${wpTotalBudgets}/100*100, 0)`, 
-      //     //   z: "0%",
-      //     //   s: {
-      //     //     fill: { fgColor: { rgb: '454922' } },
-      //     //     font: { color: { rgb: 'ffffff' } },
-      //     //     alignment: {
-      //     //       horizontal: 'center',
-      //     //       vertical: 'center',
-      //     //     },
-      //     //   },
-      //     // }
-
-      //     //wpTotalBudgets for each aow in partners
-      //     ws[wpTotalBudgets] = {
-      //       t: 'n',
-      //       f: '=' + sumFormula,
-      //       z: "#,##0",
-      //       s: {
-      //         fill: { fgColor: { rgb: '454962' } },
-      //         font: { color: { rgb: 'ffffff' } },
-      //         alignment: {
-      //           horizontal: 'center',
-      //           vertical: 'center',
-      //         },
-      //       },
-      //     }
-      //   }
-      //   startRowForPartner += this.allData[wp.ost_wp.wp_official_code].length + 1;
-      // }
-
-      // let wpBudgetsTotalCenter = [];
-      // let wpBudgetsTotalCenterForProject = [];
-
-      // let wpBudgetTotalCenter;
-      // let totalCenter;
-
-
-      // for (let row = 0; row <= rowCount; row++) {
-      //   let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-      //   //get Total center budget (cellRef)
-      //   if (row == this.actualWps.length + 1 + 5) {
-      //     totalCenter = cellRef
-      //   }
-      // }
-
-
-
-
-
-
-
-      // for (let row = 0; row <= rowCount; row++) {
-      //   let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-
-      //   if (row > 5 && row <= this.actualWps.length + 5) {
-      //     wpBudgetsTotalCenter.push(cellRef);
-      //   }
-
-      //   //calculate total center budget(total center)
-      //   if (row == this.actualWps.length + 1 + 5) {
-      //     // totalCenter = cellRef;
-      //     ws[cellRef] = {
-      //       t: 'n',
-      //       f: '=' + wpBudgetsTotalCenter.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2),
-      //       z: "#,##0",
-      //       s: {
-      //         fill: { fgColor: { rgb: '454962' } },
-      //         font: { color: { rgb: 'ffffff' } },
-      //         alignment: {
-      //           horizontal: 'center',
-      //           vertical: 'center',
-      //         },
-      //       },
-      //     }
-      //   }
-
-      //   if (row > 5 && row <= this.actualWps.length + 1 + 5) {
-      //     wpBudgetTotalCenter = cellRef
-      //   }
-      // }
-
-
-
-
-
-
-
-
-
-
-
-
-      // for (let row = 0; row <= rowCount; row++) {
-      //   let cellRef = XLSX.utils.encode_cell({ r: row, c: col - 1 });
-
-      //   if (row > 5 && row <= this.actualWps.length + 5) {
-      //     wpBudgetsTotalCenterForProject.push(cellRef);
-      //   }
-
-      //   //calculate total center budget(total center) (for projects)
-      //   if (row == this.actualWps.length + 1 + 5) {
-      //     // totalCenter = cellRef;
-      //     ws[cellRef] = {
-      //       t: 'n',
-      //       f: '=' + wpBudgetsTotalCenterForProject.map(d => `${d}+ `).join().replaceAll(',', '').slice(0, -2),
-      //       z: "#,##0",
-      //       s: {
-      //         fill: { fgColor: { rgb: '454962' } },
-      //         font: { color: { rgb: 'ffffff' } },
-      //         alignment: {
-      //           horizontal: 'center',
-      //           vertical: 'center',
-      //         },
-      //       },
-      //     }
-      //   }
-
-      //   if (row > 5 && row <= this.actualWps.length + 1 + 5) {
-      //     wpBudgetTotalCenter = cellRef
-      //   }
-      // }
-
-
-
-
-
-  
-
-      /*generate formula for checks period in (partners)*/
-      /*generate formula for checks period for each aow in (partners)*/
-
-      // let startPeriodColumn = 3;
-      // let endPeriodColumn = startPeriodColumn + this.period.length;
-      // let startPeriodRows = 5 + this.actualWps.length + 2;
-      // for (let wp of this.wps) {
-      //   for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-      //     let arr: string[] = [];
-      //     for (let row = startPeriodRows; row < startPeriodRows + this.allData[wp.ost_wp.wp_official_code].length; row++) {
-      //       let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-      //       arr.push(cellRef);
-      //     }
-      //     if(arr.length){
-      //       let ci = arr[arr.length - 1].split('');
-      //       ci.shift();
-      //       const i = +ci.join('');
-      //       let cellRef = XLSX.utils.encode_cell({
-      //         c: col,
-      //         r: i
-      //       });
-  
-      //       let formula = arr.map(d => `${d}="X"`).join();
-      //       ws[cellRef] = {
-      //         t: 'n',
-      //         f: `=IF(OR(${formula}),"X","")`,
-      //         s: {
-      //           fill: { fgColor: { rgb: '454962' } },
-      //           font: { color: { rgb: 'ffffff' } },
-      //           alignment: {
-      //             horizontal: 'center',
-      //             vertical: 'center',
-      //           },
-      //         },
-      //       }
-      //     }
-    
-      //   }
-      //   startPeriodRows += this.allData[wp.ost_wp.wp_official_code].length + 1;
-      // }
-
-
-
-
-
-
-      //   let x = this.actualWps.length + 6;
-      //   let lastRowsPartners = [x];
-
-      //   for (let wp of this.wps) {
-      //     const wpCode = wp.ost_wp.wp_official_code;
-      //     const dataList = this.allData[wpCode];
-
-      //     if (Array.isArray(dataList)) {
-      //       x += dataList.length + 1;
-
-      //       if (wp.category !== "Projects") {
-      //         lastRowsPartners.push(x);
-      //       }
-      //     }
-      //   }
-
-      
-      // // Remove the first item (row total center)
-      // lastRowsPartners.shift();
-      
-
-      //   let i = 0;
-      //   for (let row = 6; row < this.actualWps.length + 6; row++) {
-      //     for (let col = startPeriodColumn; col < endPeriodColumn; col++) {
-      //       let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-      //       let cellRefrows = XLSX.utils.encode_cell({ r: lastRowsPartners[i], c: col });
-
-
-      //       ws[cellRef] = {
-      //         t: 'n',
-      //         f: `=IF(OR(${cellRefrows}="X"),"X","")`,
-      //         s: {
-      //           alignment: {
-      //             horizontal: 'center',
-      //             vertical: 'center',
-      //           },
-      //         },
-      //       }
-      //     }
-      //     i++;
-      //   }
-
-
-
-
-
-
-
-
- /*generate formula for checks period for summary in (partners)*/
-      // for (let col = startPeriodColumn; col < endPeriodColumn; col++) { 
-      //   let arr: string[] = [];
-      //   for (let row = 6; row < this.actualWps.length + 6; row++) {
-      //     let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-      //     arr.push(cellRef);
-      //   }
-
-      //   let ci = arr[arr.length - 1].split('');
-      //   ci.shift();
-
-      //   const i = +ci.join('');
-      //   let cellRef = XLSX.utils.encode_cell({
-      //     c: col,
-      //     r: i
-      //   });
-      //   let formula = arr.map(d => `${d}="X"`).join();
-      //     ws[cellRef] = {
-      //       t: 'n',
-      //       f: `=IF(OR(${formula}),"X","")`,
-      //       s: {
-      //         fill: { fgColor: { rgb: '454962' } },
-      //         font: { color: { rgb: 'ffffff' } },
-      //         alignment: {
-      //           horizontal: 'center',
-      //           vertical: 'center',
-      //         },
-      //       },
-      //     }
-      // } 
-      /*generate formula for checks period in (partners)*/
-
-
-
-      // XLSX.utils.book_append_sheet(wb, ws, partner.acronym);
-
-      // indexPartner++;
-    // }
-
-    // let ArrayOfArraysForGeo = [
-    //   ...this.getHeaderGeoAndPartner(submission, 'Geographic Scope', this.initiative_data, 'Geographic Scope')
-    // ];
-    // for (let data of allDataGeo) {
-    //   data?.forEach((object) => {
-    //     delete object['id'];
-    //   });
-    // }
-    // const merges2 = [];
-    // merges2.push(
-    //         { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
-    
-    //         { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
-          
-    //         { s: { r: 2, c: 0 }, e: { r: 3, c: 1 } },
-          
-    //         { s: { r: 2, c: 2 }, e: { r: 3, c: 2 } },
-          
-    //         { s: { r: 2, c: 3 }, e: { r: 3, c: 3 } },
-          
-    //         { s: { r: 2, c: 4 }, e: { r: 3, c: 4 } },
-    // )
-    // const ALIGN_CENTER = {
-    //   horizontal: 'center',
-    //   vertical: 'center',
-    //   wrapText: true,
-    // };
-    
-    // const baseFill = { fgColor: { rgb: 'ffffff' } };
-    // const baseFont = { color: { rgb: '000000' } };
-    
-    // const headerStyle = {
-    //   alignment: ALIGN_CENTER,
-    //   fill: { fgColor: { rgb: '454962' } },
-    //   font: { color: { rgb: 'ffffff' } },
-    // };
-    
-   
-    
-    // const lightCenter = {
-    //   alignment: ALIGN_CENTER,
-    //   fill: baseFill,
-    //   font: baseFont,
-    //   wrapText: true,
-
-    // };
-    
-  
-    // const geoMap = new Map<string, any[]>();
-    // lockupArrayForGeo.forEach((label, idx) => {
-    //   geoMap.set(label, allDataGeo[idx]);
-    // });
-
-    // for (let [label, block] of geoMap) {
-    //   const startRow = ArrayOfArraysForGeo.length;
-      
-    //   let filteredBlock = (block.length ? block : [null]).filter(
-    //     (b: any) => b && b.Centers
-    //   );
-
-
-    //   (filteredBlock.length ? filteredBlock : [null]).forEach((rec, idx) => {
-    //     if (rec === null) {
-    //       ArrayOfArraysForGeo.push([
-    //         {
-    //           v: label,
-    //           s: {
-    //             fill: { fgColor: { rgb: '454962' } },
-    //             font: { color: { rgb: 'ffffff' } },
-    //             alignment: {
-    //               horizontal: 'center',
-    //               vertical: 'center',
-    //               wrapText: true,
-    //             },
-    //           },
-    //         },
-    //       ]);
-    //       return;
-    //     }
-    
-    //     const values = Object.values(rec ?? []);
-    //     ArrayOfArraysForGeo.push([
-    //       { v: label, s: headerStyle },
-    //       ...values.map((d, colIdx) => {
-    
-    //         return {
-    //           v: d,
-    //           s: lightCenter,
-    //         };
-    //       }),
-    //     ]);
-    //   });
-    
-    //   const endRow = ArrayOfArraysForGeo.length - 1;
-    
-    //   merges2.push({ s: { c: 0, r: startRow }, e: { c: 0, r: endRow } });
-    // }
-
-    // const wsGeo = XLSX.utils.aoa_to_sheet(ArrayOfArraysForGeo);
-    // wsGeo['!rows'] = new Array(ArrayOfArraysForGeo.length).fill({ hpt: 22 });   
-    // wsGeo['!merges'] = merges2;
-    // wsGeo['!cols'] = [
-    //   { wch: 28 }, // A
-    //   { wch: 60 }, // B
-    //   { wch: 18 }, // C
-    //   { wch: 60 }, // D
-    //   { wch: 30 }, // E
-    //   { wch: 45 }, // F
-    //   { wch: 15 }, // G
-    // ];    
-
-
-
-
-
-
-
-    // let ArrayOfArraysForPartner = [
-    //   ...this.getHeaderGeoAndPartner(submission, 'Partners', this.initiative_data, 'partner')
-    // ];
-    // for (let data of allDataPartner) {
-    //   data?.forEach((object) => {
-    //     delete object['id'];
-    //   });
-    // }
-    // const merges3 = [];
-    // merges3.push(
-    //         { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
-    
-    //         { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
-          
-    //         { s: { r: 2, c: 0 }, e: { r: 3, c: 1 } },
-          
-    //         { s: { r: 2, c: 2 }, e: { r: 3, c: 2 } },
-          
-    //         { s: { r: 2, c: 3 }, e: { r: 3, c: 3 } },
-          
-    //         { s: { r: 2, c: 4 }, e: { r: 3, c: 4 } },
-    // )
-   
-    
-  
-    // const partnerMap = new Map<string, any[]>();
-    // lockupArrayForPartner.forEach((label, idx) => {
-    //   partnerMap.set(label, allDataPartner[idx] ?? []);
-    // });
-
-    // for (let [label, block] of partnerMap) {
-    //   const startRow = ArrayOfArraysForPartner.length;
-      
-    //   const filteredBlock = (block.length ? block : [null]).filter(
-    //     (b: any) => b && b.Centers && b.Centers.trim() !== ''
-    //   );
-
-
-    //   (filteredBlock.length ? filteredBlock : [null]).forEach((rec, idx) => {
-    //     if (rec === null) {
-    //       ArrayOfArraysForPartner.push([
-    //         {
-    //           v: label,
-    //           s: {
-    //             fill: { fgColor: { rgb: '454962' } },
-    //             font: { color: { rgb: 'ffffff' } },
-    //             alignment: {
-    //               horizontal: 'center',
-    //               vertical: 'center',
-    //               wrapText: true,
-    //             },
-    //           },
-    //         },
-    //       ]);
-    //       return;
-    //     }
-    
-    //     const values = Object.values(rec ?? []);
-    //     ArrayOfArraysForPartner.push([
-    //       { v: label, s: headerStyle },
-    //       ...values.map((d, colIdx) => {
-    
-    //         return {
-    //           v: d,
-    //           s: lightCenter,
-    //         };
-    //       }),
-    //     ]);
-    //   });
-    
-    //   const endRow = ArrayOfArraysForPartner.length - 1;
-    
-    //   merges3.push({ s: { c: 0, r: startRow }, e: { c: 0, r: endRow } });
-    // }
-
-    // const wsPartner = XLSX.utils.aoa_to_sheet(ArrayOfArraysForPartner);
-    // wsPartner['!rows'] = new Array(ArrayOfArraysForPartner.length).fill({ hpt: 22 });   
-    // wsPartner['!merges'] = merges3;
-    // wsPartner['!cols'] = [
-    //   { wch: 28 }, // A
-    //   { wch: 60 }, // B
-    //   { wch: 18 }, // C
-    //   { wch: 60 }, // D
-    //   { wch: 30 }, // E
-    //   { wch: 45 }, // F
-    //   { wch: 15 }, // G
-    // ];    
-    // if(showGeographicScope){
-    //   XLSX.utils.book_append_sheet(wb, wsGeo, 'Geographic Scope');
-    //   XLSX.utils.book_append_sheet(wb, wsPartner, 'Partners');
-    // }
-
 
 
 
@@ -3786,7 +2474,7 @@ export class SubmissionService {
 
 
   // HLO for center
-  const centerHighLevelOutput = this.generateExcelCenterHLO(organization.code);
+  const centerHighLevelOutput =  await this.generateExcelCenterHLO(organization.code);
   XLSX.utils.book_append_sheet(wb, centerHighLevelOutput, 'HLO');
 
   // Partners for centers
@@ -4482,41 +3170,55 @@ export class SubmissionService {
     if (b.category == 'OUTPUT' && a.category == 'OUTCOME') return 1;
     return 0;
   }
-  setItemIndicatorAndBudget() {
+
+  
+   setItemIndicatorAndBudget() {
+    if (!this.displayBudgetValuesIndicator) return;
+  
     Object.keys(this.displayBudgetValuesIndicator).forEach((code) => {
-      Object.keys(this.displayBudgetValuesIndicator[code]).forEach((wp_id) => {
-        Object.keys(this.displayBudgetValuesIndicator[code][wp_id]).forEach((item_id) => {
+      const orgObj = this.displayBudgetValuesIndicator[code];
+      if (!orgObj) return;
+  
+      Object.keys(orgObj).forEach((wp_id) => {
+        const wpObj = orgObj[wp_id];
+        if (!wpObj) return;
+  
+        Object.keys(wpObj).forEach((item_id) => {
+          const itemObj = wpObj[item_id];
+          if (!itemObj) return;
+  
           let sum = 0;
           let total = 0;
-    
-          Object.keys(this.displayBudgetValuesIndicator[code][wp_id][item_id]).forEach((indicator_id) => {
-            const value = this.displayBudgetValuesIndicator[code][wp_id][item_id][indicator_id];
-            sum += Number(value) || 0; 
+  
+          Object.keys(itemObj).forEach((indicator_id) => {
+            const value = itemObj[indicator_id];
+            sum += Number(value) || 0;
           });
-    
-          if (!this.displayBudgetValuesItemIndicator[code]) {
-            this.displayBudgetValuesItemIndicator[code] = {};
-          }
-          if (!this.displayBudgetValuesItemIndicator[code][wp_id]) {
-            this.displayBudgetValuesItemIndicator[code][wp_id] = {};
-          }
-    
+  
+          this.displayBudgetValuesItemIndicator[code] ??= {};
+          this.displayBudgetValuesItemIndicator[code][wp_id] ??= {};
+          this.budgetValues[code] ??= {};
+          this.budgetValues[code][wp_id] ??= {};
+          this.displayBudgetValues[code] ??= {};
+          this.displayBudgetValues[code][wp_id] ??= {};
+          this.wp_budgets[code] ??= {};
+  
           this.displayBudgetValuesItemIndicator[code][wp_id][item_id] = sum;
-
           this.budgetValues[code][wp_id][item_id] = sum;
           this.displayBudgetValues[code][wp_id][item_id] = sum;
-
-
-          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach(val => {
+  
+          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach((val) => {
             if (typeof val === "number") {
               total += Number(val) || 0;
-            } 
+            }
           });
+  
           this.wp_budgets[code][wp_id] = total;
         });
       });
     });
   }
+  
   setTotalTargetForIndicatorsForPartners() {
     for (let partner of this.partners) {
       if (!this.totalTargetsIndicatorPartners[partner.code]) {
@@ -4948,7 +3650,6 @@ export class SubmissionService {
       });
     });
     this.totalConsolidatedTargetPartner = totals;
-    console.log(totals)
     return totals;
   }
   
@@ -5130,7 +3831,22 @@ export class SubmissionService {
     }
   }
 
-  async generateExcelProject(data: any, partner: any[], type: string) {
+  async generateExcelProject(dataa: any, partner: any, type: string) {
+
+ const  indicatorTogelvalue = await this.constantsRepository.findOne({where: { id: 3 }})
+  let  data :any
+    if(indicatorTogelvalue?.value == '1')
+      data = dataa.filter((d:any)=> { 
+        if(d?.center?.code && d?.center?.code == partner.code)
+          return true;
+        if(d?.center?.code && d?.center?.code != partner.code)
+          return false 
+
+          return true
+      
+      });
+    else 
+      data = dataa
     const headerStyle = {
       font: { bold: true, color: { rgb: "FFFFFF" } },
       fill: { fgColor: { rgb: "2B3C53" } },
@@ -5251,6 +3967,7 @@ const totalRowIndex = rows.length + 1;
       { wpx: 250 }, { wpx: 60 }, { wpx: 350 }, { wpx: 100 }, { wpx: 120 }
   ];
 
+  ws['!rows'] = ws['!rows'] || [];
   for (let r = 1; r < totalRowIndex + 1; r++) { 
     ws['!rows'].push({ hpt: 30 });
   }
@@ -5318,7 +4035,6 @@ const totalRowIndex = rows.length + 1;
     const HEADER_ROW = 0;
     const FIRST_DATA_ROW = HEADER_ROW + 1;
     const SUB_TOTAL_ROW = FIRST_DATA_ROW + DATA_ROWS_COUNT; 
-    console.log(mainAccountLabels, header);
 
     const ws = XLSX.utils.aoa_to_sheet([header]);
 
@@ -5464,7 +4180,6 @@ const totalRowIndex = rows.length + 1;
     const HEADER_ROW = 0;
     const FIRST_DATA_ROW = HEADER_ROW + 1;
     const SUB_TOTAL_ROW = FIRST_DATA_ROW + DATA_ROWS_COUNT; 
-    console.log(mainAccountLabels, header);
 
     const ws = XLSX.utils.aoa_to_sheet([header]);
 
@@ -5610,9 +4325,20 @@ const totalRowIndex = rows.length + 1;
     const indicatorIds = this.results[this.results.length - 1].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
-    for(let value of filtered) {
-      this.displayBudgetValuesIndicator[value.organization_code][value.workPackage.wp_official_code][value.parent_id][value.result_uuid] = Number(value.budget);      
+    for (let value of filtered) {
+      const org = value.organization_code;
+      const wp = value.workPackage.wp_official_code;
+      const parent = value.parent_id;
+      const result = value.result_uuid;
+  
+      this.displayBudgetValuesIndicator[org] ??= {};
+      this.displayBudgetValuesIndicator[org][wp] ??= {};
+      this.displayBudgetValuesIndicator[org][wp][parent] ??= {};
+  
+      this.displayBudgetValuesIndicator[org][wp][parent][result] = Number(value.budget);
     }
+  
+  
     this.sammaryCalc();
   }
   setPartnervaluesForIndicators(data: any[]) {  
@@ -6175,7 +4901,7 @@ const totalRowIndex = rows.length + 1;
   }
 
 
-  generateExcelCenterHLO(partner_code: number) {
+ async generateExcelCenterHLO(partner_code: number) {
     const headerStyle = {
       font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
       alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
@@ -6246,20 +4972,25 @@ const totalRowIndex = rows.length + 1;
 
     let currentRowIndex = 2; // Start adding data from the 3rd row (index 2)
 
-
+  const  indicatorTogelvalue = await this.constantsRepository.findOne({where: { id: 3 }})
+ 
     this.actualWps.forEach(wp => {
       const wpCode = wp.ost_wp.wp_official_code;
-      const wpItems = this.partnersData[partner_code][wpCode] || [];
-      const isValidItem = wpItems.filter(d => d.category == 'OUTPUT');
-      // if (wpItems.length === 0) return; // Skip if no data
+      
+      const wpItemsa = this.partnersData[partner_code][wpCode] || [];
+      let  isValidItem
+       if( indicatorTogelvalue?.value == '1')
+        isValidItem = wpItemsa.filter(d => d.category == 'OUTPUT' && d.pooled_centers.map((d:any)=>d.code).includes(partner_code));
+       else
+       isValidItem = wpItemsa.filter(d => d.category == 'OUTPUT');
+       // if (wpItems.length === 0) return; // Skip if no data
 
       if(isValidItem.length){
 
-     
       const wpStartRow = currentRowIndex; // Mark the starting row for this WP
 
       // 3. Loop through items and build rows
-      wpItems.forEach((item, itemIndex) => {
+      isValidItem.forEach((item, itemIndex) => {
         if(item.category == 'OUTPUT') {
           const startRowForItem = currentRowIndex;
           const wpTitleCell = wp.ost_wp.acronym;
