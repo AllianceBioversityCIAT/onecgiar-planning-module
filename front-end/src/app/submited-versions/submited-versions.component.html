@@ -97,6 +97,7 @@
             <td mat-cell *matCellDef="let row; first as isFirst">
               <div class="m">
                 <button
+                *ngIf="(!isAllowedToAccessChat && row.status == 'Approved') || isAllowedToAccessChat"
                   class="team-members-icon-table"
                   matTooltip="View"
                   matTooltipPosition="above"

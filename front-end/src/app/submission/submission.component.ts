@@ -40,7 +40,7 @@ import { DecimalPipe, Location } from "@angular/common";
   selector: "app-submission",
   templateUrl: "./submission.component.html",
   styleUrls: ["./submission.component.scss"],
-   providers: [DecimalPipe] 
+  providers: [DecimalPipe] 
 })
 export class SubmissionComponent implements OnInit, OnDestroy {
   title = "planning";
@@ -137,7 +137,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   toggleSummaryValues: any = {};
   noValuesAssigned: any = {};
   partnersStatus: any = {};
-  partnersValidate: any = {};
   centerHasError: any = {};
   itemHasError: any = {};
   geoLocationErrors: any = {};
@@ -1058,7 +1057,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.errors = {};
     this.noValuesAssigned = {};
     this.partnersStatus = {};
-    this.partnersValidate = {};
     this.centerHasError = {};
     this.itemHasError = {};
     this.geoLocationErrors = {};
@@ -1296,7 +1294,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       
     for (let partner of this.partners) {
       this.partnersStatus[partner.code] = this.checkComplete(partner.code);
-      this.partnersValidate[partner.code] = this.checkValidateCenter(partner.code);
       if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
       if (!this.budgetValues[partner.code])
         this.budgetValues[partner.code] = {};
@@ -1913,7 +1910,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.socket.on("statusOfCenter", (data: any) => {
       if (this.params.id == data.initiative_id) {
         this.partnersStatus[data.organization_code] = !data.status;
-        this.partnersValidate[data.organization_code] = !data.is_valid;
       }
       
     });
@@ -1926,12 +1922,6 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.getAnaplanTotal(data.organization.code);
       }
     });
-    this.socket.on("validateOfCenter", (data: any) => {
-      if (this.params.id == data.initiative_id) {
-        this.partnersValidate[data.organization_code] = !data.is_valid;
-      }
-    });
-
     this.socket.on("submissionStatus", (data: any) => {
       this.initStatus = data.initStatus
       this.initiative_data = data.initiative_data;
@@ -2662,17 +2652,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
 
   async submit() {
     let messages = "Are you sure you want to submit?";
-    let invalidCenters = this.invalidCenters().sort(); 
-    if (invalidCenters.length) {
-      messages = invalidCenters.length > 1 ? "Centers" : "Center(s)";
-      messages += "  are invalid:";
+    let incompleteCentersArray = this.incompleteCenters().sort(); 
+    if (incompleteCentersArray.length) {
+      messages = incompleteCentersArray.length > 1 ? "Centers" : "Center(s)";
+      messages += "  are incomplete:";
     }
     this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
           title: "Submit",
           message2: messages,
-          f: invalidCenters,
+          f: incompleteCentersArray,
           k: `Are you sure you want to submit?`,
           svg: `../../assets/shared-image/apply.png`,
         },
@@ -2721,15 +2711,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     return incompleteCenters;
   }
 
-  invalidCenters() {
-    let invalidCenters: any = [];
-    this.partners.forEach((partner: any) => {
-      if (!this.partnersValidate[partner.code]) {
-        invalidCenters.push(partner.acronym);
-      }
-    });
-    return invalidCenters;
-  }
+
 
   validate() {
     let valid = true;
@@ -2979,17 +2961,12 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         if(budgetItem && !hasBudgetAssumptions) {
           valid = false;
           this.itemHasError[partner_code][wp_id][item.id] = true;
-          message = "There is a budget without budjet assumption"
+          message = "There is a budget without assumption"
         } else {
           this.itemHasError[partner_code][wp_id][item.id] = false;
         }
       }
     });
-
-
-
-
-
 
 
     this.partnersData[partner_code][wp_id].forEach((item: any) => {
@@ -3112,6 +3089,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
       this.user_info.role == "admin" ||
       this.my_roles?.includes(ROLES.LEAD) ||
       this.my_roles?.includes(ROLES.COORDINATOR) ||
+      this.my_roles?.includes(ROLES.Financial_Focal_Point) ||
       this.my_roles?.includes(ROLES.CoLeader)
     );
   }
@@ -3436,7 +3414,8 @@ totalConsolidatedTargetPartner: any;
   } 
 
   async setAnaplanValues() {
-    this.anaplanValues = await this.anaplanService.getAllValues(this.params.id);
+    this.anaplanValues = await this.anaplanService.getAllValues(this.params.id,this.phase.id);
+    console.log('anaplanValues', this.anaplanValues)
     for(let values of this.anaplanValues){
      this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
     }

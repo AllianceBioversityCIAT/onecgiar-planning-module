@@ -15,15 +15,15 @@ export class AnaplanController {
   
 
     @ApiBearerAuth()
-    @Get('all-values/:initiative_id')
-    findAllValues(@Param('initiative_id') id: number) {
-      return this.service.findAllValues(id);
+    @Get('all-values/:initiative_id/:phase_id')
+    findAllValues(@Param('initiative_id') id: number,@Param('phase_id') phase_id: number) {
+      return this.service.findAllValues(id,phase_id);
     }
 
     @ApiBearerAuth()
-    @Get('all-values/:initiative_id/version/:version_id')
-    findAllValuesVersion(@Param('initiative_id') id: number, @Param('version_id') version_id: number) {
-      return this.service.findAllValuesVersion(id, version_id);
+    @Get('all-values/:initiative_id/:phase_id/version/:version_id')
+    findAllValuesVersion(@Param('initiative_id') id: number, @Param('version_id') version_id: number,@Param('phase_id') phase_id: number) {
+      return this.service.findAllValuesVersion(id, version_id,phase_id);
     }
 
     @ApiBearerAuth()

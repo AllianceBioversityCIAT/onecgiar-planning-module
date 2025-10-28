@@ -13,6 +13,7 @@ import { ChatBoxComponent } from "./chat-box/chat-box.component";
 import { ChatInputComponent } from "./chat-input/chat-input.component";
 import { MatButtonModule } from "@angular/material/button";
 import { ChatSpinnerComponent } from "./chat-spinner/chat-spinner.component";
+import { MatTooltipModule } from "@angular/material/tooltip";
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import { ChatSpinnerComponent } from "./chat-spinner/chat-spinner.component";
     TrustHTMLModule,
     MatButtonModule,
     MatIconModule,
+    MatTooltipModule
   ],
 })
 export class ChatModule {}

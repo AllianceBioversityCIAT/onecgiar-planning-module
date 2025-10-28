@@ -8,6 +8,21 @@
   overflow: hidden;
 }
 
+.head {
+    background: linear-gradient(to right, #2a2e45, #212537);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+        padding: 12px;
+        font-size: 17px;
+        font-weight: 500;
+    }
+
+}
+
 div {
   background-color: white;
 

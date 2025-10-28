@@ -31,12 +31,13 @@ export class AnaplanService {
   }
   
 
-  findAllValues(id: number) {
+  findAllValues(id: number,phase_id) {
     return this.anaplanValuesRepo.find({
       where: {
         initiative: {
           id: id
         },
+        phase_id: phase_id,
         submission: IsNull()
       },
       relations: ['workPackage', 'anaplan', 'organization']
@@ -44,12 +45,13 @@ export class AnaplanService {
   }
 
 
-  findAllValuesVersion(id: number, version_id: number) {
+  findAllValuesVersion(id: number, version_id: number,phase_id) {
     return this.anaplanValuesRepo.find({
       where: {
         initiative: {
           id: id
         },
+        phase_id: phase_id,
         submission:  {
           id: version_id
         }

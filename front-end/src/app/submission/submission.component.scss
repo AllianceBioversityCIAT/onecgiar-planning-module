@@ -1899,6 +1899,7 @@ pre {
 }
 
 .approved-status-msg {
+  z-index: 999999;
   padding: 8px 0;
   margin: auto;
   color: #04030f;
@@ -2234,12 +2235,12 @@ pre {
 }
 
 .normal-icon {
-  opacity: 1;
+  filter: brightness(0) saturate(100%);
   cursor: pointer;
 }
 
 .half-opacity-icon {
-  opacity: 0.5;
+    opacity: 1;
   cursor: pointer;
 }
 
@@ -2411,4 +2412,41 @@ pre {
   padding: 0px 1.7rem !important;
   margin-bottom: -70px;
   font-weight: 600;
+}
+
+
+/* the inner sticky bar style */
+.sticky-target {
+  background-color: #ffffff;
+  transition: all 0.25s ease;
+}
+.tab-title{
+  display: none;
+}
+/* when active */
+.is-sticky .sticky-target {
+  max-width: 180rem;
+    padding: 0 3.2rem;
+    margin: 0 auto;
+  position: fixed;
+  height: 84px;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  .risk-report-title-box__title{
+    display: none;
+  }
+.form-container-4,.form-container-3{
+ position: relative;
+    top: -8rem;
+    left: 24px;
+}
+.tab-title{
+  display: block;
+}
+.tab-version,.tab-phase,.tab-program{
+  display: none;
+}
 }

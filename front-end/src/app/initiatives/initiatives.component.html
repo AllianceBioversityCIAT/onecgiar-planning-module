@@ -92,7 +92,7 @@
                       <!-- 1 -->
                       <button
                       class="color-icons-table-action"
-                      *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles)"
+                      *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles) || isFinancialFocalPoint(row.roles)"
                       mat-icon-button
                       (click)="openDialog(row.id)"
                       matTooltip="Assign Organizations"
@@ -141,7 +141,7 @@
                   class="color-icons-table-action"
                   matTooltip="Team members"
                   matTooltipPosition="above"
-                  *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles) || isContributor(row.roles)"
+                  *ngIf="isCoLeader(row.roles) || isLeader(row.roles) || isCoordinator(row.roles) || isContributor(row.roles) || isFinancialFocalPoint(row.roles)"
                   routerLink="program/{{ row['id'] }}/{{
                     row['official_code']
                   }}/team-members"
