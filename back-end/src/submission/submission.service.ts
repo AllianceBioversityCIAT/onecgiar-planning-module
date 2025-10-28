@@ -3756,7 +3756,7 @@ export class SubmissionService {
     return subtotalRow ? [...mainRows, subtotalRow] : mainRows;
   }
   async setAnaplanValues() {
-    this.anaplanValues = await this.anaplanService.findAllValues(this.initiative_data.id);
+    this.anaplanValues = await this.anaplanService.findAllValues(this.initiative_data.id, this.phase.id);
     for(let values of this.anaplanValues){
      this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
     }

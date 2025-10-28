@@ -3215,7 +3215,8 @@ totalConsolidatedTargetPartner: any;
   } 
 
   async setAnaplanValues() {
-    this.anaplanValues = await this.anaplanService.getAllValues(this.params.id);
+    this.anaplanValues = await this.anaplanService.getAllValues(this.params.id,this.phase.id);
+    console.log('anaplanValues', this.anaplanValues)
     for(let values of this.anaplanValues){
      this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
     }
