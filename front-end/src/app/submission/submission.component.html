@@ -2094,7 +2094,12 @@
                           ></mat-checkbox>
                         </td>
                       </ng-container>
-                      <td>
+                      <td [ngClass]="{
+                        itemHasError:
+                        geoLocationErrors[partner.code][
+                            wp.ost_wp.wp_official_code + '-partners'
+                          ][item.id]
+                      }">
                         <app-geographic-location
                         [countries]="clarisaCountries"
                         [(selectedCountries)]="partner.selectedCountries"
@@ -3926,7 +3931,12 @@
                             ></mat-checkbox>
                           </td>
                         </ng-container>
-                        <td>
+                        <td [ngClass]="{
+                          itemHasError:
+                          geoLocationErrors[partner.code][
+                              wp.ost_wp.wp_official_code + '-partners'
+                            ][item.id]
+                        }">
                           <app-geographic-location
                           [countries]="clarisaCountries"
                           [(selectedCountries)]="partner.selectedCountries"

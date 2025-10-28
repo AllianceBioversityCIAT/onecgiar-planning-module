@@ -139,6 +139,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   partnersStatus: any = {};
   centerHasError: any = {};
   itemHasError: any = {};
+  geoLocationErrors: any = {};
   itemIndicatorHasError: any = {};
   tocSubmissionData: any;
   check(values: any, code: string, id: number, item_id: string) {
@@ -1058,6 +1059,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     this.partnersStatus = {};
     this.centerHasError = {};
     this.itemHasError = {};
+    this.geoLocationErrors = {};
     this.itemIndicatorHasError = {};
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
@@ -1314,6 +1316,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
         this.centerHasError[partner.code] = false;
       if (!this.itemHasError[partner.code])
         this.itemHasError[partner.code] = {};
+      if (!this.geoLocationErrors[partner.code])
+        this.geoLocationErrors[partner.code] = {};
       if (!this.itemIndicatorHasError[partner.code])
         this.itemIndicatorHasError[partner.code] = {};
 
@@ -1361,6 +1365,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
           this.summaryBudgetsTotal[wp.ost_wp.wp_official_code] = 0;
         if (!this.itemHasError[partner.code][wp.ost_wp.wp_official_code])
           this.itemHasError[partner.code][wp.ost_wp.wp_official_code] = {};
+        if (!this.geoLocationErrors[partner.code][wp.ost_wp.wp_official_code])
+          this.geoLocationErrors[partner.code][wp.ost_wp.wp_official_code] = {};
         if (!this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code])
           this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code] = {};
 
@@ -1467,6 +1473,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
             item.id
           ] = false;
           this.itemHasError[partner.code][wp.ost_wp.wp_official_code][item.id] = false;
+
+          this.geoLocationErrors[partner.code][wp.ost_wp.wp_official_code][item.id] = false;
 
           this.itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id] = {};
           if(item?.quantitative_indicators?.length) {
@@ -1620,7 +1628,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     console.log(this.allData)
     console.log('displayBudgetValues', this.displayBudgetValues)
     console.log('partnersMelia', this.partnersMelia)
-    console.log('partnersMelia', this.partnersProject)
+    console.log('perValues', this.period)
 
 
     //sort WP titles
@@ -2744,14 +2752,172 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     };
   }
 
-  validateWp(partner_code: any, wp_id: any, wp_official_code: string) { 
-    const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting '];
-    const isIncluded = validateWp.some(item => wp_id.toLowerCase().includes(item.toLowerCase()));
+  // validateWp(partner_code: any, wp_id: any, wp_official_code: string) { 
+  //   const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting '];
+  //   const isIncluded = validateWp.some(item => wp_id.toLowerCase().includes(item.toLowerCase()));
 
+  //   let valid = true;
+  //   let wpChecked = false;
+  //   let message = "";
+  //   let hasBudget = false;
+  //   const relatedBudgets = [
+  //     this.wp_budgets[partner_code]?.[wp_official_code],
+  //     this.wp_budgets[partner_code]?.[wp_official_code + '-melia'],
+  //     this.wp_budgets[partner_code]?.[wp_official_code + '-Cross-Cutting'],
+  //     this.wp_budgets[partner_code]?.[wp_official_code + '-partners']
+  //   ];
+  //   const totalRelatedBudget = this.roundNumbers(relatedBudgets);
+  //   const wpTotal = this.getWpTotals(partner_code, wp_official_code);
+
+  //   let total: any = Object.values(this.budgetValues[partner_code][wp_id]).reduce((sum: any, val: any) => sum + val, 0);
+  //   if (!this.partnersData[partner_code][wp_id]) {
+  //     return {
+  //       valid: valid,
+  //       message: message,
+  //     };
+  //   }
+  //   // this.partnersData[partner_code][wp_id].forEach((item: any) => {
+  //   //   if (item.category != "EOI" && item.category != "OUTCOME" && item.category != "Geographic-Scope" && item.category != "partners") {
+  //       // let perChecked = Object.values(
+  //       //   this.perValues[partner_code][wp_id][item.id]
+  //       // ).reduce((a: any, b: any) => a || b);
+  //   //     if (perChecked && !this.noValuesAssigned[partner_code][wp_id][item.id]) {
+  //   //       hasBudget = true;
+  //   //     }
+  //   //     if (
+  //   //       perChecked &&
+  //   //       !+this.values[partner_code][wp_id][item.id] &&
+  //   //       !this.noValuesAssigned[partner_code][wp_id][item.id]
+  //   //     ) {
+  //   //       valid = false;
+  //   //       this.itemHasError[partner_code][wp_id][item.id] = true;
+  //   //     } else {
+  //   //       this.itemHasError[partner_code][wp_id][item.id] = false;
+  //   //     }
+  //   //     if (perChecked) wpChecked = true;
+  //   //   }
+  //   // });
+
+  //   this.partnersData[partner_code][wp_id].forEach((item: any) => {
+  //     if (item.category == 'OUTPUT') {
+  //       if(item.quantitative_indicators) {
+  //         item.quantitative_indicators.forEach((indicator: any) => {
+  //             const hasBudgetAssumptions = this.hasBudgetAssumptions(partner_code, indicator.id, wp_id);
+  //             const budgetIndicator = this.displayBudgetValuesIndicator[partner_code][wp_id][item.id][indicator.id];
+    
+  //             if(budgetIndicator && !hasBudgetAssumptions) {
+  //               valid = false;
+  //               this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = true;
+  //               message = "There is a budget without budjet assumption"
+  //             } else {
+  //               this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = false;
+  //             }
+  //         });
+  //       }
+  //     } else {
+  //       const hasBudgetAssumptions = this.hasBudgetAssumptions(partner_code, item.id, wp_id);
+  //       const budgetItem = this.displayBudgetValues[partner_code][wp_id][item.id];
+
+  //       if(budgetItem && !hasBudgetAssumptions) {
+  //         valid = false;
+  //         this.itemHasError[partner_code][wp_id][item.id] = true;
+  //         message = "There is a budget without budjet assumption"
+  //       } else {
+  //         this.itemHasError[partner_code][wp_id][item.id] = false;
+  //       }
+  //     }
+  //   });
+
+  //   this.partnersData[partner_code][wp_id].forEach((item: any) => {
+  //     const isChecked = this.perValues[partner_code][wp_id][item.id][6];
+  //     const selectedCountries = item.selectedCountries || [];
+    
+  //     if (isChecked && selectedCountries.length === 0) {
+  //       console.log(partner_code, wp_id, item.id);
+    
+  //       valid = false;
+  //       this.itemHasError[partner_code][wp_id][item.id] = true;
+    
+  //       // ✅ Ensure proper initialization
+  //       this.geoLocationErrors[partner_code] = this.geoLocationErrors[partner_code] || {};
+  //       this.geoLocationErrors[partner_code][wp_id] = this.geoLocationErrors[partner_code][wp_id] || {};
+  //       this.geoLocationErrors[partner_code][wp_id][item.id] = true;
+    
+  //       // ✅ Only set this message once to prevent later overwrites
+  //       // if (!this.errors[partner_code]) this.errors[partner_code] = {};
+  //       // if (!this.errors[partner_code][wp_id]) {
+  //         message = "There is a checked item without geographic location";
+  //         // this.errors[partner_code][wp_id] = message;
+  //       // }
+  //     }
+  //   });
+    
+  //   if(isIncluded){
+  //     this.errors[partner_code][wp_id] = null;
+  //     if (
+  //       this.totals[partner_code][wp_id] == 0 &&
+  //       (this.wp_budgets[partner_code][wp_id] != 0 && this.wp_budgets[partner_code][wp_id] != null)
+  //     ) {
+  //       valid = false;
+  //       this.errors[partner_code][wp_id] =
+  //         "There is a work package with a budget not disaggregated";
+  //       message = "There is a work package with a budget not disaggregated";
+  //     } else if (Math.round(totalRelatedBudget) !== Math.round(wpTotal)) {
+  //       valid = false;
+
+  //       this.errors[partner_code][wp_id] =
+  //         "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
+  //       message =
+  //         "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
+  //     }  else if (
+  //       // wpChecked &&
+  //       // hasBudget &&
+  //       (Math.round(total) !== 0 &&  Number(this.wp_budgets[partner_code][wp_id]) !== 0)
+  //     ) {
+  //       valid = false;
+  //       if ( Math.round(total) !== Number(this.wp_budgets[partner_code][wp_id])) {
+  //         this.errors[partner_code][wp_id] =
+  //           "Results budget must be equal total budget";
+  //         message = "The subtotal of all percentages should equal 100%";
+  //       } else {
+  //         valid = true;
+  //         this.errors[partner_code][wp_id] = null;
+  //         message = '';
+  //       }
+         
+  //     } else if (
+  //       this.totals[partner_code][wp_id] > 0 &&
+  //       !+this.wp_budgets[partner_code][wp_id]
+  //     ) {
+  //       valid = false;
+  //       this.errors[partner_code][wp_id] =
+  //         "There is a work package without a total budget assigned";
+  //       message = "There is a work package without a total budget assigned";
+  //     } else if (!valid) {
+  //       this.errors[partner_code][wp_id] =
+  //         "There is a checked item(s) but not budgeted";
+  //       message = "There is a checked item(s) but not budgeted";
+  //     }
+  //     return {
+  //       valid: valid,
+  //       message: message,
+  //     };
+  //   }
+  //    return {
+  //       valid: valid,
+  //       message: message,
+  //     };
+  // } 
+
+  validateWp(partner_code: any, wp_id: any, wp_official_code: string) {
+    const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting'];
+    const isIncluded = validateWp.some(item =>
+      wp_id.toLowerCase().includes(item.toLowerCase())
+    );
+  
     let valid = true;
-    let wpChecked = false;
     let message = "";
-    let hasBudget = false;
+  
     const relatedBudgets = [
       this.wp_budgets[partner_code]?.[wp_official_code],
       this.wp_budgets[partner_code]?.[wp_official_code + '-melia'],
@@ -2760,35 +2926,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     ];
     const totalRelatedBudget = this.roundNumbers(relatedBudgets);
     const wpTotal = this.getWpTotals(partner_code, wp_official_code);
-
-    let total: any = Object.values(this.budgetValues[partner_code][wp_id]).reduce((sum: any, val: any) => sum + val, 0);
+  
+    let total: any = Object.values(this.budgetValues[partner_code][wp_id] || {}).reduce(
+      (sum: any, val: any) => sum + val,
+      0
+    );
+  
     if (!this.partnersData[partner_code][wp_id]) {
-      return {
-        valid: valid,
-        message: message,
-      };
+      return { valid: valid, message: message };
     }
-    // this.partnersData[partner_code][wp_id].forEach((item: any) => {
-    //   if (item.category != "EOI" && item.category != "OUTCOME" && item.category != "Geographic-Scope" && item.category != "partners") {
-    //     let perChecked = Object.values(
-    //       this.perValues[partner_code][wp_id][item.id]
-    //     ).reduce((a: any, b: any) => a || b);
-    //     if (perChecked && !this.noValuesAssigned[partner_code][wp_id][item.id]) {
-    //       hasBudget = true;
-    //     }
-    //     if (
-    //       perChecked &&
-    //       !+this.values[partner_code][wp_id][item.id] &&
-    //       !this.noValuesAssigned[partner_code][wp_id][item.id]
-    //     ) {
-    //       valid = false;
-    //       this.itemHasError[partner_code][wp_id][item.id] = true;
-    //     } else {
-    //       this.itemHasError[partner_code][wp_id][item.id] = false;
-    //     }
-    //     if (perChecked) wpChecked = true;
-    //   }
-    // });
+  
+
 
     this.partnersData[partner_code][wp_id].forEach((item: any) => {
       if (item.category == 'OUTPUT') {
@@ -2821,25 +2969,76 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     });
 
 
-    if(isIncluded){
-      this.errors[partner_code][wp_id] = null;
-       if (Math.round(totalRelatedBudget) !== Math.round(wpTotal)) {
+    this.partnersData[partner_code][wp_id].forEach((item: any) => {
+      const isChecked = this.perValues[partner_code][wp_id][item.id]?.[this.period[0].id];
+      const selectedCountries = item.selectedCountries || [];
+  
+      if (isChecked && selectedCountries.length === 0) {
+        console.log('Missing geo for:', partner_code, wp_id, item.id);
+  
         valid = false;
-        this.errors[partner_code][wp_id] =
+        this.itemHasError[partner_code][wp_id][item.id] = true;
+  
+        this.geoLocationErrors[partner_code] = this.geoLocationErrors[partner_code] || {};
+        this.geoLocationErrors[partner_code][wp_id] = this.geoLocationErrors[partner_code][wp_id] || {};
+        this.geoLocationErrors[partner_code][wp_id][item.id] = true;
+  
+        message += (message ? " | " : "") + "There is a checked item without geographic location";
+        this.errors[partner_code] = this.errors[partner_code] || {};
+        this.errors[partner_code][wp_id] = message;
+      }
+    });
+  
+    if (isIncluded) {
+      let newMessage = "";
+  
+      this.errors[partner_code] = this.errors[partner_code] || {};
+  
+      if (
+        this.totals[partner_code][wp_id] == 0 &&
+        (this.wp_budgets[partner_code][wp_id] != 0 &&
+          this.wp_budgets[partner_code][wp_id] != null)
+      ) {
+        valid = false;
+        newMessage = "There is a work package with a budget not disaggregated";
+      }
+  
+      else if (Math.round(totalRelatedBudget) !== Math.round(wpTotal)) {
+        valid = false;
+        newMessage =
           "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
-        message =
-          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
-      }  
-      return {
-        valid: valid,
-        message: message,
-      };
+      }
+  
+      else if (
+        Math.round(total) !== 0 &&
+        Number(this.wp_budgets[partner_code][wp_id]) !== 0
+      ) {
+        if (Math.round(total) !== Number(this.wp_budgets[partner_code][wp_id])) {
+          valid = false;
+          newMessage = "Results budget must be equal total budget";
+        }
+      }
+  
+      else if (
+        this.totals[partner_code][wp_id] > 0 &&
+        !+this.wp_budgets[partner_code][wp_id]
+      ) {
+        valid = false;
+        newMessage = "There is a work package without a total budget assigned";
+      }
+  
+      if (newMessage) {
+        message += (message ? " | " : "") + newMessage;
+        this.errors[partner_code][wp_id] = message;
+      }
     }
-     return {
-        valid: valid,
-        message: message,
-      };
-  } 
+  
+    return {
+      valid: valid,
+      message: message,
+    };
+  }
+  
   async excel() {
     await this.submissionService.excelCurrent(this.params.id);
   }
@@ -3304,7 +3503,12 @@ totalConsolidatedTargetPartner: any;
 
     const result_id = item.id;
     const parent_id = item.parent_id
-    const data = {partner, wp, initiative_id, result_id}
+    const data = {partner, wp, initiative_id, result_id};
+    // if(item.selectedCountries.length) {
+    //   this.geoLocationErrors[partner.code][wp.ost_wp.wp_official_code + '-partners'][result_id] = false
+    // } else {
+    //   this.geoLocationErrors[partner.code][wp.ost_wp.wp_official_code + '-partners'][result_id] = true
+    // }
     await this.countryService.createOrUpdate(data).then(
       (res) => {
         if(res)
