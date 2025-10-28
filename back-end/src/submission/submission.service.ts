@@ -39,6 +39,7 @@ import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { AnaplanService } from 'src/anaplan/anaplan.service';
 import { BudgetAssumptionsService } from 'src/budget-assumptions/budget-assumptions.service';
 import { Response } from 'express';
+import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -73,6 +74,8 @@ export class SubmissionService {
     // private meliaRepository: Repository<Melia>,
     @InjectRepository(CrossCutting)
     private CrossCuttingRepository: Repository<CrossCutting>,
+    @InjectRepository(AnaplanValues)
+    private anaplanValuesRepository: Repository<AnaplanValues>,
     @InjectRepository(IpsrValue)
     private ipsrValueRepository: Repository<IpsrValue>,
     @InjectRepository(PartnerCountry)
@@ -336,6 +339,24 @@ export class SubmissionService {
         newSubmission,
         { reload: true },
       );
+
+      let oldAnaplanValues = await this.anaplanValuesRepository.find({
+        where: {
+          initiative_id: initiative_id,
+          submission: IsNull(),
+          phase_id: phase_id
+        },
+        relations: ['workPackage', 'anaplan', 'organization'],
+      });
+
+      for (let value of oldAnaplanValues) {
+        delete value.id;
+        value.submission = submissionObject;
+        await this.anaplanValuesRepository.save(value, {
+          reload: true,
+        });
+      }
+
       let oldResults = await this.resultRepository.find({
         where: {
           initiative_id: initiative_id,
@@ -576,6 +597,24 @@ export class SubmissionService {
         where: {
           initiative_id: id,
           submission_id: IsNull(),
+          phase_id: phaseId,
+          type: 'INDICATOR',
+        },
+        relations: ['values', 'workPackage'],
+      });
+      return saved_data;
+    } catch (error) {
+      console.error('error getSaved Data', error);
+      throw new BadRequestException('getSaved error');
+    }
+  }
+
+  async getSavedIndicatorForVersion(id, phaseId, versionId) {
+    try {
+      const saved_data = await this.resultRepository.find({
+        where: {
+          initiative_id: id,
+          submission_id: versionId,
           phase_id: phaseId,
           type: 'INDICATOR',
         },

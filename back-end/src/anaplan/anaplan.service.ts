@@ -5,7 +5,7 @@ import { Anaplan } from 'src/entities/anaplan.entity';
 import { History } from 'src/entities/history.entity';
 import { Initiative } from 'src/entities/initiative.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class AnaplanService {
@@ -36,6 +36,22 @@ export class AnaplanService {
       where: {
         initiative: {
           id: id
+        },
+        submission: IsNull()
+      },
+      relations: ['workPackage', 'anaplan', 'organization']
+    });
+  }
+
+
+  findAllValuesVersion(id: number, version_id: number) {
+    return this.anaplanValuesRepo.find({
+      where: {
+        initiative: {
+          id: id
+        },
+        submission:  {
+          id: version_id
         }
       },
       relations: ['workPackage', 'anaplan', 'organization']
@@ -70,6 +86,7 @@ export class AnaplanService {
         organization_code: data.organization.code,
         phase_id: data.phase_id,
         anaplan_id: data.anaplan_id,
+        submission: IsNull(),
         workPackage: workPackageObject,
       },
     });
