@@ -33,7 +33,7 @@ export class PartnerCountry {
   @ManyToOne(() => Phase)
   phase: Phase;
 
-  @Column({ nullable: true})
+  @Column({ nullable: false})
   phase_id: number;
   
   @JoinColumn({ name: 'initiative_id' })
