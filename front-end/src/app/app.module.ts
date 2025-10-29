@@ -179,7 +179,7 @@ import { StickyOnScrollDirective } from "./sticky-on-scroll.directive";
     GeographicLocationComponent,
     StickyOnScrollDirective
   ],
-  imports: [
+  imports: [ 
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
