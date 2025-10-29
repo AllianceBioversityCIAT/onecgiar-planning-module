@@ -1,4 +1,6 @@
 export const environment = {
+    production: false,
+    clarityProjectId: null,
     socket_path:"/socket.io",
     socket_url:"https://planningtest-serv.ciat.cgiar.org",
     api_url:'https://planningtest-serv.ciat.cgiar.org',

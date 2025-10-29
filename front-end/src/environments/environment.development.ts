@@ -1,4 +1,6 @@
 export const environment = {
+    production: false,
+    clarityProjectId: null,
     socket_path:"/api/socket.io",
     socket_url:"https://planning.loc.codeobia.com",
     api_url:'/api',
