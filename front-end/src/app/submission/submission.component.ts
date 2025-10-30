@@ -348,7 +348,7 @@ if(!this.timeCalcForIndicator[item_id])
       let subTotalBudgetIndicator = 0;
       let totalWpBudget = 0;
 
-      
+    
      
         budgetValue = this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id];
        
@@ -383,6 +383,7 @@ if(!this.timeCalcForIndicator[item_id])
           indicator_type: indicator_type == 'custom' ? 'custom-OUTPUT' : indicator_type
         }
       );
+      this.validateCenter(partner_code);
       if (result) {
         this.socket.emit("setDataValueForIndicator", {
           id: this.params.id,
@@ -634,6 +635,7 @@ if(!this.timeCalcForIndicator[item_id])
         this.noValuesAssigned[partner_code][wp_id][item_id] = 0;
       }
     }
+   await this.validateWp(partner_code,wp_id,wp_id+'-partenr')
     this.changes(partner_code, wp_id, item_id, per_id, event.checked);
     const result = await this.submissionService.saveResultValues(
       this.params.id,
@@ -1768,7 +1770,7 @@ if(!this.timeCalcForIndicator[item_id])
           this.partners = partners;
         } else {
           this.toastrService.error(
-            "You are not assigned to this initiative, so please contact the leader to  give you access",
+            "You are not assigned to this program, so please contact the leader to  give you access",
             "Access denied"
           );
           this.router.navigate(["denied"]);
@@ -2872,29 +2874,41 @@ if(!this.timeCalcForIndicator[item_id])
   //       message: message,
   //     };
   // } 
- validateCenter(partner_code: any, is_mark = false) {
-    let valid = true;
-    let message = "";
-    Object.keys(this.partnersData[partner_code]).forEach((wp_id) => {
-      for(let wp of this.actualWps){
-        let result = this.validateWp(partner_code, wp_id, wp.ost_wp.wp_official_code);
-        if (!result.valid) {
-          valid = result.valid;
-          message = result.message;
-        }
-      }
-    });
-    if (is_mark) {
-      if (!valid) this.toastrService.error(message, "Complete failed");
-      this.centerStatusService.validPartner.next(valid);
+  validateCenter(partner_code: any, is_mark = false) {
+  let valid = true;
+  let message = "";
+
+  const visited = new Set<string>(); // will hold official codes per partner
+
+  const partnerWps = Object.keys(this.partnersData[partner_code] || {});
+  for (const wp of this.actualWps)
+    for (const wp_id of partnerWps.filter(d=>d.startsWith(wp.ost_wp.wp_official_code))){
+        const result =  this.validateWp(partner_code, wp_id, wp.ost_wp.wp_official_code);
+          if (!result.valid) {
+              valid = false;
+              message = result.message;
+              // if one failure is enough, you can break earlier:
+              // break;
+            }
     }
-    this.centerHasError[partner_code] = !valid;
-    return {
-      valid: valid,
-      message: message,
-    };
-  }
+
+    
+    
+     if (is_mark) {
+        if (!valid) this.toastrService.error(message, "Complete failed");
+        this.centerStatusService.validPartner.next(valid);
+      }
+      this.centerHasError[partner_code] = !valid;
+
+
+  return { valid, message };
+}
+
+
   validateWp(partner_code: any, wp_id: any, wp_official_code: string) {
+     this.errors[partner_code][wp_id] = null;
+       
+   // console.log('Validating WP:', partner_code, wp_id, wp_official_code);
     const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting'];
     const isIncluded = validateWp.some(item =>
       wp_id.toLowerCase().includes(item.toLowerCase())
@@ -2911,19 +2925,24 @@ if(!this.timeCalcForIndicator[item_id])
     ];
     const totalRelatedBudget = this.roundNumbers(relatedBudgets);
     const wpTotal = this.getWpTotals(partner_code, wp_official_code);
+ //   if(isIncluded)
+  console.log('totalRelatedBudget',totalRelatedBudget ,'totals', wpTotal,'wp_id',wp_id ,'partner_code',partner_code,'wp_official_code',wp_official_code)
+    if (Math.round(totalRelatedBudget) != Math.round(wpTotal)) {
+     // console.log('budget missmatch' ,wp_official_code)
+        valid = false;
+        message =
+          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
+           this.errors[partner_code][wp_id] = message;
+          // console.log('partner_code',partner_code,'wp_id',wp_id,'message',message)
+    }
   
-    let total: any = Object.values(this.budgetValues[partner_code][wp_id] || {}).reduce(
-      (sum: any, val: any) => sum + val,
-      0
-    );
-  
+   // console.log(' this.errors', this.errors)
     if (!this.partnersData[partner_code][wp_id]) {
       return { valid: valid, message: message };
     }
   
-
-
     this.partnersData[partner_code][wp_id].forEach((item: any) => {
+       
       if (item.category == 'OUTPUT') {
         if(item.quantitative_indicators) {
           item.quantitative_indicators.forEach((indicator: any) => {
@@ -2934,10 +2953,13 @@ if(!this.timeCalcForIndicator[item_id])
                 valid = false;
                 this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = true;
                 message = "There is a budget without assumption"
+                  this.errors[partner_code][wp_id] =message
               } else {
                 this.itemIndicatorHasError[partner_code][wp_id][item.id][indicator.id] = false;
               }
           });
+        }else{
+           this.itemIndicatorHasError[partner_code][wp_id][item.id] = false;
         }
       } else {
         const hasBudgetAssumptions = this.hasBudgetAssumptions(partner_code, item.id, wp_id);
@@ -2947,75 +2969,46 @@ if(!this.timeCalcForIndicator[item_id])
           valid = false;
           this.itemHasError[partner_code][wp_id][item.id] = true;
           message = "There is a budget without assumption"
-        } else {
-          this.itemHasError[partner_code][wp_id][item.id] = false;
+           this.errors[partner_code][wp_id] =message
+        }else{
+        this.itemHasError[partner_code][wp_id][item.id] = false;
+
         }
       }
     });
 
 
     this.partnersData[partner_code][wp_id].forEach((item: any) => {
+        this.geoLocationErrors[partner_code][wp_id][item.id] = null;
+      
       const isChecked = this.perValues[partner_code][wp_id][item.id]?.[this.period[0].id];
       const selectedCountries = item.selectedCountries || [];
-  
+
       if (isChecked && selectedCountries.length === 0) {
-        console.log('Missing geo for:', partner_code, wp_id, item.id);
-  
         valid = false;
-        this.itemHasError[partner_code][wp_id][item.id] = true;
-  
         this.geoLocationErrors[partner_code] = this.geoLocationErrors[partner_code] || {};
         this.geoLocationErrors[partner_code][wp_id] = this.geoLocationErrors[partner_code][wp_id] || {};
         this.geoLocationErrors[partner_code][wp_id][item.id] = true;
-  
-        message += (message ? " | " : "") + "There is a checked item without geographic location";
+        message += (message ? " | " : "") + "There is a contacted partner without a location";
         this.errors[partner_code] = this.errors[partner_code] || {};
         this.errors[partner_code][wp_id] = message;
+      }else if(isChecked && selectedCountries.length > 0 && this.displayBudgetValues[partner_code][wp_id][item.id] == 0  ){
+          valid = false;
+          this.itemHasError[partner_code][wp_id][item.id] = true;
+          message += (message ? " | " : "") + "contracted partner has location but no budget assigned";
+        this.errors[partner_code] = this.errors[partner_code] || {};
+        this.errors[partner_code][wp_id] = "contracted partner has location but no budget assigned";;
+      }else if(isChecked && selectedCountries.length > 0 && this.displayBudgetValues[partner_code][wp_id][item.id] &&!this.hasBudgetAssumptions(partner_code, item.id, wp_id) ){
+          valid = false; 
+        message = "There is a budget without assumption" 
+        this.itemHasError[partner_code][wp_id][item.id] = true;
+            this.errors[partner_code][wp_id] =message
+      }else{
+  this.itemHasError[partner_code][wp_id][item.id] = false;
       }
     });
-  
-    if (isIncluded) {
-      let newMessage = "";
-  
-      this.errors[partner_code] = this.errors[partner_code] || {};
-  if(partner_code == 52)
-   console.log(partner_code,wp_official_code,Math.round(totalRelatedBudget) , Math.round(wpTotal))
-  
-     if (Math.round(totalRelatedBudget) !== Math.round(wpTotal)) {
-       if(partner_code == 52)
-      console.log('Budget mismatch for:', partner_code, wp_official_code, Math.round(totalRelatedBudget), Math.round(wpTotal));
-        valid = false;
-        newMessage =
-          "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
-           this.errors[partner_code][wp_id] = newMessage;
-      }
-  
-      else if (
-        Math.round(total) !== 0 &&
-        Number(this.wp_budgets[partner_code][wp_id]) !== 0
-      ) {
-        if (Math.round(total) !== Number(this.wp_budgets[partner_code][wp_id])) {
-          valid = false;
-          newMessage = "Results budget must be equal total budget";
-           this.errors[partner_code][wp_id] = newMessage;
-        }
-      }
-  
-      else if (
-        this.totals[partner_code][wp_id] > 0 &&
-        !+this.wp_budgets[partner_code][wp_id]
-      ) {
-        valid = false;
-        newMessage = "There is a work package without a total budget assigned";
-        this.errors[partner_code][wp_id] = newMessage;
-        
-      }
-  
-      if (newMessage) {
-        message += (message ? " | " : "") + newMessage;
-        
-      }
-    }
+
+
     return {
       valid: valid,
       message: message,
@@ -3338,10 +3331,7 @@ totalConsolidatedTargetPartner: any;
       if (dialogResult) {
         this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
         this.hasBudgetAssumptions(dialogResult.data.organization_code, dialogResult.data.item_id, dialogResult.data.wp_id);
-        if(parent_id)
-          this.itemIndicatorHasError[partner][wp_id][parent_id][item_id] = false;
-        else
-          this.itemHasError[partner][wp_id][item_id] = false;
+        this.validateCenter(partner )
       }
     });
   }  
@@ -3414,6 +3404,7 @@ totalConsolidatedTargetPartner: any;
     if(this.anaplanTimeCalc[anaplan_id][wp_id])
     clearTimeout(this.anaplanTimeCalc[anaplan_id][wp_id]);
     this.anaplanTimeCalc[anaplan_id][wp_id] = setTimeout(async () => {
+       this.validateCenter(organization.code)
         await this.anaplanService.createOrUpdate({...data,phase_id:this.phase.id}).then(
           () => {
             this.socket.emit("setDataAnaplan", {
@@ -3490,11 +3481,20 @@ totalConsolidatedTargetPartner: any;
     const result_id = item.id;
     const parent_id = item.parent_id
     const data = {partner, wp, initiative_id, result_id};
-    // if(item.selectedCountries.length) {
-    //   this.geoLocationErrors[partner.code][wp.ost_wp.wp_official_code + '-partners'][result_id] = false
-    // } else {
-    //   this.geoLocationErrors[partner.code][wp.ost_wp.wp_official_code + '-partners'][result_id] = true
-    // }
+    if(this.partnersData[partner.code][wp.ost_wp.wp_official_code + '-partners'])
+    this.partnersData[partner.code][wp.ost_wp.wp_official_code + '-partners'].map((d:any)=>{
+    if(item.id == d.id){
+        d.selectedCountries=selectedCountries
+      }
+      return d
+      })
+    // if(this.partnersData[partner.code][wp.ost_wp.wp_official_code])
+    // this.partnersData[partner.code][wp.ost_wp.wp_official_code][item.id]=item
+
+    
+   await this.validateWp(partner.code, wp.ost_wp.wp_official_code + '-partners', wp.ost_wp.wp_official_code);
+
+
     await this.countryService.createOrUpdate(data).then(
       (res) => {
         if(res)

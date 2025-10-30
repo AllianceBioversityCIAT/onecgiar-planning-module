@@ -1845,10 +1845,11 @@
                     </td>
                   </tr>
                 </table>
+                  
               </div>
-              <p class="error">
-                {{ errors[partner.code][wp.ost_wp.wp_official_code] }}
-              </p>
+                  <p *ngIf="haveHLO(partnersData[partner.code][wp.ost_wp.wp_official_code])" class="error">
+                    {{ errors[partner.code][wp.ost_wp.wp_official_code] }}
+                  </p>
 
 
 
@@ -3095,12 +3096,13 @@
                       </td>
                     </tr>
                   </table>
+                
+
                 </div>
-                <p class="error">
+
+<p *ngIf="haveHLO(partnersData[partner.code][wp.ost_wp.wp_official_code])" class="error">
                   {{ errors[partner.code][wp.ost_wp.wp_official_code] }}
                 </p>
-
-
 
                 <!-- <div class="sub-head pooled">
                   <span class="sub-title">Pooled Funded/Outcomes</span>
