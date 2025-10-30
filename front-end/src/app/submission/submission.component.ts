@@ -3405,7 +3405,8 @@ totalConsolidatedTargetPartner: any;
   }
   anaplanTimeCalc : any = {};
   anaplanCalc(organization: any, anaplan_id: number, wp_id: number) {
-    const value = this.anaplanBudgets[organization.code][wp_id][anaplan_id];
+    let value = this.anaplanBudgets[organization.code][wp_id][anaplan_id] || 0;
+    value = value !='' ? value : 0;
     const initiative_id = this.initiative_data.id;
     const data = { organization, anaplan_id, wp_id, value, initiative_id};
   if(!this.anaplanTimeCalc[anaplan_id])
