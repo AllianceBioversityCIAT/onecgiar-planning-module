@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HeaderService } from 'src/app/header.service';
+import { ArchiveService } from 'src/app/services/archive.service';
 import { PhasesService } from 'src/app/services/phases.service';
 import { SubmissionService } from 'src/app/services/submission.service';
 
@@ -18,7 +19,8 @@ export class VersionComponent implements OnInit {
     public router: Router,
     private headerService: HeaderService,
     private titl2: Title,
-    private meta: Meta
+    private meta: Meta,
+    private archiveService: ArchiveService,
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -303,18 +305,12 @@ export class VersionComponent implements OnInit {
     this.totals = {};
     this.errors = {};
 
-    this.wp_budgets = await this.submissionService.getBudgets(this.params.id, this.submission_data.phase.id);
+    this.wp_budgets = this.allResult.data.submissionBudgets;
 
     this.results = this.submission_data.toc_data;
-    // const melia_data = await this.submissionService.getMeliaBySubmission(
-    //   this.params.id
-    // );
-    const cross_data = await this.submissionService.getCrossBySubmission(
-      this.params.id
-    );
-    this.ipsr_value_data = await this.submissionService.getIpsrBySubmission(
-      this.params.id
-    );
+
+    const cross_data = this.allResult.data.crossSubmission;
+    this.ipsr_value_data = this.allResult.data.ipsrSubmission
     cross_data.map((d: any) => {
       d["category"] = "Cross Cutting";
       d["wp_id"] = "CROSS";
@@ -552,20 +548,21 @@ export class VersionComponent implements OnInit {
   initiativeId: any;
   officalCode: any;
   params5: any;
+  allResult: any;
   async ngOnInit() {
     this.params = this.activatedRoute?.snapshot.params;
     this.params5 = this.activatedRoute?.parent?.snapshot.parent?.params;
 
-    this.submission_data = await this.submissionService.getSubmissionsById(
-      +this.params.id
-    );
+    this.allResult = await this.archiveService.getArchivedInitiativesById(this.params.id)
+    console.log(this.allResult)
+
+    this.submission_data = this.allResult.data.submissions;
+
     console.log(this.submission_data)
     this.initiative_data = this.submission_data.initiative;
 
-    this.partners = await this.phasesService.getAssignedOrgs(
-      this.submission_data.phase.id,
-      this.initiative_data.id
-    );
+    this.partners = this.allResult.data.assignedOrganizations;
+    
     if (this.partners.length < 1) {
       this.partners = await this.submissionService.getOrganizations();
     }
