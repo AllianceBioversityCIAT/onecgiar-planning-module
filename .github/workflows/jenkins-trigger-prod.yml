@@ -1,4 +1,4 @@
-name: Trigger Jenkins Jobs Prod
+name: Trigger Jenkins Jobs Prod.
 
 on:
   push:
