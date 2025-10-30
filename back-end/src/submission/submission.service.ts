@@ -2478,7 +2478,7 @@ export class SubmissionService {
   if(organization && !anaplan){
   //  center Consolidated
   const centerConsolidated = this.generateExcelCenterConsolidated(organization.code);
-  XLSX.utils.book_append_sheet(wb, centerConsolidated, 'summary');
+  XLSX.utils.book_append_sheet(wb, centerConsolidated, 'Summary');
 
 
   // cenert Cross-Cutting
@@ -2499,12 +2499,12 @@ export class SubmissionService {
 
   if(data.projects.length) {
     const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
-    XLSX.utils.book_append_sheet(wb, projectSheet, 'project');
+    XLSX.utils.book_append_sheet(wb, projectSheet, 'Project');
   }
   
   if(data.melias.length) {
     const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
-    XLSX.utils.book_append_sheet(wb, meliaSheet, 'melia');
+    XLSX.utils.book_append_sheet(wb, meliaSheet, 'Melia');
   }
 
   const anaplanSheet = this.generateExcelAnaplan(organization);
@@ -2515,7 +2515,7 @@ export class SubmissionService {
   } else  if(!organization && !anaplan){
       //  summary Consolidated
       const summaryConsolidated = this.generateExcelSummaryConsolidated();
-      XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'summary');
+      XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'Summary');
 
       // HLO for summary
       const summaryHighLevelOutput = this.generateExcelSummaryHLO();
@@ -2528,11 +2528,11 @@ export class SubmissionService {
 
       // melia for summary
       const summaryMelia = this.generateExcelSummaryMelia();
-      XLSX.utils.book_append_sheet(wb, summaryMelia, 'melia');
+      XLSX.utils.book_append_sheet(wb, summaryMelia, 'Melia');
 
       // project for summary
       const summaryProject = this.generateExcelSummaryProject();
-      XLSX.utils.book_append_sheet(wb, summaryProject, 'project');
+      XLSX.utils.book_append_sheet(wb, summaryProject, 'Project');
 
       // summary Cross-Cutting
       const summaryCross = this.generateExcelSummaryCrossCutting();
@@ -2541,7 +2541,7 @@ export class SubmissionService {
 
       // synergy programs for summary
       const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
-      XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'synergy programs');
+      XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'Synergy programs');
 
       // Partners for summary
       const partnersSummarySheet = this.generateExcelSummaryPartner();
@@ -2559,7 +2559,7 @@ export class SubmissionService {
   } else if(submissionId) {
         //  summary Consolidated
         const summaryConsolidated = this.generateExcelSummaryConsolidated();
-        XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'summary');
+        XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'Summary');
   
         // HLO for summary
         const summaryHighLevelOutput = this.generateExcelSummaryHLO();
@@ -2572,11 +2572,11 @@ export class SubmissionService {
   
         // melia for summary
         const summaryMelia = this.generateExcelSummaryMelia();
-        XLSX.utils.book_append_sheet(wb, summaryMelia, 'melia');
+        XLSX.utils.book_append_sheet(wb, summaryMelia, 'Melia');
   
         // project for summary
         const summaryProject = this.generateExcelSummaryProject();
-        XLSX.utils.book_append_sheet(wb, summaryProject, 'project');
+        XLSX.utils.book_append_sheet(wb, summaryProject, 'Project');
   
         // summary Cross-Cutting
         const summaryCross = this.generateExcelSummaryCrossCutting();
@@ -2585,7 +2585,7 @@ export class SubmissionService {
   
         // synergy programs for summary
         const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
-        XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'synergy programs');
+        XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'Synergy programs');
   
         // Partners for summary
         const partnersSummarySheet = this.generateExcelSummaryPartner();
@@ -6437,7 +6437,10 @@ generateExcelCenterHLO(partner_code: number) {
     return ws;
   }
 
-
+  stripHtml(text: string): string {
+    if (!text) return '';
+    return text.replace(/<[^>]*>/g, '').trim();
+  }
 
   generateExcelSummaryMelia() {
     const headerStyle = {
@@ -6510,7 +6513,7 @@ generateExcelCenterHLO(partner_code: number) {
         ws_data.push([
           wp.ost_wp.acronym,
           item.title || "N/A",
-          item.supported_outcome || "N/A",
+          this.stripHtml(item.supported_outcome) || "N/A",
           this.getScope(item, "melia") || "N/A",
           this.summaryBudgets[wpCode]?.[item.id] || 0,
         ]);
