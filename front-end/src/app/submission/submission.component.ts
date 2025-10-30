@@ -237,12 +237,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     return (wpTotal / totalBudgets * 100); 
   }
   
-  timeCalc: any;
+  timeCalcChangeCalc: any;
   async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean, item_type: string | null = null, socket: boolean) {
 
     console.log("changeCalc called");
-    if (this.timeCalc) clearTimeout(this.timeCalc);
-    this.timeCalc = setTimeout(async () => {
+    if(!this.timeCalcChangeCalc)
+      this.timeCalcChangeCalc={}
+    if (this.timeCalcChangeCalc[item_id]) clearTimeout(this.timeCalcChangeCalc[item_id]);
+    this.timeCalcChangeCalc[item_id] = setTimeout(async () => {
       let percentValue = 0;
       let budgetValue = 0;
       let isActualValues = this.toggleValues[partner_code][wp_id];
@@ -333,10 +335,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
    
     // localStorage.setItem('initiatives', JSON.stringify(this.values));
   } 
-
+timeCalcForIndicator: any = {};
   async changeCalcForIndicator(partner_code: any, wp_id: any, item_id: any, item_title: string, indicator_id: number, item_type: string, parent_title: string, indicator_type: string) {
-    if (this.timeCalc) clearTimeout(this.timeCalc);
-    this.timeCalc = setTimeout(async () => {
+if(!this.timeCalcForIndicator[item_id])
+  this.timeCalcForIndicator[item_id]={}
+    if (this.timeCalcForIndicator[item_id][indicator_id])
+      clearTimeout(this.timeCalcForIndicator[item_id][indicator_id]);
+
+    this.timeCalcForIndicator[item_id][indicator_id] = setTimeout(async () => {
       let percentValue = 0;
       let budgetValue;
       let subTotalBudgetIndicator = 0;
@@ -394,8 +400,8 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   budgetTime: any;
   async wpBudgetChange(partner_code: any, wp_id: any, budget: any, refresh: boolean) {
     console.log(' sdasdasd =>>>>>>>',budget);
-    if (this.budgetTime) clearTimeout(this.budgetTime);
-    this.budgetTime = setTimeout(async () => {
+    if (this.budgetTime[wp_id]) clearTimeout(this.budgetTime[wp_id]);
+    this.budgetTime[wp_id] = setTimeout(async () => {
       const result = await this.submissionService.saveWpBudget(this.params.id, {
         partner_code,
         wp_id,
@@ -3397,14 +3403,16 @@ totalConsolidatedTargetPartner: any;
      this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
     }
   }
-  
+  anaplanTimeCalc : any = {};
   anaplanCalc(organization: any, anaplan_id: number, wp_id: number) {
     const value = this.anaplanBudgets[organization.code][wp_id][anaplan_id];
     const initiative_id = this.initiative_data.id;
     const data = { organization, anaplan_id, wp_id, value, initiative_id};
-  
-    clearTimeout(this.timeCalc);
-    this.timeCalc = setTimeout(async () => {
+  if(!this.anaplanTimeCalc[anaplan_id])
+    this.anaplanTimeCalc[anaplan_id]={}
+    if(this.anaplanTimeCalc[anaplan_id][wp_id])
+    clearTimeout(this.anaplanTimeCalc[anaplan_id][wp_id]);
+    this.anaplanTimeCalc[anaplan_id][wp_id] = setTimeout(async () => {
         await this.anaplanService.createOrUpdate({...data,phase_id:this.phase.id}).then(
           () => {
             this.socket.emit("setDataAnaplan", {
