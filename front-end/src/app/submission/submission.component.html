@@ -2110,7 +2110,10 @@
                         [initiative_id]="initiative_data.id"
                         [item_id]="item.id"
                         (selectedCountriesChange)="onCountriesChange($event, partner, wp, item)"
-                        [disabled]="(perValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id] | inQue)"
+                        [disabled]="(partnersStatus[partner.code] ||
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved' ||
+                              !partner?.canEdit) || (perValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id] | inQue)"
                       >
                       </app-geographic-location>
                       </td>
@@ -3947,7 +3950,10 @@
                           [initiative_id]="initiative_data.id"
                           [item_id]="item.id"
                           (selectedCountriesChange)="onCountriesChange($event, partner, wp, item)"
-                          [disabled]="(perValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id] | inQue)"
+                          [disabled]="(partnersStatus[partner.code] ||
+                              initStatus == 'Pending' ||
+                              initStatus == 'Approved' ||
+                              !partner?.canEdit) || (perValues[partner.code][wp.ost_wp.wp_official_code + '-partners'][item.id] | inQue)"
                         >
                         </app-geographic-location>
                         </td>

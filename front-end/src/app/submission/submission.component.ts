@@ -237,14 +237,14 @@ export class SubmissionComponent implements OnInit, OnDestroy {
     return (wpTotal / totalBudgets * 100); 
   }
   
-  timeCalcChangeCalc: any;
+  timeCalcChangeCalc: any={};
   async changeCalc(partner_code: any, wp_id: any, item_id: any, item_title: string, type: string, fromCheck: boolean, item_type: string | null = null, socket: boolean) {
 
     console.log("changeCalc called");
-    if(!this.timeCalcChangeCalc)
-      this.timeCalcChangeCalc={}
-    if (this.timeCalcChangeCalc[item_id]) clearTimeout(this.timeCalcChangeCalc[item_id]);
-    this.timeCalcChangeCalc[item_id] = setTimeout(async () => {
+    if(!this.timeCalcChangeCalc[item_id])
+      this.timeCalcChangeCalc[item_id]={}
+    if (this.timeCalcChangeCalc[item_id][wp_id]) clearTimeout(this.timeCalcChangeCalc[item_id][wp_id]);
+    this.timeCalcChangeCalc[item_id][wp_id] = setTimeout(async () => {
       let percentValue = 0;
       let budgetValue = 0;
       let isActualValues = this.toggleValues[partner_code][wp_id];
