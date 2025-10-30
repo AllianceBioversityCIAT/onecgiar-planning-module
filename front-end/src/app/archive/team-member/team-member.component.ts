@@ -44,7 +44,6 @@ export class TeamMemberComponent implements OnInit {
     "User",
     "Role",
     "Creation Date",
-    "Status",
   ];
   async ngOnInit() {
     const params: any = this.activatedRoute?.snapshot.params;

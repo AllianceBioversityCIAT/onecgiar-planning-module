@@ -2,7 +2,7 @@
   <div class="risk-management-container">
     <div class="risk-management-content">
      
-      <app-search-init (filters)="filter($event)"> </app-search-init>
+      <app-search-init (filters)="filter($event)" [homepage]="true"> </app-search-init>
       <span>Selected Phase: {{ activePhase.name}}</span>
       <div class="table-box">
         <div class="table-box mat-elevation-z8">

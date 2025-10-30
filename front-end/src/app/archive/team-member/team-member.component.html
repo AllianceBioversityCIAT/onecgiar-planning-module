@@ -54,14 +54,6 @@
                             {{ element.role }}
                         </td>
                     </ng-container>
-
-                    <ng-container matColumnDef="Status">
-                        <th mat-header-cell *matHeaderCellDef>Status</th>
-                        <td mat-cell *matCellDef="let element">
-                            {{ element.user_id ? "Active" : "Invited" }}
-                        </td>
-                    </ng-container>
-                
                     <tr class="table-header" mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                     <tr class="table-header" mat-row *matRowDef="let row; columns: displayedColumns"></tr>
                 </table>

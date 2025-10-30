@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from "@angular/core";
+import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { FormBuilder, FormGroup } from "@angular/forms";
 import { ROLES } from "../components/new-team-member/new-team-member.component";
 
@@ -10,6 +10,7 @@ import { ROLES } from "../components/new-team-member/new-team-member.component";
 export class SearchInitComponent {
   constructor(private fb: FormBuilder) {}
   filterForm: FormGroup = new FormGroup({});
+  @Input() homepage : boolean;
 
   @Output() filters: EventEmitter<any> = new EventEmitter<any>();
 

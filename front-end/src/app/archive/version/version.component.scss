@@ -110,6 +110,20 @@ mat-form-field {
   color: #5569dd;
 }
 
+.link {
+  display: inline-block;
+  text-decoration: none !important;
+
+  transition: all 0.3s;
+
+  color: #5569dd !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 1.5rem !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: normal !important;
+}
+
 .line {
   height: 11px;
   overflow: hidden;

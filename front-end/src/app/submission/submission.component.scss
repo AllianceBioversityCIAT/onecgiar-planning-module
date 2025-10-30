@@ -21,6 +21,14 @@
   justify-content: space-evenly;
   height: 77px;
 }
+.empty-message {
+    width: 100%;
+    font-size: 16px;
+    justify-content: center;
+    display: flex;
+    margin-top: 28px;
+    color: red;
+}
 .sub-title {
   bottom: -25px;
   position: relative;
