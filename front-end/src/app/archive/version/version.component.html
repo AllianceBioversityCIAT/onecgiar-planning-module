@@ -9,31 +9,19 @@
         <nav class="risk-nav-main">
             <ul class="risk-nav-list">
                 <li>
-                    <a class="risk-nav-link" routerLink="/">Programs</a>
+                    <a class="risk-nav-link" routerLink="/archive">Archive</a>
                 </li>
                 <li>
                     <a routerLink="''" class="risk-nav-link">></a>
                 </li>
                 <li>
-                    <a [routerLink]="[
-                '/',
-                'program',
-                initiativeId,
-                officalCode,
-                'submission'
-              ]" class="risk-nav-link"><span class="line">&nbsp;</span>{{ officalCode }}</a>
+                    <a  class="risk-nav-link link"><span class="line">&nbsp;</span>{{ officalCode }}</a>
                 </li>
                 <li>
-                    <a routerLink="''" class="risk-nav-link">></a>
+                    <a routerLink="''" class="risk-nav-link link">></a>
                 </li>
                 <li>
-                    <a [routerLink]="[
-                '/',
-                'program',
-                initiativeId,
-                officalCode,
-                'submited-versions'
-              ]" class="risk-nav-link">Submitted versions</a>
+                    <a class="risk-nav-link link">Submitted versions</a>
                 </li>
             </ul>
         </nav>
