@@ -25,7 +25,7 @@ import { Phase } from './phase.entity';
     organization: Organization;
 
     @ApiProperty()
-    @Column({ nullable: true })
+    @Column({ nullable: false })
     phase_id: number;
   
     @ApiProperty()

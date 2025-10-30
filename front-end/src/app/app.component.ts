@@ -6,6 +6,7 @@ import {
 } from "./confirm/confirm.component";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
+import { ClarityService } from "./services/clarity.service";
 
 @Component({
   selector: "app-root",
@@ -16,7 +17,8 @@ export class AppComponent implements OnInit {
   constructor(
     private authService: AuthService,
     public dialog: MatDialog,
-    public router: Router
+    public router: Router,
+    private clarity: ClarityService
   ) {
     const faviconTag: any = document.getElementById("faviconTag");
 

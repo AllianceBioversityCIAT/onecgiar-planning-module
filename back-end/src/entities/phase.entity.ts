@@ -11,6 +11,7 @@ import { Submission } from './submission.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { BudgetAssumptions } from './budget-assumptions.entity';
 import { PartnerCountry } from './Partner-country.entity';
+import { AnaplanValues } from './anaplan-values.entity';
 
 export enum phaseStatus {
   OPEN = 'open',
@@ -80,5 +81,8 @@ export class Phase {
   @ApiProperty()
   @Column({ default: false })
   show_eoi: boolean;
+
+  @OneToMany(() => AnaplanValues, (AnaplanValues) => AnaplanValues.phase)
+  anaplan_values: AnaplanValues[];
 
 }

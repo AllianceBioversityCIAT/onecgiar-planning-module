@@ -16,9 +16,15 @@ export class AnaplanService {
     ).catch((e) => false);
   }
 
-  async getAllValues(initiative_id: number) {
+  async getAllValues(initiative_id: number,phase_id: number) {
     return firstValueFrom(
-      this.http.get(environment.api_url+"/anaplan/all-values/" + initiative_id).pipe(map((d: any) => d))
+      this.http.get(`${environment.api_url}/anaplan/all-values/${initiative_id}/${phase_id}`).pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
+  async getAllValuesVersion(initiative_id: number, version_id: number,phase_id: number) {
+    return firstValueFrom(
+      this.http.get(`${environment.api_url}/anaplan/all-values/${initiative_id}/${phase_id}/version/${version_id}`).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
 

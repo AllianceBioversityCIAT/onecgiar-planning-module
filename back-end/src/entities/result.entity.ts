@@ -79,7 +79,7 @@ export class Result {
   @JoinColumn({ name: 'phase_id' })
   phase: Phase;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   phase_id: number;
 }
 
