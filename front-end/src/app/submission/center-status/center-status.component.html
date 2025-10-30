@@ -1,21 +1,5 @@
-<!-- <div class="form-container">
-  <form class="search">
-    <div class="sec-7"></div>
-
-    <div>
-      <p>
-        {{ initiative_data.name }} ‐
-        {{ initiative_data.short_name }}
-      </p>
-    </div>
-  </form>
-</div> -->
 <div>
   <div>
-    <!-- <mat-card-subtitle class="card-title"
-      >{{ organization?.name }} ‐ {{ organization?.acronym }}</mat-card-subtitle
-    > -->
-
     <button
       class="new-btns submit-btn"
       mat-raised-button
@@ -26,10 +10,7 @@
     >
       Mark as {{ status ? "" : "In" }}complete
     </button>
-  </div>
-</div>
-
-<mat-icon
+    <mat-icon
   matTooltipPosition="above"
   *ngIf="status === false"
   class="text-if-complete"
@@ -57,6 +38,10 @@
     </defs>
   </svg>
 </mat-icon>
+  </div>
+</div>
+
+
 
 <!-- <sat-popover #popoverCheckbox hasBackdrop>
   <div class="popover">

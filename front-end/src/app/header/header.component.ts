@@ -10,7 +10,9 @@ import { HeaderService } from "../header.service";
 import { ConfirmComponent } from "../confirm/confirm.component";
 import { AuthService } from "../services/auth.service";
 import { DeleteConfirmDialogComponent } from "../delete-confirm-dialog/delete-confirm-dialog.component";
-
+declare global {
+  interface Window { clarity: any; }
+}
 @Component({
   selector: "app-header",
   templateUrl: "./header.component.html",
@@ -108,6 +110,10 @@ export class HeaderComponent implements OnInit {
   ngOnInit() {
     this.router.events.subscribe((e) => {
       this.user_info = this.authService.getLoggedInUser();
+       if (window.clarity) {
+          window.clarity('set', 'userId', this.user_info.id);
+          window.clarity('set', 'username', this.user_info.full_name);
+        }
       this.isAdmin = this.authService.isAdmin();
     });
     this.loadingService.loadingSub.pipe(delay(0)).subscribe((d) => {

@@ -5,7 +5,7 @@ import { Anaplan } from 'src/entities/anaplan.entity';
 import { History } from 'src/entities/history.entity';
 import { Initiative } from 'src/entities/initiative.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class AnaplanService {
@@ -31,11 +31,29 @@ export class AnaplanService {
   }
   
 
-  findAllValues(id: number) {
+  findAllValues(id: number,phase_id) {
     return this.anaplanValuesRepo.find({
       where: {
         initiative: {
           id: id
+        },
+        phase_id: phase_id,
+        submission: IsNull()
+      },
+      relations: ['workPackage', 'anaplan', 'organization']
+    });
+  }
+
+
+  findAllValuesVersion(id: number, version_id: number,phase_id) {
+    return this.anaplanValuesRepo.find({
+      where: {
+        initiative: {
+          id: id
+        },
+        phase_id: phase_id,
+        submission:  {
+          id: version_id
         }
       },
       relations: ['workPackage', 'anaplan', 'organization']
@@ -67,8 +85,10 @@ export class AnaplanService {
     let record = await this.anaplanValuesRepo.findOne({
       where: {
         initiative_id: data.initiative_id,
-        organization_code: data.organization_code,
+        organization_code: data.organization.code,
+        phase_id: data.phase_id,
         anaplan_id: data.anaplan_id,
+        submission: IsNull(),
         workPackage: workPackageObject,
       },
     });
@@ -94,6 +114,7 @@ export class AnaplanService {
       const newRecord = this.anaplanValuesRepo.create({
         initiative_id: data.initiative_id,
         organization_code: data.organization.code,
+        phase_id: data.phase_id,
         anaplan_id: data.anaplan_id,
         wp_id: workPackageObject.wp_id,
         value: data.value,

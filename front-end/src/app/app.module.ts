@@ -108,6 +108,7 @@ import { QualitativeIndicatorsComponent } from './submission/qualitative-indicat
 import { BudgetAssumptionsComponent } from './submission/budget-assumptions/budget-assumptions.component';
 import { BudgetAssumptionSummaryComponent } from './submission/budget-assumption-summary/budget-assumption-summary.component';
 import { GeographicLocationComponent } from './submission/geographic-location/geographic-location.component';
+import { StickyOnScrollDirective } from "./sticky-on-scroll.directive";
 
 
 @NgModule({
@@ -176,8 +177,9 @@ import { GeographicLocationComponent } from './submission/geographic-location/ge
     BudgetAssumptionsComponent,
     BudgetAssumptionSummaryComponent,
     GeographicLocationComponent,
+    StickyOnScrollDirective
   ],
-  imports: [
+  imports: [ 
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,

@@ -58,8 +58,8 @@ const routes: Routes = [
     canActivate: [UserGuard],
     children: [
       { path: "", component: TableComponent },
-      { path: ":id/submitted-versions", component: SubmittedVersionComponent },
-      { path: ":id/submitted-versions/:id", component: VersionComponent },
+      { path: ":id/submitted-versions", component: VersionComponent },
+      // { path: ":id/submitted-versions/:id", component: VersionComponent },
       { path: ":id/team-member", component: TeamMemberComponent },
     ]
   },

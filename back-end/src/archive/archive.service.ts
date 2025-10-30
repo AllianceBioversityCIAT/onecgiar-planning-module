@@ -87,8 +87,10 @@ export class ArchiveService {
         .skip(skip)
         .getManyAndCount();
 
+        const cleanedResult = finalResult.map(({ data, ...rest }) => rest);
+
       return {
-        result: finalResult,
+        result: cleanedResult,
         count: total,
       };
     } catch (error) {

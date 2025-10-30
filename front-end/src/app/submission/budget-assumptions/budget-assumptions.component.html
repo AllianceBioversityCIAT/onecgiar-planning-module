@@ -1,5 +1,11 @@
+
+<div class="head">
+  <span class="title"> Budget Assumptions </span>
+  <button mat-icon-button (click)="onClose()" class="close-btn">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 <div class="indicators-container">
-  <h2>Budget Assumptions</h2>
   <div class="content">
     <form [formGroup]="Form" (ngSubmit)="onSubmit()">
       <mat-form-field
@@ -28,7 +34,8 @@
     </form>
 
     <div class="footer">
-      <button class="save-btn" (click)="onSubmit()">Save</button>
+      <button [hidden]="disabled"  class="save-btn" (click)="onSubmit()">Save</button>
+    
     </div>
   </div>
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ChangeDetectorRef } from "@angular/core";
 import { SubmissionService } from "../../services/submission.service";
 import { AppSocket } from "../../socket.service";
 import { MatDialog } from "@angular/material/dialog";
@@ -9,11 +9,16 @@ import { PhasesService } from "src/app/services/phases.service";
 import { HeaderService } from "src/app/header.service";
 import { Meta, Title } from "@angular/platform-browser";
 import { QualitativeIndicatorsComponent } from "src/app/submission/qualitative-indicators/qualitative-indicators.component";
+import { DecimalPipe, Location } from "@angular/common";
+import { ClarisaCountryService } from "src/app/services/clarisa-country.service";
+import { BudgetAssumptionsService } from "src/app/services/budget-assumptions.service";
+import { AnaplanService } from "src/app/services/anaplan.service";
 
 @Component({
   selector: "app-submited-version",
   templateUrl: "./submited-version.component.html",
   styleUrls: ["./submited-version.component.scss"],
+  providers: [DecimalPipe] 
 })
 export class SubmitedVersionComponent implements OnInit {
   title = "planning";
@@ -29,7 +34,13 @@ export class SubmitedVersionComponent implements OnInit {
     private toastrService: ToastrService,
     private headerService: HeaderService,
     private titl2: Title,
-    private meta: Meta
+    private meta: Meta,
+    private location: Location,
+    private cdr: ChangeDetectorRef,
+    private decimalPipe: DecimalPipe,
+    private anaplanService: AnaplanService,
+    private countryService: ClarisaCountryService,
+    private budgetAssumptionsService: BudgetAssumptionsService,
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -46,6 +57,8 @@ export class SubmitedVersionComponent implements OnInit {
     this.headerService.logoutSvg="brightness(0) saturate(100%) invert(43%) sepia(18%) saturate(3699%) hue-rotate(206deg) brightness(89%) contrast(93%)";
   }
   user: any;
+  clarisaCountries: any[] = [];
+
   data: any = [];
   wps: any = [];
   partners: any = [];
@@ -57,12 +70,27 @@ export class SubmitedVersionComponent implements OnInit {
   totals: any = {};
   displayValues: any = {};
   summaryBudgets: any = {};
+  summaryBudgetsIndicator: any = {};
+  totalTargetsIndicator: any = {};
+  totalTargetsIndicatorPartners: any = {};
+
   summaryBudgetsTotal: any = {};
   summaryBudgetsAllTotal: any = 0;
   summaryBudgetsProjectsTotal: any = 0;
+  summaryBudgetsPartnerTotal: any = 0;
+  summaryBudgetsMeliaTotal: any = 0;
   wp_budgets: any = {};
+  anaplanBudgets: any = {};
   budgetValues: any = {};
   displayBudgetValues: any = {};
+  displayBudgetValuesItemIndicator: any = {};
+
+  displayBudgetValuesIndicator: any = {};
+  budgetValuesIndicatorPartner: any = {};
+  totalBudgetValuesIndicatorPartner: any = {};
+  budgetValuesIndicatorSummary: any = {};
+  totalBudgetValuesIndicatorSummary: any = {};
+
   toggleValues: any = {};
   toggleSummaryValues: any = {};
   errors: any = {};
@@ -92,6 +120,31 @@ export class SubmitedVersionComponent implements OnInit {
       this.errors[code][id] = null;
       return true;
     }
+  }
+  checkForOutput(values: any, code: string, id: number, item: any) {
+    if (!values[code]) {
+      values[code] = {};
+      this.totals[code] = {};
+      this.errors[code] = {};
+    }
+  
+    if (!values[code][id]) {
+      values[code][id] = {};
+      this.totals[code][id] = 0;
+      this.errors[code][id] = null;
+    }
+  
+    if (!values[code][id][item.id]) {
+      values[code][id][item.id] = {};
+    }
+  
+    for (let indicator of item.quantitative_indicators) {
+      if (!values[code][id][item.id][indicator.id]) {
+
+        values[code][id][item.id][indicator.id] = 0;
+      }
+    }
+    return true;
   }
   calclate(code: any, id: any) {
     if (this.totals[code] && this.totals[code][id])
@@ -148,41 +201,169 @@ export class SubmitedVersionComponent implements OnInit {
 
     this.allvalueChange();
   }
-  // async changeEnable(
-  //   partner_code: any,
-  //   wp_id: any,
-  //   item_id: any,
-  //   per_id: number,
-  //   event: any
-  // ) {
-  //   this.changes(partner_code, wp_id, item_id, per_id, event.checked);
-  //   const result = await this.submissionService.saveResultValues(
-  //     this.params.id,
-  //     {
-  //       partner_code,
-  //       wp_id,
-  //       item_id,
-  //       per_id,
-  //       value: event.checked,
-  //     }
-  //   );
-  //   if (result)
-  //     this.socket.emit("setDataValues", {
-  //       id: this.params.id,
-  //       partner_code,
-  //       wp_id,
-  //       item_id,
-  //       per_id,
-  //       value: event.checked,
-  //     });
-  // }
+  organizationSelected: any = "";
+  selectedTabIndex: number = 0;
+  selectedTabIndexAOW: number = 0;
+  tabChanged(organization: any) {
+    this.partners.map((d: any) => {
+      if (d.name == organization?.tab?.textLabel) this.organizationSelected = d;
+    });
+    this.updatePath(organization);
+  }
+  updatePath(tab: any) {
+    this.location.replaceState(
+    this.router.url.split('?')[0], 
+    `tab=${tab.index}&AOW=${this.selectedTabIndexAOW}`    
+  );
+  this.selectedTabIndex = tab.index;
+  }
+
+  isUpdatingTab = false;
+
+  tabChangedAOW(event: any) {
+    if (this.isUpdatingTab) return;
+  
+    const newIndex = event.index;
+  
+    this.isUpdatingTab = true;
+  
+    this.updateURL(newIndex);
+  
+    setTimeout(() => {
+      this.selectedTabIndexAOW = newIndex;
+      this.isUpdatingTab = false;
+    });
+  }
+  
+  updateURL(newIndex: number) {
+    this.location.replaceState(
+      this.router.url.split('?')[0],
+      `tab=${this.selectedTabIndex}&AOW=${newIndex}`
+    );
+  }
   wpsTotalSum = 0;
+  // sammaryCalc() {
+  //   let totalsum: any = {};
+  //   let totalsumcenter: any = {};
+  //   let totalWp: any = {};
+  //   this.summaryBudgets = {};
+  //   this.summaryBudgetsTotal = {};
+
+  //   Object.keys(this.budgetValues).forEach((partner_code) => {
+  //     Object.keys(this.budgetValues[partner_code]).forEach((wp_id) => {
+  //       if (!this.summaryBudgets[wp_id]) this.summaryBudgets[wp_id] = {};
+  //       if (!this.summaryBudgetsTotal[wp_id])
+  //         this.summaryBudgetsTotal[wp_id] = 0;
+  //       Object.keys(this.budgetValues[partner_code][wp_id]).forEach(
+  //         (item_id) => {
+  //           if (!this.summaryBudgets[wp_id][item_id])
+  //             this.summaryBudgets[wp_id][item_id] = 0;
+  //           this.summaryBudgets[wp_id][item_id] +=
+  //             +this.budgetValues[partner_code][wp_id][item_id];
+  //           this.summaryBudgetsTotal[wp_id] +=
+  //             +this.budgetValues[partner_code][wp_id][item_id];
+  //         }
+  //       );
+  //     });
+  //   });
+
+  //   if(!this.initiative_data.synchronized)
+  //     this.summaryBudgetsAllTotal = Object.values(
+  //       this.summaryBudgetsTotal
+  //     ).reduce((a: any, b: any) => a + b);
+  //   else
+  //     this.summaryBudgetsProjectsTotal = Object.entries(this.summaryBudgetsTotal)
+  //     .filter(([key, _]) => key.includes('-project'))
+  //     .reduce((sum, [_, value]: any) => sum + value, 0);
+
+  //     this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
+  //     .filter(([key, _]) => !key.includes('-project'))
+  //     .reduce((sum, [_, value]: any) => sum + value, 0);
+
+  //   Object.keys(this.summaryBudgets).forEach((wp_id) => {
+  //     if (this.summaryBudgetsTotal[wp_id]) {
+  //       Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
+  //         this.sammary[wp_id][item_id] = this.percentValue(
+  //           this.summaryBudgets[wp_id][item_id],
+  //           this.summaryBudgetsTotal[wp_id]
+  //         );
+  //       });
+  //     }
+  //   });
+
+  //   Object.keys(this.values).forEach((code) => {
+  //     Object.keys(this.values[code]).forEach((wp_id) => {
+  //       let total = 0;
+  //       Object.keys(this.values[code][wp_id]).forEach((d) => {
+  //         total += +this.values[code][wp_id][d];
+  //       });
+  //       if (total > 100) {
+  //         this.errors[code][wp_id] =
+  //           "total percentage cannot be over 100 percent";
+  //       } else {
+  //         this.errors[code][wp_id] = null;
+  //       }
+  //       this.totals[code][wp_id] = total;
+
+  //       Object.keys(this.values[code][wp_id]).forEach((item_id) => {
+  //         if (!totalsum[wp_id]) totalsum[wp_id] = {};
+  //         if (!totalsum[wp_id][item_id]) totalsum[wp_id][item_id] = 0;
+  //         totalsum[wp_id][item_id] += +this.values[code][wp_id][item_id];
+  //       });
+  //       // Sum(percentage from each output from each center for each WP) / Sum(total percentage for each WP for each center)
+  //     });
+  //   });
+
+  //   Object.keys(this.totals).forEach((code) => {
+  //     Object.keys(this.totals[code]).forEach((wp_id) => {
+  //       if (!totalsumcenter[wp_id]) totalsumcenter[wp_id] = 0;
+  //       totalsumcenter[wp_id] += +this.totals[code][wp_id];
+  //       // Sum(percentage from each output from each center for each WP) / Sum(total percentage for each WP for each center)
+  //     });
+  //   });
+
+  //   Object.keys(totalsum).forEach((wp_id) => {
+  //     Object.keys(totalsum[wp_id]).forEach((item_id) => {
+  //       if (!totalWp[wp_id]) totalWp[wp_id] = {};
+  //       if (+totalsum[wp_id][item_id] && +totalsumcenter[wp_id])
+  //         totalWp[wp_id][item_id] =
+  //           +(+totalsum[wp_id][item_id] / +totalsumcenter[wp_id]) * 100;
+  //       else totalWp[wp_id][item_id] = 0;
+  //     });
+  //   });
+
+  //   this.sammaryTotal["CROSS"] = 0;
+  //   this.sammaryTotal["IPSR"] = 0;
+  //   this.sammaryTotalConsolidated["CROSS"] = 0;
+  //   this.sammaryTotalConsolidated["IPSR"] = 0;
+  //   Object.keys(this.sammary).forEach((wp_id) => {
+  //     this.sammaryTotal[wp_id] = 0;
+  //     this.sammaryTotalConsolidated[wp_id] = 0;
+  //     Object.keys(this.sammary[wp_id]).forEach((item_id) => {
+  //       this.sammaryTotal[wp_id] += totalWp[wp_id][item_id];
+  //       this.sammaryTotalConsolidated[wp_id] = this.summaryBudgetsAllTotal ? this.summaryBudgetsTotal[wp_id] / this.summaryBudgetsAllTotal * 100 : 0;
+  //     });
+  //   });
+  //   this.wpsTotalSum = 0;
+  //   Object.keys(this.sammaryTotal).forEach((wp_id) => {
+  //     this.wpsTotalSum += this.sammaryTotalConsolidated[wp_id];
+  //   });
+  //   // this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
+  // }
   sammaryCalc() {
     let totalsum: any = {};
     let totalsumcenter: any = {};
     let totalWp: any = {};
+    Object.keys(this.summaryBudgets).forEach((wp_id) => {
+      Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
+        if (this.summaryBudgetsTotal[wp_id]) {
+          this.sammary[wp_id][item_id] = 0
+        }
+      });
+    });
     this.summaryBudgets = {};
     this.summaryBudgetsTotal = {};
+    this.summaryBudgetsIndicator = {};
 
     Object.keys(this.budgetValues).forEach((partner_code) => {
       Object.keys(this.budgetValues[partner_code]).forEach((wp_id) => {
@@ -202,28 +383,62 @@ export class SubmitedVersionComponent implements OnInit {
       });
     });
 
-    if(!this.initiative_data.synchronized)
-      this.summaryBudgetsAllTotal = Object.values(
-        this.summaryBudgetsTotal
-      ).reduce((a: any, b: any) => a + b);
-    else
-      this.summaryBudgetsProjectsTotal = Object.entries(this.summaryBudgetsTotal)
-      .filter(([key, _]) => key.includes('-project'))
-      .reduce((sum, [_, value]: any) => sum + value, 0);
+    Object.keys(this.displayBudgetValuesIndicator).forEach((partner_code) => {
+      Object.keys(this.displayBudgetValuesIndicator[partner_code]).forEach((wp_id) => {
+        if (!this.summaryBudgetsIndicator[wp_id]) {
+          this.summaryBudgetsIndicator[wp_id] = {};
+        }
+    
+        Object.keys(this.displayBudgetValuesIndicator[partner_code][wp_id]).forEach((item_id) => {
+          if (!this.summaryBudgetsIndicator[wp_id][item_id]) {
+            this.summaryBudgetsIndicator[wp_id][item_id] = {};
+          }
+    
+          Object.keys(this.displayBudgetValuesIndicator[partner_code][wp_id][item_id]).forEach((indicator_id) => {
+            if (this.summaryBudgetsIndicator[wp_id][item_id][indicator_id] == null) {
+              this.summaryBudgetsIndicator[wp_id][item_id][indicator_id] = 0;
+            }
+    
+            const raw = this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id];
+            const value = Number(raw) || 0;
+    
+            this.summaryBudgetsIndicator[wp_id][item_id][indicator_id] += value;
+          });
+        });
+      });
+    });
 
-      this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
-      .filter(([key, _]) => !key.includes('-project'))
-      .reduce((sum, [_, value]: any) => sum + value, 0);
+
+
+    this.summaryBudgetsProjectsTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => key.includes('-project'))
+    .reduce((sum, [_, value]: any) => sum + value, 0);
+
+    this.summaryBudgetsPartnerTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => key.includes('-partners'))
+    .reduce((sum, [_, value]: any) => sum + value, 0);
+
+    this.summaryBudgetsMeliaTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key, _]) => key.includes('-melia'))
+    .reduce((sum, [_, value]: any) => sum + value, 0);
+
+    this.summaryBudgetsAllTotal = Object.entries(this.summaryBudgetsTotal)
+    .filter(([key]) => 
+      !key.includes('-project')
+    )
+    .reduce((sum, [, value]: any) => sum + value, 0);
+  
+    // console.log(this.summaryBudgetsTotal)
 
     Object.keys(this.summaryBudgets).forEach((wp_id) => {
-      if (this.summaryBudgetsTotal[wp_id]) {
-        Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
+      Object.keys(this.summaryBudgets[wp_id]).forEach((item_id) => {
+        if (this.summaryBudgetsTotal[wp_id]) {
           this.sammary[wp_id][item_id] = this.percentValue(
             this.summaryBudgets[wp_id][item_id],
             this.summaryBudgetsTotal[wp_id]
           );
-        });
-      }
+        }
+      });
     });
 
     Object.keys(this.values).forEach((code) => {
@@ -232,12 +447,6 @@ export class SubmitedVersionComponent implements OnInit {
         Object.keys(this.values[code][wp_id]).forEach((d) => {
           total += +this.values[code][wp_id][d];
         });
-        if (total > 100) {
-          this.errors[code][wp_id] =
-            "total percentage cannot be over 100 percent";
-        } else {
-          this.errors[code][wp_id] = null;
-        }
         this.totals[code][wp_id] = total;
 
         Object.keys(this.values[code][wp_id]).forEach((item_id) => {
@@ -275,15 +484,19 @@ export class SubmitedVersionComponent implements OnInit {
       this.sammaryTotal[wp_id] = 0;
       this.sammaryTotalConsolidated[wp_id] = 0;
       Object.keys(this.sammary[wp_id]).forEach((item_id) => {
-        this.sammaryTotal[wp_id] += totalWp[wp_id][item_id];
-        this.sammaryTotalConsolidated[wp_id] = this.summaryBudgetsAllTotal ? this.summaryBudgetsTotal[wp_id] / this.summaryBudgetsAllTotal * 100 : 0;
+        if (totalWp[wp_id])
+          if (totalWp[wp_id][item_id])
+            this.sammaryTotal[wp_id] += totalWp[wp_id][item_id];
+          this.sammaryTotalConsolidated[wp_id] = this.summaryBudgetsAllTotal
+            ? (this.summaryBudgetsTotal[wp_id] / this.summaryBudgetsAllTotal) *
+            100
+            : 0;
       });
     });
     this.wpsTotalSum = 0;
     Object.keys(this.sammaryTotal).forEach((wp_id) => {
       this.wpsTotalSum += this.sammaryTotalConsolidated[wp_id];
     });
-    // this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
   }
   allvalueChange() {
     for (let wp of this.wps) {
@@ -357,6 +570,13 @@ export class SubmitedVersionComponent implements OnInit {
   initiative_data: any = {};
   ipsr_value_data: any;
   actualWps:any;
+  toggleIndicatorValues: any;
+  savedValuesForIndicator: any = null;
+
+  partnersMelia:any;
+  partnersProject:any;
+  partnerProjects:any = {}
+  partnersProjectMelia:any;
   async InitData() {
     this.loading = true;
     this.wpsTotalSum = 0;
@@ -372,11 +592,19 @@ export class SubmitedVersionComponent implements OnInit {
     this.partnersData = {};
     this.sammary = {};
     this.summaryBudgets = {};
+    this.summaryBudgetsIndicator = {};
+    this.totalTargetsIndicator = {};
+    this.totalTargetsIndicatorPartners = {};
     this.summaryBudgetsTotal = {};
     this.wp_budgets = {};
     this.toggleValues = {};
     this.budgetValues = {};
     this.displayBudgetValues = {};
+    this.displayBudgetValuesItemIndicator = {};
+
+    this.displayBudgetValuesIndicator = {};
+    this.budgetValuesIndicatorPartner = {};
+    this.budgetValuesIndicatorSummary = {};
     this.allData = {};
     this.values = {};
     this.displayValues = {};
@@ -386,6 +614,7 @@ export class SubmitedVersionComponent implements OnInit {
     this.wp_budgets = await this.submissionService.getBudgets(this.params.id, this.submission_data.phase.id);
 
     this.results = this.submission_data.toc_data;
+    console.log(this.submission_data)
     // const melia_data = await this.submissionService.getMeliaBySubmission(
     //   this.params.id
     // );
@@ -395,6 +624,31 @@ export class SubmitedVersionComponent implements OnInit {
     this.ipsr_value_data = await this.submissionService.getIpsrBySubmission(
       this.params.id
     );
+    this.partnersMelia = this.sortByNameOrTitle(this.submission_data.toc_data[this.submission_data.toc_data.length - 1].melias);
+    this.partnersProject = this.sortByNameOrTitle(this.submission_data.toc_data[this.submission_data.toc_data.length - 1].projects);
+
+
+    for(let partner of this.partners){
+      if(this.toggleIndicatorValues)
+      this.partnerProjects[partner.code] = this.partnersProject.filter((project: any) => project.center.code === partner.code);
+    else
+      this.partnerProjects[partner.code] = this.partnersProject
+    }
+
+
+
+    this.partnersMelia.forEach((melia: any) => {
+      if (melia.results && Array.isArray(melia.results)) {
+        melia.results.forEach((result: any) => {
+          const wp = result?.group?.ost_wp;
+          if (wp?.acronym === 'AOW00') {
+            wp.wp_official_code = 'CROSS';
+          }
+        });
+      }
+    });
+
+
     cross_data.map((d: any) => {
       d["category"] = "Cross Cutting";
       d["wp_id"] = "CROSS";
@@ -515,36 +769,225 @@ export class SubmitedVersionComponent implements OnInit {
           });
         }
       }
-  
-      this.wps = [...this.wps, ... melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partners];
 
+      let synergyPrograms = [];
+      if(this.initiative_data.synchronized){
+        
+        for (let wp of this.wps) {
+          synergyPrograms.push({
+            id: wp.id,
+            title: wp.ost_wp.wp_official_code + "-synergy-programs",
+            category: "synergy-programs",
+            ost_wp: { wp_official_code: wp.ost_wp.wp_official_code + "-synergy-programs" },
+          });
+        }
+      }
+  
+      this.wps = [...this.wps, ...melias, ...crossCutting, ...w3Projects ,...geographicScope, ...partners, ...synergyPrograms];
+
+      this.anaplanLabels = await this.anaplanService.getAll();
+
+
+    // for (let partner of this.partners) {
+    //   if (!this.budgetValues[partner.code])
+    //     this.budgetValues[partner.code] = {};
+
+    //   if (!this.displayBudgetValues[partner.code])
+    //     this.displayBudgetValues[partner.code] = {};
+
+    //   for (let wp of this.wps) {
+    //     if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
+    //     if (!this.wp_budgets[partner.code][wp.ost_wp.wp_official_code])
+    //       this.wp_budgets[partner.code][wp.ost_wp.wp_official_code] = null;
+
+    //     if (!this.toggleValues[partner.code])
+    //       this.toggleValues[partner.code] = {};
+    //     if (!this.toggleValues[partner.code][wp.ost_wp.wp_official_code])
+    //       this.toggleValues[partner.code][wp.ost_wp.wp_official_code] = false;
+
+    //     if (!this.budgetValues[partner.code][wp.ost_wp.wp_official_code])
+    //       this.budgetValues[partner.code][wp.ost_wp.wp_official_code] = {};
+    //     // console.log(this.budgetValues[partner.code][wp.ost_wp.wp_official_code])
+    //     if (!this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code])
+    //       this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code] =
+    //         {};
+
+    //     if (!this.summaryBudgets[wp.ost_wp.wp_official_code])
+    //       this.summaryBudgets[wp.ost_wp.wp_official_code] = {};
+
+    //     if (!this.summaryBudgetsTotal[wp.ost_wp.wp_official_code])
+    //       this.summaryBudgetsTotal[wp.ost_wp.wp_official_code] = 0;
+
+    //     const result = await this.getDataForWp(
+    //       wp.id,
+    //       partner.code,
+    //       wp.ost_wp.wp_official_code,
+    //       wp.ost_wp.acronym,
+    //       wp.category
+    //     );
+    //     // console.log(result)
+    //     if (result.length) {
+    //       if (!this.partnersData[partner.code])
+    //         this.partnersData[partner.code] = {};
+    //       this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
+    //     }
+    //     if (!this.perValuesSammary[wp.ost_wp.wp_official_code])
+    //       this.perValuesSammary[wp.ost_wp.wp_official_code] = {};
+    //     this.period.forEach((element) => {
+    //       if (!this.perValuesSammary[wp.ost_wp.wp_official_code][element.id])
+    //         this.perValuesSammary[wp.ost_wp.wp_official_code][element.id] =
+    //           false;
+    //     });
+
+    //     if (!this.perValuesSammaryForPartner[partner.code])
+    //       this.perValuesSammaryForPartner[partner.code] = {};
+    //     if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code])
+    //       this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code] = {};
+    //     this.period.forEach((element) => {
+    //       if (!this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id])
+    //         this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id] =
+    //           false;
+    //     });
+    //     result.forEach((item: any) => {
+    //       this.check(
+    //         this.values,
+    //         partner.code,
+    //         wp.ost_wp.wp_official_code,
+    //         item.id
+    //       );
+    //       this.check(
+    //         this.displayValues,
+    //         partner.code,
+    //         wp.ost_wp.wp_official_code,
+    //         item.id
+    //       );
+    //       this.budgetValues[partner.code][wp.ost_wp.wp_official_code][item.id] =
+    //         null;
+
+    //       this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code][
+    //         item.id
+    //       ] = null;
+
+    //       if (!this.summaryBudgets[wp.ost_wp.wp_official_code][item.id])
+    //         this.summaryBudgets[wp.ost_wp.wp_official_code][item.id] = 0;
+
+    //       if (!this.perValues[partner.code]) this.perValues[partner.code] = {};
+    //       if (!this.perValues[partner.code][wp.ost_wp.wp_official_code])
+    //         this.perValues[partner.code][wp.ost_wp.wp_official_code] = {};
+    //       if (
+    //         !this.perValues[partner.code][wp.ost_wp.wp_official_code][item.id]
+    //       )
+    //         this.perValues[partner.code][wp.ost_wp.wp_official_code][item.id] =
+    //           {};
+
+    //       this.period.forEach((element) => {
+    //         this.perValues[partner.code][wp.ost_wp.wp_official_code][item.id][
+    //           element.id
+    //         ] = false;
+    //       });
+
+    //       this.period.forEach((element) => {
+    //         if (!this.perAllValues[wp.ost_wp.wp_official_code])
+    //           this.perAllValues[wp.ost_wp.wp_official_code] = {};
+    //         if (!this.perAllValues[wp.ost_wp.wp_official_code][item.id])
+    //           this.perAllValues[wp.ost_wp.wp_official_code][item.id] = {};
+
+    //         this.perAllValues[wp.ost_wp.wp_official_code][item.id][element.id] =
+    //           false;
+
+    //         if (!this.sammary[wp.ost_wp.wp_official_code])
+    //           this.sammary[wp.ost_wp.wp_official_code] = {};
+    //         if (!this.sammary[wp.ost_wp.wp_official_code][item.id])
+    //           this.sammary[wp.ost_wp.wp_official_code][item.id] = 0;
+
+    //         if (!this.sammaryTotal[wp.ost_wp.wp_official_code])
+    //           this.sammaryTotal[wp.ost_wp.wp_official_code] = 0;
+
+    //         if (!this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code])
+    //           this.sammaryTotalConsolidated[wp.ost_wp.wp_official_code] = 0;
+    //       });
+    //     });
+    //   }
+    //   if(!this.initiative_data.synchronized){
+    //     if (this.partnersData[partner.code]?.IPSR)
+    //       this.partnersData[partner.code].IPSR = this.partnersData[
+    //         partner.code
+    //       ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+    //   }
+    //     if(!this.initiative_data.synchronized){
+    //       let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+    //       this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+    //       newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
+    //     }
+    //   this.wps.forEach((d: any) => {
+    //     if (d.category == "WP") {
+    //       let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+    //         .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+    //       let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+    //         .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+    //       this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+    //     }
+    //   })
+
+    //   this.loading = false;
+    // }
     for (let partner of this.partners) {
+      if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
       if (!this.budgetValues[partner.code])
         this.budgetValues[partner.code] = {};
-
+      if (!this.anaplanBudgets[partner.code]) {
+        this.anaplanBudgets[partner.code] = {};
+      }
       if (!this.displayBudgetValues[partner.code])
         this.displayBudgetValues[partner.code] = {};
+      if (!this.displayBudgetValuesItemIndicator[partner.code])
+        this.displayBudgetValuesItemIndicator[partner.code] = {};
+      if (!this.displayBudgetValuesIndicator[partner.code])
+        this.displayBudgetValuesIndicator[partner.code] = {};
+      if (!this.budgetValuesIndicatorPartner[partner.code])
+        this.budgetValuesIndicatorPartner[partner.code] = {};
+      if (!this.toggleValues[partner.code])
+        this.toggleValues[partner.code] = {};
+      for(let wp of this.actualWps) {
+        if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code]) {
+          this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code] = {};
+        }
+
+        this.anaplanLabels.forEach((element) => {
+          if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id])
+            this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code][element.id] =
+              0;
+        });
+      }
 
       for (let wp of this.wps) {
-        if (!this.wp_budgets[partner.code]) this.wp_budgets[partner.code] = {};
         if (!this.wp_budgets[partner.code][wp.ost_wp.wp_official_code])
           this.wp_budgets[partner.code][wp.ost_wp.wp_official_code] = null;
-
-        if (!this.toggleValues[partner.code])
-          this.toggleValues[partner.code] = {};
         if (!this.toggleValues[partner.code][wp.ost_wp.wp_official_code])
           this.toggleValues[partner.code][wp.ost_wp.wp_official_code] = false;
-
         if (!this.budgetValues[partner.code][wp.ost_wp.wp_official_code])
           this.budgetValues[partner.code][wp.ost_wp.wp_official_code] = {};
-        // console.log(this.budgetValues[partner.code][wp.ost_wp.wp_official_code])
         if (!this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code])
           this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code] =
             {};
-
+        if (!this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code])
+          this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code] =
+            {};
+        if (!this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code])
+          this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code] =
+            {};
+        if (!this.budgetValuesIndicatorPartner[partner.code][wp.ost_wp.wp_official_code])
+          this.budgetValuesIndicatorPartner[partner.code][wp.ost_wp.wp_official_code] = {};
+        for(let type of this.highLevelOutputIndicatorTypes) {
+          if (!this.budgetValuesIndicatorPartner[partner.code][wp.ost_wp.wp_official_code][type])
+            this.budgetValuesIndicatorPartner[partner.code][wp.ost_wp.wp_official_code] = 0;
+        }
         if (!this.summaryBudgets[wp.ost_wp.wp_official_code])
           this.summaryBudgets[wp.ost_wp.wp_official_code] = {};
-
+        if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code])
+          this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code] = {};
         if (!this.summaryBudgetsTotal[wp.ost_wp.wp_official_code])
           this.summaryBudgetsTotal[wp.ost_wp.wp_official_code] = 0;
 
@@ -555,12 +998,19 @@ export class SubmitedVersionComponent implements OnInit {
           wp.ost_wp.acronym,
           wp.category
         );
-        // console.log(result)
+     
+        
         if (result.length) {
           if (!this.partnersData[partner.code])
             this.partnersData[partner.code] = {};
+
+         const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
+          if(filterd_results.length > 0 && this.toggleIndicatorValues)
+          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d.pooled_centers.map((d:any)=>d.code).includes(partner.code))];
+         else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
         }
+
         if (!this.perValuesSammary[wp.ost_wp.wp_official_code])
           this.perValuesSammary[wp.ost_wp.wp_official_code] = {};
         this.period.forEach((element) => {
@@ -578,29 +1028,80 @@ export class SubmitedVersionComponent implements OnInit {
             this.perValuesSammaryForPartner[partner.code][wp.ost_wp.wp_official_code][element.id] =
               false;
         });
+
+   
         result.forEach((item: any) => {
-          this.check(
-            this.values,
-            partner.code,
-            wp.ost_wp.wp_official_code,
-            item.id
-          );
-          this.check(
-            this.displayValues,
-            partner.code,
-            wp.ost_wp.wp_official_code,
-            item.id
-          );
+          if (item.category !== "OUTCOME" && item.category !== "OUTPUT") {
+            this.check(
+              this.values,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item.id
+            );
+            this.check(
+              this.displayValues,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item.id
+            );
+          } else if(item.category === "OUTCOME" && !item.group) {
+            this.check(
+              this.values,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item.id
+            );
+            this.check(
+              this.displayValues,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item.id
+            );
+          }
+          else if(item.category === "OUTPUT") {
+            this.checkForOutput(
+              this.values,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item
+            );
+            this.checkForOutput(
+              this.displayValues,
+              partner.code,
+              wp.ost_wp.wp_official_code,
+              item
+            );
+          }
           this.budgetValues[partner.code][wp.ost_wp.wp_official_code][item.id] =
             null;
-
           this.displayBudgetValues[partner.code][wp.ost_wp.wp_official_code][
             item.id
           ] = null;
+          this.displayBudgetValuesItemIndicator[partner.code][wp.ost_wp.wp_official_code][
+            item.id
+          ] = null;
+          if(item.category == 'OUTPUT'){
+            this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][
+              item.id
+            ] = {};
+            for(let indicator of item.quantitative_indicators) {
+              this.displayBudgetValuesIndicator[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] = null;
+            }
+          }
+
+         
 
           if (!this.summaryBudgets[wp.ost_wp.wp_official_code][item.id])
             this.summaryBudgets[wp.ost_wp.wp_official_code][item.id] = 0;
-
+          if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id])
+            this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id] = {};
+          if (item.category === 'OUTPUT') {
+            for (let indicator of item.quantitative_indicators) {
+              if (!this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id]) {
+                this.summaryBudgetsIndicator[wp.ost_wp.wp_official_code][item.id][indicator.id] = 0;
+              }
+            }
+          }
           if (!this.perValues[partner.code]) this.perValues[partner.code] = {};
           if (!this.perValues[partner.code][wp.ost_wp.wp_official_code])
             this.perValues[partner.code][wp.ost_wp.wp_official_code] = {};
@@ -610,6 +1111,7 @@ export class SubmitedVersionComponent implements OnInit {
             this.perValues[partner.code][wp.ost_wp.wp_official_code][item.id] =
               {};
 
+      
           this.period.forEach((element) => {
             this.perValues[partner.code][wp.ost_wp.wp_official_code][item.id][
               element.id
@@ -638,29 +1140,33 @@ export class SubmitedVersionComponent implements OnInit {
           });
         });
       }
-      if(!this.initiative_data.synchronized){
+      if(!this.initiative_data.synchronized)
         if (this.partnersData[partner.code]?.IPSR)
           this.partnersData[partner.code].IPSR = this.partnersData[
             partner.code
           ]?.IPSR?.filter((d: any) => d.value != null && d.value != "").sort((a: any, b: any) => +(a.ipsr.id - b.ipsr.id));
+
+      if(!this.initiative_data.synchronized){
+         let newCrossCenters = this.partnersData[partner.code]?.CROSS?.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
+        if(this.partnersData[partner.code]?.CROSS)
+          this.partnersData[partner.code].CROSS = this.partnersData[partner.code]?.CROSS?.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
+        newCrossCenters?.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
       }
-        if(!this.initiative_data.synchronized){
-          let newCrossCenters = this.partnersData[partner.code].CROSS.filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
-          this.partnersData[partner.code].CROSS = this.partnersData[partner.code].CROSS.filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
-          newCrossCenters.forEach((d: any) => this.partnersData[partner.code].CROSS.unshift(d))
-        }
+       
+
       this.wps.forEach((d: any) => {
         if (d.category == "WP") {
-          let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+          if(this.partnersData[partner.code]){
+            let outputData = this.partnersData[partner.code][d.ost_wp.wp_official_code]?.filter((d: any) => d.category == "OUTPUT")
             .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-          let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-            .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+            let outcomeData = this.partnersData[partner.code][d.ost_wp.wp_official_code]?.filter((d: any) => d.category != "OUTPUT")
+              .sort((a: any, b: any) => a.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
 
-          this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+            this.partnersData[partner.code][d.ost_wp.wp_official_code] = outputData?.concat(outcomeData);
+          }
         }
       })
-
       this.loading = false;
     }
 
@@ -675,13 +1181,30 @@ export class SubmitedVersionComponent implements OnInit {
     }
     console.log(this.allData)
     console.log(this.values)
-    console.log(this.budgetValues)
+    console.log(this.partnersData)
 
 
     this.savedValues = this.submission_data.consolidated;
     console.log(this.savedValues)
 
     this.setvalues(this.savedValues.values, this.savedValues.perValues);
+
+    this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicatorVersion(
+      this.initiativeId,
+      this.submission_data.phase.id,
+      this.submission_data.id
+    );
+
+    this.setvaluesForIndicators(this.savedValuesForIndicator);
+    this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
+
+    this.setTotalTargetForIndicators();
+    this.setTotalTargetForIndicatorsForPartners();
+    this.setItemIndicatorAndBudget();
+    this.sammaryCalc();
+    this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners);
+    await this.setAnaplanValues();
+
 
     if(!this.initiative_data.synchronized){
       const newIPSR = this.allData["IPSR"]
@@ -718,6 +1241,10 @@ export class SubmitedVersionComponent implements OnInit {
   initiativeId: any;
   officalCode: any;
   params5: any;
+  allBudgetAssumptions: any[] = [];
+  anaplanLabels: any[] = [];
+  anaplanValues: any[] = [];
+  allCenterCountryValues: any[] = [];
   async ngOnInit() {
     this.params = this.activatedRoute?.snapshot.params;
     this.params5 = this.activatedRoute?.parent?.snapshot.parent?.params;
@@ -732,9 +1259,24 @@ export class SubmitedVersionComponent implements OnInit {
       this.submission_data.phase.id,
       this.initiative_data.id
     );
+
+    this.clarisaCountries = await this.countryService.getAll();
+    this.allCenterCountryValues = await this.countryService.getAllValues(this.submission_data.phase.id);
+
     if (this.partners.length < 1) {
       this.partners = await this.submissionService.getOrganizations();
     }
+    const tab = this.activatedRoute.snapshot.queryParamMap.get('tab');
+    if (tab) {
+      this.selectedTabIndex = tab ? +tab : 0;
+
+    } 
+    const aowTab = this.activatedRoute.snapshot.queryParamMap.get('AOW');
+    if (aowTab) {
+      this.selectedTabIndexAOW = aowTab ? +aowTab : 0;
+    } 
+    this.organizationSelected = this.partners[0];
+
     this.indicatorTypes = [
       'Number of Policy (Policy Change)',
       'Innovation Use',
@@ -755,6 +1297,7 @@ export class SubmitedVersionComponent implements OnInit {
       'Innovation Use',
       'custom-OUTCOME'
     ]
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.submission_data.phase.id);
 
     this.InitData();
     this.period = this.submission_data.phase.periods;
@@ -762,9 +1305,185 @@ export class SubmitedVersionComponent implements OnInit {
     this.initiativeId = this.submission_data.initiative.id;
     this.officalCode = this.params.code;
     console.log(this.initiativeId);
-
+    this.setItemIndicatorAndBudget();
+    this.sammaryCalc();
+    this.recomputeIndicatorBudgetTotals();
+    this.cdr.detectChanges();
   }
 
+  setItemIndicatorAndBudget() {
+    if (!this.displayBudgetValuesIndicator) return;
+  
+    Object.keys(this.displayBudgetValuesIndicator).forEach((code) => {
+      const orgObj = this.displayBudgetValuesIndicator[code];
+      if (!orgObj) return;
+  
+      Object.keys(orgObj).forEach((wp_id) => {
+        const wpObj = orgObj[wp_id];
+        if (!wpObj) return;
+  
+        Object.keys(wpObj).forEach((item_id) => {
+          const itemObj = wpObj[item_id];
+          if (!itemObj) return;
+  
+          let sum = 0;
+          let total = 0;
+  
+          Object.keys(itemObj).forEach((indicator_id) => {
+            const value = itemObj[indicator_id];
+            sum += Number(value) || 0;
+          });
+  
+          this.displayBudgetValuesItemIndicator[code] ??= {};
+          this.displayBudgetValuesItemIndicator[code][wp_id] ??= {};
+          this.budgetValues[code] ??= {};
+          this.budgetValues[code][wp_id] ??= {};
+          this.displayBudgetValues[code] ??= {};
+          this.displayBudgetValues[code][wp_id] ??= {};
+          this.wp_budgets[code] ??= {};
+  
+          this.displayBudgetValuesItemIndicator[code][wp_id][item_id] = sum;
+          this.budgetValues[code][wp_id][item_id] = sum;
+          this.displayBudgetValues[code][wp_id][item_id] = sum;
+  
+          Object.values(this.displayBudgetValuesItemIndicator[code][wp_id]).forEach((val) => {
+            if (typeof val === "number") {
+              total += Number(val) || 0;
+            }
+          });
+  
+          this.wp_budgets[code][wp_id] = total;
+        });
+      });
+    });
+  }
+
+  setvaluesForIndicators(data: any[]) {
+    const indicatorIds = this.results[this.results.length - 2].indicator_ids;
+    const ids = Object.values(indicatorIds);
+    const filtered = data.filter(item => ids.includes(item.result_uuid));
+  
+    for (let value of filtered) {
+      const org = value.organization_code;
+      const wp = value.workPackage.wp_official_code;
+      const parent = value.parent_id;
+      const result = value.result_uuid;
+  
+      this.displayBudgetValuesIndicator[org] ??= {};
+      this.displayBudgetValuesIndicator[org][wp] ??= {};
+      this.displayBudgetValuesIndicator[org][wp][parent] ??= {};
+  
+      this.displayBudgetValuesIndicator[org][wp][parent][result] = Number(value.budget);
+    }
+  
+    this.sammaryCalc();
+  }
+  setPartnervaluesForIndicators(data: any[]) {  
+    const indicatorIds = this.results[this.results.length - 2].indicator_ids;
+    const ids = Object.values(indicatorIds);
+    const filtered = data.filter(item => ids.includes(item.result_uuid));
+
+    for(let value of filtered) {
+      const orgCode = value.organization_code;
+      const wpCode = value.workPackage.wp_official_code;
+      const indicatorType = value.indicator_type;
+      const budget = Number(value.budget) || 0;
+
+      
+      if (!this.budgetValuesIndicatorPartner[orgCode] || typeof this.budgetValuesIndicatorPartner[orgCode] !== 'object') {
+        this.budgetValuesIndicatorPartner[orgCode] = {};
+      }
+
+      if (!this.budgetValuesIndicatorPartner[orgCode][wpCode] || typeof this.budgetValuesIndicatorPartner[orgCode][wpCode] !== 'object') {
+        this.budgetValuesIndicatorPartner[orgCode][wpCode] = {};
+      }
+
+      if (!this.budgetValuesIndicatorPartner[orgCode][wpCode][indicatorType]) {
+        this.budgetValuesIndicatorPartner[orgCode][wpCode][indicatorType] = 0;
+      }
+
+      this.budgetValuesIndicatorPartner[orgCode][wpCode][indicatorType] += budget;
+
+
+
+
+      if (!this.budgetValuesIndicatorSummary[wpCode]) {
+        this.budgetValuesIndicatorSummary[wpCode] = {};
+      }
+  
+      if (!this.budgetValuesIndicatorSummary[wpCode][indicatorType]) {
+        this.budgetValuesIndicatorSummary[wpCode][indicatorType] = 0;
+      }
+  
+      this.budgetValuesIndicatorSummary[wpCode][indicatorType] += budget;
+
+
+      if (!this.totalBudgetValuesIndicatorPartner[orgCode]) {
+        this.totalBudgetValuesIndicatorPartner[orgCode] = {};
+      }
+  
+      if (!this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType]) {
+        this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType] = 0;
+      }
+  
+      this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType] += budget;
+  
+      if (!this.totalBudgetValuesIndicatorSummary[indicatorType]) {
+        this.totalBudgetValuesIndicatorSummary[indicatorType] = 0;
+      }
+  
+      this.totalBudgetValuesIndicatorSummary[indicatorType] += budget;
+      
+    }
+  }
+
+  async recomputeIndicatorBudgetTotals() {
+    this.savedValuesForIndicator = await this.submissionService.getSavedDataIndicatorVersion(
+      this.initiativeId,
+      this.submission_data.phase.id,
+      this.submission_data.id
+    );
+    this.budgetValuesIndicatorPartner = {};
+    this.budgetValuesIndicatorSummary = {};
+    this.totalBudgetValuesIndicatorPartner = {};
+    this.totalBudgetValuesIndicatorSummary = {};
+  
+    const indicatorIds = this.results?.[this.results.length - 1]?.indicator_ids ?? {};
+    const ids = new Set(Object.values(indicatorIds));
+  
+    const filtered = this.savedValuesForIndicator.filter((item:any) => ids.has(item.result_uuid));
+  
+  
+    for (const item of filtered) {
+  
+      const org = item.organization_code;
+      const wp = item.workPackage?.wp_official_code;
+      const type = item.indicator_type;
+      const budget = Number(item.budget) || 0;
+  
+      this.budgetValuesIndicatorPartner[org] ??= {};
+      this.budgetValuesIndicatorPartner[org][wp] ??= {};
+      this.budgetValuesIndicatorPartner[org][wp][type] =
+        (this.budgetValuesIndicatorPartner[org][wp][type] || 0) + budget;
+  
+      
+      this.budgetValuesIndicatorSummary[wp] ??= {};
+      this.budgetValuesIndicatorSummary[wp][type] =
+        (this.budgetValuesIndicatorSummary[wp][type] || 0) + budget;
+  
+      this.totalBudgetValuesIndicatorPartner[org] ??= {};
+      this.totalBudgetValuesIndicatorPartner[org][type] =
+        (this.totalBudgetValuesIndicatorPartner[org][type] || 0) + budget;
+  
+      this.totalBudgetValuesIndicatorSummary[type] =
+        (this.totalBudgetValuesIndicatorSummary[type] || 0) + budget;
+    }
+  
+    this.budgetValuesIndicatorPartner = { ...this.budgetValuesIndicatorPartner };
+    this.budgetValuesIndicatorSummary = { ...this.budgetValuesIndicatorSummary };
+    this.totalBudgetValuesIndicatorPartner = { ...this.totalBudgetValuesIndicatorPartner };
+    this.totalBudgetValuesIndicatorSummary = { ...this.totalBudgetValuesIndicatorSummary };
+  }
   ngOnDestroy(): void {
     this.socket.disconnect();
   }
@@ -811,18 +1530,38 @@ export class SubmitedVersionComponent implements OnInit {
 
 
   getTotalBudgetForEachPartner(budgets: { [key: string]: any }) {
-    return Object.entries(budgets)
-    .filter(([key]) => !key.includes("-project"))
-    .reduce((sum, [_, value]) => sum + Number(value), 0)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (!budgets || typeof budgets !== 'object') return '0';
+      return Object.entries(budgets)
+        .filter(([key]) => 
+          !key.includes('-project')
+        )
+        .reduce((sum, [, value]) => sum + Number(value || 0), 0)
+        .toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
   getTotalBudgetForEachPartnerProject(budgets: { [key: string]: any }) {
-    return Object.entries(budgets)
-    .filter(([key]) => key.includes("-project"))
-    .reduce((sum, [_, value]) => sum + Number(value), 0)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (!budgets || typeof budgets !== 'object') return '0';
+      return Object.entries(budgets)
+      .filter(([key]) => key.includes("-project"))
+      .reduce((sum, [_, value]) => sum + Number(value), 0)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  getTotalBudgetForEachPartnerPartner(budgets: { [key: string]: any }) {
+    if (!budgets || typeof budgets !== 'object') return '0';
+      return Object.entries(budgets)
+      .filter(([key]) => key.includes("-partners"))
+      .reduce((sum, [_, value]) => sum + Number(value), 0)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  getTotalBudgetForEachPartnerMelia(budgets: { [key: string]: any }) {
+    if (!budgets || typeof budgets !== 'object') return '0';
+      return Object.entries(budgets)
+      .filter(([key]) => key.includes("-melia"))
+      .reduce((sum, [_, value]) => sum + Number(value), 0)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
   getTotalPercentageForEachPartner(budgets: any) {
@@ -920,7 +1659,7 @@ export class SubmitedVersionComponent implements OnInit {
     wp_category: string
   ) {
     let wp_data;
-    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting') {
+    if(wp_category != 'Projects' && wp_category != 'Geographic-Scope' && wp_category != 'partners' && wp_category != 'melia' && wp_category != 'Cross Cutting' && wp_category != 'synergy-programs') {
       wp_data = this.results.filter((d: any) => {
         if (partner_code)
           return (
@@ -1041,7 +1780,24 @@ export class SubmitedVersionComponent implements OnInit {
           )
         );
       });
-    }
+    }  else if(wp_category == 'synergy-programs') {
+      wp_data = this.results.filter((d: any) => {
+        if (partner_code)
+          return (
+            (d.category == "synergy-programs") &&
+            (
+              (d?.wp.id == id && d.category == 'synergy-programs' && wp_category == 'synergy-programs')
+            )
+          );
+        else
+        return (
+          (d.category == "synergy-programs") &&
+          (
+            (d?.wp.id == id && d.category == 'synergy-programs' && wp_category == 'synergy-programs')
+          )
+        );
+      });
+    } 
  
     // if (ost_wp_acronym === 'AOW00') {
     //   const meliaMap = new Map<string, any>();
@@ -1175,12 +1931,298 @@ export class SubmitedVersionComponent implements OnInit {
 
   return total;
 }
+totalConsolidatedTargetPartner: any;
+  getTotalIndValuesByPartner(data: any): Record<string, Record<string, number>> {
+    if (!data) return {};
 
+    const totals: Record<string, Record<string, number>> = {};
+
+    Object.keys(data).forEach((partnerId) => {
+      totals[partnerId] = {};
+      const partner = data[partnerId];
+
+      Object.keys(partner).forEach((category) => {
+        const categoryData = partner[category];
+
+        if (typeof categoryData === 'object' && categoryData !== null) {
+          Object.keys(categoryData).forEach((indicator) => {
+            const value = categoryData[indicator];
+            if (typeof value === 'number') {
+              totals[partnerId][indicator] = (totals[partnerId][indicator] || 0) + value;
+            }
+          });
+        }
+      });
+    });
+    this.totalConsolidatedTargetPartner = totals;
+    console.log(totals)
+    return totals;
+  }
   getAllMeliasLength() {
     let total = 0;
     for(let wp of this.actualWps) {
       total += this.allData[wp.ost_wp.wp_official_code + '-melia']?.length
     }
     return total
+  }
+
+  getScope(indicator: any, type: string) {
+    let target = type == 'item' ? 'location' : 'geographic_scope'
+      let scope = '';
+      if(indicator[target] == 'global') {
+        scope = 'Global';
+      } else if(indicator[target] == 'country') {
+        if(target == 'geographic_scope')
+          scope = 'Country: ' + indicator.country?.map((c:any) => c.name).join(', ')
+        else
+          scope = 'Country: ' + indicator.countries?.map((c:any) => c.name).join(', ')
+      } else if(indicator[target] == 'regional') {
+        scope = 'Regional: ' + indicator.regions?.map((c:any) => c.name).join(', ')
+      }
+      return scope
+  }
+
+  getTargetValue(targets: any[]) {
+    return targets.reduce((sum, target) => {
+      const val = parseFloat(target?.[this.submission_data.phase.reportingYear]) || 0; 
+      return sum + val;
+    }, 0);
+  }
+
+  setTotalTargetForIndicators() {
+    for (let wp of this.actualWps) {
+      if (!this.totalTargetsIndicator[wp.ost_wp.wp_official_code]) {
+        this.totalTargetsIndicator[wp.ost_wp.wp_official_code] = {};
+      }
+  
+      const wpData = this.perAllValuesIndicator?.[wp.ost_wp.wp_official_code];
+      if (!wpData) continue;
+  
+      Object.keys(wpData).forEach((itemId) => {
+        const indicators = wpData[itemId];
+  
+        Object.keys(indicators).forEach((indicatorName) => {
+          const value = Number(indicators[indicatorName]) || 0;
+  
+          if (!this.totalTargetsIndicator[wp.ost_wp.wp_official_code][indicatorName]) {
+            this.totalTargetsIndicator[wp.ost_wp.wp_official_code][indicatorName] = 0;
+          }
+  
+          this.totalTargetsIndicator[wp.ost_wp.wp_official_code][indicatorName] += value;
+        });
+      });
+    }
+    
+  }
+
+  setTotalTargetForIndicatorsForPartners() {
+    for (let partner of this.partners) {
+      if (!this.totalTargetsIndicatorPartners[partner.code]) {
+        this.totalTargetsIndicatorPartners[partner.code] = {};
+      }
+      for (let wp of this.actualWps) {
+        if (!this.totalTargetsIndicatorPartners[partner.code][wp.ost_wp.wp_official_code]) {
+          this.totalTargetsIndicatorPartners[partner.code][wp.ost_wp.wp_official_code] = {};
+        }
+      }
+    }
+   
+    for (let wp of this.actualWps) {
+      const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
+    
+      for (let wpData of wpDataArray) {
+        const wpCode = wpData.ost_wp?.wp_official_code || wp.ost_wp.wp_official_code;
+    
+        for (let indicator of wpData.quantitative_indicators || []) {
+          const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
+            ? indicator.type.value
+            : 'Other';
+    
+          for (let target of indicator.targets || []) {
+            for (let targetPartner of target.centers || []) {
+              const partnerCode = targetPartner.code;
+    
+              if (!this.totalTargetsIndicatorPartners[partnerCode]) {
+                this.totalTargetsIndicatorPartners[partnerCode] = {};
+              }
+    
+              if (!this.totalTargetsIndicatorPartners[partnerCode][wpCode]) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode] = {};
+              }
+    
+              if (!this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType]) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] = 0;
+              }
+              const value = parseFloat(target[this.submission_data.phase.reportingYear]); 
+              if (!isNaN(value)) {
+                this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  getMeliaProjectItemTotal(partnerCode: string, item: any, type: string): number {
+    if (!item?.results?.length) return 0;
+  
+    return item.results.reduce((sum: number, result: any) => {
+      const wpCode = result?.group?.ost_wp?.wp_official_code + type;
+      const value =
+        this.displayBudgetValues?.[partnerCode]?.[wpCode]?.[item.id] || 0;
+  
+      return sum + Number(value.toString().replace(/,/g, ''));
+    }, 0);
+  }
+
+  async setAnaplanValues() {
+    this.anaplanValues = await this.anaplanService.getAllValuesVersion(this.initiativeId, this.submission_data.id,this.submission_data.phase.id);
+    for(let values of this.anaplanValues){
+     this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
+    }
+  }
+
+  getWpTotals(partnerCode: number, wp:any): any{
+    const partnerData = this.anaplanBudgets[partnerCode];
+  
+    const totals: Record<string, number> = {};
+  
+    Object.keys(partnerData).forEach((wp) => {
+      const wpObj = partnerData[wp] as Record<number, number>;
+  
+      totals[wp] = Object.values(wpObj).reduce(
+        (sum, val) => sum + (Number(val) || 0), 
+        0
+      );
+    });
+    return this.decimalPipe.transform(totals[wp], '1.2-2');;
+  }
+  
+  getTotalsByAnaplan(partnerCode: number, anaplan_id:number) {
+    const partnerData = this.anaplanBudgets[partnerCode];
+    if (!partnerData) return {};
+  
+    const totals: Record<number, number> = {};
+  
+    Object.values(partnerData).forEach((wpObj) => {
+      Object.entries(wpObj as Record<number, number>).forEach(([anaplanId, value]) => {
+        const id = +anaplanId;
+        const val = value || 0;
+  
+        if (!totals[id]) {
+          totals[id] = 0;
+        }
+        totals[id] += val;
+      });
+    });
+    return this.decimalPipe.transform(totals[anaplan_id], '1.2-2');
+  }
+
+  getAnaplanTotal(partnerCode: number):number {
+    const partnerData = this.anaplanBudgets[partnerCode];
+    if (!partnerData) return 0;
+  
+    let total = 0;
+  
+    Object.values(partnerData).forEach((wpObj) => {
+      Object.values(wpObj as Record<number, number>).forEach((val) => {
+        total += val || 0;
+      });
+    });
+  
+    return total;
+  }
+  getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number) {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData && wpData[anaplanId] !== undefined) {
+        total += Number(wpData[anaplanId]) || 0;
+      }
+    }
+  
+    return this.decimalPipe.transform(total, '1.2-2');
+  }
+  getTotalByAnaplanId(anaplanId: number): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      for (const wpCode in partnerData) {
+        const wpData = partnerData[wpCode];
+        if (wpData && wpData[anaplanId] !== undefined) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+
+
+  getWpTotalsAcrossPartners(wpCode: string) {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      const wpData = partnerData[wpCode];
+      if (wpData) {
+        for (const anaplanId in wpData) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return this.decimalPipe.transform(total, '1.2-2');
+  }
+
+  getSummaryTotalAnaplan(): number {
+    let total = 0;
+  
+    for (const partnerCode in this.anaplanBudgets) {
+      const partnerData = this.anaplanBudgets[partnerCode];
+      for (const wpCode in partnerData) {
+        const wpData = partnerData[wpCode];
+        for (const anaplanId in wpData) {
+          total += Number(wpData[anaplanId]) || 0;
+        }
+      }
+    }
+  
+    return total;
+  }
+  haveHLO(data: any[]) {
+    return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+  }
+
+  haveselectedCountry(data: any[]) {
+    return data.some(item => item.selectedCountries.length);
+  }
+
+  sort(obj: any): void {
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+  
+      if (Array.isArray(value)) {
+        value.sort((a, b) => {
+          const textA = (a.name || a.title || '').toLowerCase();
+          const textB = (b.name || b.title || '').toLowerCase();
+          return textA.localeCompare(textB);
+        });
+      } else if (typeof value === 'object' && value !== null) {
+        this.sort(value);
+      }
+    });
+  }
+  sortByNameOrTitle(arr: any[]): any[] {
+    if (!Array.isArray(arr)) return arr;
+  
+    return [...arr].sort((a, b) => {
+      const textA = (a.name || a.title || '').trim().toLowerCase();
+      const textB = (b.name || b.title || '').trim().toLowerCase();
+      return textA.localeCompare(textB);
+    });
   }
 }

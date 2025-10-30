@@ -77,7 +77,11 @@ export class ChatComponent implements AfterViewInit, OnDestroy {
       if (index) this.chatMessages.splice(index, 1);
     });
   }
-
+onClose() {
+    if (this.dialogRef) {
+      this.dialogRef.close();
+    }
+  }
   addMessage({ data, clearInput }: { data: any; clearInput: any }) {
     console.log(data, clearInput);
     if (data?.id) {

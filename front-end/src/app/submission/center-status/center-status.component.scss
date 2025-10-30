@@ -13,7 +13,6 @@
 .submit-btn {
   background-color: #5569dd !important;
   color: white !important;
-
 }
 .search {
   flex: 0 0 40%;
@@ -337,14 +336,10 @@ mat-slide-toggle {
 .text-if-complete {
   color: #dc3545;
   text-align: center;
-  margin-bottom: 0;
   animation: _ngcontent-kwl-c55_moveInBottom 1.5s ease-out 1.85s;
   animation-fill-mode: backwards;
-  top: -10rem;
-  display: inline-block;
-  margin: -6rem 4rem -3rem 12rem;
-  position: relative;
-  left: 5rem;
+  display: inline;
+  margin-left: 5px;
 }
 
 ::ng-deep .mdc-text-field--invalid .mdc-notched-outline > * {

@@ -90,37 +90,48 @@ export class InitiativesService {
       this.httpService
         .get('https://api.clarisa.cgiar.org/api/cgiar-entities?version=2')
         .pipe(
-          map((response: any) => response.data.filter((item: any) => item.level == 1 && 
-            !(item.entity_type?.name === 'Initiative' || item.entity_type?.name === 'CRP')
-          ))
+          map((response: any) =>
+            response.data.filter(
+              (item: any) =>
+                item.level == 1 &&
+                !(
+                  item.entity_type?.name === 'Initiative' ||
+                  item.entity_type?.name === 'CRP'
+                ),
+            ),
+          ),
         ),
     );
 
     const currenetInitiatives = await this.initiativeRepository.find();
 
-    const clarisaExistCodes = currenetInitiatives.map(d => d.official_code);
+    const clarisaExistCodes = currenetInitiatives.map((d) => d.official_code);
 
-    return initiativesData.filter(d => !clarisaExistCodes.includes(d.code));
+    return initiativesData.filter((d) => !clarisaExistCodes.includes(d.code));
   }
   //(new sync)
-  async syncInit(data: any) { 
+  async syncInit(data: any) {
     const initiativesData = await firstValueFrom(
       this.httpService
         .get('https://api.clarisa.cgiar.org/api/cgiar-entities?version=2')
         .pipe(
-          map((response: any) => response.data.filter((item: any) => item.level == 1))
+          map((response: any) =>
+            response.data.filter((item: any) => item.level == 1),
+          ),
         ),
     );
 
-    const filtered_clarisa_initiatives = initiativesData.filter(d => data.ids.includes(d.code));
-
-
+    const filtered_clarisa_initiatives = initiativesData.filter((d) =>
+      data.ids.includes(d.code),
+    );
 
     for (const element of filtered_clarisa_initiatives) {
-      let entity; 
-      entity = await this.initiativeRepository.findOne({ where: {
-        official_code: element.code
-      }});
+      let entity;
+      entity = await this.initiativeRepository.findOne({
+        where: {
+          official_code: element.code,
+        },
+      });
       if (!entity) {
         entity = this.initiativeRepository.create();
         entity.name = element.name;
@@ -128,10 +139,10 @@ export class InitiativesService {
         entity.short_name = element.short_name;
         entity.synchronized = true;
         await this.initiativeRepository.save(entity);
-      } 
+      }
     }
-    this.importWorkPackages(data)
-  } 
+    this.importWorkPackages(data);
+  }
 
   //(old sync)
   // @Cron(CronExpression.EVERY_WEEK)
@@ -157,32 +168,35 @@ export class InitiativesService {
   //     }
   //   });
   // }
-  
+
   @Cron(CronExpression.EVERY_WEEK)
-  async importWorkPackages(programIds: any) { 
-    console.log(programIds)
+  async importWorkPackages(programIds: any) {
+    console.log(programIds);
     let workPackagesData = await firstValueFrom(
       this.httpService
         .get('https://api.clarisa.cgiar.org/api/cgiar-entities?version=2')
         .pipe(
-          map((response: any) => response.data.filter((item: any) => item.level == 2))
+          map((response: any) =>
+            response.data.filter((item: any) => item.level == 2),
+          ),
         ),
     );
 
-    let filteredWorkPackages = workPackagesData.filter(wp => programIds.ids.includes(wp.parent.code))
+    let filteredWorkPackages = workPackagesData.filter((wp) =>
+      programIds.ids.includes(wp.parent.code),
+    );
 
-
-    for(let element of filteredWorkPackages) {
+    for (let element of filteredWorkPackages) {
       let entity = await this.workPackageRepository.findOneBy({
         wp_official_code: element.code,
-        initiative_offical_code: element.parent.code
+        initiative_offical_code: element.parent.code,
       });
 
       let initiative = await this.initiativeRepository.findOne({
         where: {
-          official_code: element.parent.code
-        }
-      })
+          official_code: element.parent.code,
+        },
+      });
 
       if (!entity) {
         entity = this.workPackageRepository.create();
@@ -195,7 +209,7 @@ export class InitiativesService {
         await this.workPackageRepository.save(entity);
       }
     }
-  } 
+  }
 
   create(createInitiativeDto: CreateInitiativeDto) {
     const newInitiative = this.initiativeRepository.create({
@@ -222,7 +236,7 @@ export class InitiativesService {
   findAll() {
     return this.initiativeRepository.find({
       where: {
-        archived: false
+        archived: false,
       },
       order: { official_code: 'asc' },
     });
@@ -247,6 +261,8 @@ export class InitiativesService {
                   `PLAT-0${query.initiative_id}`,
                   `SGP-${query.initiative_id}`,
                   `SGP-0${query.initiative_id}`,
+                  `SP0${query.initiative_id}`,
+                  `SP${query.initiative_id}`,
                 ],
               });
             }
@@ -257,7 +273,9 @@ export class InitiativesService {
                 });
                 qb.andWhere(`roles.user_id = ${req.user.id}`);
               } else {
-                qb.andWhere('roles.role = :my_role', { my_role: query.my_role });
+                qb.andWhere('roles.role = :my_role', {
+                  my_role: query.my_role,
+                });
                 qb.andWhere(`roles.user_id = ${req.user.id}`);
               }
             } else if (query?.my_ini == 'true') {
@@ -299,9 +317,9 @@ export class InitiativesService {
         count: total,
       };
     } catch (error) {
-        throw new BadRequestException('Connection Error');
+      throw new BadRequestException('Connection Error');
     }
-  } 
+  }
   async exportInitForTrack() {
     try {
       const data = await this.initiativeRepository
@@ -312,24 +330,26 @@ export class InitiativesService {
         .leftJoinAndSelect('history.user', 'user')
         .getMany();
 
-        data.forEach(d => {
-          d.history = d.history.reduce((prevValue: any, currValue: any) => {
-            return (prevValue.id > currValue.id ? prevValue.user.full_name : currValue.user.full_name);
-          }, '-');
-        })
-        
+      data.forEach((d) => {
+        d.history = d.history.reduce((prevValue: any, currValue: any) => {
+          return prevValue.id > currValue.id
+            ? prevValue.user.full_name
+            : currValue.user.full_name;
+        }, '-');
+      });
+
       const { finaldata, merges } = this.prepareTemplate(data);
       const file_name = 'Initiative.xlsx';
       var wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(finaldata);
       ws['!merges'] = merges;
-  
 
       this.appendStyleForXlsx(ws);
 
-      this.autofitColumnsXlsx(finaldata,ws);
+      this.autofitColumnsXlsx(finaldata, ws);
 
       XLSX.utils.book_append_sheet(wb, ws, 'Initiative');
+       (wb.Workbook as any) = { fullCalcOnLoad: 1 };
       await XLSX.writeFile(
         wb,
         join(process.cwd(), 'generated_files', file_name),
@@ -338,7 +358,7 @@ export class InitiativesService {
       const file = createReadStream(
         join(process.cwd(), 'generated_files', file_name),
       );
-  
+
       setTimeout(async () => {
         try {
           unlink(join(process.cwd(), 'generated_files', file_name), null);
@@ -349,19 +369,19 @@ export class InitiativesService {
         disposition: `attachment; filename="${file_name}"`,
       });
     } catch (error) {
-        throw new BadRequestException('Connection Error');
+      throw new BadRequestException('Connection Error');
     }
   }
 
   appendStyleForXlsx(ws: XLSX.WorkSheet) {
-    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const range = XLSX.utils.decode_range(ws['!ref'] ?? '');
     const rowCount = range.e.r;
     const columnCount = range.e.c;
 
     for (let row = 0; row <= rowCount; row++) {
       for (let col = 0; col <= columnCount; col++) {
         let cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-        if(col != 2 && row != rowCount){
+        if (col != 2 && row != rowCount) {
           ws[cellRef].s = {
             alignment: {
               horizontal: 'center',
@@ -370,8 +390,7 @@ export class InitiativesService {
           };
         }
 
-
-        if(row == rowCount && col == 0) {
+        if (row == rowCount && col == 0) {
           ws[cellRef].s = {
             font: {
               bold: true,
@@ -380,15 +399,15 @@ export class InitiativesService {
               horizontal: 'center',
               vertical: 'center',
             },
-          }
+          };
         }
 
         if (row === 0 || row === 1) {
-            // Format headers and names
+          // Format headers and names
           ws[cellRef].s = {
             ...ws[cellRef].s,
             fill: { fgColor: { rgb: '0f212f' } },
-            font: { color: { rgb: 'ffffff' } ,  bold: true },
+            font: { color: { rgb: 'ffffff' }, bold: true },
             alignment: {
               horizontal: 'center',
               vertical: 'center',
@@ -397,28 +416,32 @@ export class InitiativesService {
           };
         }
 
-        if(col >= 3 && row > 1 && row < rowCount) {
-          ws[cellRef].z = "#,##0";
+        if (col >= 3 && row > 1 && row < rowCount) {
+          ws[cellRef].z = '#,##0';
         }
       }
     }
   }
 
-
-  autofitColumnsXlsx(json: any[], worksheet: XLSX.WorkSheet, header?: string[]) {
-
+  autofitColumnsXlsx(
+    json: any[],
+    worksheet: XLSX.WorkSheet,
+    header?: string[],
+  ) {
     const jsonKeys = header ? header : Object.keys(json[0]);
 
-    let objectMaxLength = []; 
+    let objectMaxLength = [];
     for (let i = 0; i < json.length; i++) {
       let objValue = json[i];
       for (let j = 0; j < jsonKeys.length; j++) {
-        if (typeof objValue[jsonKeys[j]] == "number") {
+        if (typeof objValue[jsonKeys[j]] == 'number') {
           objectMaxLength[j] = 10;
         } else {
-          const l = objValue[jsonKeys[j]] ? objValue[jsonKeys[j]].length + 5 : 0;
+          const l = objValue[jsonKeys[j]]
+            ? objValue[jsonKeys[j]].length + 5
+            : 0;
 
-          objectMaxLength[j] = objectMaxLength[j] >= l ? objectMaxLength[j]: l;
+          objectMaxLength[j] = objectMaxLength[j] >= l ? objectMaxLength[j] : l;
         }
       }
 
@@ -431,24 +454,26 @@ export class InitiativesService {
       }
     }
 
-    const wscols = objectMaxLength.map(w => { return { width: w} });
+    const wscols = objectMaxLength.map((w) => {
+      return { width: w };
+    });
 
     //row height
     worksheet['!rows'] = [];
-    worksheet['!rows'].push({ //for header
-      hpt: 20
-     })
-     worksheet['!rows'].push({ //for header
-      hpt: 20
-     })
+    worksheet['!rows'].push({
+      //for header
+      hpt: 20,
+    });
+    worksheet['!rows'].push({
+      //for header
+      hpt: 20,
+    });
 
-    worksheet["!cols"] = wscols;
+    worksheet['!cols'] = wscols;
   }
 
   prepareTemplate(data: any) {
     let finaldata = [this.getTemplate()];
-
-
 
     let merges = [];
     for (let index = 0; index < 4; index++) {
@@ -457,7 +482,6 @@ export class InitiativesService {
         e: { c: index, r: 1 },
       });
     }
-
 
     data.forEach((element: any) => {
       const template = this.getTemplate();
@@ -475,18 +499,19 @@ export class InitiativesService {
       'Current status': null,
     };
   }
-  
+
   mapTemplate(template, element) {
     template['Program ID'] = element?.official_code;
     template['Program Title'] = element?.name;
     template['Updated by'] = element?.history;
-    template['Current status'] = 
-    new Date(element.last_submitted_at).getTime() != null &&
-    new Date(element.last_update_at).getTime() == new Date(element.last_submitted_at).getTime()
-      ? element?.latest_submission
-       ? element?.latest_submission?.status
-        : "Draft"
-      : "Draft";
+    template['Current status'] =
+      new Date(element.last_submitted_at).getTime() != null &&
+      new Date(element.last_update_at).getTime() ==
+        new Date(element.last_submitted_at).getTime()
+        ? element?.latest_submission
+          ? element?.latest_submission?.status
+          : 'Draft'
+        : 'Draft';
   }
 
   async getAllFull() {
@@ -557,29 +582,33 @@ export class InitiativesService {
   async getInitHistory(initiative_id: number) {
     return await this.historyRepository.find({
       where: {
-        initiative_id: initiative_id
+        initiative_id: initiative_id,
       },
-      relations: ['user', 'initiative', 'organization', 'work_package', 'period'],
+      relations: [
+        'user',
+        'initiative',
+        'organization',
+        'work_package',
+        'period',
+      ],
       order: {
-        id: "DESC",
-    },
-    })
-  } 
+        id: 'DESC',
+      },
+    });
+  }
 
-  async deleteRole(initiative_id, id, user) { 
-
-    
+  async deleteRole(initiative_id, id, user) {
     const roles = await this.iniRolesRepository.findOne({
       where: { initiative_id, id },
     });
 
     let errorMsg = null;
-    if(roles.role == 'Leader' && user.role != 'admin')
+    if (roles.role == 'Leader' && user.role != 'admin')
       errorMsg = 'Only admin can delete leader';
 
     if (roles && !errorMsg) return await this.iniRolesRepository.remove(roles);
     else throw new NotFoundException();
-  } 
+  }
 
   async setRole(initiative_id, role: InitiativeRoles, user) {
     let errorMsg = null;
@@ -623,7 +652,8 @@ export class InitiativesService {
           if (
             data.role == 'Coordinator' ||
             data.role == 'Contributor' ||
-            data.role == 'Co-leader'
+            data.role == 'Co-leader'   ||
+            data.role =='Financial Focal Point'
           ) {
             this.emailService.sendEmailTobyVarabel(
               user,
@@ -732,47 +762,62 @@ export class InitiativesService {
     return this.idUserHavePermissionToEdit(message_id, user);
   }
 
-
-
   async getInitPartnersBudget(query: any) {
-    const initiative = await this.initiativeRepository.createQueryBuilder('init')
+    const initiative = await this.initiativeRepository
+      .createQueryBuilder('init')
       .leftJoinAndSelect('init.submissions', 'submissions')
       .where(
-        "submissions.id = (" +
-          this.submissionRepository.createQueryBuilder("submissions")
-          .select("MAX(id)")
-          .where("submissions.initiative_id = init.id")
-          .getQuery() + ")"
+        'submissions.id = (' +
+          this.submissionRepository
+            .createQueryBuilder('submissions')
+            .select('MAX(id)')
+            .where('submissions.initiative_id = init.id')
+            .getQuery() +
+          ')',
       )
-      .andWhere("submissions.status = :status", { status: SubmissionStatus.APPROVED })
-      .select(['init.official_code', 'init.name', 'submissions.id', 'wp_budget.*'])
-      .addSelect("SUM(wp_budget.budget)",'wp_budget_total')
+      .andWhere('submissions.status = :status', {
+        status: SubmissionStatus.APPROVED,
+      })
+      .select([
+        'init.official_code',
+        'init.name',
+        'submissions.id',
+        'wp_budget.*',
+      ])
+      .addSelect('SUM(wp_budget.budget)', 'wp_budget_total')
       .leftJoinAndSelect('submissions.wp_budget', 'wp_budget')
       .leftJoinAndSelect('wp_budget.phase', 'phase')
-      .andWhere("phase.id = :phase_id", { phase_id : query.phase_id })
+      .andWhere('phase.id = :phase_id', { phase_id: query.phase_id })
       .leftJoinAndSelect('wp_budget.organization', 'organization')
       .andWhere(
         new Brackets((qb) => {
           if (query.initiatives) {
-            qb.andWhere("init.id IN (:initiatives)", { initiatives: query.initiatives  })
+            qb.andWhere('init.id IN (:initiatives)', {
+              initiatives: query.initiatives,
+            });
           }
           if (query.partners) {
-            qb.andWhere("organization.code IN (:partners)", { partners: query.partners  })
+            qb.andWhere('organization.code IN (:partners)', {
+              partners: query.partners,
+            });
           }
         }),
       )
 
       .groupBy('init.id , wp_budget.organization_code')
       .getMany();
-  
+
     return initiative;
   }
 
   async exportBudgetSummary(query: any) {
     const data = await this.getInitPartnersBudget(query);
 
-    const { finaldata, merges } = await this.prepareUserTemplate(data, query.partners);
- 
+    const { finaldata, merges } = await this.prepareUserTemplate(
+      data,
+      query.partners,
+    );
+
     const file_name = 'Total-Summary.xlsx';
     var wb = XLSX.utils.book_new();
 
@@ -780,27 +825,23 @@ export class InitiativesService {
 
     merges.push({
       s: { c: 0, r: finaldata.length + 1 },
-      e: { c: 1, r: finaldata.length + 1},
+      e: { c: 1, r: finaldata.length + 1 },
     });
-  
+
     ws['!merges'] = merges;
 
     XLSX.utils.book_append_sheet(wb, ws, 'Total Summary');
 
-    XLSX.utils.sheet_add_aoa(ws, [
-      ["Total, USD"]
-    ], {origin: -1}, );
+    XLSX.utils.sheet_add_aoa(ws, [['Total, USD']], { origin: -1 });
 
+    this.getPartnerTotalBudget(ws);
 
-    this.getPartnerTotalBudget(ws)
-
-    this.getInitiativeTotalBudget(ws)
+    this.getInitiativeTotalBudget(ws);
 
     this.appendStyleForXlsx(ws);
 
-    this.autofitColumnsXlsx(finaldata,ws);
-
-
+    this.autofitColumnsXlsx(finaldata, ws);
+ (wb.Workbook as any) = { fullCalcOnLoad: 1 };
     await XLSX.writeFile(
       wb,
       join(process.cwd(), 'generated_files', file_name),
@@ -823,33 +864,32 @@ export class InitiativesService {
 
   async getTemplateBudgetSummary(partnersFiltered: any[]) {
     let header = {
-      'Official Code'	: null,
+      'Official Code': null,
       'Program title': null,
-      'Total budget, USD'	: null,
+      'Total budget, USD': null,
     };
 
     let partners: Organization[] = [];
 
-    if(partnersFiltered)
-       partners = await this.organizationRepository.find({
+    if (partnersFiltered)
+      partners = await this.organizationRepository.find({
         where: {
-          code: In([partnersFiltered])
+          code: In([partnersFiltered]),
         },
         order: {
-          acronym: 'ASC'
-        }
+          acronym: 'ASC',
+        },
       });
-     else 
-       partners = await this.organizationRepository.find({
+    else
+      partners = await this.organizationRepository.find({
         order: {
-          acronym: 'ASC'
-        }
+          acronym: 'ASC',
+        },
       });
 
-    partners.forEach(d => header[d.acronym] = null)
-    return header
+    partners.forEach((d) => (header[d.acronym] = null));
+    return header;
   }
-
 
   async mapTemplateBudgetSummary(template, element, partnersFiltered: any[]) {
     template['Official Code'] = element?.official_code;
@@ -858,78 +898,75 @@ export class InitiativesService {
 
     let partners: Organization[] = [];
 
-    if(partnersFiltered)
-       partners = await this.organizationRepository.find({
+    if (partnersFiltered)
+      partners = await this.organizationRepository.find({
         where: {
-          code: In([partnersFiltered])
+          code: In([partnersFiltered]),
         },
         order: {
-          acronym: 'ASC'
-        }
+          acronym: 'ASC',
+        },
       });
-     else 
-       partners = await this.organizationRepository.find({
+    else
+      partners = await this.organizationRepository.find({
         order: {
-          acronym: 'ASC'
+          acronym: 'ASC',
+        },
+      });
+
+    for (let partner of partners) {
+      element.submissions[0].wp_budget.some((d) => {
+        if (d.organization_code === partner.code) {
+          return (template[partner.acronym] = d.total);
+        } else {
+          return (template[partner.acronym] = 0);
         }
       });
-    
-
-
-    for(let partner of partners) {
-      element.submissions[0].wp_budget.some(d => {
-        if(d.organization_code === partner.code) {
-          return template[partner.acronym] = d.total
-        } else {
-          return template[partner.acronym] = 0
-        }
-      })
     }
   }
 
-
   async prepareUserTemplate(data: any, partnersFiltered: any[]) {
-  let finaldata = [await this.getTemplateBudgetSummary(partnersFiltered)];
+    let finaldata = [await this.getTemplateBudgetSummary(partnersFiltered)];
 
-  let partners: Organization[] = [];
+    let partners: Organization[] = [];
 
-    if(partnersFiltered)
+    if (partnersFiltered)
       partners = await this.organizationRepository.find({
         where: {
-          code: In([partnersFiltered])
+          code: In([partnersFiltered]),
         },
         order: {
-          acronym: 'ASC'
-        }
+          acronym: 'ASC',
+        },
       });
-   else 
-     partners = await this.organizationRepository.find({
-      order: {
-        acronym: 'ASC'
-      }
-    });
+    else
+      partners = await this.organizationRepository.find({
+        order: {
+          acronym: 'ASC',
+        },
+      });
     let merges = [];
 
+    for (let index = 0; index < partners.length + 3; index++) {
+      merges.push({
+        s: { c: index, r: 0 },
+        e: { c: index, r: 1 },
+      });
+    }
 
-  for (let index = 0; index < partners.length + 3; index++) {
-    merges.push({
-      s: { c: index, r: 0 },
-      e: { c: index, r: 1 },
-    });
+    for (let element of data) {
+      const template: any = await this.getTemplateBudgetSummary(
+        partnersFiltered,
+      );
+      await this.mapTemplateBudgetSummary(template, element, partnersFiltered);
+      finaldata.push(template);
+    }
+
+    return { finaldata, merges };
   }
-
-  for(let element of data) {
-    const template: any = await this.getTemplateBudgetSummary(partnersFiltered);
-    await this.mapTemplateBudgetSummary(template, element, partnersFiltered);
-    finaldata.push(template);
-  }
-
-  return { finaldata, merges };
-  }
-
 
   getInitiativeTotalBudget(ws: any) {
-    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const range = XLSX.utils.decode_range(ws['!ref'] ?? '');
     const rowCount = range.e.r;
     const startCol = 2;
     const startRow = 2;
@@ -940,7 +977,7 @@ export class InitiativesService {
       ws[cellRef] = {
         t: 'n',
         f: '=' + `${formula}`,
-        z: "#,##0",
+        z: '#,##0',
         s: {
           font: {
             bold: true,
@@ -948,14 +985,14 @@ export class InitiativesService {
           alignment: {
             horizontal: 'center',
             vertical: 'center',
-          }
+          },
         },
-      }
+      };
     }
   }
 
   getFormulaInitiativeTotalBudget(ws: any, currentRow: number) {
-    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const range = XLSX.utils.decode_range(ws['!ref'] ?? '');
 
     const columnCount = range.e.c;
     const startCol = 3;
@@ -966,16 +1003,17 @@ export class InitiativesService {
       let cellRef = XLSX.utils.encode_cell({ r: currentRow, c: col });
       arrData.push(cellRef);
     }
-    return arrData.map(d =>  d + '+').join('').slice(0, -1);
+    return arrData
+      .map((d) => d + '+')
+      .join('')
+      .slice(0, -1);
   }
 
-
   getPartnerTotalBudget(ws: any) {
-    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const range = XLSX.utils.decode_range(ws['!ref'] ?? '');
     const rowCount = range.e.r;
     const columnCount = range.e.c;
     const startCount = 3;
-
 
     for (let col = startCount; col <= columnCount; col++) {
       let cellRef = XLSX.utils.encode_cell({ r: rowCount, c: col });
@@ -983,7 +1021,7 @@ export class InitiativesService {
       ws[cellRef] = {
         t: 'n',
         f: '=' + `${formula}`,
-        z: "#,##0",
+        z: '#,##0',
         s: {
           font: {
             bold: true,
@@ -991,14 +1029,14 @@ export class InitiativesService {
           alignment: {
             horizontal: 'center',
             vertical: 'center',
-          }
+          },
         },
-      }
+      };
     }
   }
 
   getFormulaPartnerTotalBudget(ws: any, currentCol: number) {
-    const range = XLSX.utils.decode_range(ws["!ref"] ?? "");
+    const range = XLSX.utils.decode_range(ws['!ref'] ?? '');
 
     const rowCount = range.e.r;
     const startRow = 2;
@@ -1009,40 +1047,38 @@ export class InitiativesService {
       let cellRef = XLSX.utils.encode_cell({ r: row, c: currentCol });
       arrData.push(cellRef);
     }
-    return arrData.map(d =>  d + '+').join('').slice(0, -1);
+    return arrData
+      .map((d) => d + '+')
+      .join('')
+      .slice(0, -1);
   }
   async archiveInit(data: any) {
-    for(let id of data.ids) {
-      const init = await this.initiativeRepository.findOne(
-        {
-          where: {id: id},
-          relations: ['roles', 'latest_submission']
-        }
-      );
-
-      const roles = await this.iniRolesRepository.find({
-        where: { initiative_id: id},
-        relations: ['user', 'organizations']
+    for (let id of data.ids) {
+      const init = await this.initiativeRepository.findOne({
+        where: { id: id },
+        relations: ['roles', 'latest_submission'],
       });
 
+      const roles = await this.iniRolesRepository.find({
+        where: { initiative_id: id },
+        relations: ['user', 'organizations'],
+      });
 
       const archived = this.archiveRepository.create();
       archived.data = JSON.stringify(roles);
       archived.initiative = init;
-      
-      
+
       await this.archiveRepository.save(archived).then(
         async () => {
           await this.initiativeRepository.update(id, {
-            archived: true
+            archived: true,
           });
-        }, (error) => {
+        },
+        (error) => {
           console.log('error => ', error);
-          throw new BadRequestException(
-            `something wrong`,
-          );
-        }
-      )
+          throw new BadRequestException(`something wrong`);
+        },
+      );
     }
   }
 }

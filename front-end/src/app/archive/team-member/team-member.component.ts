@@ -43,7 +43,6 @@ export class TeamMemberComponent implements OnInit {
     "Email",
     "User",
     "Role",
-    "organizations",
     "Creation Date",
     "Status",
   ];
@@ -60,10 +59,8 @@ export class TeamMemberComponent implements OnInit {
   async getArchivedInitiativesById() {
       await this.archiveService.getArchivedInitiativesById(this.archived_id).then(
         (data) => {
-          console.log(data)
           this.data = data;
-          this.dataSource = new MatTableDataSource(data?.data);
-
+          this.dataSource = new MatTableDataSource(data?.data?.teamMember);
         }, (error) => {
           this.toster.error('Connection Error', undefined, { disableTimeOut: true })
         }

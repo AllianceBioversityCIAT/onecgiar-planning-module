@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Request,
+  Res,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -41,6 +42,7 @@ import {
   updateStatus,
 } from 'src/DTO/submission.dto';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
+import { Response } from 'express';
 @UseGuards(JwtAuthGuard)
 @ApiTags('submission')
 @Controller('submission')
@@ -89,13 +91,6 @@ export class SubmissionController {
     return this.submissionService.updateLatestSubmitionStatus(id, data, req.user)
   }
 
-  @Patch('validatePORB/:id')
-  @ApiBearerAuth()
-  @ApiBody({ type: markPORBAsValid })
-  @ApiBearerAuth()
-  markPORBAsValid(@Param('id') id, @Body() data, @Request() req) {
-    return this.submissionService.markPORBAsValid(id, data, req.user)
-  }
 
   @Post('save/:id')
   @ApiBearerAuth()
@@ -111,13 +106,17 @@ export class SubmissionController {
   ) {
     const init = await this.initService.findOne(id);
     const json = await this.getTocs(init.synchronized == true ? init.official_code : id);
+    const meliaProject = await this.getActualTocs(init.official_code)
+    const mergedJson = [
+      ...json,
+      { melias: meliaProject.melias, projects: meliaProject.projects }
+    ];
     const tocSubmissionData = await this.submissionService.getTocSubmissionData(init.synchronized == true ? init.official_code : id);
-
     return this.submissionService.createNew(
       req.user.id,
       id,
       phase_id,
-      JSON.stringify(json),
+      JSON.stringify(mergedJson),
       tocSubmissionData
     );
   }
@@ -203,8 +202,20 @@ export class SubmissionController {
     description: '',
     type: getSaved,
   })
+  //for Submission
   async getSavedIndicator(@Param('id') id, @Param('phaseId') phaseId) {
     return this.submissionService.getSavedIndicator(id, phaseId);
+  }
+
+  @Get('save-indicator/:id/phaseId/:phaseId/version/:version_id')
+  @ApiBearerAuth()
+  @ApiCreatedResponse({
+    description: '',
+    type: getSaved,
+  })
+  //for version
+  async getSavedIndicatorVersion(@Param('id') id, @Param('phaseId') phaseId, @Param('version_id') version_id) {
+    return this.submissionService.getSavedIndicatorForVersion(id, phaseId, version_id);
   }
 
   @Get('initiative_id/:initiative_id')
@@ -312,7 +323,8 @@ for (let data of filteredData) {
     const isLinked = data.melias?.some((m: any) =>
       typeof m === 'object' ? m.id === melia.id : m === melia.id
     );
-
+      if(!data.group)
+        data.group = ""
     if (isLinked) {
       const key = `${melia.id}_${data.group}`;
 
@@ -519,12 +531,12 @@ for (let data of filteredData) {
 
   @Get('excel/:id')
   @ApiBearerAuth()
-  async excel(@Param('id') id) {
-    return await this.submissionService.generateExcel(id, null, null, null,true);
+  async excel(@Param('id') id , @Res({ passthrough: true }) res: Response) {
+    return await this.submissionService.generateExcel(id, null, null, null,true,res, false);
   }
   @Get('excelCurrent/:id')
   @ApiBearerAuth()
-  async excelCurrent(@Param('id') initId) {
+  async excelCurrent(@Param('id') initId , @Res({ passthrough: true }) res: Response) {
     const init = await this.initService.findOne(initId);
     const toc_data = this.getTocs(init.synchronized == true ? init.official_code : initId);
     return await this.submissionService.generateExcel(
@@ -532,12 +544,30 @@ for (let data of filteredData) {
       initId,
       toc_data,
       null,
+      true,
+      res,
+      false
+    );
+  }
+
+  @Post('excelAnaplan')
+  @ApiBearerAuth()
+  async excelAnaplan(@Body() data: any , @Res({ passthrough: true }) res: Response) {
+    const init = await this.initService.findOne(data.initId);
+    const toc_data = this.getTocs(init.synchronized == true ? init.official_code : data.initId);
+    return await this.submissionService.generateExcel(
+      null,
+      data.initId,
+      toc_data,
+      data?.organization,
+      true,
+      res,
       true
     );
   }
   @Post('excelCurrentCenter')
   @ApiBearerAuth()
-  async excelCurrentCenter(@Body() data: any) {
+  async excelCurrentCenter(@Body() data: any , @Res({ passthrough: true }) res: Response) {
     const init = await this.initService.findOne(data.initId);
     const toc_data = this.getTocs(init.synchronized == true ? init.official_code : data.initId);
     return await this.submissionService.generateExcel(
@@ -545,6 +575,8 @@ for (let data of filteredData) {
       data.initId,
       toc_data,
       data.organization,
+      false,
+      res,
       false
     );
   }

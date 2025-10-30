@@ -34,27 +34,27 @@ export class ClarisaCountryService {
   }
 
   async createOrUpdate(data: any) {
-    const { initiative_id, wp, partner, result_id } = data;
+    const { initiative_id, wp_official_code, partner_code,selectedCountries, result_id } = data;
 
     let activePhase = await this.phaseService.findActivePhase();
     let workPackageObject : any = await this.workPackageRepo.findOneBy({
-      wp_official_code: wp.ost_wp.wp_official_code + '-partners',
+      wp_official_code: wp_official_code + '-partners',
     });
 
     await this.partnerCountryRepo.delete({
       initiative_id,
-      center_code: partner.code,
+      center_code: partner_code,
       wp_id:  workPackageObject.wp_id,
       result_id: result_id,
       phase_id: activePhase.id
     });
 
-    const entities = partner.selectedCountries.map((c) =>
+    const entities = selectedCountries.map((c) =>
       this.partnerCountryRepo.create({
         initiative_id,
-        center_code: partner.code,
+        center_code: partner_code,
         wp_id: workPackageObject.wp_id,
-        country_code: c.code,
+        country_code: c,
         result_id: result_id,
         phase_id: activePhase.id
       }),
