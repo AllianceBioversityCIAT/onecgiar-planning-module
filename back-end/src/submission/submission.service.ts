@@ -2395,28 +2395,41 @@ export class SubmissionService {
         wp.category
       );
     }
-    await this.setAnaplanValues();
+    
     if (submissionId != null) {
       this.setvalues(
         submission.consolidated.values,
         submission.consolidated.perValues,
       );
+      this.savedValuesForIndicator = await this.getSavedIndicatorForVersion(
+        this.initiative_data.id,
+        this.submission_data.phase.id,
+        submissionId
+      );
+      this.setvaluesForIndicators(this.savedValuesForIndicator, 2);
+      this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 2);
+  
+      await this.setAnaplanValuesVersion(submissionId);
     } else {
       this.setvaluesCurrent(
         this.savedValues.values,
         this.savedValues.perValues,
         this.savedValues.no_budget
       );
+      this.savedValuesForIndicator = await this.getSavedIndicator(
+        this.initiative_data.id,
+        this.phase.id
+      );
+      this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
+      this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
+  
+      await this.setAnaplanValues();
     }
-    this.savedValuesForIndicator = await this.getSavedIndicator(
-      this.initiative_data.id,
-      this.phase.id
-    );
-    this.setvaluesForIndicators(this.savedValuesForIndicator);
-    this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
+  
 
     this.setTotalTargetForIndicators();
-    this.setTotalTargetForIndicatorsForPartners()
+    if(!submissionId)
+      this.setTotalTargetForIndicatorsForPartners()
     this.setItemIndicatorAndBudget();
     this.sammaryCalc();
     this.getTotalIndValuesByPartner(this.totalTargetsIndicatorPartners);
@@ -2543,6 +2556,43 @@ export class SubmissionService {
   } else if(!organization && anaplan) {
     const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
     XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
+  } else if(submissionId) {
+        //  summary Consolidated
+        const summaryConsolidated = this.generateExcelSummaryConsolidated();
+        XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'summary');
+  
+        // HLO for summary
+        const summaryHighLevelOutput = this.generateExcelSummaryHLO();
+        XLSX.utils.book_append_sheet(wb, summaryHighLevelOutput, 'HLO');
+  
+  
+        // Outcome for summary
+        const summaryOutcome = this.generateExcelSummaryOutcome();
+        XLSX.utils.book_append_sheet(wb, summaryOutcome, 'Outcome');
+  
+        // melia for summary
+        const summaryMelia = this.generateExcelSummaryMelia();
+        XLSX.utils.book_append_sheet(wb, summaryMelia, 'melia');
+  
+        // project for summary
+        const summaryProject = this.generateExcelSummaryProject();
+        XLSX.utils.book_append_sheet(wb, summaryProject, 'project');
+  
+        // summary Cross-Cutting
+        const summaryCross = this.generateExcelSummaryCrossCutting();
+        XLSX.utils.book_append_sheet(wb, summaryCross, 'Cross-Cutting');
+  
+  
+        // synergy programs for summary
+        const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
+        XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'synergy programs');
+  
+        // Partners for summary
+        const partnersSummarySheet = this.generateExcelSummaryPartner();
+        XLSX.utils.book_append_sheet(wb, partnersSummarySheet, 'Partner');
+  
+        const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
+        XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
   }
     (wb.Workbook as any) = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
     if(organization)
@@ -3684,7 +3734,7 @@ export class SubmissionService {
   }
   getTargetValue(targets: any[]) {
     return targets.reduce((sum, target) => {
-      const val = parseFloat(target?.[this.phase.reportingYear]) || 0; 
+      const val = parseFloat(target?.[this?.phase?.reportingYear || this?.submission_data?.phase?.reportingYear]) || 0; 
       return sum + val;
     }, 0);
   }
@@ -3757,6 +3807,12 @@ export class SubmissionService {
   }
   async setAnaplanValues() {
     this.anaplanValues = await this.anaplanService.findAllValues(this.initiative_data.id, this.phase.id);
+    for(let values of this.anaplanValues){
+     this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
+    }
+  }
+  async setAnaplanValuesVersion(id: number) {
+    this.anaplanValues = await this.anaplanService.findAllValuesVersion(this.initiative_data.id, id, this.submission_data.phase.id);
     for(let values of this.anaplanValues){
      this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
     }
@@ -4321,8 +4377,9 @@ const totalRowIndex = rows.length + 1;
     }
     
   }
-  setvaluesForIndicators(data: any[]) {
-    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
+  setvaluesForIndicators(data: any[], index: number) {
+    console.log(data)
+    const indicatorIds = this.results[this.results.length - index].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
     for (let value of filtered) {
@@ -4341,8 +4398,8 @@ const totalRowIndex = rows.length + 1;
   
     this.sammaryCalc();
   }
-  setPartnervaluesForIndicators(data: any[]) {  
-    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
+  setPartnervaluesForIndicators(data: any[], index: number) {  
+    const indicatorIds = this.results[this.results.length - index].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
 
