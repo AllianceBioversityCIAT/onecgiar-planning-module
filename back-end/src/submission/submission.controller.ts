@@ -323,7 +323,8 @@ for (let data of filteredData) {
     const isLinked = data.melias?.some((m: any) =>
       typeof m === 'object' ? m.id === melia.id : m === melia.id
     );
-
+      if(!data.group)
+        data.group = ""
     if (isLinked) {
       const key = `${melia.id}_${data.group}`;
 
