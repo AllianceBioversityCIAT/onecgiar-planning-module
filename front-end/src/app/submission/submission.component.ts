@@ -2991,6 +2991,7 @@ if(!this.timeCalcForIndicator[item_id])
 
 
     this.partnersData[partner_code][wp_id].forEach((item: any) => {
+      if (item.category == 'partners') {
         this.geoLocationErrors[partner_code][wp_id][item.id] = null;
       
       const isChecked = this.perValues[partner_code][wp_id][item.id]?.[this.period[0].id];
@@ -3015,10 +3016,10 @@ if(!this.timeCalcForIndicator[item_id])
         message = "There is a budget without assumption" 
         this.itemHasError[partner_code][wp_id][item.id] = true;
             this.errors[partner_code][wp_id] =message
+      } else{
+  this.itemHasError[partner_code][wp_id][item.id] = false;
       }
-  //     else{
-  // this.itemHasError[partner_code][wp_id][item.id] = false;
-  //     }
+    }
     });
 
 
