@@ -20,8 +20,8 @@ export class TableComponent implements OnInit {
     "name",
     "short_name",
     "my_role",
-    "last_update_at",
-    "status",
+    // "last_update_at",
+    // "status",
     "actions",
   ];
   dataSource: MatTableDataSource<any>;
