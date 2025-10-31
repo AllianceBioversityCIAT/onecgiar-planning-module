@@ -4125,6 +4125,7 @@
 
 
           <mat-tab label="W3/Bilateral">
+            <ng-container *ngIf="partnerProjects[partner.code].length">
             <mat-card>
               <div class="sub-head">
                 <span class="sub-title">Total W3/Bilateral budget</span>
@@ -4308,6 +4309,11 @@
                 </div>
               </mat-card-content>
             </mat-card>
+          </ng-container>
+
+          <ng-container *ngIf="!partnerProjects[partner.code].length">
+            <div class="empty-message">The data is missing in the TOC.</div>
+          </ng-container>
           </mat-tab>
 
 
@@ -4322,6 +4328,7 @@
 
 
           <mat-tab label="MELIA Study">
+            <ng-container *ngIf="partnersMelia.length">
             <mat-card>
               <div class="sub-head">
                 <span class="sub-title">MELIA Study - Pooled funding</span>
@@ -4514,6 +4521,11 @@
               </mat-card-content>
 
             </mat-card>
+          </ng-container>
+
+          <ng-container *ngIf="!partnersMelia.length">
+            <div class="empty-message">The data is missing in the TOC.</div>
+          </ng-container>
           </mat-tab>
 
 
