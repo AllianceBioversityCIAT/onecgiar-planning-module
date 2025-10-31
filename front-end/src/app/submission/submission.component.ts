@@ -346,7 +346,7 @@ if(!this.timeCalcForIndicator[item_id])
       let percentValue = 0;
       let budgetValue;
       let subTotalBudgetIndicator = 0;
-      let totalWpBudget = 0;
+      let budget = 0;
 
     
      
@@ -362,11 +362,23 @@ if(!this.timeCalcForIndicator[item_id])
         
         Object.values(this.displayBudgetValuesItemIndicator[partner_code][wp_id]).forEach(val => {
           if (typeof val === "number") {
-            totalWpBudget += val;
+            budget += val;
           } 
         });
-        this.wp_budgets[partner_code][wp_id] = totalWpBudget;
-
+        this.wp_budgets[partner_code][wp_id] = budget;
+        const result2 = await this.submissionService.saveWpBudget(this.params.id, {
+          partner_code,
+          wp_id,
+          budget,
+          phaseId: this.phase.id,
+        });
+        if (result2)
+          this.socket.emit("setDataBudget", {
+            id: this.params.id,
+            partner_code,
+            wp_id,
+            budget,
+          });
         const result = await this.submissionService.saveResultValue(
         this.params.id,
         {
