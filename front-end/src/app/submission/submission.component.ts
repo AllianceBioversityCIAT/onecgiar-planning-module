@@ -21,7 +21,7 @@ import { CenterStatusService } from "./center-status.service";
 import { Meta, Title } from "@angular/platform-browser";
 import { ConstantService } from "../services/constant.service";
 import { InitiativesService } from "../services/initiatives.service";
-import { filter, from, iif, of, switchMap, tap } from "rxjs";
+import { filter, firstValueFrom, from, iif, of, switchMap, tap } from "rxjs";
 import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
 import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
@@ -1096,11 +1096,19 @@ if(!this.timeCalcForIndicator[item_id])
           return d;
         });
     }
+  const toc_data = await this.submissionService.getTocData(this.initiative_data.synchronized == true ? this.params.code : this.params.id).catch(e=>{
+        this.dialog
+          .open(CustomMessageComponent, {
+            disableClose: true,
+          })
+        this.results = [
+          ...cross_data,
+          ...this.ipsr_value_data,
+        ];
+      })
 
-    this.partnersProjectMelia = await this.submissionService.getActualTocData(
-      this.params.code
-    );
-
+       this.tocSubmissionData = toc_data.info
+    this.partnersProjectMelia =  toc_data.extra
     this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
     this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
 
@@ -1131,12 +1139,12 @@ if(!this.timeCalcForIndicator[item_id])
         return d;
       });
  
-    await this.submissionService.getToc(this.initiative_data.synchronized == true ? this.params.code : this.params.id).then(
-      (data) => {
-        if(!data)
+
+
+        if(!toc_data)
           this.tocIncompleteData = true
         else
-          this.results = data;
+          this.results = toc_data.results;
           if(!this.initiative_data.synchronized)
             this.results = [
               ...cross_data,
@@ -1148,21 +1156,9 @@ if(!this.timeCalcForIndicator[item_id])
               ...cross_data,
               ...this?.results,
             ];
-      console.log(data)
 
-      },
-      (error) => {
-        this.dialog
-          .open(CustomMessageComponent, {
-            disableClose: true,
-          })
-        this.results = [
-          ...cross_data,
-          ...this.ipsr_value_data,
-        ];
-      }
-    );
-  
+      
+
 
 
     this.wp_budgets = await this.submissionService.getWpBudgets(
@@ -1727,7 +1723,7 @@ if(!this.timeCalcForIndicator[item_id])
     this.clarisaCountries = await this.countryService.getAll();
     this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
 
-    this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.initiative_data.synchronized == true ? this.params.code : this.params.id)
+   
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
