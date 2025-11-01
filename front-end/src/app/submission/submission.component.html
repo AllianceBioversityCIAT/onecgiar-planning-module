@@ -1345,14 +1345,10 @@
 
 
 
-
-
-
-            <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-synergy-programs'].length">
               <div class="sub-head">
-                <span class="sub-title p-0">Synergy programs</span>
+                <span class="sub-title p-0">Synergy programs <app-popover id="20"></app-popover></span>
               </div>
-              <div class="table-box-1 mat-elevation-z8 accelerator-table">
+              <div class="table-box-1 mat-elevation-z8 accelerator-table w3-project-table">
                  
                 <table>
                   <tr>
@@ -1374,10 +1370,18 @@
                       <td>{{ item.result.title }}</td>
                       <td>{{ item.description }}</td>
                   </tr>
-                  </ng-container>
+                   </ng-container>
+
+                 
                 </table>
+                  <ng-container *ngIf="!allData[wp.ost_wp.wp_official_code + '-synergy-programs'].length">
+              
+                     <div class="empty-message talign-center">The data is missing in the TOC.</div>
+                 
+                   </ng-container>
+                 
+                 
               </div>
-            </ng-container>
 
 
 
