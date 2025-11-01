@@ -636,8 +636,9 @@ if(!this.timeCalcForIndicator[item_id])
     title: string,
     per_id: number,
     category: string,
-    event: any
-  ) {
+    event: any,
+    parent_id:any
+  ) { 
     if (
       !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
         true
@@ -662,12 +663,46 @@ if(!this.timeCalcForIndicator[item_id])
         is_project: category == "Project" ? true : false
       }
     );
-    if (!event.checked && (this.budgetValues[partner_code][wp_id][item_id] || this.displayBudgetValues[partner_code][wp_id][item_id])) {
-      this.budgetValues[partner_code][wp_id][item_id] = 0;
-      this.displayBudgetValues[partner_code][wp_id][item_id] = 0;
-      this.values[partner_code][wp_id][item_id] = 0;
-      this.displayValues[partner_code][wp_id][item_id] = 0;
-      this.changeCalc(partner_code, wp_id, item_id, title, "percent", false, 'PARTNER', true);
+    const initiative_id = this.initiative_data.id;
+    const phase_id = this.phase.id;
+
+    if (!event.checked) {
+      if(this.budgetValues[partner_code][wp_id][item_id] || this.displayBudgetValues[partner_code][wp_id][item_id]) {
+        this.budgetValues[partner_code][wp_id][item_id] = 0;
+        this.displayBudgetValues[partner_code][wp_id][item_id] = 0;
+        this.values[partner_code][wp_id][item_id] = 0;
+        this.displayValues[partner_code][wp_id][item_id] = 0;
+        this.changeCalc(partner_code, wp_id, item_id, title, "percent", false, 'PARTNER', true);
+      }
+      const official_code = this.initiative_data.official_code;
+      const partner = this.partners.filter((p: any) => p.code == partner_code)[0];
+      const wp = this.wps.filter((wp: any) => wp.ost_wp.wp_official_code == wp_id)[0];
+      const selectedCountries: any = [];
+      const result_id = item_id;
+      await this.countryService.findOne({partner_code, wp_id, initiative_id, phase_id, item_id}).then(
+        (res) => {
+          if(res)
+            setTimeout(() => {
+              this.socket.emit("setSelectedCountryPartner", {
+                official_code,
+                result_id,
+                parent_id,
+                partner,
+                wp,
+                selectedCountries
+              });
+            }, 500);
+            setTimeout(() => {
+              this.socket.emit("setSelectedCountrySummaryRemove", {
+                official_code,
+                result_id,
+                wp
+              });
+            }, 500);
+        }, (error) => {
+          console.log(error)
+        }
+      )
     }
     if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (this.values[partner_code][wp_id][item_id] == 0 && this.displayValues[partner_code][wp_id][item_id] == 0)){
       this.values[partner_code][wp_id][item_id] = null;
@@ -687,7 +722,7 @@ if(!this.timeCalcForIndicator[item_id])
       this.params.id
     );
     this.getInitStatus(this.initiative_data);
-  }
+  } 
 
   async checkAll(
     partner_code: any,
@@ -1646,9 +1681,6 @@ if(!this.timeCalcForIndicator[item_id])
     
 
     console.log(this.allData)
-    console.log('displayBudgetValues', this.displayBudgetValues)
-    console.log('partnersMelia', this.partnersMelia)
-    console.log('itemHasError', this.itemHasError)
 
 
     //sort WP titles
@@ -1967,12 +1999,26 @@ if(!this.timeCalcForIndicator[item_id])
     
       const wpKey = wp.ost_wp.wp_official_code + "-partners";
       const allData = this.allData[wpKey];
-
       for (let item of allData) {
         if (item.id == result_id) {
           setTimeout(() => {
             item.selectedCountries = [];
             item.selectedCountries = selectedCountries;
+          }, 500);
+        }
+      }
+    });
+
+    this.socket.on("setSelectedCountrySummaryRemove", (payload: any) => {
+      const { wp, selectedCountries, result_id } = payload || {};
+    
+      const wpKey = wp.ost_wp.wp_official_code;
+      const allData = this.allData[wpKey];
+
+      for (let item of allData) {
+        if (item.id == result_id) {
+          setTimeout(() => {
+            item.selectedCountries = [];
           }, 500);
         }
       }
@@ -3487,8 +3533,7 @@ totalConsolidatedTargetPartner: any;
     return total;
   }
 
-
-  async onCountriesChange(selectedCountries: any[], partner: any, wp: any, item: any) {
+  async onCountriesChange(selectedCountries: any[], partner: any, wp: any, item: any) { 
     const initiative_id = this.initiative_data.id;
     const official_code = this.initiative_data.official_code;
 
@@ -3506,7 +3551,7 @@ totalConsolidatedTargetPartner: any;
     // this.partnersData[partner.code][wp.ost_wp.wp_official_code][item.id]=item
 
     
-   await this.validateWp(partner.code, wp.ost_wp.wp_official_code + '-partners', wp.ost_wp.wp_official_code);
+    this.validateWp(partner.code, wp.ost_wp.wp_official_code + '-partners', wp.ost_wp.wp_official_code);
 
 
     await this.countryService.createOrUpdate(data).then(
@@ -3533,7 +3578,7 @@ totalConsolidatedTargetPartner: any;
         console.log(error)
       }
     )
-  }
+  } 
 
   getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number) {
     let total = 0;

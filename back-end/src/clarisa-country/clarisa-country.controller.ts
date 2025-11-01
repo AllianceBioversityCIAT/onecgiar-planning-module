@@ -18,6 +18,13 @@ export class ClarisaCountryController {
       return this.service.findAllValues(id);
     }
 
+    @ApiBearerAuth()
+    @Post('byItem')
+    findOne(@Body() body) {
+      console.log(body)
+      return this.service.findOne(body);
+    }
+
 
     @ApiBearerAuth()
     @Post()

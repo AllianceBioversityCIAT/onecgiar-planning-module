@@ -33,6 +33,29 @@ export class ClarisaCountryService {
     });
   }
 
+
+  async findOne(data: any) {
+    const { initiative_id, wp_id, partner_code,phase_id, item_id } = data;
+
+    let workPackageObject : any = await this.workPackageRepo.findOneBy({
+      wp_official_code: wp_id,
+    });
+
+    const countries = await this.partnerCountryRepo.find({
+      where: {
+        initiative_id: initiative_id,
+        center_code: partner_code,
+        phase_id: phase_id,
+        result_id: item_id,
+        workPackage: workPackageObject
+      }
+    });
+    if (countries.length > 0) {
+      await this.partnerCountryRepo.remove(countries);
+    }
+  }
+
+
   async createOrUpdate(data: any) {
     const { initiative_id, wp_official_code, partner_code,selectedCountries, result_id } = data;
 
