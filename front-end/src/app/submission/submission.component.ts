@@ -346,7 +346,7 @@ if(!this.timeCalcForIndicator[item_id])
       let percentValue = 0;
       let budgetValue;
       let subTotalBudgetIndicator = 0;
-      let totalWpBudget = 0;
+      let budget = 0;
 
     
      
@@ -362,11 +362,23 @@ if(!this.timeCalcForIndicator[item_id])
         
         Object.values(this.displayBudgetValuesItemIndicator[partner_code][wp_id]).forEach(val => {
           if (typeof val === "number") {
-            totalWpBudget += val;
+            budget += val;
           } 
         });
-        this.wp_budgets[partner_code][wp_id] = totalWpBudget;
-
+        this.wp_budgets[partner_code][wp_id] = budget;
+        const result2 = await this.submissionService.saveWpBudget(this.params.id, {
+          partner_code,
+          wp_id,
+          budget,
+          phaseId: this.phase.id,
+        });
+        if (result2)
+          this.socket.emit("setDataBudget", {
+            id: this.params.id,
+            partner_code,
+            wp_id,
+            budget,
+          });
         const result = await this.submissionService.saveResultValue(
         this.params.id,
         {
@@ -1636,7 +1648,7 @@ if(!this.timeCalcForIndicator[item_id])
     console.log(this.allData)
     console.log('displayBudgetValues', this.displayBudgetValues)
     console.log('partnersMelia', this.partnersMelia)
-    console.log('perValues', this.period)
+    console.log('itemHasError', this.itemHasError)
 
 
     //sort WP titles
@@ -2926,7 +2938,7 @@ if(!this.timeCalcForIndicator[item_id])
     const totalRelatedBudget = this.roundNumbers(relatedBudgets);
     const wpTotal = this.getWpTotals(partner_code, wp_official_code);
  //   if(isIncluded)
-  console.log('totalRelatedBudget',totalRelatedBudget ,'totals', wpTotal,'wp_id',wp_id ,'partner_code',partner_code,'wp_official_code',wp_official_code)
+  // console.log('totalRelatedBudget',totalRelatedBudget ,'totals', wpTotal,'wp_id',wp_id ,'partner_code',partner_code,'wp_official_code',wp_official_code)
     if (Math.round(totalRelatedBudget) != Math.round(wpTotal)) {
      // console.log('budget missmatch' ,wp_official_code)
         valid = false;
@@ -2979,6 +2991,7 @@ if(!this.timeCalcForIndicator[item_id])
 
 
     this.partnersData[partner_code][wp_id].forEach((item: any) => {
+      if (item.category == 'partners') {
         this.geoLocationErrors[partner_code][wp_id][item.id] = null;
       
       const isChecked = this.perValues[partner_code][wp_id][item.id]?.[this.period[0].id];
@@ -3003,9 +3016,10 @@ if(!this.timeCalcForIndicator[item_id])
         message = "There is a budget without assumption" 
         this.itemHasError[partner_code][wp_id][item.id] = true;
             this.errors[partner_code][wp_id] =message
-      }else{
+      } else{
   this.itemHasError[partner_code][wp_id][item.id] = false;
       }
+    }
     });
 
 
