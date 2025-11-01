@@ -3902,6 +3902,7 @@
                         ]
                       "
                     >
+                    <ng-container *ngIf="item.code">
                       <tr>
                         <td class="wp-title">
                             {{item.name}}
@@ -3912,6 +3913,7 @@
                         </td>
   
                         <ng-container *ngFor="let per of period | slice:0:1">
+                       
                           <td class="talign-center">
                             <mat-checkbox
                               [disabled]="
@@ -4084,7 +4086,7 @@
                          
                         </td>
                       </tr>
-
+                  </ng-container>
                    
                   </ng-container>
                   <tr class="total">
