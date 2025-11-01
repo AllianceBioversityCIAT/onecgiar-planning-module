@@ -2998,13 +2998,13 @@ if(!this.timeCalcForIndicator[item_id])
         this.geoLocationErrors[partner_code] = this.geoLocationErrors[partner_code] || {};
         this.geoLocationErrors[partner_code][wp_id] = this.geoLocationErrors[partner_code][wp_id] || {};
         this.geoLocationErrors[partner_code][wp_id][item.id] = true;
-        message += (message ? " | " : "") + "There is a contacted partner without a location";
+        message = "There is a contacted partner without a location";
         this.errors[partner_code] = this.errors[partner_code] || {};
         this.errors[partner_code][wp_id] = message;
       }else if(isChecked && selectedCountries.length > 0 && this.displayBudgetValues[partner_code][wp_id][item.id] == 0  ){
           valid = false;
           this.itemHasError[partner_code][wp_id][item.id] = true;
-          message += (message ? " | " : "") + "contracted partner has location but no budget assigned";
+          message  = "contracted partner has location but no budget assigned";
         this.errors[partner_code] = this.errors[partner_code] || {};
         this.errors[partner_code][wp_id] = "contracted partner has location but no budget assigned";;
       }else if(isChecked && selectedCountries.length > 0 && this.displayBudgetValues[partner_code][wp_id][item.id] &&!this.hasBudgetAssumptions(partner_code, item.id, wp_id) ){
