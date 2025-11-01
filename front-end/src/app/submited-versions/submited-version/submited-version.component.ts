@@ -613,7 +613,7 @@ export class SubmitedVersionComponent implements OnInit {
 
     this.wp_budgets = await this.submissionService.getBudgets(this.params.id, this.submission_data.phase.id);
 
-    this.results = this.submission_data.toc_data;
+    this.results = this.submission_data.toc_data.results;
     console.log(this.submission_data)
     // const melia_data = await this.submissionService.getMeliaBySubmission(
     //   this.params.id
@@ -624,8 +624,8 @@ export class SubmitedVersionComponent implements OnInit {
     this.ipsr_value_data = await this.submissionService.getIpsrBySubmission(
       this.params.id
     );
-    this.partnersMelia = this.sortByNameOrTitle(this.submission_data.toc_data[this.submission_data.toc_data.length - 1].melias);
-    this.partnersProject = this.sortByNameOrTitle(this.submission_data.toc_data[this.submission_data.toc_data.length - 1].projects);
+    this.partnersMelia = this.sortByNameOrTitle(this.submission_data.toc_data?.extra?.melias);
+    this.partnersProject = this.sortByNameOrTitle(this.submission_data.toc_data?.extra?.projects);
 
 
     for(let partner of this.partners){
