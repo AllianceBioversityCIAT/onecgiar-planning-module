@@ -1359,7 +1359,7 @@ export class SubmitedVersionComponent implements OnInit {
   }
 
   setvaluesForIndicators(data: any[]) {
-    const indicatorIds = this.results[this.results.length - 2].indicator_ids;
+    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
   
@@ -1379,7 +1379,7 @@ export class SubmitedVersionComponent implements OnInit {
     this.sammaryCalc();
   }
   setPartnervaluesForIndicators(data: any[]) {  
-    const indicatorIds = this.results[this.results.length - 2].indicator_ids;
+    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
 
