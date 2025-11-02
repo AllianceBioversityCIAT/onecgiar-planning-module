@@ -681,17 +681,15 @@ if(!this.timeCalcForIndicator[item_id])
       const result_id = item_id;
       await this.countryService.findOne({partner_code, wp_id, initiative_id, phase_id, item_id}).then(
         (res) => {
-          if(res)
             setTimeout(() => {
               this.socket.emit("setSelectedCountryPartner", {
                 official_code,
                 result_id,
                 parent_id,
                 partner,
-                wp,
                 selectedCountries
               });
-            }, 500);
+            }, 0);
             setTimeout(() => {
               this.socket.emit("setSelectedCountrySummaryRemove", {
                 official_code,
@@ -3563,7 +3561,6 @@ totalConsolidatedTargetPartner: any;
               result_id,
               parent_id,
               partner,
-              wp,
               selectedCountries
             });
           }, 500);
