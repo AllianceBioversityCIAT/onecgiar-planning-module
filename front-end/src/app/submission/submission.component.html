@@ -397,14 +397,14 @@
           dynamicHeight="true"
         >
           <mat-tab
-            *ngFor="let wp of actualWps; first as isFirst; last as isLast"
+            *ngFor="let wp of actualWps; let i = index; first as isFirst; last as isLast"
             label="{{ wp.ost_wp.acronym }}"
           >
             <mat-card *ngIf="allData[wp.ost_wp.wp_official_code].length">
               <mat-card-title class="card-title-table"
                 >{{ wp.title }}
                 <app-popover
-                  [id]="isFirst ? '15' : isLast ? '16' : '2'"
+                [id]="isFirst ? '2' : i === 1 ? '3' : '19'"
                 ></app-popover>
               </mat-card-title>
               <mat-card-content>
@@ -620,8 +620,7 @@
               <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-melia'].length">
 
                 <div class="sub-head">
-                  <span class="sub-title p-0">MELIA study - Pooled funding</span>
-
+                  <span class="sub-title  p-0">MELIA Study - Pooled funding<app-popover id="4"></app-popover></span>
                 </div>
                 <div class="table-box-1 mat-elevation-z8 w3-project-table melia-table">
                  
@@ -1022,7 +1021,7 @@
                 <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-project'].length">
 
                 <div class="sub-head">
-                  <span class="sub-title p-0">W3/Bilateral Projects budget</span>
+                  <span class="sub-title p-0">W3/Bilateral Projects budget <app-popover [id]="'6'"></app-popover></span>
 
                 </div>
                 <div class="table-box-1 mat-elevation-z8 w3-project-table project-table">
@@ -1256,7 +1255,7 @@
           
             <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length && haveselectedCountry(allData[wp.ost_wp.wp_official_code + '-partners'])">
               <div class="sub-head">
-                <span class="sub-title p-0">Contracted Partners - Pooled funding</span>
+                <span class="sub-title p-0">Contracted Partners - Pooled funding<app-popover id="5"></app-popover></span>
               </div>
               <div class="table-box-1 mat-elevation-z8 w3-project-table">
                  
@@ -1346,7 +1345,7 @@
 
 
               <div class="sub-head">
-                <span class="sub-title p-0">Synergy programs <app-popover id="20"></app-popover></span>
+                <span class="sub-title p-0">Synergy programs <app-popover id="9"></app-popover></span>
               </div>
               <div class="table-box-1 mat-elevation-z8 accelerator-table w3-project-table">
                  
@@ -1423,7 +1422,7 @@
           
                     <tbody>
                       <tr *ngFor="let anaplan of anaplanLabels">
-                        <td class="wp-title">{{ anaplan.label }}</td>
+                        <td class="wp-title"><div><span>{{ anaplan.label }}</span><span><app-popover [name]="anaplan.label"></app-popover></span></div></td>
           
                         <td *ngFor="let wp of actualWps" class="text-right">
                           {{
@@ -1675,7 +1674,7 @@
               <mat-card-title class="card-title-table"
                 >{{ wp.title }}
                 <app-popover
-                  [id]="'17'"
+                  [id]="'2'"
                 ></app-popover>
               </mat-card-title>
               <ng-container *ngIf="haveHLO(partnersData[partner.code][wp.ost_wp.wp_official_code])">
@@ -2038,7 +2037,7 @@
 
             <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length">
               <div class="sub-head-w3">
-                <span class="sub-title-w3">Contracted Partners - Pooled funding</span>
+                <span class="sub-title-w3">Contracted Partners - Pooled funding<app-popover id="5"></app-popover></span>
               </div>    
               
 
@@ -2304,7 +2303,7 @@
         
                     <tbody>
                       <tr *ngFor="let anaplan of anaplanLabels">
-                        <td class="wp-title">{{ anaplan.label }}</td>
+                        <td class="wp-title"><div><span>{{ anaplan.label }}</span><span><app-popover [name]="anaplan.label"></app-popover></span></div></td>
         
                         <td *ngFor="let wp of actualWps?.slice(0, 1)">
                           <div class="td-flex">
@@ -2750,7 +2749,7 @@
           dynamicHeight="true"
         >
           <mat-tab
-            *ngFor="let wp of actualWps; first as isFirst; last as isLast"
+            *ngFor="let wp of actualWps; let i = index; first as isFirst; last as isLast"
            
            
             label="{{ wp.ost_wp.acronym }}"
@@ -2760,7 +2759,7 @@
                 <mat-card-title class="card-title-table"
                   >{{ wp.title }}
                   <app-popover
-                    [id]="isFirst ? '17' : isLast ? '18' : '3'"
+                  [id]="isFirst ? '2' : i === 1 ? '3' : '19'"
                   ></app-popover>
                 </mat-card-title>
                 <ng-container *ngIf="haveHLO(partnersData[partner.code][wp.ost_wp.wp_official_code])">
@@ -3880,7 +3879,7 @@
 
               <ng-container *ngIf="allData[wp.ost_wp.wp_official_code + '-partners'].length">
                 <div class="sub-head-w3">
-                  <span class="sub-title-w3">Contracted Partners - Pooled funding</span>
+                  <span class="sub-title-w3">Contracted Partners - Pooled funding<app-popover id="5"></app-popover></span>
                 </div>    
                 
 
@@ -4135,7 +4134,7 @@
             <ng-container *ngIf="partnerProjects[partner.code].length">
             <mat-card>
               <div class="sub-head">
-                <span class="sub-title">Total W3/Bilateral budget</span>
+                <span class="sub-title">Total W3/Bilateral budget<app-popover id="6"></app-popover></span>
               </div>
               <mat-card-content>
                 <div class="table-box-partner-project mat-elevation-z8">
@@ -4338,7 +4337,7 @@
             <ng-container *ngIf="partnersMelia.length">
             <mat-card>
               <div class="sub-head">
-                <span class="sub-title">MELIA Study - Pooled funding</span>
+                <span class="sub-title  p-0">MELIA Study - Pooled funding<app-popover id="4"></app-popover></span>
               </div>
               <mat-card-content>
             <ng-container *ngIf="partnersMelia.length">
@@ -4581,7 +4580,7 @@
           
                       <tbody>
                         <tr *ngFor="let anaplan of anaplanLabels">
-                          <td class="wp-title">{{ anaplan.label }}</td>
+                          <td class="wp-title"><div><span>{{ anaplan.label }}</span><span><app-popover [name]="anaplan.label"></app-popover></span></div></td>
           
                           <td *ngFor="let wp of actualWps">
                             <div class="td-flex">

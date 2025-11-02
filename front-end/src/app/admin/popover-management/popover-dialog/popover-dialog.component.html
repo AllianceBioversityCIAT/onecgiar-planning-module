@@ -9,47 +9,73 @@
         <img
           class="form-dialog-header__icon-box__icon-size__icon"
           src="../../../assets/shared-image/Vector-close.svg"
-          alt="~/Frontend/images/icon _ Vector-close"
+          alt="close"
         />
       </mat-icon>
     </button>
   </div>
 </div>
 
-<section>
-  <mat-label class="form-dialog-content__title-box__title"
-    >Description<span class="star">*</span></mat-label
-  >
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <section>
+    <div class="form-dialog-content__field--grid-column">
+      <div class="form-dialog-content__title-box">
+        <mat-label class="form-dialog-content__title-box__title"
+          >Name<span class="star">*</span></mat-label
+        >
+      </div>
 
-  <app-editor
-    [form]="form"
-    [controller]="'description'"
-    [showToolbar]="true"
-    [withoutUpload]="true"
-  ></app-editor>
-  <mat-error
-    class="error"
-    *ngIf="form.controls?.['description']?.errors?.['required']"
-    >This field is mandatory</mat-error
-  >
+      <mat-form-field
+        class="form-dialog-content__field"
+        floatLabel="always"
+        hideRequiredMarker
+        appearance="outline"
+      >
+        <input matInput formControlName="name" />
+        <mat-error
+          class="error"
+          *ngIf="form.controls?.['name']?.errors?.['required']"
+        >
+          This field is mandatory
+        </mat-error>
+      </mat-form-field>
+    </div>
 
-  <div class="form-dialog-conten-box-1">
-    <div></div>
-    <div class="form-dialog-conten-button-box">
-      <div class="form-dialog-conten__button-box" align="end">
-        <div class="risk-report-button-box">
-          <button
-            class="risk-report-button-box__btn btn--chestnut"
-            type="submit"
-            mat-raised-button
-            mat-button
-            color="primary"
-            (click)="submit()"
-          >
-            Save
-          </button>
+    <mat-label class="form-dialog-content__title-box__title"
+      >Description<span class="star">*</span></mat-label
+    >
+
+    <app-editor
+      [form]="form"
+      [controller]="'description'"
+      [showToolbar]="true"
+      [withoutUpload]="true"
+    ></app-editor>
+
+    <mat-error
+      class="error"
+      *ngIf="form.controls?.['description']?.errors?.['required']"
+    >
+      This field is mandatory
+    </mat-error>
+
+    <div class="form-dialog-conten-box-1">
+      <div></div>
+      <div class="form-dialog-conten-button-box">
+        <div class="form-dialog-conten__button-box" align="end">
+          <div class="risk-report-button-box">
+            <button
+              class="risk-report-button-box__btn btn--chestnut"
+              type="submit"
+              mat-raised-button
+              mat-button
+              color="primary"
+            >
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+</form>

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePopoverDto } from './dto/create-popover.dto';
 import { UpdatePopoverDto } from './dto/update-popover.dto';
 import { Popover } from 'src/entities/popover.entity';
@@ -26,6 +26,16 @@ export class PopoverService {
 
   findOne(id: number) {
     return this.popoverRepository.findOneById(id);
+  }
+
+  async findOneByName(name: string) {
+    try {
+      return await this.popoverRepository.findOne({
+        where: { name },
+      });
+    } catch (error) {
+      console.error('Error fetching popover:', error);
+    }
   }
 
   update(id: number, updatePopoverDto: UpdatePopoverDto) {

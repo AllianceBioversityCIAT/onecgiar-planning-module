@@ -18,6 +18,7 @@ export class PopoverComponent implements OnInit {
   top: string;
 
   @Input() id: string = "";
+  @Input() name: string = "";
 
   isOpen = false;
   popover: any;
@@ -32,6 +33,14 @@ export class PopoverComponent implements OnInit {
         const popover = await this.popoverManagementService.get(this.id);
         this.popover = popover?.description || this.id
         localStorage.setItem(`popovers_${this.id}`, this.popover);
+      }
+    } else {
+      if (localStorage.getItem(`popovers_${this.name}`)) {
+        this.popover = localStorage.getItem(`popovers_${this.name}`);
+      } else {
+        const popover = await this.popoverManagementService.getByName(this.name);
+        this.popover = popover?.description || this.id
+        localStorage.setItem(`popovers_${this.name}`, this.popover);
       }
     }
   }
