@@ -21,7 +21,7 @@ import { CenterStatusService } from "./center-status.service";
 import { Meta, Title } from "@angular/platform-browser";
 import { ConstantService } from "../services/constant.service";
 import { InitiativesService } from "../services/initiatives.service";
-import { filter, from, iif, of, switchMap, tap } from "rxjs";
+import { filter, firstValueFrom, from, iif, of, switchMap, tap } from "rxjs";
 import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
 import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
@@ -346,7 +346,7 @@ if(!this.timeCalcForIndicator[item_id])
       let percentValue = 0;
       let budgetValue;
       let subTotalBudgetIndicator = 0;
-      let totalWpBudget = 0;
+      let budget = 0;
 
     
      
@@ -362,11 +362,23 @@ if(!this.timeCalcForIndicator[item_id])
         
         Object.values(this.displayBudgetValuesItemIndicator[partner_code][wp_id]).forEach(val => {
           if (typeof val === "number") {
-            totalWpBudget += val;
+            budget += val;
           } 
         });
-        this.wp_budgets[partner_code][wp_id] = totalWpBudget;
-
+        this.wp_budgets[partner_code][wp_id] = budget;
+        const result2 = await this.submissionService.saveWpBudget(this.params.id, {
+          partner_code,
+          wp_id,
+          budget,
+          phaseId: this.phase.id,
+        });
+        if (result2)
+          this.socket.emit("setDataBudget", {
+            id: this.params.id,
+            partner_code,
+            wp_id,
+            budget,
+          });
         const result = await this.submissionService.saveResultValue(
         this.params.id,
         {
@@ -624,8 +636,9 @@ if(!this.timeCalcForIndicator[item_id])
     title: string,
     per_id: number,
     category: string,
-    event: any
-  ) {
+    event: any,
+    parent_id:any
+  ) { 
     if (
       !Object.values(this.perValues[partner_code][wp_id][item_id]).includes(
         true
@@ -650,12 +663,44 @@ if(!this.timeCalcForIndicator[item_id])
         is_project: category == "Project" ? true : false
       }
     );
-    if (!event.checked && (this.budgetValues[partner_code][wp_id][item_id] || this.displayBudgetValues[partner_code][wp_id][item_id])) {
-      this.budgetValues[partner_code][wp_id][item_id] = 0;
-      this.displayBudgetValues[partner_code][wp_id][item_id] = 0;
-      this.values[partner_code][wp_id][item_id] = 0;
-      this.displayValues[partner_code][wp_id][item_id] = 0;
-      this.changeCalc(partner_code, wp_id, item_id, title, "percent", false, 'PARTNER', true);
+    const initiative_id = this.initiative_data.id;
+    const phase_id = this.phase.id;
+
+    if (!event.checked) {
+      if(this.budgetValues[partner_code][wp_id][item_id] || this.displayBudgetValues[partner_code][wp_id][item_id]) {
+        this.budgetValues[partner_code][wp_id][item_id] = 0;
+        this.displayBudgetValues[partner_code][wp_id][item_id] = 0;
+        this.values[partner_code][wp_id][item_id] = 0;
+        this.displayValues[partner_code][wp_id][item_id] = 0;
+        this.changeCalc(partner_code, wp_id, item_id, title, "percent", false, 'PARTNER', true);
+      }
+      const official_code = this.initiative_data.official_code;
+      const partner = this.partners.filter((p: any) => p.code == partner_code)[0];
+      const wp = this.wps.filter((wp: any) => wp.ost_wp.wp_official_code == wp_id)[0];
+      const selectedCountries: any = [];
+      const result_id = item_id;
+      await this.countryService.findOne({partner_code, wp_id, initiative_id, phase_id, item_id}).then(
+        (res) => {
+            setTimeout(() => {
+              this.socket.emit("setSelectedCountryPartner", {
+                official_code,
+                result_id,
+                parent_id,
+                partner,
+                selectedCountries
+              });
+            }, 0);
+            setTimeout(() => {
+              this.socket.emit("setSelectedCountrySummaryRemove", {
+                official_code,
+                result_id,
+                wp
+              });
+            }, 500);
+        }, (error) => {
+          console.log(error)
+        }
+      )
     }
     if(Object.values(this.perValues[partner_code][wp_id][item_id]).filter(item => item).length === 1 && (this.values[partner_code][wp_id][item_id] == 0 && this.displayValues[partner_code][wp_id][item_id] == 0)){
       this.values[partner_code][wp_id][item_id] = null;
@@ -675,7 +720,7 @@ if(!this.timeCalcForIndicator[item_id])
       this.params.id
     );
     this.getInitStatus(this.initiative_data);
-  }
+  } 
 
   async checkAll(
     partner_code: any,
@@ -1084,11 +1129,19 @@ if(!this.timeCalcForIndicator[item_id])
           return d;
         });
     }
+  const toc_data = await this.submissionService.getTocData(this.initiative_data.synchronized == true ? this.params.code : this.params.id).catch(e=>{
+        this.dialog
+          .open(CustomMessageComponent, {
+            disableClose: true,
+          })
+        this.results = [
+          ...cross_data,
+          ...this.ipsr_value_data,
+        ];
+      })
 
-    this.partnersProjectMelia = await this.submissionService.getActualTocData(
-      this.params.code
-    );
-
+       this.tocSubmissionData = toc_data.info
+    this.partnersProjectMelia =  toc_data.extra
     this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
     this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
 
@@ -1119,12 +1172,12 @@ if(!this.timeCalcForIndicator[item_id])
         return d;
       });
  
-    await this.submissionService.getToc(this.initiative_data.synchronized == true ? this.params.code : this.params.id).then(
-      (data) => {
-        if(!data)
+
+
+        if(!toc_data)
           this.tocIncompleteData = true
         else
-          this.results = data;
+          this.results = toc_data.results;
           if(!this.initiative_data.synchronized)
             this.results = [
               ...cross_data,
@@ -1136,21 +1189,9 @@ if(!this.timeCalcForIndicator[item_id])
               ...cross_data,
               ...this?.results,
             ];
-      console.log(data)
 
-      },
-      (error) => {
-        this.dialog
-          .open(CustomMessageComponent, {
-            disableClose: true,
-          })
-        this.results = [
-          ...cross_data,
-          ...this.ipsr_value_data,
-        ];
-      }
-    );
-  
+      
+
 
 
     this.wp_budgets = await this.submissionService.getWpBudgets(
@@ -1634,9 +1675,6 @@ if(!this.timeCalcForIndicator[item_id])
     
 
     console.log(this.allData)
-    console.log('displayBudgetValues', this.displayBudgetValues)
-    console.log('partnersMelia', this.partnersMelia)
-    console.log('perValues', this.period)
 
 
     //sort WP titles
@@ -1715,7 +1753,7 @@ if(!this.timeCalcForIndicator[item_id])
     this.clarisaCountries = await this.countryService.getAll();
     this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
 
-    this.tocSubmissionData = await this.submissionService.getTocSubmissionData(this.initiative_data.synchronized == true ? this.params.code : this.params.id)
+   
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
@@ -1955,12 +1993,26 @@ if(!this.timeCalcForIndicator[item_id])
     
       const wpKey = wp.ost_wp.wp_official_code + "-partners";
       const allData = this.allData[wpKey];
-
       for (let item of allData) {
         if (item.id == result_id) {
           setTimeout(() => {
             item.selectedCountries = [];
             item.selectedCountries = selectedCountries;
+          }, 500);
+        }
+      }
+    });
+
+    this.socket.on("setSelectedCountrySummaryRemove", (payload: any) => {
+      const { wp, selectedCountries, result_id } = payload || {};
+    
+      const wpKey = wp.ost_wp.wp_official_code;
+      const allData = this.allData[wpKey];
+
+      for (let item of allData) {
+        if (item.id == result_id) {
+          setTimeout(() => {
+            item.selectedCountries = [];
           }, 500);
         }
       }
@@ -2926,7 +2978,7 @@ if(!this.timeCalcForIndicator[item_id])
     const totalRelatedBudget = this.roundNumbers(relatedBudgets);
     const wpTotal = this.getWpTotals(partner_code, wp_official_code);
  //   if(isIncluded)
-  console.log('totalRelatedBudget',totalRelatedBudget ,'totals', wpTotal,'wp_id',wp_id ,'partner_code',partner_code,'wp_official_code',wp_official_code)
+  // console.log('totalRelatedBudget',totalRelatedBudget ,'totals', wpTotal,'wp_id',wp_id ,'partner_code',partner_code,'wp_official_code',wp_official_code)
     if (Math.round(totalRelatedBudget) != Math.round(wpTotal)) {
      // console.log('budget missmatch' ,wp_official_code)
         valid = false;
@@ -2979,6 +3031,7 @@ if(!this.timeCalcForIndicator[item_id])
 
 
     this.partnersData[partner_code][wp_id].forEach((item: any) => {
+      if (item.category == 'partners') {
         this.geoLocationErrors[partner_code][wp_id][item.id] = null;
       
       const isChecked = this.perValues[partner_code][wp_id][item.id]?.[this.period[0].id];
@@ -2989,13 +3042,13 @@ if(!this.timeCalcForIndicator[item_id])
         this.geoLocationErrors[partner_code] = this.geoLocationErrors[partner_code] || {};
         this.geoLocationErrors[partner_code][wp_id] = this.geoLocationErrors[partner_code][wp_id] || {};
         this.geoLocationErrors[partner_code][wp_id][item.id] = true;
-        message += (message ? " | " : "") + "There is a contacted partner without a location";
+        message = "There is a contacted partner without a location";
         this.errors[partner_code] = this.errors[partner_code] || {};
         this.errors[partner_code][wp_id] = message;
       }else if(isChecked && selectedCountries.length > 0 && this.displayBudgetValues[partner_code][wp_id][item.id] == 0  ){
           valid = false;
           this.itemHasError[partner_code][wp_id][item.id] = true;
-          message += (message ? " | " : "") + "contracted partner has location but no budget assigned";
+          message  = "contracted partner has location but no budget assigned";
         this.errors[partner_code] = this.errors[partner_code] || {};
         this.errors[partner_code][wp_id] = "contracted partner has location but no budget assigned";;
       }else if(isChecked && selectedCountries.length > 0 && this.displayBudgetValues[partner_code][wp_id][item.id] &&!this.hasBudgetAssumptions(partner_code, item.id, wp_id) ){
@@ -3003,9 +3056,10 @@ if(!this.timeCalcForIndicator[item_id])
         message = "There is a budget without assumption" 
         this.itemHasError[partner_code][wp_id][item.id] = true;
             this.errors[partner_code][wp_id] =message
-      }else{
+      } else{
   this.itemHasError[partner_code][wp_id][item.id] = false;
       }
+    }
     });
 
 
@@ -3473,8 +3527,7 @@ totalConsolidatedTargetPartner: any;
     return total;
   }
 
-
-  async onCountriesChange(selectedCountries: any[], partner: any, wp: any, item: any) {
+  async onCountriesChange(selectedCountries: any[], partner: any, wp: any, item: any) { 
     const initiative_id = this.initiative_data.id;
     const official_code = this.initiative_data.official_code;
 
@@ -3492,7 +3545,7 @@ totalConsolidatedTargetPartner: any;
     // this.partnersData[partner.code][wp.ost_wp.wp_official_code][item.id]=item
 
     
-   await this.validateWp(partner.code, wp.ost_wp.wp_official_code + '-partners', wp.ost_wp.wp_official_code);
+    this.validateWp(partner.code, wp.ost_wp.wp_official_code + '-partners', wp.ost_wp.wp_official_code);
 
 
     await this.countryService.createOrUpdate(data).then(
@@ -3504,7 +3557,6 @@ totalConsolidatedTargetPartner: any;
               result_id,
               parent_id,
               partner,
-              wp,
               selectedCountries
             });
           }, 500);
@@ -3519,7 +3571,7 @@ totalConsolidatedTargetPartner: any;
         console.log(error)
       }
     )
-  }
+  } 
 
   getAnaplanValueAcrossPartners(wpCode: string, anaplanId: number) {
     let total = 0;

@@ -2499,12 +2499,12 @@ export class SubmissionService {
 
   if(data.projects.length) {
     const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
-    XLSX.utils.book_append_sheet(wb, projectSheet, 'Project');
+    XLSX.utils.book_append_sheet(wb, projectSheet, 'W3-Bilateral projects');
   }
   
   if(data.melias.length) {
     const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
-    XLSX.utils.book_append_sheet(wb, meliaSheet, 'Melia');
+    XLSX.utils.book_append_sheet(wb, meliaSheet, 'MELIA');
   }
 
   const anaplanSheet = this.generateExcelAnaplan(organization);
@@ -2528,11 +2528,11 @@ export class SubmissionService {
 
       // melia for summary
       const summaryMelia = this.generateExcelSummaryMelia();
-      XLSX.utils.book_append_sheet(wb, summaryMelia, 'Melia');
+      XLSX.utils.book_append_sheet(wb, summaryMelia, 'MELIA');
 
       // project for summary
       const summaryProject = this.generateExcelSummaryProject();
-      XLSX.utils.book_append_sheet(wb, summaryProject, 'Project');
+      XLSX.utils.book_append_sheet(wb, summaryProject, 'W3-Bilateral projects');
 
       // summary Cross-Cutting
       const summaryCross = this.generateExcelSummaryCrossCutting();
@@ -2572,11 +2572,11 @@ export class SubmissionService {
   
         // melia for summary
         const summaryMelia = this.generateExcelSummaryMelia();
-        XLSX.utils.book_append_sheet(wb, summaryMelia, 'Melia');
+        XLSX.utils.book_append_sheet(wb, summaryMelia, 'MELIA');
   
         // project for summary
         const summaryProject = this.generateExcelSummaryProject();
-        XLSX.utils.book_append_sheet(wb, summaryProject, 'Project');
+        XLSX.utils.book_append_sheet(wb, summaryProject, 'W3-Bilateral projects');
   
         // summary Cross-Cutting
         const summaryCross = this.generateExcelSummaryCrossCutting();
@@ -2594,7 +2594,9 @@ export class SubmissionService {
         const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
         XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
   }
-    (wb.Workbook as any) = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
+      // ensure Workbook exists
+     wb.Workbook = wb.Workbook || {} as any;
+    (wb.Workbook as any).CalcPr = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
     if(organization)
       file_name =  organization?.acronym? file_name+`_${this.initiative_data?.official_code}_${organization.acronym}` : file_name+ '_'+ this.initiative_data?.official_code;
     else 

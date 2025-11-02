@@ -626,6 +626,13 @@ table {
   }
 }
 
+.accelerator-table {
+  background-color: white !important;
+  td {
+    font-size: 1.3rem !important;
+  }
+}
+
 .table-box-2 tr:last-child {
   background-color: #f8f9fa;
   td {

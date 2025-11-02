@@ -94,6 +94,14 @@ export class EventsGateway implements OnModuleInit {
     this.server.emit('setSelectedCountrySummary', { wp, selectedCountries, result_id });
   }
 
+  @SubscribeMessage('setSelectedCountrySummaryRemove')
+  async setSelectedCountrySummaryRemove(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    const { official_code, result_id, wp } = data;
+    let activePhase = await this. phaseService.findActivePhase();
+    const selectedCountries = await this.submissionService.getSelectedCountry(result_id, official_code, activePhase.id)
+    this.server.emit('setSelectedCountrySummaryRemove', { wp, selectedCountries, result_id });
+  }
+
   onModuleInit() {
     this.server?.on('connect', (socket) => {
       socket.on('disconnect', (data) => {
