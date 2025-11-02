@@ -2594,7 +2594,9 @@ export class SubmissionService {
         const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
         XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
   }
-    (wb.Workbook as any) = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
+      // ensure Workbook exists
+     wb.Workbook = wb.Workbook || {} as any;
+    (wb.Workbook as any).CalcPr = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
     if(organization)
       file_name =  organization?.acronym? file_name+`_${this.initiative_data?.official_code}_${organization.acronym}` : file_name+ '_'+ this.initiative_data?.official_code;
     else 
