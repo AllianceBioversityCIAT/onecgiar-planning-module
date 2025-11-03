@@ -4315,6 +4315,9 @@
                 </div>
               </mat-card-content>
             </mat-card>
+             <p *ngIf="getFirstError(partner,'project')" class="error">
+                  {{ getFirstError(partner,'project') }}
+                </p>
           </ng-container>
 
           <ng-container *ngIf="!partnerProjects[partner.code].length">
@@ -4524,6 +4527,9 @@
                   </table>
                 </div>
                 </ng-container> 
+               <p *ngIf="getFirstError(partner,'melia')" class="error">
+                  {{ getFirstError(partner,'melia') }}
+                </p>
               </mat-card-content>
 
             </mat-card>

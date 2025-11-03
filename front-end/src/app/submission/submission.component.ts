@@ -92,7 +92,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   onScroll(): void {
     this.currentScroll = window.scrollY;
   }
+getFirstError(partner: any,section:string): string | null {
+  if (!this.wps?.length) return null;
 
+  for (const wp of this.wps) {
+    const key = wp?.ost_wp?.wp_official_code + '-'+section;
+    if (this.errors[partner.code]?.[key]) {
+      return this.errors[partner.code][key];
+    }
+  }
+  return null;
+}
   clarisaCountries: any[] = [];
   user: any;
   data: any = [];
