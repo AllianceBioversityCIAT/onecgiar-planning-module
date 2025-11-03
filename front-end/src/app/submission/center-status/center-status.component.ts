@@ -7,6 +7,7 @@ import { CenterStatusService } from '../center-status.service';
 import { ToastrService } from 'ngx-toastr';
 import { HeaderService } from 'src/app/header.service';
 import { AppSocket } from 'src/app/socket.service';
+import { SubmitMessageComponent } from '../submit-message/submit-message.component';
 
 @Component({
   selector: 'app-center-status',
@@ -53,7 +54,70 @@ export class CenterStatusComponent implements OnInit {
   }
 
   complete() {
-    this.dialog
+    if(this.status) {
+      this.dialog
+      .open(SubmitMessageComponent, {
+        data: {
+          message: "Note that your program has not specified any “Partners” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not intend to contract any partner. ",
+        },
+        width: '400px'
+      })
+      .afterClosed()
+      .subscribe(async (dialogResult) => {
+        if (dialogResult == true) {
+          this.dialog
+          .open(DeleteConfirmDialogComponent, {
+            data: {
+              title: 'Mark as Complete',
+              message: `Are you sure you want to Mark it as ${
+                this.status ? '' : 'In'
+              }complete?`,
+              svg: `../../../../assets/shared-image/${
+                this.status ? 'checked-center.png' : 'uncompleted.png'
+              }`,
+            },
+          })
+          .afterClosed()
+          .subscribe(async (dialogResult) => {
+            if (dialogResult == true) {
+              if (this.status) this.clicked.emit();
+    
+              const valid = this.centerStatusService.validPartner.getValue();
+              if (!this.status || (this.status && valid)) {
+                let result = await this.submissionService.markStatus(
+                  this.organization_code,
+                  +this.initiative_id,
+                  this.phase_id,
+                  !!this.status,
+                  this.organization
+                );
+                if (this.status === false) {
+                  this.toast.success('mark as incompleted');
+                  this.socket.emit('statusOfCenter', {
+                    organization_code: this.organization_code,
+                    initiative_id: this.initiative_id,
+                    phase_id: this.phase_id,
+                    status: true,
+                    is_valid: true
+                  });
+                } else {
+                  this.toast.success('marked as completed');
+                  this.socket.emit('statusOfCenter', {
+                    organization_code: this.organization_code,
+                    initiative_id: this.initiative_id,
+                    phase_id: this.phase_id,
+                    status: false,
+                    is_valid: true
+                  });
+                }
+                if (result) this.change.emit(!!this.status);
+              }
+            }
+          });
+        }
+      });
+    } else {
+      this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
           title: 'Mark as Complete',
@@ -102,5 +166,7 @@ export class CenterStatusComponent implements OnInit {
           }
         }
       });
+    }
+   
   }
 }
