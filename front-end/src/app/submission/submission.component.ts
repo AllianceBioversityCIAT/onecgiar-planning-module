@@ -1439,7 +1439,7 @@ if(!this.timeCalcForIndicator[item_id])
 
          const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
           if(filterd_results.length > 0 && this.toggleIndicatorValues)
-          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers.map((d:any)=>d.code).includes(partner.code))];
+          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
          else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
           // this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;

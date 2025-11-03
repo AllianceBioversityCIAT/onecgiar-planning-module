@@ -5170,7 +5170,7 @@ const totalRowIndex = rows.length + 1;
 //       const wpItemsa = this.partnersData[partner_code][wpCode] || [];
 //       let  isValidItem
 //        if( indicatorTogelvalue?.value == '1')
-//         isValidItem = wpItemsa.filter(d => d.category == 'OUTPUT' && d?.pooled_centers.map((d:any)=>d.code).includes(partner_code));
+//         isValidItem = wpItemsa.filter(d => d.category == 'OUTPUT' && d?.pooled_centers?.map((d:any)=>d.code).includes(partner_code));
 //        else
 //        isValidItem = wpItemsa.filter(d => d.category == 'OUTPUT');
 //        // if (wpItems.length === 0) return; // Skip if no data
