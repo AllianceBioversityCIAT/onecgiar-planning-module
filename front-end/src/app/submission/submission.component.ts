@@ -1140,7 +1140,7 @@ if(!this.timeCalcForIndicator[item_id])
         ];
       })
 
-       this.tocSubmissionData = toc_data.info
+this.tocSubmissionData = toc_data.info
     this.partnersProjectMelia =  toc_data.extra
     this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
     this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
@@ -1675,6 +1675,7 @@ if(!this.timeCalcForIndicator[item_id])
     
 
     console.log(this.allData)
+    console.log(this.results)
 
 
     //sort WP titles
