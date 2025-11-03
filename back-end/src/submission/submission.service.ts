@@ -1947,7 +1947,7 @@ export class SubmissionService {
     if (submissionId != null) {
       submission = await this.findSubmissionsById(submissionId);
       this.submission_data = submission;
-      this.results = submission.toc_data;
+      this.results = submission.toc_data.results;
       this.period = submission.phase.periods;
       this.wp_budgets = await this.getSubmissionBudgets(submissionId, submission.phase.id);
 
@@ -1978,7 +1978,7 @@ export class SubmissionService {
       this.period = await this.periodService.findByPhaseId(this.phase.id);
 
       this.anaplanLabels = await this.anaplanService.findAll();
-      this.results = await tocData;
+      this.results = await tocData.results;
 
 
       if(!this.initiative_data.synchronized)
@@ -2406,8 +2406,8 @@ export class SubmissionService {
         this.submission_data.phase.id,
         submissionId
       );
-      this.setvaluesForIndicators(this.savedValuesForIndicator, 2);
-      this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 2);
+      this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
+      this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
   
       await this.setAnaplanValuesVersion(submissionId);
     } else {
@@ -3971,9 +3971,9 @@ const totalRowIndex = rows.length + 1;
 
   let totalLabel = '';
   if(type == 'project')
-    totalLabel = "W3/Bilateral projects Subtotal";
+    totalLabel = "W3/Bilateral projects subtotal";
   else
-    totalLabel = "MELIA Studies Budget Subtotal";
+    totalLabel = "MELIA Studies Budget subtotal";
 
   XLSX.utils.sheet_add_aoa(ws, [[totalLabel, null, null, null, null]], { origin: -1 });
 
@@ -4380,7 +4380,6 @@ const totalRowIndex = rows.length + 1;
     
   }
   setvaluesForIndicators(data: any[], index: number) {
-    console.log(data)
     const indicatorIds = this.results[this.results.length - index].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
@@ -5015,7 +5014,7 @@ const totalRowIndex = rows.length + 1;
       if (currentRowIndex > wpStartRow) {
         ws_data.push([
             null,
-            'HLO budget Subtotal', null, null, null, null, null,
+            'HLO budget subtotal', null, null, null, null, null,
             this.roundNumber(this.summaryBudgetsTotal[wpCode]) || 0,
         ]);
         merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 6 } });
@@ -5048,7 +5047,7 @@ const totalRowIndex = rows.length + 1;
 
   for (let R = 0; R < ws_data.length; ++R) {
     const isHeader = R < 2;
-    const isSubtotal = ws_data[R][1] === 'HLO budget Subtotal';
+    const isSubtotal = ws_data[R][1] === 'HLO budget subtotal';
 
     if (isHeader) {
       ws['!rows'][R] = { hpt: 30 };
@@ -5067,7 +5066,7 @@ const totalRowIndex = rows.length + 1;
         // Header rows (first two rows)
         cell.s = headerStyle;
       } else if (
-        ws_data[R][1] === 'HLO budget Subtotal' // 🟢 Detect subtotal rows by value
+        ws_data[R][1] === 'HLO budget subtotal' // 🟢 Detect subtotal rows by value
       ) {
         cell.s = subTotalRowStyle;
       } else {
@@ -5439,7 +5438,7 @@ generateExcelCenterHLO(partner_code: number) {
 
       ws_data.push([
         null,
-        'HLO budget Subtotal', null, null, null, null, null,
+        'HLO budget subtotal', null, null, null, null, null,
         { f: subtotalFormula },
       ]);
 
@@ -5471,7 +5470,7 @@ generateExcelCenterHLO(partner_code: number) {
 
   for (let R = 0; R < ws_data.length; ++R) {
     const isHeader = R < 2;
-    const isSubtotal = ws_data[R][1] === 'HLO budget Subtotal';
+    const isSubtotal = ws_data[R][1] === 'HLO budget subtotal';
 
     if (isHeader) {
       ws['!rows'][R] = { hpt: 30 };
@@ -5488,7 +5487,7 @@ generateExcelCenterHLO(partner_code: number) {
 
       if (R < 2) {
         cell.s = headerStyle;
-      } else if (ws_data[R][1] === 'HLO budget Subtotal') {
+      } else if (ws_data[R][1] === 'HLO budget subtotal') {
         cell.s = subTotalRowStyle;
       } else {
         cell.s = dataCellStyle;
@@ -5857,7 +5856,7 @@ generateExcelCenterHLO(partner_code: number) {
       // ---- SUBTOTAL ROW ----
       ws_data.push([
         null,
-        "Contracted Partners budget Subtotal",
+        "Contracted partners subtotal",
         null,
         null,
         this.roundNumber(this.summaryBudgetsTotal[wpCode]) || 0,
@@ -5886,7 +5885,7 @@ generateExcelCenterHLO(partner_code: number) {
     // ---- STYLING ----
     for (let R = 0; R < ws_data.length; ++R) {
       const isHeader = R === 0;
-      const isSubtotal = ws_data[R][1] === "Contracted Partners budget Subtotal";
+      const isSubtotal = ws_data[R][1] === "Contracted partners subtotal";
   
       ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 50 };
   
@@ -6174,7 +6173,7 @@ generateExcelCenterHLO(partner_code: number) {
       const subtotalRowIndex = currentRowIndex;
       ws_data.push([
         null,
-        "Contracted Partners budget Subtotal",
+        "Contracted partners subtotal",
         null,
         null,
         { f: `SUM(E${wpStartRow + 1}:E${currentRowIndex})` },
@@ -6202,7 +6201,7 @@ generateExcelCenterHLO(partner_code: number) {
   
     for (let R = 0; R < ws_data.length; ++R) {
       const isHeader = R === 0;
-      const isSubtotal = ws_data[R][1] === "Contracted Partners budget Subtotal";
+      const isSubtotal = ws_data[R][1] === "Contracted partners subtotal";
   
       ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 70 };
   
@@ -6525,7 +6524,7 @@ generateExcelCenterHLO(partner_code: number) {
   
       ws_data.push([
         null,
-        "MELIA budget Subtotal",
+        "MELIA budget subtotal",
         null,
         null,
         this.summaryBudgetsTotal[wpCode] || 0,
@@ -6553,7 +6552,7 @@ generateExcelCenterHLO(partner_code: number) {
   
     for (let R = 0; R < ws_data.length; ++R) {
       const isHeader = R === 0;
-      const isSubtotal = ws_data[R][1] === "MELIA budget Subtotal";
+      const isSubtotal = ws_data[R][1] === "MELIA budget subtotal";
   
       ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 60 };
   
@@ -6659,7 +6658,7 @@ generateExcelCenterHLO(partner_code: number) {
   
       ws_data.push([
         null,
-        "W3/Bilateral budget Subtotal",
+        "W3/Bilateral budget subtotal",
         null,
         this.summaryBudgetsTotal[wpCode] || 0,
       ]);
@@ -6686,7 +6685,7 @@ generateExcelCenterHLO(partner_code: number) {
   
     for (let R = 0; R < ws_data.length; ++R) {
       const isHeader = R === 0;
-      const isSubtotal = ws_data[R][1] === "W3/Bilateral budget Subtotal";
+      const isSubtotal = ws_data[R][1] === "W3/Bilateral budget subtotal";
   
       ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 60 };
   
