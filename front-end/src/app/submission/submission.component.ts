@@ -3641,7 +3641,10 @@ totalConsolidatedTargetPartner: any;
   }
 
   haveHLO(data: any[]) {
-    return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+    if(data)
+      return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+    else
+      return false
   }
 
   haveselectedCountry(data: any[]) {
