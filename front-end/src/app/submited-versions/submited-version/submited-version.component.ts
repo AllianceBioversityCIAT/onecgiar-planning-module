@@ -1006,7 +1006,7 @@ export class SubmitedVersionComponent implements OnInit {
 
          const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
           if(filterd_results.length > 0 && this.toggleIndicatorValues)
-          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d.pooled_centers.map((d:any)=>d.code).includes(partner.code))];
+          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
          else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
         }
@@ -1181,7 +1181,6 @@ export class SubmitedVersionComponent implements OnInit {
     }
     console.log(this.allData)
     console.log(this.values)
-    console.log(this.partnersData)
 
 
     this.savedValues = this.submission_data.consolidated;
@@ -1359,7 +1358,7 @@ export class SubmitedVersionComponent implements OnInit {
   }
 
   setvaluesForIndicators(data: any[]) {
-    const indicatorIds = this.results[this.results.length - 2].indicator_ids;
+    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
   
@@ -1379,7 +1378,7 @@ export class SubmitedVersionComponent implements OnInit {
     this.sammaryCalc();
   }
   setPartnervaluesForIndicators(data: any[]) {  
-    const indicatorIds = this.results[this.results.length - 2].indicator_ids;
+    const indicatorIds = this.results[this.results.length - 1].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
 
@@ -1407,32 +1406,32 @@ export class SubmitedVersionComponent implements OnInit {
 
 
 
-      if (!this.budgetValuesIndicatorSummary[wpCode]) {
-        this.budgetValuesIndicatorSummary[wpCode] = {};
-      }
+    //   if (!this.budgetValuesIndicatorSummary[wpCode]) {
+    //     this.budgetValuesIndicatorSummary[wpCode] = {};
+    //   }
   
-      if (!this.budgetValuesIndicatorSummary[wpCode][indicatorType]) {
-        this.budgetValuesIndicatorSummary[wpCode][indicatorType] = 0;
-      }
+    //   if (!this.budgetValuesIndicatorSummary[wpCode][indicatorType]) {
+    //     this.budgetValuesIndicatorSummary[wpCode][indicatorType] = 0;
+    //   }
   
-      this.budgetValuesIndicatorSummary[wpCode][indicatorType] += budget;
+    //   this.budgetValuesIndicatorSummary[wpCode][indicatorType] += budget;
 
 
-      if (!this.totalBudgetValuesIndicatorPartner[orgCode]) {
-        this.totalBudgetValuesIndicatorPartner[orgCode] = {};
-      }
+    //   if (!this.totalBudgetValuesIndicatorPartner[orgCode]) {
+    //     this.totalBudgetValuesIndicatorPartner[orgCode] = {};
+    //   }
   
-      if (!this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType]) {
-        this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType] = 0;
-      }
+    //   if (!this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType]) {
+    //     this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType] = 0;
+    //   }
   
-      this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType] += budget;
+    //   this.totalBudgetValuesIndicatorPartner[orgCode][indicatorType] += budget;
   
-      if (!this.totalBudgetValuesIndicatorSummary[indicatorType]) {
-        this.totalBudgetValuesIndicatorSummary[indicatorType] = 0;
-      }
+    //   if (!this.totalBudgetValuesIndicatorSummary[indicatorType]) {
+    //     this.totalBudgetValuesIndicatorSummary[indicatorType] = 0;
+    //   }
   
-      this.totalBudgetValuesIndicatorSummary[indicatorType] += budget;
+    //   this.totalBudgetValuesIndicatorSummary[indicatorType] += budget;
       
     }
   }
@@ -2194,7 +2193,10 @@ totalConsolidatedTargetPartner: any;
     return total;
   }
   haveHLO(data: any[]) {
-    return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+    if(data)
+      return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+    else
+      return false
   }
 
   haveselectedCountry(data: any[]) {

@@ -664,7 +664,7 @@ export class SubmissionController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const init = await this.initService.findOne(initId);
-    const toc_data = this.getTocs(
+    const toc_data = await this.getTocs(
       init.synchronized == true ? init.official_code : initId,
     );
     return await this.submissionService.generateExcel(
@@ -685,7 +685,7 @@ export class SubmissionController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const init = await this.initService.findOne(data.initId);
-    const toc_data = this.getTocs(
+    const toc_data = await this.getTocs(
       init.synchronized == true ? init.official_code : data.initId,
     );
     return await this.submissionService.generateExcel(
@@ -705,7 +705,7 @@ export class SubmissionController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const init = await this.initService.findOne(data.initId);
-    const toc_data = this.getTocs(
+    const toc_data = await this.getTocs(
       init.synchronized == true ? init.official_code : data.initId,
     );
     return await this.submissionService.generateExcel(

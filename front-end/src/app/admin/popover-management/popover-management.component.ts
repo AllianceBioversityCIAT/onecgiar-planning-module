@@ -15,7 +15,7 @@ import { PopoverManagementService } from "src/app/services/popover-management.se
   styleUrls: ["./popover-management.component.scss"],
 })
 export class PopoverManagementComponent implements OnInit {
-  columnsToDisplay: string[] = ["id", "description", "actions"];
+  columnsToDisplay: string[] = ["id", "description", "name", "actions"];
   dataSource: MatTableDataSource<any>;
   list: any = [];
   @ViewChild(MatPaginator) paginator: MatPaginator;

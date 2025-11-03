@@ -10,7 +10,9 @@
   min-height: calc(100vh - 210px);
   padding: 4.5rem 0 10rem 0;
 }
-
+.text-left{
+  text-align: left !important;
+}
 .risk-management-container {
   width: 95%;
   margin: 0 auto;

@@ -10,4 +10,9 @@ export class Popover {
   @ApiProperty()
   @Column('longtext')
   description: string;
+
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  name: string;
 }
