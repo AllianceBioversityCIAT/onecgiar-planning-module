@@ -36,6 +36,7 @@ export class PopoverDialogComponent implements OnInit {
   private async initForm() {
     this.form = this.fb.group({
       description: [null, Validators.required],
+      name: [null, Validators.required],
     });
   }
 

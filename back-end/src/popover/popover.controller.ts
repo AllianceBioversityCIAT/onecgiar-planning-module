@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { PopoverService } from './popover.service';
 import { CreatePopoverDto } from './dto/create-popover.dto';
@@ -20,7 +21,12 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 export class PopoverController {
   constructor(private readonly popoverService: PopoverService) {
   }
-
+  @Post('byName')
+  async findOneByName(@Body('name') name: string) {
+    console.log(name)
+    const popover = await this.popoverService.findOneByName(name);
+    return popover || null;   
+  }
   @Post()
   create(@Body() createPopoverDto: CreatePopoverDto) {
     return this.popoverService.create(createPopoverDto);
@@ -43,6 +49,8 @@ export class PopoverController {
   findOne(@Param('id') id: string) {
     return this.popoverService.findOne(+id);
   }
+
+
   @ApiBody({ type: Popover })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePopoverDto: UpdatePopoverDto) {
