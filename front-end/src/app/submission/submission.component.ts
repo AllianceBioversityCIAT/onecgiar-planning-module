@@ -1117,6 +1117,10 @@ if(!this.timeCalcForIndicator[item_id])
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
+    this.clarisaCountries = await this.countryService.getAll();
+    this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
+
+   
 
     if(!this.initiative_data.synchronized){
         this.ipsrs_data = await this.submissionService.getIpsrs();
@@ -1750,10 +1754,7 @@ if(!this.timeCalcForIndicator[item_id])
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
-    this.clarisaCountries = await this.countryService.getAll();
-    this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
 
-   
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
