@@ -18,6 +18,10 @@ section {
   flex-direction: column;
 }
 
+.form-dialog-content__field {
+  width: 100% !important;
+}
+
 .form-dialog-conten-button-box-3 {
   text-align: right;
   margin-top: 2.5rem !important;

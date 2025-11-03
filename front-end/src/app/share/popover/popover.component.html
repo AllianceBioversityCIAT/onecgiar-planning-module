@@ -16,11 +16,11 @@
   (backdropClick)="isOpen = !isOpen"
 >
   <section>
-    <div *ngIf="id">
+    <div *ngIf="id || name">
       <section [innerHTML]="(popover) | trustHTML"></section>
       <mat-icon (click)="isOpen = !isOpen"> close </mat-icon>
     </div>
-    <div *ngIf="!id">
+    <div *ngIf="!id && !name">
       <ng-content></ng-content>
       <mat-icon (click)="isOpen = !isOpen"> close </mat-icon>
     </div>

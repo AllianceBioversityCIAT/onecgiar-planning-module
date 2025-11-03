@@ -23,6 +23,14 @@ export class PopoverManagementService {
     ).catch((e) => false);
   }
 
+  async getByName(name: string) {
+    return firstValueFrom(
+      this.http
+        .post(environment.api_url + "/popover/byName" , {name})
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async getByToken(token: string) {
     return firstValueFrom(
       this.http

@@ -92,7 +92,17 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   onScroll(): void {
     this.currentScroll = window.scrollY;
   }
+getFirstError(partner: any,section:string): string | null {
+  if (!this.wps?.length) return null;
 
+  for (const wp of this.wps) {
+    const key = wp?.ost_wp?.wp_official_code + '-'+section;
+    if (this.errors[partner.code]?.[key]) {
+      return this.errors[partner.code][key];
+    }
+  }
+  return null;
+}
   clarisaCountries: any[] = [];
   user: any;
   data: any = [];
@@ -1117,6 +1127,10 @@ if(!this.timeCalcForIndicator[item_id])
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
+    this.clarisaCountries = await this.countryService.getAll();
+    this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
+
+   
 
     if(!this.initiative_data.synchronized){
         this.ipsrs_data = await this.submissionService.getIpsrs();
@@ -1140,7 +1154,7 @@ if(!this.timeCalcForIndicator[item_id])
         ];
       })
 
-       this.tocSubmissionData = toc_data.info
+this.tocSubmissionData = toc_data.info
     this.partnersProjectMelia =  toc_data.extra
     this.partnersMelia = this.sortByNameOrTitle(this.partnersProjectMelia.melias);
     this.partnersProject = this.sortByNameOrTitle(this.partnersProjectMelia.projects);
@@ -1435,7 +1449,7 @@ if(!this.timeCalcForIndicator[item_id])
 
          const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
           if(filterd_results.length > 0 && this.toggleIndicatorValues)
-          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d.pooled_centers.map((d:any)=>d.code).includes(partner.code))];
+          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
          else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
           // this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
@@ -1672,28 +1686,6 @@ if(!this.timeCalcForIndicator[item_id])
       const newCROSS = this.allData[firstKey].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
       this.allData[firstKey] = this.allData[firstKey].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
       newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
-    
-
-    console.log(this.allData)
-
-
-    //sort WP titles
-    // this.wps.forEach((d: any) => {
-    //   if (d.category == "WP") {
-    //     let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
-    //       .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
-
-    //     let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
-    //       .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
-
-    //     this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
-    //   }
-    // })
-
-  this.sort(this.allData);
-  this.sort(this.partnersData);
-
-
   }
   savedValues: any = null;
   savedValuesForIndicator: any = null;
@@ -1750,10 +1742,7 @@ if(!this.timeCalcForIndicator[item_id])
     this.initiative_data = await this.submissionService.getInitiative(
       this.params.id
     );
-    this.clarisaCountries = await this.countryService.getAll();
-    this.allCenterCountryValues = await this.countryService.getAllValues(this.phase.id);
 
-   
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
@@ -3640,7 +3629,10 @@ totalConsolidatedTargetPartner: any;
   }
 
   haveHLO(data: any[]) {
-    return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+    if(data)
+      return data.some(item => item.category === 'OUTPUT' && item.quantitative_indicators.length);
+    else
+      return false
   }
 
   haveselectedCountry(data: any[]) {
