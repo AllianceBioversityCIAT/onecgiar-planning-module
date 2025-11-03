@@ -2406,7 +2406,7 @@ export class SubmissionService {
         this.submission_data.phase.id,
         submissionId
       );
-      this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
+      // this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
       this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
   
       await this.setAnaplanValuesVersion(submissionId);
@@ -2420,7 +2420,7 @@ export class SubmissionService {
         this.initiative_data.id,
         this.phase.id
       );
-      this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
+      // this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
       this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
   
       await this.setAnaplanValues();
@@ -4398,6 +4398,10 @@ const totalRowIndex = rows.length + 1;
     this.sammaryCalc();
   }
   setPartnervaluesForIndicators(data: any[], index: number) {  
+    this.budgetValuesIndicatorPartner = {};
+    this.budgetValuesIndicatorSummary = {};
+    this.totalBudgetValuesIndicatorPartner = {};
+    this.totalBudgetValuesIndicatorSummary = {};
     const indicatorIds = this.results[this.results.length - index].indicator_ids;
     const ids = Object.values(indicatorIds);
     const filtered = data.filter(item => ids.includes(item.result_uuid));
