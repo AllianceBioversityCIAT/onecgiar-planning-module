@@ -2718,7 +2718,7 @@ this.tocSubmissionData = toc_data.info
       data: {
         message: "Note that your program has not specified any “Synergies with other Programs” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not plan to develop synergies with other Programs.",
       },
-      width: '400px'
+      width: '600px'
     })
     .afterClosed()
     .subscribe(async (dialogResult) => {

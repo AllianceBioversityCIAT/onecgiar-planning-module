@@ -1,9 +1,4 @@
-.dialog-text {
-  line-height: 1.5;
-  color: #333;
-  font-weight: 600;
-  padding: 18px;
-}
+
 
 .btn-confirm-yes {
   background-color: rgb(85, 105, 221) !important;
@@ -14,17 +9,17 @@
   background-color: rgb(68, 84, 177) !important;
 }
 
-.btn-confirm-no {
-  background-color: rgb(172 176 201) !important;
-  color: white;
+
+
+.dialog-list {
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding: 20px;
+  padding-left: 35px;
+  line-height: 1.5;
+  color: #333;
 }
 
-.btn-confirm-no:hover {
-  background-color: rgb(140 145 173) !important;
-}
-
-mat-dialog-actions button {
-  display: flex;
-  align-items: center;
-  margin-left: 8px;
+.dialog-list li {
+  margin-bottom: 5px; 
 }
