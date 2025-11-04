@@ -35,6 +35,7 @@ import { AnaplanService } from "../services/anaplan.service";
 import { ClarisaCountryService } from "../services/clarisa-country.service";
 import { MatTabGroup } from "@angular/material/tabs";
 import { DecimalPipe, Location } from "@angular/common";
+import { SubmitMessageComponent } from "./submit-message/submit-message.component";
 
 @Component({
   selector: "app-submission",
@@ -87,7 +88,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   @ViewChild(MatTabGroup) tabGroup: MatTabGroup;
 
   currentScroll = 0;
-
+notes:any={};
   @HostListener('window:scroll', [])
   onScroll(): void {
     this.currentScroll = window.scrollY;
@@ -1686,7 +1687,49 @@ this.tocSubmissionData = toc_data.info
       const newCROSS = this.allData[firstKey].filter((d: any) => d.category == "Cross Cutting").sort((a: any, b: any) => b?.title?.toLowerCase().localeCompare(a?.title?.toLowerCase()));
       this.allData[firstKey] = this.allData[firstKey].filter((d: any) => d.category != "Cross Cutting").sort((a: any, b: any) => a?.title?.toLowerCase().localeCompare(b?.title?.toLowerCase()));
       newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
-  }
+    
+
+    console.log(this.allData)
+    console.log(this.results)
+
+
+    //sort WP titles
+    // this.wps.forEach((d: any) => {
+    //   if (d.category == "WP") {
+    //     let outputData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category == "OUTPUT")
+    //       .sort((a: any, b: any) => a.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b.title.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()))
+
+    //     let outcomeData = this.allData[d.ost_wp.wp_official_code].filter((d: any) => d.category != "OUTPUT")
+    //       .sort((a: any, b: any) => a?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase().localeCompare(b?.title?.replace(/[\s~`!@#$%^&*(){}\[\];:"'<,.>?\/\\|_+=-]/g, '').toLowerCase()));
+
+    //     this.allData[d.ost_wp.wp_official_code] = outputData.concat(outcomeData);
+    //   }
+    // })
+
+  this.sort(this.allData);
+  this.sort(this.partnersData);
+
+        const m1= 'Note that your program has not specified any “Partners” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not intend to contract any partner. ';
+        const m2 = "Note that your program has not specified any “Bilateral projects” in the TOC linked to HLOs/Outcomes. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not rely on Bilateral projects mapped to realise its TOC.";
+      for(let partner of this.partners ){
+         this.notes[partner.code]=[]
+         let flagNoPartners=true;
+          let flagNoProject=true;
+        console.log('this.notes[partner.code]=[]',partner.code)
+      for(let wp of this.wps){
+      if(this.partnersData[partner.code]?.[wp.ost_wp.wp_official_code + '-partners']?.length)
+        flagNoPartners=false;
+      
+      }
+       if(this.partnerProjects[partner.code]?.length)
+        flagNoProject=false;
+      
+      if(flagNoPartners && partner.code != 221)
+      this.notes[partner.code][0] = m1
+      if(flagNoProject && partner.code != 221)
+        this.notes[partner.code][1] = m2
+    }
+ }
   savedValues: any = null;
   savedValuesForIndicator: any = null;
   isCenter: boolean = false;
@@ -2700,52 +2743,80 @@ this.tocSubmissionData = toc_data.info
   // }
 
   async submit() {
-    let messages = "Are you sure you want to submit?";
-    let incompleteCentersArray = this.incompleteCenters().sort(); 
-    if (incompleteCentersArray.length) {
-      messages = incompleteCentersArray.length > 1 ? "Centers" : "Center(s)";
-      messages += "  are incomplete:";
+    let synergiesFlag=false;
+    for(let wp of this.wps){
+      if(this.allData[wp.ost_wp.wp_official_code + '-synergy-programs']?.length)
+        synergiesFlag=true;
     }
+    if(!synergiesFlag)
     this.dialog
-      .open(DeleteConfirmDialogComponent, {
-        data: {
-          title: "Submit",
-          message2: messages,
-          f: incompleteCentersArray,
-          k: `Are you sure you want to submit?`,
-          svg: `../../assets/shared-image/apply.png`,
-        },
-      })
-      .afterClosed()
-      .subscribe(async (dialogResult) => {
-        if (dialogResult == true) {
-            this.loading = true;
-            await this.submissionService.submit(this.params.id, {
-              phase_id: this.phase.id,
-            }).then(
-              async (data) => {
-                this.initiative_data = await this.submissionService.getInitiative(
-                  this.params.id
-                );
-                this.socket.emit('submissionStatus', {
-                  initStatus: "Pending",
-                  initiative_data: this.initiative_data
-                });
+    .open(SubmitMessageComponent, {
+      data: {
+        message: "Note that your program has not specified any “Synergies with other Programs” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not plan to develop synergies with other Programs.",
+      },
+      width: '600px'
+    })
+    .afterClosed()
+    .subscribe(async (dialogResult) => {
+      this.submitDialog()
+    });
+else
+this.submitDialog()
 
-                this.toastrService.success("Data Submitted successfully");
-                this.router.navigate([
-                  "program",
-                  this.initiative_data.id,
-                  this.initiative_data.official_code,
-                  "submited-versions",
-                ]);
-              }, (error) => {
-                this.toster.error('Connection Error', undefined, { disableTimeOut: true });
-              }
-            );
-            this.loading = false;
+  }
+
+  async submitDialog(){
+
+
+        let messages = "Are you sure you want to submit?";
+        let incompleteCentersArray = this.incompleteCenters().sort(); 
+        if (incompleteCentersArray.length) {
+          messages = incompleteCentersArray.length > 1 ? "Centers" : "Center(s)";
+          messages += "  are incomplete:";
         }
-      });
+        this.dialog
+          .open(DeleteConfirmDialogComponent, {
+            data: {
+              title: "Submit",
+              message2: messages,
+              f: incompleteCentersArray,
+              k: `Are you sure you want to submit?`,
+              svg: `../../assets/shared-image/apply.png`,
+            },
+          })
+          .afterClosed()
+          .subscribe(async (dialogResult) => {
+            if (dialogResult == true) {
+              if(this.validate()) {
+                this.loading = true;
+                await this.submissionService.submit(this.params.id, {
+                  phase_id: this.phase.id,
+                }).then(
+                  async (data) => {
+                    this.initiative_data = await this.submissionService.getInitiative(
+                      this.params.id
+                    );
+                    this.socket.emit('submissionStatus', {
+                      initStatus: "Pending",
+                      initiative_data: this.initiative_data
+                    });
+    
+                    this.toastrService.success("Data Submitted successfully");
+                    this.router.navigate([
+                      "program",
+                      this.initiative_data.id,
+                      this.initiative_data.official_code,
+                      "submited-versions",
+                    ]);
+                  }, (error) => {
+                    this.toster.error('Connection Error', undefined, { disableTimeOut: true });
+                  }
+                );
+                this.loading = false;
+              }
+            }
+          });
+      
   }
 
   incompleteCenters() {
@@ -2757,7 +2828,21 @@ this.tocSubmissionData = toc_data.info
     });
     return incompleteCenters;
   }
-
+  validate() {
+    let valid = true;
+    let message = "";
+    Object.keys(this.partnersData).forEach((partner_code) => {
+      let result = this.validateCenter(partner_code, false);
+      if (!result.valid) {
+        valid = result.valid;
+        message = result.message;
+      }
+    });
+    if (!valid) {
+      this.toastrService.error(message, "Submission failed");
+    }
+    return valid;
+  }
 
   // validateWp(partner_code: any, wp_id: any, wp_official_code: string) { 
   //   const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting '];
@@ -2915,7 +3000,7 @@ this.tocSubmissionData = toc_data.info
   //       message: message,
   //     };
   // } 
-  validateCenter(partner_code: any, is_mark = false) {
+  validateCenter(partner_code: any, is_mark = false) { 
   let valid = true;
   let message = "";
 
@@ -2943,7 +3028,7 @@ this.tocSubmissionData = toc_data.info
 
 
   return { valid, message };
-}
+} 
 
 
   validateWp(partner_code: any, wp_id: any, wp_official_code: string) {
