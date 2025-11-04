@@ -58,9 +58,10 @@ export class CenterStatusComponent implements OnInit {
       this.dialog
       .open(SubmitMessageComponent, {
         data: {
-          message: "Note that your program has not specified any “Partners” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not intend to contract any partner. ",
+          message:'Note that your program has not specified any “Partners” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not intend to contract any partner. ',
+          message2: "Note that your program has not specified any “Bilateral projects” in the TOC linked to HLOs/Outcomes. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not rely on Bilateral projects mapped to realise its TOC.",
         },
-        width: '400px'
+        width: '600px'
       })
       .afterClosed()
       .subscribe(async (dialogResult) => {

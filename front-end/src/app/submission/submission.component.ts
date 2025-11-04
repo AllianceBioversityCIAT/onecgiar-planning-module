@@ -2729,7 +2729,7 @@ this.tocSubmissionData = toc_data.info
       data: {
         message: "Note that your program has not specified any “Synergies with other Programs” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not plan to develop synergies with other Programs.",
       },
-      width: '400px'
+      width: '600px'
     })
     .afterClosed()
     .subscribe(async (dialogResult) => {
@@ -2753,6 +2753,7 @@ this.tocSubmissionData = toc_data.info
           .afterClosed()
           .subscribe(async (dialogResult) => {
             if (dialogResult == true) {
+              if(this.validate()) {
                 this.loading = true;
                 await this.submissionService.submit(this.params.id, {
                   phase_id: this.phase.id,
@@ -2778,6 +2779,7 @@ this.tocSubmissionData = toc_data.info
                   }
                 );
                 this.loading = false;
+              }
             }
           });
       }
@@ -2793,7 +2795,21 @@ this.tocSubmissionData = toc_data.info
     });
     return incompleteCenters;
   }
-
+  validate() {
+    let valid = true;
+    let message = "";
+    Object.keys(this.partnersData).forEach((partner_code) => {
+      let result = this.validateCenter(partner_code, false);
+      if (!result.valid) {
+        valid = result.valid;
+        message = result.message;
+      }
+    });
+    if (!valid) {
+      this.toastrService.error(message, "Submission failed");
+    }
+    return valid;
+  }
 
   // validateWp(partner_code: any, wp_id: any, wp_official_code: string) { 
   //   const validateWp = ['project', 'partners', 'melia', 'Cross-Cutting '];
@@ -2951,7 +2967,7 @@ this.tocSubmissionData = toc_data.info
   //       message: message,
   //     };
   // } 
-  validateCenter(partner_code: any, is_mark = false) {
+  validateCenter(partner_code: any, is_mark = false) { 
   let valid = true;
   let message = "";
 
@@ -2979,7 +2995,7 @@ this.tocSubmissionData = toc_data.info
 
 
   return { valid, message };
-}
+} 
 
 
   validateWp(partner_code: any, wp_id: any, wp_official_code: string) {

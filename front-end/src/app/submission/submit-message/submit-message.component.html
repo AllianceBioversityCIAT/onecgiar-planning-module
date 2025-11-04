@@ -1,14 +1,20 @@
 
+
 <div>
-  <p class="dialog-text">{{ data.message }}</p>
+  <ul *ngIf="data.message || data.message2" class="dialog-list">
+    
+    <li *ngIf="data.message">
+      {{ data.message }}
+    </li>
+
+    <li *ngIf="data.message2">
+      {{ data.message2 }}
+    </li>
+  </ul>
 </div>
 
 <mat-dialog-actions align="end">
-  <button mat-flat-button class="btn-confirm-no" (click)="onNoClick()">
-    No
-  </button>
-  
   <button class="btn-confirm-yes" mat-raised-button (click)="onYesClick()" cdkFocusInitial>
-    Yes
+    OK
   </button>
 </mat-dialog-actions>
