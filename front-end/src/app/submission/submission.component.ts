@@ -35,6 +35,7 @@ import { AnaplanService } from "../services/anaplan.service";
 import { ClarisaCountryService } from "../services/clarisa-country.service";
 import { MatTabGroup } from "@angular/material/tabs";
 import { DecimalPipe, Location } from "@angular/common";
+import { SubmitMessageComponent } from "./submit-message/submit-message.component";
 
 @Component({
   selector: "app-submission",
@@ -2723,52 +2724,64 @@ this.tocSubmissionData = toc_data.info
   // }
 
   async submit() {
-    let messages = "Are you sure you want to submit?";
-    let incompleteCentersArray = this.incompleteCenters().sort(); 
-    if (incompleteCentersArray.length) {
-      messages = incompleteCentersArray.length > 1 ? "Centers" : "Center(s)";
-      messages += "  are incomplete:";
-    }
     this.dialog
-      .open(DeleteConfirmDialogComponent, {
-        data: {
-          title: "Submit",
-          message2: messages,
-          f: incompleteCentersArray,
-          k: `Are you sure you want to submit?`,
-          svg: `../../assets/shared-image/apply.png`,
-        },
-      })
-      .afterClosed()
-      .subscribe(async (dialogResult) => {
-        if (dialogResult == true) {
-            this.loading = true;
-            await this.submissionService.submit(this.params.id, {
-              phase_id: this.phase.id,
-            }).then(
-              async (data) => {
-                this.initiative_data = await this.submissionService.getInitiative(
-                  this.params.id
-                );
-                this.socket.emit('submissionStatus', {
-                  initStatus: "Pending",
-                  initiative_data: this.initiative_data
-                });
-
-                this.toastrService.success("Data Submitted successfully");
-                this.router.navigate([
-                  "program",
-                  this.initiative_data.id,
-                  this.initiative_data.official_code,
-                  "submited-versions",
-                ]);
-              }, (error) => {
-                this.toster.error('Connection Error', undefined, { disableTimeOut: true });
-              }
-            );
-            this.loading = false;
+    .open(SubmitMessageComponent, {
+      data: {
+        message: "Note that your program has not specified any “Synergies with other Programs” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not plan to develop synergies with other Programs.",
+      },
+      width: '400px'
+    })
+    .afterClosed()
+    .subscribe(async (dialogResult) => {
+      if (dialogResult == true) {
+        let messages = "Are you sure you want to submit?";
+        let incompleteCentersArray = this.incompleteCenters().sort(); 
+        if (incompleteCentersArray.length) {
+          messages = incompleteCentersArray.length > 1 ? "Centers" : "Center(s)";
+          messages += "  are incomplete:";
         }
-      });
+        this.dialog
+          .open(DeleteConfirmDialogComponent, {
+            data: {
+              title: "Submit",
+              message2: messages,
+              f: incompleteCentersArray,
+              k: `Are you sure you want to submit?`,
+              svg: `../../assets/shared-image/apply.png`,
+            },
+          })
+          .afterClosed()
+          .subscribe(async (dialogResult) => {
+            if (dialogResult == true) {
+                this.loading = true;
+                await this.submissionService.submit(this.params.id, {
+                  phase_id: this.phase.id,
+                }).then(
+                  async (data) => {
+                    this.initiative_data = await this.submissionService.getInitiative(
+                      this.params.id
+                    );
+                    this.socket.emit('submissionStatus', {
+                      initStatus: "Pending",
+                      initiative_data: this.initiative_data
+                    });
+    
+                    this.toastrService.success("Data Submitted successfully");
+                    this.router.navigate([
+                      "program",
+                      this.initiative_data.id,
+                      this.initiative_data.official_code,
+                      "submited-versions",
+                    ]);
+                  }, (error) => {
+                    this.toster.error('Connection Error', undefined, { disableTimeOut: true });
+                  }
+                );
+                this.loading = false;
+            }
+          });
+      }
+    });
   }
 
   incompleteCenters() {
