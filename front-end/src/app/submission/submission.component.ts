@@ -88,7 +88,7 @@ export class SubmissionComponent implements OnInit, OnDestroy {
   @ViewChild(MatTabGroup) tabGroup: MatTabGroup;
 
   currentScroll = 0;
-
+notes:any={};
   @HostListener('window:scroll', [])
   onScroll(): void {
     this.currentScroll = window.scrollY;
@@ -1709,8 +1709,27 @@ this.tocSubmissionData = toc_data.info
   this.sort(this.allData);
   this.sort(this.partnersData);
 
-
-  }
+        const m1= 'Note that your program has not specified any “Partners” in the TOC. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not intend to contract any partner. ';
+        const m2 = "Note that your program has not specified any “Bilateral projects” in the TOC linked to HLOs/Outcomes. In case this is not correct please update the TOC before submission. In submitting your PORB you confirm that your program does not rely on Bilateral projects mapped to realise its TOC.";
+      for(let partner of this.partners ){
+         this.notes[partner.code]=[]
+         let flagNoPartners=true;
+          let flagNoProject=true;
+        console.log('this.notes[partner.code]=[]',partner.code)
+      for(let wp of this.wps){
+      if(this.partnersData[partner.code]?.[wp.ost_wp.wp_official_code + '-partners']?.length)
+        flagNoPartners=false;
+      
+      }
+       if(this.partnerProjects[partner.code]?.length)
+        flagNoProject=false;
+      
+      if(flagNoPartners && partner.code != 221)
+      this.notes[partner.code][0] = m1
+      if(flagNoProject && partner.code != 221)
+        this.notes[partner.code][1] = m2
+    }
+ }
   savedValues: any = null;
   savedValuesForIndicator: any = null;
   isCenter: boolean = false;
@@ -2724,6 +2743,12 @@ this.tocSubmissionData = toc_data.info
   // }
 
   async submit() {
+    let synergiesFlag=false;
+    for(let wp of this.wps){
+      if(this.allData[wp.ost_wp.wp_official_code + '-synergy-programs']?.length)
+        synergiesFlag=true;
+    }
+    if(!synergiesFlag)
     this.dialog
     .open(SubmitMessageComponent, {
       data: {
@@ -2733,7 +2758,16 @@ this.tocSubmissionData = toc_data.info
     })
     .afterClosed()
     .subscribe(async (dialogResult) => {
-      if (dialogResult == true) {
+      this.submitDialog()
+    });
+else
+this.submitDialog()
+
+  }
+
+  async submitDialog(){
+
+
         let messages = "Are you sure you want to submit?";
         let incompleteCentersArray = this.incompleteCenters().sort(); 
         if (incompleteCentersArray.length) {
@@ -2782,8 +2816,7 @@ this.tocSubmissionData = toc_data.info
               }
             }
           });
-      }
-    });
+      
   }
 
   incompleteCenters() {
