@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import * as saveAs from 'file-saver';
 import { Observable, firstValueFrom, map } from 'rxjs';
@@ -254,6 +254,34 @@ async excelCurrent(id: any) {
       this.http.post(environment.api_url+'/melia', data).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
+
+  async exportInit(initIds: any, phase_id: number) {
+    try {
+      const response = await firstValueFrom(
+        this.http.post(`${environment.api_url}/submission/export/${phase_id}`, initIds, {
+          observe: 'response',
+          responseType: 'blob',
+          headers: new HttpHeaders({ skipLoading: 'true' }) 
+        })
+      );
+  
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = 'export.zip';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (match) filename = match[1];
+      }
+  
+      const blob = response.body!;
+      const url = window.URL.createObjectURL(blob);
+  
+      return { success: true, url, filename };
+    } catch (e) {
+      console.error('Export failed:', e);
+      return { success: false };
+    }
+  }
+  
 
   async saveIPSR(data: any) {
     return firstValueFrom(

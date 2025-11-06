@@ -18,6 +18,12 @@ export class LoadingInterceptor implements HttpInterceptor {
     request: HttpRequest<unknown>,
     next: HttpHandler
   ): Observable<HttpEvent<unknown>> {
+    if (request.headers.has('skipLoading')) {
+      const cloned = request.clone({
+        headers: request.headers.delete('skipLoading'),
+      });
+      return next.handle(cloned);
+    }
     this.totalRequests++;
     setTimeout(() => {
       const url = request.url.split('/').slice(-1)[0];
