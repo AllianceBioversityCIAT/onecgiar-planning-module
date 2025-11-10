@@ -1768,7 +1768,8 @@
                               partnersStatus[partner.code] ||
                               initStatus == 'Pending' ||
                               initStatus == 'Approved' ||
-                              !partner?.canEdit
+                              !partner?.canEdit ||
+                              !getTargetValue(indicator?.targets)
                             "
                               (keyup)="
                                 changeCalcForIndicator(
@@ -2860,7 +2861,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                !getTargetValue(indicator?.targets)
                               "
                                 (keyup)="
                                   changeCalcForIndicator(
