@@ -1903,7 +1903,7 @@ export class SubmissionService {
   totalTargetsIndicatorPartners: any = {};
   totalConsolidatedTargetPartner: any;
 
-  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any, showGeographicScope: boolean,res: Response, anaplan: boolean) { 
+  async generateExcel(submissionId: any, initId: any, tocData: any, organization: any, showGeographicScope: boolean,res: Response, anaplan: boolean, zip: boolean) { 
     this.perValues = {};
     this.perValuesSammary = {};
     this.perValuesSammaryForPartner = {};
@@ -1955,6 +1955,8 @@ export class SubmissionService {
       cross_data = await this.CrossCuttingService.findBySubmissionID(
         submissionId
       );
+      this.anaplanLabels = await this.anaplanService.findAll();
+
       if(!this.initiative_data.synchronized)
         this.ipsr_value_data = await this.IpsrValueService.findBySubmissionId(
           submissionId
@@ -2406,7 +2408,7 @@ export class SubmissionService {
         this.submission_data.phase.id,
         submissionId
       );
-      // this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
+      this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
       this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
   
       await this.setAnaplanValuesVersion(submissionId);
@@ -2420,7 +2422,7 @@ export class SubmissionService {
         this.initiative_data.id,
         this.phase.id
       );
-      // this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
+      this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
       this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
   
       await this.setAnaplanValues();
@@ -2475,7 +2477,7 @@ export class SubmissionService {
 
 
 
-  if(organization && !anaplan){
+  if(organization && !anaplan && !zip && !submissionId){
   //  center Consolidated
   const centerConsolidated = this.generateExcelCenterConsolidated(organization.code);
   XLSX.utils.book_append_sheet(wb, centerConsolidated, 'Summary');
@@ -2512,7 +2514,7 @@ export class SubmissionService {
 
 
 
-  } else  if(!organization && !anaplan){
+  } else  if(!organization && !anaplan && !zip && !submissionId){
       //  summary Consolidated
       const summaryConsolidated = this.generateExcelSummaryConsolidated();
       XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'Summary');
@@ -2550,13 +2552,53 @@ export class SubmissionService {
       const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
       XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
   
-  } else if(organization && anaplan) {
+  } else if(organization && anaplan && !zip && !submissionId) {
     const anaplanSheet = this.generateExcelAnaplan(organization);
     XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
-  } else if(!organization && anaplan) {
+  } else if(!organization && anaplan && !zip && !submissionId) {
     const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
     XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
-  } else if(submissionId) {
+  } 
+  else if(submissionId && !organization && !zip) {
+    //  summary Consolidated
+    const summaryConsolidated = this.generateExcelSummaryConsolidated();
+    XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'Summary');
+
+    // HLO for summary
+    const summaryHighLevelOutput = this.generateExcelSummaryHLO();
+    XLSX.utils.book_append_sheet(wb, summaryHighLevelOutput, 'HLO');
+
+
+    // Outcome for summary
+    const summaryOutcome = this.generateExcelSummaryOutcome();
+    XLSX.utils.book_append_sheet(wb, summaryOutcome, 'Outcome');
+
+    // melia for summary
+    const summaryMelia = this.generateExcelSummaryMelia();
+    XLSX.utils.book_append_sheet(wb, summaryMelia, 'Melia');
+
+    // project for summary
+    const summaryProject = this.generateExcelSummaryProject();
+    XLSX.utils.book_append_sheet(wb, summaryProject, 'Project');
+
+    // summary Cross-Cutting
+    const summaryCross = this.generateExcelSummaryCrossCutting();
+    XLSX.utils.book_append_sheet(wb, summaryCross, 'Cross-Cutting');
+
+
+    // synergy programs for summary
+    const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
+    XLSX.utils.book_append_sheet(wb, synergyProgramsSheet, 'Synergy programs');
+
+    // Partners for summary
+    const partnersSummarySheet = this.generateExcelSummaryPartner();
+    XLSX.utils.book_append_sheet(wb, partnersSummarySheet, 'Partner');
+
+    const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
+    XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
+} 
+  else if(submissionId && !organization && zip) {
+
         //  summary Consolidated
         const summaryConsolidated = this.generateExcelSummaryConsolidated();
         XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'Summary');
@@ -2593,10 +2635,44 @@ export class SubmissionService {
   
         const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
         XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
+  } else if(submissionId && organization && zip) {
+
+    //  center Consolidated
+  const centerConsolidated = this.generateExcelCenterConsolidated(organization.code);
+  XLSX.utils.book_append_sheet(wb, centerConsolidated, 'Summary');
+
+
+  // cenert Cross-Cutting
+  const centerCross = this.generateExcelCenterCrossCutting(organization.code);
+  XLSX.utils.book_append_sheet(wb, centerCross, 'Cross-Cutting');
+
+
+  // HLO for center
+  const centerHighLevelOutput =  await this.generateExcelCenterHLO(organization.code);
+  XLSX.utils.book_append_sheet(wb, centerHighLevelOutput, 'HLO');
+
+  // Partners for centers
+  const partnersCenterSheet = this.generateExcelCenterPartner(organization.code);
+  XLSX.utils.book_append_sheet(wb, partnersCenterSheet, 'Partner');
+
+
+  // const data = await this.getActualTocs(this.initiative_data.official_code);
+
+  if(this.submission_data.toc_data?.extra?.projects) {
+    const projectSheet = await this.generateExcelProject(this.submission_data.toc_data?.extra?.projects, organization, 'project');
+    XLSX.utils.book_append_sheet(wb, projectSheet, 'Project');
   }
-      // ensure Workbook exists
-     wb.Workbook = wb.Workbook || {} as any;
-    (wb.Workbook as any).CalcPr = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
+  
+  if(this.submission_data.toc_data?.extra?.melias) {
+    const meliaSheet = await this.generateExcelProject(this.submission_data.toc_data?.extra?.melias, organization, 'melia');
+    XLSX.utils.book_append_sheet(wb, meliaSheet, 'Melia');
+  }
+
+  const anaplanSheet = this.generateExcelAnaplan(organization);
+  XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
+
+}
+    (wb.Workbook as any) = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
     if(organization)
       file_name =  organization?.acronym? file_name+`_${this.initiative_data?.official_code}_${organization.acronym}` : file_name+ '_'+ this.initiative_data?.official_code;
     else 
@@ -2616,18 +2692,21 @@ export class SubmissionService {
         unlink(join(process.cwd(), 'generated_files', `${file_name}.xlsx`), null);
       } catch (e) { }
     }, 9000);
-  res.setHeader(
-    'Content-Type',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  );
-  res.setHeader(
-    'Content-Disposition',
-    `attachment; filename="${file_name}.xlsx"`,
-  );
-  res.setHeader(
-    'Access-Control-Expose-Headers',
-    'Content-Disposition',
-  );         
+    if(!zip) {
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${file_name}.xlsx"`,
+      );
+      res.setHeader(
+        'Access-Control-Expose-Headers',
+        'Content-Disposition',
+      );  
+    }
+        
     return new StreamableFile(file);
 
     // return {

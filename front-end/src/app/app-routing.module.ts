@@ -33,6 +33,7 @@ import { SubmittedVersionComponent } from "./archive/submitted-version/submitted
 import { TeamMemberComponent } from "./archive/team-member/team-member.component";
 import { TableComponent } from "./archive/table/table.component";
 import { VersionComponent } from "./archive/version/version.component";
+import { ExportComponent } from "./admin/export/export.component";
 
 const routes: Routes = [
   {
@@ -86,6 +87,7 @@ const routes: Routes = [
       { path: "track-porbs", component: TrackPORBsComponent },
       { path: "sync-init", component: SyncInitComponent },
       { path: "archive", component: ArchivedComponent },
+      { path: "export", component: ExportComponent },
 
     ],
   },
