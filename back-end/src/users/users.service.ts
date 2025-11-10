@@ -144,7 +144,9 @@ export class UsersService {
     this.autofitColumnsXlsx(finaldata,ws);
 
     XLSX.utils.book_append_sheet(wb, ws, 'Users');
-     (wb.Workbook as any) = { fullCalcOnLoad: 1 };
+    // ensure Workbook exists
+      wb.Workbook = wb.Workbook || {} as any;
+     (wb.Workbook as any).CalcPr = { fullCalcOnLoad: 1 };
     await XLSX.writeFile(
       wb,
       join(process.cwd(), 'generated_files', file_name),

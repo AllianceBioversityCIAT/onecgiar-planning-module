@@ -404,7 +404,7 @@
               <mat-card-title class="card-title-table"
                 >{{ wp.title }}
                 <app-popover
-                [id]="isFirst ? '2' : i === 1 ? '3' : '19'"
+                [id]="isFirst ? '2' : '3'"
                 ></app-popover>
               </mat-card-title>
               <mat-card-content>
@@ -432,7 +432,7 @@
                     <tr>
                       <th style="width: 25% !important">Description</th>
                       <th style="width: 10% !important">Type</th>
-                      <th style="width: 10% !important">Location of Work
+                      <th style="width: 10% !important">Geographic location</th>
                       <th style="width: 10% !important">Target</th>
                       <th style="width: 10% !important">Budget (USD)</th>
                     </tr>
@@ -574,7 +574,7 @@
                   <tr>
                     <!-- <th>Description</th> -->
                     <th style="width: 10% !important;">Type</th>
-                    <th>Location of Work
+                    <th>Geographic location</th>
                     <th>Target</th>
                   </tr>
                 
@@ -628,7 +628,7 @@
                   <tr>
                     <th>MELIA study</th>
                     <th>Supported outcomes</th>
-                    <th>Location of Work
+                    <th>Geographic location</th>
                     <th>Total budget (USD)</th>
                   </tr>
 
@@ -1263,7 +1263,7 @@
                   <tr>
                       <th>Partner</th>
                       <th>Center</th>
-                      <th>Location of Work
+                      <th>Geographic location</th>
                       <th>Total budget (USD)</th>
                   </tr>
                   <ng-container
@@ -1580,6 +1580,7 @@
                 *ngIf="initStatus != 'Approved' && partner.canEdit"
                 (change)="partnerStatusChange($event, partner.code)"
                 [status]="!checkComplete(partner.code)"
+                [notes]="notes[partner.code]"
                 [initiative_id]="initiative_data.id"
                 [organization_code]="partner.code"
                 [phase_id]="phase.id"
@@ -1712,7 +1713,7 @@
                 <tr>
                   <th style="width: 10% !important">Description</th>
                   <th style="width: 10% !important">Type</th>
-                  <th style="width: 25% !important">Location of Work
+                  <th style="width: 25% !important">Geographic location
                   <th style="width: 10% !important">Target</th>
                   <th style="width: 10% !important">Budget (USD)</th>
                 </tr>
@@ -2049,7 +2050,7 @@
                       <th>Partners title</th>
                       <th>High level outputs</th>
                       <th>Contracted Partners</th>
-                      <th>Location of Work
+                      <th>Geographic location</th>
                       <th>Total budget (USD)</th>
                   </tr>
 
@@ -2433,6 +2434,7 @@
                   *ngIf="initStatus != 'Approved' && partner.canEdit"
                   (change)="partnerStatusChange($event, partner.code)"
                   [status]="!checkComplete(partner.code)"
+                   [notes]="notes[partner.code]"
                   [initiative_id]="initiative_data.id"
                   [organization_code]="partner.code"
                   [phase_id]="phase.id"
@@ -2759,7 +2761,7 @@
                 <mat-card-title class="card-title-table"
                   >{{ wp.title }}
                   <app-popover
-                  [id]="isFirst ? '2' : i === 1 ? '3' : '19'"
+                  [id]="isFirst ? '2' : '3'"
                   ></app-popover>
                 </mat-card-title>
                 <ng-container *ngIf="haveHLO(partnersData[partner.code][wp.ost_wp.wp_official_code])">
@@ -2797,7 +2799,7 @@
                   <tr>
                     <th style="width: 25% !important">Description</th>
                     <th style="width: 10% !important">Type</th>
-                    <th style="width: 10% !important">Location of Work
+                    <th style="width: 10% !important">Geographic location</th>
                     <th style="width: 10% !important">Target</th>
                     <th style="width: 10% !important">Budget (USD)</th>
                   </tr>
@@ -3891,7 +3893,7 @@
                         <th>Partners title</th>
                         <th>High level outputs</th>
                         <th>Contracted Partners</th>
-                        <th>Location of Work
+                        <th>Geographic location</th>
                         <th>Total budget (USD)</th>
                     </tr>
   
@@ -4315,6 +4317,9 @@
                 </div>
               </mat-card-content>
             </mat-card>
+             <p *ngIf="getFirstError(partner,'project')" class="error">
+                  {{ getFirstError(partner,'project') }}
+                </p>
           </ng-container>
 
           <ng-container *ngIf="!partnerProjects[partner.code].length">
@@ -4524,6 +4529,9 @@
                   </table>
                 </div>
                 </ng-container> 
+               <p *ngIf="getFirstError(partner,'melia')" class="error">
+                  {{ getFirstError(partner,'melia') }}
+                </p>
               </mat-card-content>
 
             </mat-card>
