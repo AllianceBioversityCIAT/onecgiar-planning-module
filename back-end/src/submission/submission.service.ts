@@ -2430,7 +2430,7 @@ export class SubmissionService {
   
 
     this.setTotalTargetForIndicators();
-    if(!submissionId)
+    // if(!submissionId)
       this.setTotalTargetForIndicatorsForPartners()
     this.setItemIndicatorAndBudget();
     this.sammaryCalc();
