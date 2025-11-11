@@ -26,6 +26,14 @@ export class InitiativesService {
     ).catch((e) => false);
   }
 
+  async getInitiativeForExport(phase_id: number) {
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + "/initiatives/export/" + phase_id)
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
   async getInitiatives(filters: any = null, page: any, limit: any) {
     if (filters) {
       let finalFilters: any = {};

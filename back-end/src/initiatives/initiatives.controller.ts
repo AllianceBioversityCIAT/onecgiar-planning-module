@@ -127,6 +127,13 @@ export class InitiativesController {
     return this.initiativesService.getInitPartnersBudget(query);
   }
 
+  @Get('export/:phase_id')
+  @ApiBearerAuth()
+  getInitExport(@Param('phase_id') phase_id: number) {
+    console.log(phase_id)
+    return this.initiativesService.getInitExport(phase_id);
+  }
+
 
   @Get('budgetSummary')
   @ApiBearerAuth()

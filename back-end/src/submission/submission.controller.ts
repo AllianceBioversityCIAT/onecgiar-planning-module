@@ -43,6 +43,11 @@ import {
 } from 'src/DTO/submission.dto';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
 import { Response } from 'express';
+import * as stream from 'stream';
+import * as archiver from 'archiver';
+import { Readable } from 'stream';
+import { PhasesService } from 'src/phases/phases.service';
+
 @UseGuards(JwtAuthGuard)
 @ApiTags('submission')
 @Controller('submission')
@@ -50,6 +55,7 @@ export class SubmissionController {
   constructor(
     private readonly submissionService: SubmissionService,
     private readonly initService: InitiativesService,
+    private readonly phasesService: PhasesService,
     private readonly httpService: HttpService,
   ) {}
 
@@ -655,6 +661,7 @@ export class SubmissionController {
       true,
       res,
       false,
+      false,
     );
   }
   @Get('excelCurrent/:id')
@@ -675,9 +682,80 @@ export class SubmissionController {
       true,
       res,
       false,
+      false,
     );
   }
 
+  @Post('export/:phase_id')
+  @ApiBearerAuth()
+  async export(
+    @Body() data: any,
+    @Res({ passthrough: true }) res: Response,
+    @Param('phase_id') phase_id: number
+  ) {
+    const { phase, initiatives } = data;
+
+    // console.log(initiatives)
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename=${phase.name}.zip`);
+
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.pipe(res);
+
+
+    for (const item of initiatives) {
+      const file = await this.submissionService.generateExcel(
+        item.latest_submission_id,
+        null,
+        null,
+        null,
+        true,
+        res,
+        false,
+        true
+      );
+      const buffer = await this.streamToBuffer(file.getStream());
+
+      const folderPath = `${item.official_code}/summary-${item.official_code}/`;
+
+      archive.append(buffer, { name: `${folderPath}${item.official_code}.xlsx` });
+
+      let partners = await this.phasesService.fetchAssignedOrganizations(phase_id, item.initiatives_id);
+      console.log(partners)
+
+      for(let partner of partners) {
+        const file = await this.submissionService.generateExcel(
+          item.latest_submission_id,
+          null,
+          null,
+          partner,
+          false,
+          res,
+          false,
+          true
+        );
+
+        const buffer = await this.streamToBuffer(file.getStream());
+
+        const folderPath = `${item.official_code}/${partner.acronym}/`;
+
+        archive.append(buffer, { name: `${folderPath}${item.official_code}.xlsx` });
+      }
+    }
+    await archive.finalize();
+  }
+
+
+  streamToBuffer(stream: Readable): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const chunks: any[] = [];
+      stream.on('data', chunk => chunks.push(chunk));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+      stream.on('error', reject);
+    });
+  }
   @Post('excelAnaplan')
   @ApiBearerAuth()
   async excelAnaplan(
@@ -696,6 +774,7 @@ export class SubmissionController {
       true,
       res,
       true,
+      false,
     );
   }
   @Post('excelCurrentCenter')
@@ -715,6 +794,7 @@ export class SubmissionController {
       data.organization,
       false,
       res,
+      false,
       false,
     );
   }
