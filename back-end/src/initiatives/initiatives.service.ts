@@ -811,6 +811,16 @@ export class InitiativesService {
 
     return initiative;
   }
+  async getInitExport(phase_id: number) {
+    const data = await this.initiativeRepository.createQueryBuilder('init')
+    .leftJoin("init.latest_submission", "submission")
+    .where("submission.phase_id = :phase_id", { phase_id })
+    .andWhere('submission.status = :status', { status: 'Approved' })
+    .andWhere("init.archived = :archived", { archived: false })
+    .getMany();
+
+    return data;
+  }
 
   async exportBudgetSummary(query: any) {
     const data = await this.getInitPartnersBudget(query);

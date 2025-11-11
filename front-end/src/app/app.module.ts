@@ -110,6 +110,8 @@ import { BudgetAssumptionSummaryComponent } from './submission/budget-assumption
 import { GeographicLocationComponent } from './submission/geographic-location/geographic-location.component';
 import { StickyOnScrollDirective } from "./sticky-on-scroll.directive";
 import { SubmitMessageComponent } from './submission/submit-message/submit-message.component';
+import { ExportComponent } from './admin/export/export.component';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 
 @NgModule({
@@ -179,7 +181,8 @@ import { SubmitMessageComponent } from './submission/submit-message/submit-messa
     BudgetAssumptionSummaryComponent,
     GeographicLocationComponent,
     StickyOnScrollDirective,
-    SubmitMessageComponent
+    SubmitMessageComponent,
+    ExportComponent
   ],
   imports: [ 
     BrowserModule,
@@ -221,7 +224,8 @@ import { SubmitMessageComponent } from './submission/submit-message/submit-messa
     ChatModule,
     HighchartsChartModule,
     TimeagoModule.forRoot(),
-    NgxMaskDirective, NgxMaskPipe
+    NgxMaskDirective, NgxMaskPipe,
+    MatProgressBarModule
   ],
   providers: [
     AppSocket,
