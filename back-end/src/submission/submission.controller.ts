@@ -338,8 +338,9 @@ export class SubmissionController {
   async getTocs(@Param('id') id) {
     const activePhase =
       await this.submissionService.PhasesService.findActivePhase();
+    const program = await   this.initService.initiativeRepository.findOne({where:{official_code:id}})
     return await firstValueFrom(
-      this.httpService.get(process.env.TOC_API + '/toc/' + id).pipe(
+      this.httpService.get(process.env.TOC_API + `/toc/${program.action_area_id ? program.action_area_id : id}`).pipe(
         map(async (dd: any) => {
           const melias = dd?.data?.melias ?? [];
           const projects = dd?.data?.projects ?? [];
