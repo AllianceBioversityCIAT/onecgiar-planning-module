@@ -3813,8 +3813,15 @@ export class SubmissionService {
       }
       return scope
   }
-  getTargetValue(targets: any[]) {
-    return targets.reduce((sum, target) => {
+  getTargetValue(targets: any[],code:string='') {
+     let  filterd;
+      
+      if(code!='')
+        filterd = targets.filter((target:any)=>target?.centers?.map((d:any)=>d.code).includes(code))
+      else
+        filterd = targets;
+     
+    return filterd.reduce((sum, target) => {
       const val = parseFloat(target?.[this?.phase?.reportingYear || this?.submission_data?.phase?.reportingYear]) || 0; 
       return sum + val;
     }, 0);
@@ -5489,7 +5496,7 @@ generateExcelCenterHLO(partner_code: number) {
               indicator.description,
               indicator.type?.name || 'N/A',
               this.getScope(indicator, 'item'),
-              this.getTargetValue(indicator?.targets),
+              this.getTargetValue(indicator?.targets,String(partner_code)),
               this.displayBudgetValuesIndicator[partner_code][wpCode]?.[item.id]?.[indicator?.id] || 0,
               null,
             ];

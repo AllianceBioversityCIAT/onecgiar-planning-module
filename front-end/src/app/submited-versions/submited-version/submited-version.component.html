@@ -1081,7 +1081,7 @@
                           {{  getScope(indicator, 'item')  }}
                         </td>
                         <td class="talign-center" style="width: 10% !important">
-                          {{  getTargetValue(indicator?.targets) }}
+                          {{  getTargetValue(indicator?.targets,partner.code) }}
                         </td>
                         <td class="talign-center" style="width: 10% !important">
                             {{displayBudgetValuesIndicator[partner.code][
@@ -1671,7 +1671,7 @@
                             {{  getScope(indicator, 'item')  }}
                           </td>
                           <td class="talign-center" style="width: 10% !important">
-                            {{  getTargetValue(indicator?.targets) }}
+                            {{  getTargetValue(indicator?.targets,partner.code) }}
                           </td>
                           <td class="talign-center" style="width: 10% !important">
                             {{  displayBudgetValuesIndicator[partner.code][
