@@ -1005,9 +1005,18 @@ export class SubmitedVersionComponent implements OnInit {
             this.partnersData[partner.code] = {};
 
          const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
-          if(filterd_results.length > 0 && this.toggleIndicatorValues)
-          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
-         else
+         if(filterd_results.length > 0 && this.toggleIndicatorValues){
+          const indicator_filterd = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
+          const updatedIndicators = indicator_filterd.map((res: any) => ({
+                          ...res,
+                          quantitative_indicators: (res.quantitative_indicators ?? []).filter((i: any) =>
+                            i.targets?.some((t: any) =>
+                              t.centers?.some((co: any) => co.code === partner.code)
+                            )
+                          )
+                        }));
+        this.partnersData[partner.code][wp.ost_wp.wp_official_code] = updatedIndicators;
+         } else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
         }
 
@@ -1981,8 +1990,14 @@ totalConsolidatedTargetPartner: any;
       return scope
   }
 
-  getTargetValue(targets: any[]) {
-    return targets.reduce((sum, target) => {
+  getTargetValue(targets: any[],code:string='') {
+   let  filterd;
+    
+    if(code!='')
+      filterd = targets.filter((target:any)=>target?.centers?.map((d:any)=>d.code).includes(code))
+    else
+      filterd = targets;
+    return filterd.reduce((sum, target) => {
       const val = parseFloat(target?.[this.submission_data.phase.reportingYear]) || 0; 
       return sum + val;
     }, 0);

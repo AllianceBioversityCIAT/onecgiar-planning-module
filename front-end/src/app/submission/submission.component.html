@@ -1749,7 +1749,7 @@
                           {{  getScope(indicator, 'item')  }}
                         </td>
                         <td class="talign-center" style="width: 10% !important">
-                          {{  getTargetValue(indicator?.targets) }}
+                          {{  getTargetValue(indicator?.targets,partner.code) }}
                         </td>
                         <td [ngClass]="{ itemIndicatorHasError: itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] }" 
                             class="talign-center" style="width: 10% !important">
@@ -1769,7 +1769,7 @@
                               initStatus == 'Pending' ||
                               initStatus == 'Approved' ||
                               !partner?.canEdit ||
-                              !getTargetValue(indicator?.targets)
+                              !getTargetValue(indicator?.targets,partner.code)
                             "
                               (keyup)="
                                 changeCalcForIndicator(
@@ -2842,7 +2842,7 @@
                             {{  getScope(indicator, 'item')  }}
                           </td>
                           <td class="talign-center" style="width: 10% !important">
-                            {{  getTargetValue(indicator?.targets) }}
+                            {{  getTargetValue(indicator?.targets,partner.code) }}
                           </td>
                           <td [ngClass]="{ itemIndicatorHasError: itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] }" 
                               class="talign-center" style="width: 10% !important">
@@ -2862,7 +2862,7 @@
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
                                 !partner?.canEdit ||
-                                !getTargetValue(indicator?.targets)
+                                !getTargetValue(indicator?.targets,partner.code)
                               "
                                 (keyup)="
                                   changeCalcForIndicator(
