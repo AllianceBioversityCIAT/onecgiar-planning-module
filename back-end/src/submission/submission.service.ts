@@ -2512,14 +2512,14 @@ export class SubmissionService {
   XLSX.utils.book_append_sheet(wb, partnersCenterSheet, 'Partner');
 
 
-  const data = await this.getActualTocs(this.initiative_data.official_code);
+  const data = tocData?.extra;
 
-  if(data.projects.length) {
+  if(data?.projects?.length) {
     const projectSheet = await this.generateExcelProject(data.projects, organization, 'project');
     XLSX.utils.book_append_sheet(wb, projectSheet, 'W3-Bilateral projects');
   }
   
-  if(data.melias.length) {
+  if(data?.melias?.length) {
     const meliaSheet = await this.generateExcelProject(data.melias, organization, 'melia');
     XLSX.utils.book_append_sheet(wb, meliaSheet, 'MELIA');
   }
