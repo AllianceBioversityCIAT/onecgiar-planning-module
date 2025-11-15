@@ -2233,6 +2233,21 @@ export class SubmissionService {
         if (result.length) {
           if (!this.partnersData[partner.code])
             this.partnersData[partner.code] = {};
+          const  indicatorTogelvalue = await this.constantsRepository.findOne({where: { id: 3 }})
+
+         const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
+          if(filterd_results.length > 0 && indicatorTogelvalue?.value == '1'){
+          const indicator_filterd = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
+          const updatedIndicators = indicator_filterd.map((res: any) => ({
+                          ...res,
+                          quantitative_indicators: (res.quantitative_indicators ?? []).filter((i: any) =>
+                            i.targets?.some((t: any) =>
+                              t.centers?.some((co: any) => co.code === partner.code)
+                            )
+                          )
+                        }));
+        this.partnersData[partner.code][wp.ost_wp.wp_official_code] = updatedIndicators;
+         } else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
         }
 
