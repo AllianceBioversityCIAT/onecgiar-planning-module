@@ -282,7 +282,7 @@ export class SubmissionController {
           if(item.related_node_id)
             item.id = item.related_node_id;
           item.results.forEach((result) => {
-            const related_node_id = result.group?.related_node_id;
+                       const related_node_id = result.group?.related_node_id || result.group?.id;
 
             if (!groupedResults[related_node_id]) {
               groupedResults[related_node_id] = {
