@@ -2494,6 +2494,7 @@ export class SubmissionService {
 
   if(organization && !anaplan && !zip && !submissionId){
   //  center Consolidated
+  console.log('center Consolidated')
   const centerConsolidated = this.generateExcelCenterConsolidated(organization.code);
   XLSX.utils.book_append_sheet(wb, centerConsolidated, 'Summary');
 
@@ -2531,6 +2532,7 @@ export class SubmissionService {
 
   } else  if(!organization && !anaplan && !zip && !submissionId){
       //  summary Consolidated
+        console.log('summary Consolidated')
       const summaryConsolidated = this.generateExcelSummaryConsolidated();
       XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'Summary');
 
@@ -2568,6 +2570,7 @@ export class SubmissionService {
       XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
   
   } else if(organization && anaplan && !zip && !submissionId) {
+       console.log('generateExcelAnaplan')
     const anaplanSheet = this.generateExcelAnaplan(organization);
     XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
   } else if(!organization && anaplan && !zip && !submissionId) {
@@ -2651,7 +2654,7 @@ export class SubmissionService {
         const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
         XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
   } else if(submissionId && organization && zip) {
-
+   console.log('center Consolidated submissionId')
     //  center Consolidated
   const centerConsolidated = this.generateExcelCenterConsolidated(organization.code);
   XLSX.utils.book_append_sheet(wb, centerConsolidated, 'Summary');
@@ -4854,6 +4857,7 @@ const totalRowIndex = rows.length + 1;
   // }
 
   generateExcelCenterConsolidated(partner_code: number) {
+      console.log('generateExcelCenterConsolidated')
     const headerStyle = {
       font: { bold: true, color: { rgb: 'FFFFFF' } },
       fill: { fgColor: { rgb: '2B3C53' } },
@@ -4885,13 +4889,13 @@ const totalRowIndex = rows.length + 1;
     this.actualWps.forEach(wp => {
       const row = [
         wp.title,
-        this.totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0,
+        this.totalTargetsIndicatorPartners?.[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0,
         this.budgetValuesIndicatorPartner[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0,
-        this.totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0,
+        this.totalTargetsIndicatorPartners?.[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0,
         this.budgetValuesIndicatorPartner[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of knowledge products'] ?? 0,
-        this.totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0,
+        this.totalTargetsIndicatorPartners?.[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0,
         this.budgetValuesIndicatorPartner[partner_code]?.[wp.ost_wp.wp_official_code]?.['Number of people trained (capacity sharing for development)'] ?? 0,
-        this.totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0,
+        this.totalTargetsIndicatorPartners?.[partner_code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0,
         this.budgetValuesIndicatorPartner[partner_code]?.[wp.ost_wp.wp_official_code]?.['custom-OUTPUT'] ?? 0,
         this.roundNumber(this.wp_budgets[partner_code][wp.ost_wp.wp_official_code + '-partners']) ?? 0,
         this.roundNumber(this.wp_budgets[partner_code][wp.ost_wp.wp_official_code + '-melia']) ?? 0,
