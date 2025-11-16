@@ -739,7 +739,6 @@ if(!this.timeCalcForIndicator[item_id])
     value: boolean,
     is_project: boolean
   ) {
-    console.log(partner_code, wp_id, value)
     if(!value) {
       this.dialog
       .open(DeleteConfirmDialogComponent, {
@@ -1030,7 +1029,6 @@ if(!this.timeCalcForIndicator[item_id])
         }
 
     }
-    console.log(this.perAllValuesIndicator)
 
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
@@ -1442,7 +1440,6 @@ this.tocSubmissionData = toc_data.info
           wp.category
         );
      
-        console.log('RESULT', )
         
         if (result.length) {
           if (!this.partnersData[partner.code])
@@ -1668,7 +1665,6 @@ this.tocSubmissionData = toc_data.info
     
     this.setvaluesForIndicators(this.savedValuesForIndicator);
     this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
-    console.log('allBudgetAssumptions', this.allBudgetAssumptions);
 
     this.setTotalTargetForIndicators();
     this.setTotalTargetForIndicatorsForPartners();
@@ -1697,8 +1693,6 @@ this.tocSubmissionData = toc_data.info
       newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
     
 
-    console.log(this.allData)
-    console.log(this.results)
 
 
     //sort WP titles
@@ -1723,7 +1717,6 @@ this.tocSubmissionData = toc_data.info
          this.notes[partner.code]=[]
          let flagNoPartners=true;
           let flagNoProject=true;
-        console.log('this.notes[partner.code]=[]',partner.code)
       for(let wp of this.wps){
       if(this.partnersData[partner.code]?.[wp.ost_wp.wp_official_code + '-partners']?.length)
         flagNoPartners=false;
@@ -1799,6 +1792,7 @@ this.tocSubmissionData = toc_data.info
     );
     const tab = this.activatedRoute.snapshot.queryParamMap.get('tab');
     if (tab) {
+      console.log('Tabbbbb',tab)
       this.selectedTabIndex = tab ? +tab : 0;
 
     } 
@@ -1871,7 +1865,7 @@ this.tocSubmissionData = toc_data.info
       if (d[3] && d[3]?.path == "center") this.isCenter = true;
     });
 
-    this.organizationSelected = this.partners[0];
+    this.organizationSelected = this.partners[tab ? +tab : 0];
     this.InitData();
 
     this.period = await this.submissionService.getPeriods(this.phase.id);
@@ -2069,7 +2063,6 @@ this.tocSubmissionData = toc_data.info
       })
       .afterClosed()
       .subscribe(async (dialogResult) => {
-        console.log(this.initiative_data);
         if (dialogResult == true) {
           await this.submissionService.cancelSubmission(
             this.initiative_data.latest_submission.id,
@@ -3324,7 +3317,6 @@ totalConsolidatedTargetPartner: any;
     });
   });
   this.totalConsolidatedTargetPartner = totals;
-  console.log(totals)
   return totals;
 }
 
@@ -3417,8 +3409,7 @@ totalConsolidatedTargetPartner: any;
         for (let indicator of wpData.quantitative_indicators || []) {
           const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
             ? indicator.type.value
-            : 'Other';
-    
+            : indicator?.type?.value + '-' + wpData.category;
           for (let target of indicator.targets || []) {
             for (let targetPartner of target.centers || []) {
               const partnerCode = targetPartner.code;
@@ -3444,10 +3435,10 @@ totalConsolidatedTargetPartner: any;
         }
       }
     }
+
   }
 
   openBudgetAssumptionsDialog(partner: number, item_id: string, wp_id: string, budget: number, type: string, parent_id: any) { 
-    console.log('partnersStatus', this.partnersStatus[partner])
  const  disbaled= this.partnersStatus[partner] || this.initStatus == 'Pending' || this.initStatus == 'Approved';
                                   
     
@@ -3489,7 +3480,6 @@ totalConsolidatedTargetPartner: any;
   
 
   openBudgetAssumptionsDialogSummary(item_id: string) {
-    console.log(item_id)
     this.dialog
     .open(BudgetAssumptionSummaryComponent, {
       data: {
@@ -3531,7 +3521,6 @@ totalConsolidatedTargetPartner: any;
 
   async setAnaplanValues() {
     this.anaplanValues = await this.anaplanService.getAllValues(this.params.id,this.phase.id);
-    console.log('anaplanValues', this.anaplanValues)
     for(let values of this.anaplanValues){
      this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
     }

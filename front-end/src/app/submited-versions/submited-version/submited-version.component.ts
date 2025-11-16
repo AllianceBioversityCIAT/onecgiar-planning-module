@@ -2050,7 +2050,7 @@ totalConsolidatedTargetPartner: any;
         for (let indicator of wpData.quantitative_indicators || []) {
           const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
             ? indicator.type.value
-            : 'Other';
+            : indicator?.type?.value + '-' + wpData.category;
     
           for (let target of indicator.targets || []) {
             for (let targetPartner of target.centers || []) {
