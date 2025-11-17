@@ -50,8 +50,8 @@ export class PartnerCountry {
   @Column()
   country_code: number;
 
-  @Column()
-  result_id: number;
+  @Column({ type: 'varchar', length: 255 })
+  result_id: string;
 
   // @Column()
   // group_id: string;

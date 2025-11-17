@@ -25,7 +25,7 @@ export class ClarisaCountryService {
           wp_official_code: data.wp.ost_wp.wp_official_code,
           partner_code:data.partner.code,
           selectedCountries:data.partner.selectedCountries.map((c: any) => c.code),
-          result_id:data.result_id,
+          result_id:String(data.result_id),
         })
         .pipe(map((d: any) => d))
     );
