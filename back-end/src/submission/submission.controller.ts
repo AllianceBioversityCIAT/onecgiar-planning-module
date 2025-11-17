@@ -375,7 +375,10 @@ export class SubmissionController {
                   items.quantitative_indicators.map((i: any) => i);
 
               if (items.partners?.length)
-                items.partners = items.partners.map((p: any) => p);
+                items.partners = items.partners.map((p: any) => {
+                p['id']=p?.code ? p.code : p?.toc_id
+              return p 
+                });
 
               if (
                 items.quantitative_indicators?.length &&
@@ -566,11 +569,11 @@ export class SubmissionController {
               }
 
               for (const partner of data.partners ?? []) {
-                const key = `${partner.code}_${data.group}`;
+                const key = `${partner.id}_${data.group}`;
                 const title = data.title?.trim();
                 const selectedCountries =
                   await this.submissionService.getSelectedCountry(
-                    partner.code,
+                    partner.id,
                     id,
                     activePhase.id,
                   );
@@ -587,7 +590,7 @@ export class SubmissionController {
                 } else {
                   partnersMap.set(key, {
                     ...partner,
-                    id: partner.code,
+                    id: partner.id,
                     parent_id: data.group,
                     results: title,
                     category: 'partners',

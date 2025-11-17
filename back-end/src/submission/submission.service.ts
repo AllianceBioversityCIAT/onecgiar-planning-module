@@ -740,7 +740,7 @@ export class SubmissionService {
   }
 
   async getSelectedCountry(
-    resultId: number,
+    resultId: string,
     initiative_id: string,
     phase_id: number,
   ) {
