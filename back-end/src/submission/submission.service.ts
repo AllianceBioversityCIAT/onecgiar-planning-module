@@ -1067,6 +1067,7 @@ export class SubmissionService {
     let oldResult = await this.resultRepository.findOneBy({
       initiative_id: id,
       result_uuid: item_id,
+      parent_id: parent_id ? parent_id : null,
       organization: organizationObject,
       workPackage: workPackageObject,
       submission: IsNull(),
