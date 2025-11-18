@@ -1033,6 +1033,7 @@ export class SubmissionService {
     let budgetAssumptionsData = {
       organization_code: partner_code,
       item_id: item_id,
+      parent_id: parent_id ? parent_id : null,
       wp_id: wp_id,
       type: type,
       phase_id: phase_id,
@@ -1091,24 +1092,7 @@ export class SubmissionService {
             : 'unchecked result as no budget assigned';
           history.old_value = value == true ? 'False' : 'True';
           history.new_value = value == true ? 'True' : 'False';
-        }
-        //  else if (key == 'value') {
-        //   if (oldResult.value == 0 && newValues.value != 0) {
-        //     history.resource_property = 'Add percentage';
-        //     history.old_value = null;
-        //     history.new_value = newValues.value.toString() + '%';
-        //   } else if (oldResult.value != 0 && newValues.value != 0) {
-        //     history.resource_property = 'Edit percentage';
-        //     history.old_value = oldResult.value.toString() + '%';
-        //     history.new_value = newValues.value.toString() + '%';
-        //   } else {
-        //     history.resource_property = 'Remove percentage';
-        //     history.old_value = oldResult.value.toString() + '%';
-        //     history.new_value = null;
-        //   }
-
-        // }
-        else if (key == 'budget') {
+        } else if (key == 'budget') {
           if (oldResult.budget == '0' && newValues.budget != '0') {
             history.resource_property = 'Add budget';
             history.old_value = null;
@@ -3888,7 +3872,9 @@ export class SubmissionService {
           wpData.ost_wp?.wp_official_code || wp.ost_wp.wp_official_code;
 
         for (let indicator of wpData.quantitative_indicators || []) {
-          const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
+          const indicatorType = this.highLevelOutputIndicatorTypes.includes(
+            indicator?.type?.value,
+          )
             ? indicator.type.value
             : indicator?.type?.value + '-' + wpData.category;
 
