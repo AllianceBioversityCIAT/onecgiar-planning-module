@@ -37,7 +37,9 @@ import { User } from 'src/entities/user.entity';
 import { SignedInUser } from 'src/user.decorator';
 import { firstValueFrom, map } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { CacheTTL } from '@nestjs/cache-manager';
 
+@CacheTTL(1800)
 @UseGuards(JwtAuthGuard)
 @ApiTags('Initiatives')
 @Controller('initiatives')

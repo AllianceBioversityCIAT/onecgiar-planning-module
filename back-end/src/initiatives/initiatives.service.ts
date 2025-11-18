@@ -242,84 +242,152 @@ export class InitiativesService {
     });
   }
 
-  async findAllFull(query: any, req: any) {
-    try {
-      const take = query.limit || 10;
-      const skip = (Number(query.page || 1) - 1) * take;
-      const [finalResult, total] = await this.initiativeRepository
-        .createQueryBuilder('init')
-        .where(
-          new Brackets((qb) => {
-            qb.where('init.name like :name', { name: `%${query.name || ''}%` });
-            qb.andWhere('init.archived = :archived', { archived: false });
-            if (query.initiative_id != undefined) {
-              qb.andWhere('init.official_code IN (:...initiative_id)', {
-                initiative_id: [
-                  `INIT-0${query.initiative_id}`,
-                  `INIT-${query.initiative_id}`,
-                  `PLAT-${query.initiative_id}`,
-                  `PLAT-0${query.initiative_id}`,
-                  `SGP-${query.initiative_id}`,
-                  `SGP-0${query.initiative_id}`,
-                  `SP0${query.initiative_id}`,
-                  `SP${query.initiative_id}`,
-                ],
-              });
-            }
-            if (query?.my_role) {
-              if (Array.isArray(query?.my_role)) {
-                qb.andWhere('roles.role IN (:...my_role)', {
-                  my_role: query.my_role,
-                });
-                qb.andWhere(`roles.user_id = ${req.user.id}`);
-              } else {
-                qb.andWhere('roles.role = :my_role', {
-                  my_role: query.my_role,
-                });
-                qb.andWhere(`roles.user_id = ${req.user.id}`);
-              }
-            } else if (query?.my_ini == 'true') {
-              qb.andWhere(`roles.user_id = ${req.user.id}`);
-            }
-          }),
-        )
-        .andWhere(
-          new Brackets((qb) => {
-            if (query.status) {
-              if (query.status != 'Draft') {
-                qb.andWhere('latest_submission.status = :status', {
-                  status: query.status,
-                });
-                qb.andWhere('init.last_update_at = init.last_submitted_at');
-              } else if (query.status == 'Draft') {
-                qb.andWhere('init.last_submitted_at is null');
-                qb.orWhere('init.last_update_at != init.last_submitted_at');
-                qb.orWhere('latest_submission.status = :status', {
-                  status: 'Draft',
-                });
-              }
-            }
-          }),
-        )
-        .orderBy(this.sort(query))
-        .leftJoinAndSelect('init.roles', 'roles')
-        .leftJoinAndSelect('init.latest_submission', 'latest_submission')
-        .leftJoinAndSelect('init.center_status', 'center_status')
-        .leftJoinAndSelect('init.latest_history', 'latest_history')
-        .leftJoinAndSelect('latest_history.user', 'user')
+async findAllFull(query: any, req: any) {
+  try {
+    const take = Number(query.limit) || 10;
+    const page = Number(query.page) || 1;
+    const skip = (page - 1) * take;
+    const userId = req.user.id;
 
-        .take(take)
-        .skip(skip)
-        .getManyAndCount();
+    // ---------- 1) MAIN QUERY: initiatives WITHOUT latest_submission join ----------
+    const baseQb = this.initiativeRepository
+      .createQueryBuilder('init')
+      .leftJoinAndSelect('init.roles', 'roles')
+      .leftJoinAndSelect('init.center_status', 'center_status')
+      .leftJoinAndSelect('init.latest_history', 'latest_history')
+      .leftJoinAndSelect('latest_history.user', 'user')
+      .where('init.archived = :archived', { archived: false });
 
-      return {
-        result: finalResult,
-        count: total,
-      };
-    } catch (error) {
-      throw new BadRequestException('Connection Error');
+    // name filter
+    if (query.name && String(query.name).trim() !== '') {
+      baseQb.andWhere('init.name LIKE :name', {
+        name: `%${String(query.name).trim()}%`,
+      });
     }
+
+    // initiative_id filter
+    if (query.initiative_id != null && query.initiative_id !== '') {
+      const id = String(query.initiative_id);
+      baseQb.andWhere('init.official_code IN (:...initiative_id)', {
+        initiative_id: [
+          `INIT-0${id}`,
+          `INIT-${id}`,
+          `PLAT-${id}`,
+          `PLAT-0${id}`,
+          `SGP-${id}`,
+          `SGP-0${id}`,
+          `SP0${id}`,
+          `SP${id}`,
+        ],
+      });
+    }
+
+    // my_role / my_ini
+    if (query?.my_role) {
+      if (Array.isArray(query.my_role)) {
+        baseQb.andWhere('roles.role IN (:...my_role)', {
+          my_role: query.my_role,
+        });
+      } else {
+        baseQb.andWhere('roles.role = :my_role', {
+          my_role: query.my_role,
+        });
+      }
+      baseQb.andWhere('roles.user_id = :userId', { userId });
+    } else if (query?.my_ini === 'true') {
+      baseQb.andWhere('roles.user_id = :userId', { userId });
+    }
+
+    // NOTE: here I'm only applying status logic that uses INIT columns.
+    // Anything that depends on latest_submission.status we will handle in 2nd query or skip.
+    if (query.status === 'Draft') {
+      baseQb.andWhere(
+        new Brackets((qb) => {
+          qb.where('init.last_submitted_at IS NULL')
+            .orWhere('init.last_update_at != init.last_submitted_at');
+        }),
+      );
+    } else if (query.status && query.status !== 'Draft') {
+      // simplest option: leave this out here and handle in 2nd query,
+      // or if you must filter at DB level, you'll need a subquery on latest_submission
+      // (I explain trade-offs below).
+    }
+
+    // count query (cheap)
+    const countQb = baseQb
+      .clone()
+      .select('COUNT(DISTINCT init.id)', 'cnt')
+      .orderBy(undefined)
+      .skip(undefined)
+      .take(undefined);
+
+    // data query (page of initiatives)
+    const dataQb = baseQb
+      .clone()
+      .orderBy(this.sort(query))
+      .take(take)
+      .skip(skip);
+
+    const [initiatives, rawCount] = await Promise.all([
+      dataQb.getMany(),
+      countQb.getRawOne<{ cnt: string }>(),
+    ]);
+
+    const total = Number(rawCount?.cnt ?? 0);
+    if (!initiatives.length) {
+      return { result: [], count: total };
+    }
+
+    // ---------- 2) SECOND QUERY: latest_submissions for these initiatives only ----------
+    const initiativeIds = initiatives.map((i) => i.id);
+
+    const submissionQb = this.submissionRepository
+      .createQueryBuilder('latest_submission')
+      .where('latest_submission.initiative_id IN (:...ids)', { ids: initiativeIds });
+
+    // If you still want to filter by status using latest_submission:
+    if (query.status && query.status !== 'Draft') {
+      submissionQb.andWhere('latest_submission.status = :status', {
+        status: query.status,
+      });
+    } else if (query.status === 'Draft') {
+      // optional: if you had a "Draft" in latest_submission too
+      // submissionQb.andWhere('latest_submission.status = :status', { status: 'Draft' });
+    }
+
+    const latestSubmissions = await submissionQb.getMany();
+
+    // Build a map: initiative_id -> latest_submission
+    const submissionByInitiative = new Map<
+      number | string,
+      typeof latestSubmissions[number]
+    >();
+
+    for (const sub of latestSubmissions) {
+      // adjust property name to match your entity (initiativeId / initiative_id)
+      const key = (sub as any).initiative_id ?? (sub as any).initiativeId;
+      if (key != null) {
+        submissionByInitiative.set(key, sub);
+      }
+    }
+
+    // ---------- 3) MERGE: attach latest_submission to initiatives ----------
+    for (const ini of initiatives) {
+      const submission = submissionByInitiative.get(ini.id);
+      // This assumes the relation name is "latest_submission"
+      (ini as any).latest_submission = submission ?? null;
+    }
+
+    return {
+      result: initiatives,
+      count: total,
+    };
+  } catch (error) {
+    throw new BadRequestException('Connection Error');
   }
+}
+
+
   async exportInitForTrack() {
     try {
       const data = await this.initiativeRepository
