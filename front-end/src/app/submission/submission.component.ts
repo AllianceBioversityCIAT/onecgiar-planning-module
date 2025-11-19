@@ -2203,10 +2203,7 @@ this.tocSubmissionData = toc_data.info
               valuesToSet[code][wp_id][item_id]
             ) {
               let percentValue = +valuesToSet[code][wp_id][item_id];
-              let budgetValue = this.budgetValue(
-                percentValue,
-                this.wp_budgets[code][wp_id]
-              );
+              let budgetValue = percentValue
               this.values[code][wp_id][item_id] = percentValue;
               this.displayValues[code][wp_id][item_id] =
                 Math.round(percentValue);

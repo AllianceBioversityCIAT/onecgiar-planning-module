@@ -660,7 +660,7 @@ export class SubmissionService {
         )
           data.values[result?.organization_code][
             result?.workPackage?.wp_official_code
-          ][result?.result_uuid] = result?.value;
+          ][result?.result_uuid] = result?.budget;
 
         if (!data.no_budget[result?.organization_code])
           data.no_budget[result?.organization_code] = {};
@@ -4027,16 +4027,13 @@ export class SubmissionService {
               valuesToSet[code][wp_id][item_id]
             ) {
               let percentValue = +valuesToSet[code][wp_id][item_id];
-              let budgetValue = this.budgetValue(
-                percentValue,
-                this.wp_budgets[code][wp_id],
-              );
+
               this.values[code][wp_id][item_id] = percentValue;
               this.displayValues[code][wp_id][item_id] =
                 Math.round(percentValue);
-              this.budgetValues[code][wp_id][item_id] = budgetValue;
+              this.budgetValues[code][wp_id][item_id] = percentValue;
               this.displayBudgetValues[code][wp_id][item_id] =
-                Math.round(budgetValue);
+                Math.round(percentValue);
             } else {
               this.values[code][wp_id][item_id] = 0;
               this.displayValues[code][wp_id][item_id] = 0;

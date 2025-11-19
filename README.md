@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="600" alt="Screenshot of OpenRXV running on AReS" src="Planning.png">
+  <img width="600" alt="Planning homepage" src="Planning.png">
 </p>
 
 
