@@ -598,19 +598,32 @@ async findAllFull(query: any, req: any) {
     };
   }
 
-  findOne(id: number) {
-    return this.initiativeRepository.findOne({
-      where: { id },
-      relations: [
-        'organizations',
-        'roles',
-        'roles.organizations',
-        'center_status',
-        'latest_submission',
-      ],
-      order: { id: 'desc' },
-    });
-  }
+async findOne(id: number) {
+  // 1) Load initiative & the cheap relations
+  const initiative = await this.initiativeRepository.findOne({
+    where: { id },
+    relations: [
+      'organizations',
+      'roles',
+      'roles.organizations',
+      'center_status',
+      // ⚠️  no latest_submission here
+    ],
+  });
+
+  if (!initiative) return null;
+
+  // 2) Load only the latest submission, optimized
+  const latestSubmission = await this.submissionRepository.findOne({
+    where: { initiative: { id } }, // or { initiativeId: id } depending on your model
+    order: { created_at: 'DESC' }, // or whatever date column you use
+    // select: ['id', 'title', 'created_at'], // limit columns if needed
+  });
+
+  // 3) Attach it manually
+  return { ...initiative, latest_submission: latestSubmission };
+}
+
 
   async updateRoles(initiative_id, id, initiativeRoles: InitiativeRoles, user) {
     const currentRole = await this.iniRolesRepository.findOne({
