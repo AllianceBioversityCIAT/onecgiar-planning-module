@@ -350,7 +350,7 @@ export class SubmitedVersionComponent implements OnInit {
   //   });
   //   // this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
   // }
-  sammaryCalc() {
+ sammaryCalc() {
     let totalsum: any = {};
     let totalsumcenter: any = {};
     let totalWp: any = {};
@@ -497,6 +497,7 @@ export class SubmitedVersionComponent implements OnInit {
     Object.keys(this.sammaryTotal).forEach((wp_id) => {
       this.wpsTotalSum += this.sammaryTotalConsolidated[wp_id];
     });
+    // this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
   }
   allvalueChange() {
     for (let wp of this.wps) {
@@ -1611,16 +1612,13 @@ export class SubmitedVersionComponent implements OnInit {
               valuesToSet[code][wp_id][item_id]
             ) {
               let percentValue = +valuesToSet[code][wp_id][item_id];
-              let budgetValue = this.budgetValue(
-                percentValue,
-                this.wp_budgets[code][wp_id]
-              );
+
               this.values[code][wp_id][item_id] = percentValue;
               this.displayValues[code][wp_id][item_id] =
                 Math.round(percentValue);
-              this.budgetValues[code][wp_id][item_id] = budgetValue;
+              this.budgetValues[code][wp_id][item_id] = percentValue;
               this.displayBudgetValues[code][wp_id][item_id] =
-                Math.round(budgetValue);
+                Math.round(percentValue);
             } else {
               this.values[code][wp_id][item_id] = 0;
               this.displayValues[code][wp_id][item_id] = 0;
