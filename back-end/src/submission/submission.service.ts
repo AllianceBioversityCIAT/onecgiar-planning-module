@@ -387,22 +387,39 @@ export class SubmissionService {
     }
   }
 
-  async findSubmissionsById(id) {
-    const sub_data = await this.submissionRepository.findOne({
+  async findSubmissionsById(id: number) {
+    // 1) Load core submission with only light relations
+    const sub = await this.submissionRepository.findOne({
       where: { id },
       relations: [
         'user',
         'phase',
         'phase.periods',
         'initiative',
-        'results',
-        'results.values',
-        'results.workPackage',
-        'results.values.period',
+        // keep results OUT if they’re heavy
       ],
     });
-    return { ...sub_data, consolidated: this.dataToPers(sub_data.results) };
+
+    if (!sub) return null;
+
+    // 2) Load only what you need from results in a separate query
+    const results = await this.resultRepository.find({
+      where: { submission: { id } }, // or submissionId: id
+      relations: ['values', 'values.period', 'workPackage'],
+      // Optional: limit fields if entity is big
+      // select: ['id', 'someField', ...],
+    });
+
+    const consolidated = this.dataToPers(results);
+
+    // 3) Attach manually
+    return {
+      ...sub,
+      results,
+      consolidated,
+    };
   }
+
   async createNew(user_id, initiative_id, phase_id, json, tocSubmissionData) {
     try {
       const submissionData = {
