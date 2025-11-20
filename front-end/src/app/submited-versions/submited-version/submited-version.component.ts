@@ -571,7 +571,7 @@ export class SubmitedVersionComponent implements OnInit {
   initiative_data: any = {};
   ipsr_value_data: any;
   actualWps:any;
-  toggleIndicatorValues: any;
+  toggleIndicatorValues: any= true;
   savedValuesForIndicator: any = null;
 
   partnersMelia:any;
