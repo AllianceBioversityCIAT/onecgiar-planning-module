@@ -1006,7 +1006,7 @@ export class SubmitedVersionComponent implements OnInit {
             this.partnersData[partner.code] = {};
 
          const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
-         if(filterd_results.length > 0 && this.toggleIndicatorValues){
+         if(filterd_results.length > 0){
           const indicator_filterd = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
           const updatedIndicators = indicator_filterd.map((res: any) => ({
                           ...res,
