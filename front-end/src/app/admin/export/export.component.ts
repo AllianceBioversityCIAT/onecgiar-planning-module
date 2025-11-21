@@ -50,6 +50,8 @@ export class ExportComponent {
   columnsToDisplay: string[] = ["official_code", "title", "status"];
   dataSource: MatTableDataSource<any>;
   selectedPhase: any;
+  statusOptions: string[] = ["Approved", "Pending"];
+  selectedStatus: string = "Approved";
   async ngOnInit() {
     await this.getPhases();
     this.selectedPhase = this.phases.filter((phase: any) => phase.active)[0];
@@ -81,6 +83,12 @@ export class ExportComponent {
     await this.getInitiatives(selectedValue.id);
   }
 
+  async onStatusChange(status: string) {
+    this.selectedStatus = status;
+    if (!this.selectedPhase) return;
+    await this.getInitiatives(this.selectedPhase.id);
+  }
+
   async pagination(event: PageEvent) {
     this.pageIndex = event.pageIndex + 1;
     this.pageSize = event.pageSize;
@@ -88,10 +96,11 @@ export class ExportComponent {
 
   async getInitiatives(phase_id: number) {
     this.initiatives = await this.initiativesService.getInitiativeForExport(
-      phase_id
+      phase_id,
+      this.selectedStatus
     );
     this.dataSource = new MatTableDataSource(this.initiatives);
-    this.length = this.initiatives;
+    this.length = this.initiatives?.length || 0;
   }
 
 

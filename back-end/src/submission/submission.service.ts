@@ -2252,6 +2252,7 @@ export class SubmissionService {
         submission?.phase?.id,
         submission?.initiative?.id,
       );
+      this.phase = submission?.phase
     } else {
       this.phase = await this.PhasesService.findActivePhase();
       this.savedValues = await this.getSaved(initId, this.phase.id);

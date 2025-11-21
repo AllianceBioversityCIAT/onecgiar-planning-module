@@ -892,13 +892,33 @@ async findOne(id: number) {
 
     return initiative;
   }
-  async getInitExport(phase_id: number) {
-    const data = await this.initiativeRepository.createQueryBuilder('init')
-    .leftJoin("init.latest_submission", "submission")
-    .where("submission.phase_id = :phase_id", { phase_id })
-    .andWhere('submission.status = :status', { status: 'Approved' })
-    .andWhere("init.archived = :archived", { archived: false })
-    .getMany();
+  async getInitExport(
+    phase_id: number,
+    statusFilter?: string | string[],
+  ) {
+    const allowedStatuses = Object.values(SubmissionStatus);
+    const normalizedStatuses = Array.isArray(statusFilter)
+      ? statusFilter
+      : statusFilter
+      ? statusFilter.split(',').map((status) => status.trim())
+      : [];
+
+    const statuses = normalizedStatuses.filter((status): status is SubmissionStatus =>
+      allowedStatuses.includes(status as SubmissionStatus),
+    );
+
+    const fallbackStatuses =
+      statuses.length > 0 ? statuses : [SubmissionStatus.APPROVED];
+
+    const data = await this.initiativeRepository
+      .createQueryBuilder('init')
+      .leftJoinAndSelect('init.latest_submission', 'submission')
+      .where('submission.phase_id = :phase_id', { phase_id })
+      .andWhere('submission.status IN (:...statuses)', {
+        statuses: fallbackStatuses,
+      })
+      .andWhere('init.archived = :archived', { archived: false })
+      .getMany();
 
     return data;
   }

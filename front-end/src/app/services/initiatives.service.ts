@@ -26,10 +26,16 @@ export class InitiativesService {
     ).catch((e) => false);
   }
 
-  async getInitiativeForExport(phase_id: number) {
+  async getInitiativeForExport(phase_id: number, status?: string | string[]) {
+    const params: Record<string, string | string[]> = {};
+    if (status && (Array.isArray(status) ? status.length : true)) {
+      params['status'] = status;
+    }
     return firstValueFrom(
       this.http
-        .get(environment.api_url + "/initiatives/export/" + phase_id)
+        .get(environment.api_url + "/initiatives/export/" + phase_id, {
+          params,
+        })
         .pipe(map((d: any) => d))
     ).catch((e) => false);
   }
