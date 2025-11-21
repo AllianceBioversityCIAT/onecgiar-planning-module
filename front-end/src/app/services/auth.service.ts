@@ -64,7 +64,7 @@ export class AuthService {
   isUser() {
     const loggedUser = this.getLoggedInUser();
     console.log(loggedUser)
-    return loggedUser.user.role == "user";
+    return loggedUser?.user?.role == "user" || loggedUser?.role == "user";
   }
 
   removePopoversLocalStorage(pattern: string) {
