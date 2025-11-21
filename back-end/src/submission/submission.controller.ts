@@ -744,8 +744,6 @@ export class SubmissionController {
         phase_id,
         item.initiatives_id,
       );
-      console.log(partners);
-
       for (let partner of partners) {
         const file = await this.submissionService.generateExcel(
           item.latest_submission_id,

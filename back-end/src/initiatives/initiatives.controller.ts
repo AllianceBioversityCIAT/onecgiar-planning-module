@@ -131,9 +131,11 @@ export class InitiativesController {
 
   @Get('export/:phase_id')
   @ApiBearerAuth()
-  getInitExport(@Param('phase_id') phase_id: number) {
-    console.log(phase_id)
-    return this.initiativesService.getInitExport(phase_id);
+  getInitExport(
+    @Param('phase_id') phase_id: number,
+    @Query('status') status?: string | string[],
+  ) {
+    return this.initiativesService.getInitExport(phase_id, status);
   }
 
 
