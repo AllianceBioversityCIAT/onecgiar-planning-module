@@ -20,7 +20,7 @@ import { Submission } from './submission.entity';
     id: number;
 
     @ApiProperty()
-    @Column({type:'float'})
+    @Column()
     value: number;
   
     @JoinColumn({ name: 'anaplan_id' })

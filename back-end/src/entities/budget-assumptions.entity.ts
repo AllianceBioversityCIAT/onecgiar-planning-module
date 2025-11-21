@@ -39,7 +39,7 @@ import { Phase } from './phase.entity';
     wp_id: string;
 
     @ApiProperty()
-    @Column()
+    @Column({type:'mediumtext'})
     budget_assumptions: string;
 
     @ApiProperty()
