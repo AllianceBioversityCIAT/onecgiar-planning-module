@@ -250,13 +250,21 @@ async findAllFull(query: any, req: any) {
     const userId = req.user.id;
 
     // ---------- 1) MAIN QUERY: initiatives WITHOUT latest_submission join ----------
-    const baseQb = this.initiativeRepository
-      .createQueryBuilder('init')
-      .leftJoinAndSelect('init.roles', 'roles')
-      .leftJoinAndSelect('init.center_status', 'center_status')
-      .leftJoinAndSelect('init.latest_history', 'latest_history')
-      .leftJoinAndSelect('latest_history.user', 'user')
-      .where('init.archived = :archived', { archived: false });
+    // Build base query selecting only initiative + small joins. Avoid joining one-to-many relations
+    // (like roles) unless required by filters to reduce result-set explosion.
+    const baseQb = this.initiativeRepository.createQueryBuilder('init').where(
+      'init.archived = :archived',
+      { archived: false },
+    );
+
+    // center status and latest_history are lightweight single-valued relations used in list view
+    baseQb.leftJoinAndSelect('init.center_status', 'center_status');
+    baseQb.leftJoinAndSelect('init.latest_history', 'latest_history');
+    baseQb.leftJoinAndSelect('latest_history.user', 'user');
+
+    // Only join roles (one-to-many) when filtering by role or user membership to avoid
+    // row multiplication which hurts pagination performance.
+   baseQb.leftJoinAndSelect('init.roles', 'roles');
 
     // name filter
     if (query.name && String(query.name).trim() !== '') {
@@ -339,16 +347,26 @@ async findAllFull(query: any, req: any) {
     }
 
     // ---------- 2) SECOND QUERY: latest_submissions for these initiatives only ----------
-    const initiativeIds = initiatives.map((i) => i.id);
+    const initiativeIds = initiatives.map((i) => i.latest_submission_id);
 
     const submissionQb = this.submissionRepository
       .createQueryBuilder('latest_submission')
-      .where('latest_submission.initiative_id IN (:...ids)', { ids: initiativeIds });
-
+      // select only essential columns to reduce payload
+      .select([
+        'latest_submission.id',
+        'latest_submission.initiative_id',
+        'latest_submission.status',
+        'latest_submission.created_at',
+        'latest_submission.phase_id',
+      ])
+      .where('latest_submission.id IN (:...ids)', { ids: initiativeIds })
+    
     // If you still want to filter by status using latest_submission:
     if (query.status && query.status !== 'Draft') {
+      console.log('query.status',query.status)
       submissionQb.andWhere('latest_submission.status = :status', {
         status: query.status,
+
       });
     } else if (query.status === 'Draft') {
       // optional: if you had a "Draft" in latest_submission too
@@ -377,14 +395,18 @@ async findAllFull(query: any, req: any) {
       // This assumes the relation name is "latest_submission"
       (ini as any).latest_submission = submission ?? null;
     }
-
-    return {
-      result: initiatives,
-      count: total,
-    };
-  } catch (error) {
-    throw new BadRequestException('Connection Error');
-  }
+    let result;
+    if(query.status && query.status !== 'Draft')
+      result = initiatives.filter(d=>d.latest_submission)
+    else result= initiatives;
+        return {
+          result: result,
+          count: total,
+        };
+      } catch (error) {
+        console.log(error)
+        throw new BadRequestException('Connection Error');
+      }
 }
 
 
