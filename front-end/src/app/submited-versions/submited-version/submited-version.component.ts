@@ -1306,7 +1306,7 @@ export class SubmitedVersionComponent implements OnInit {
       'Innovation Use',
       'custom-OUTCOME'
     ]
-    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.submission_data.phase.id);
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.submission_data.phase.id,this.initiativeId);
 
     this.InitData();
     this.period = this.submission_data.phase.periods;

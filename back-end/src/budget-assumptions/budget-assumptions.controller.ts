@@ -16,16 +16,16 @@ export class BudgetAssumptionsController {
     }
 
     @ApiBearerAuth()
-    @Get('all/:phase_id')
-    findAll(@Param('phase_id') id: number) {
-      return this.service.findAll(id);
+    @Get('all/:phase_id/:initiative_id')
+    findAll(@Param('phase_id') id: number,@Param('initiative_id') initiative_id: number) {
+      return this.service.findAll(id,initiative_id);
     }
   
 
     @ApiBearerAuth()
-    @Get(':item_id')
-    findByItemId(@Param('item_id') id: string) {
-      return this.service.find(id);
+    @Get(':item_id/:initiative_id')
+    findByItemId(@Param('item_id') id: string,@Param('initiative_id') initiative_id: number) {
+      return this.service.find(id,initiative_id);
     }
 
     @ApiBearerAuth()

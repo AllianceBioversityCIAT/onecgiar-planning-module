@@ -734,10 +734,10 @@ export class SubmissionController {
       );
       const buffer = await this.streamToBuffer(file.getStream());
 
-      const folderPath = `${item.official_code}/summary-${item.official_code}/`;
+      const folderPath = `${item.official_code}/`;
 
       archive.append(buffer, {
-        name: `${folderPath}${item.official_code}.xlsx`,
+        name: `${folderPath}${item.official_code}_Summary.xlsx`,
       });
 
       let partners = await this.phasesService.fetchAssignedOrganizations(
@@ -758,10 +758,10 @@ export class SubmissionController {
 
         const buffer = await this.streamToBuffer(file.getStream());
 
-        const folderPath = `${item.official_code}/${partner.acronym}/`;
+        const folderPath = `${item.official_code}/`;
 
         archive.append(buffer, {
-          name: `${folderPath}${item.official_code}.xlsx`,
+          name: `${folderPath}${item.official_code}_${partner.acronym}.xlsx`,
         });
       }
     }

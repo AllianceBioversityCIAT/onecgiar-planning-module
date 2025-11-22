@@ -22,7 +22,8 @@ export class BudgetAssumptionSummaryComponent {
   }
 
   async getData() {
-    this.budget_assumptions = await this.service.getAllByItem(this.data.item_id);
+    console.log(this.data);
+    this.budget_assumptions = await this.service.getAllByItem(this.data.item_id,this.data.initiative_id);
   }
 
   onClose(): void {

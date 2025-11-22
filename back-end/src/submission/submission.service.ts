@@ -703,12 +703,12 @@ export class SubmissionService {
       console.error('error dataToPers', error);
     }
   }
-  async getSaved(id, phaseId) {
+  async getSaved(id, phaseId, submission_id = null) {
     try {
       const saved_data = await this.resultRepository.find({
         where: {
           initiative_id: id,
-          submission_id: IsNull(),
+          submission_id: submission_id ? submission_id : IsNull(),
           phase_id: phaseId,
         },
         relations: ['values', 'workPackage', 'values.period'],
@@ -1343,7 +1343,11 @@ export class SubmissionService {
     return { message: 'Data saved' };
   }
 
-  async getWpsBudgets(initiative_id: number, phaseId: any) {
+  async getWpsBudgets(
+    initiative_id: number,
+    phaseId: any,
+    submission_id = null,
+  ) {
     const initiative = await this.initService.findOne(initiative_id);
 
     let wpBudgets;
@@ -1352,7 +1356,7 @@ export class SubmissionService {
       wpBudgets = await this.wpBudgetRepository.find({
         where: {
           initiative_id,
-          submission_id: IsNull(),
+          submission_id: submission_id ? submission_id : IsNull(),
           phase: { id: phaseId },
           wp_id: Not(99998),
         },
@@ -2175,6 +2179,7 @@ export class SubmissionService {
   displayBudgetValuesItemIndicator: any = {};
   totalTargetsIndicatorPartners: any = {};
   totalConsolidatedTargetPartner: any;
+  assumptionsTomap: any = {};
 
   async generateExcel(
     submissionId: any,
@@ -2218,68 +2223,93 @@ export class SubmissionService {
     this.displayValues = {};
     this.totals = {};
     this.noValuesAssigned = {};
-
     // let melia_data;
     let cross_data;
 
     let partners;
 
     this.InitiativeId = initId;
-    let submission: any = null;
-    if (submissionId != null) {
-      submission = await this.findSubmissionsById(submissionId);
+    let submission: Submission = null;
+
+    if (submissionId) {
+      submission = await this.submissionRepository.findOne({
+        where: { id: submissionId },
+        relations: ['phase'],
+      });
+      initId = submission.initiative_id;
+
       this.submission_data = submission;
-      this.results = submission.toc_data.results;
-      this.period = submission.phase.periods;
-      this.wp_budgets = await this.getSubmissionBudgets(
-        submissionId,
-        submission.phase.id,
-      );
-
-      this.initiative_data = await this.initService.findOne(
-        submission.initiative_id,
-      );
-      cross_data = await this.CrossCuttingService.findBySubmissionID(
-        submissionId,
-      );
-      this.anaplanLabels = await this.anaplanService.findAll();
-
-      if (!this.initiative_data.synchronized)
-        this.ipsr_value_data = await this.IpsrValueService.findBySubmissionId(
-          submissionId,
-        );
-      partners = await this.PhasesService.fetchAssignedOrganizations(
-        submission?.phase?.id,
-        submission?.initiative?.id,
-      );
-      this.phase = submission?.phase
-    } else {
-      this.phase = await this.PhasesService.findActivePhase();
-      this.savedValues = await this.getSaved(initId, this.phase.id);
-      partners = await this.PhasesService.fetchAssignedOrganizations(
+    }
+    if (submission) this.phase = submission.phase;
+    else this.phase = await this.PhasesService.findActivePhase();
+    if (submission)
+      this.savedValues = await this.getSaved(
+        initId,
         this.phase.id,
+        submission.id,
+      );
+    else this.savedValues = await this.getSaved(initId, this.phase.id);
+
+    partners = await this.PhasesService.fetchAssignedOrganizations(
+      this.phase.id,
+      initId,
+    );
+    if (partners.length < 1) {
+      partners = await this.organizationRepository.find();
+    }
+
+    this.initiative_data = await this.initService.findOne(initId);
+
+    this.period = await this.periodService.findByPhaseId(this.phase.id);
+
+    this.anaplanLabels = await this.anaplanService.findAll();
+    const assumptions = await this.budgetAssumptionsService.findAll(
+      this.phase.id,
+      initId,
+    );
+    for (let assumption of assumptions) {
+      if (!this.assumptionsTomap[assumption.organization_code])
+        this.assumptionsTomap[assumption.organization_code] = {};
+      if (
+        !this.assumptionsTomap[assumption.organization_code][assumption.wp_id]
+      )
+        this.assumptionsTomap[assumption.organization_code][assumption.wp_id] =
+          {};
+      if (
+        !this.assumptionsTomap[assumption.organization_code][assumption.wp_id][
+          assumption.item_id
+        ]
+      )
+        this.assumptionsTomap[assumption.organization_code][assumption.wp_id][
+          assumption.item_id
+        ] = {};
+
+      this.assumptionsTomap[assumption.organization_code][assumption.wp_id][
+        assumption.item_id
+      ] = assumption.budget_assumptions;
+    }
+   
+    if (submission) {
+      tocData = submission.toc_data as any;
+      this.results = tocData.results;
+    } else this.results = await tocData.results;
+
+    if (!this.initiative_data.synchronized)
+      this.ipsr_value_data = await this.IpsrValueService.findByInitiativeID(
         initId,
       );
-      if (partners.length < 1) {
-        partners = await this.organizationRepository.find();
-      }
 
-      this.initiative_data = await this.initService.findOne(initId);
+    cross_data = await this.CrossCuttingService.findByInitiativeID(
+      initId,
+      submissionId,
+    );
 
-      this.period = await this.periodService.findByPhaseId(this.phase.id);
+    this.wp_budgets = await this.getWpsBudgets(
+      initId,
+      this.phase.id,
+      submissionId,
+    );
 
-      this.anaplanLabels = await this.anaplanService.findAll();
-      this.results = await tocData.results;
-
-      if (!this.initiative_data.synchronized)
-        this.ipsr_value_data = await this.IpsrValueService.findByInitiativeID(
-          initId,
-        );
-
-      cross_data = await this.CrossCuttingService.findByInitiativeID(initId);
-
-      this.wp_budgets = await this.getWpsBudgets(initId, this.phase.id);
-    }
     this.indicatorTypesTitles = [
       'Policy Change',
       'Innovation Use',
@@ -2818,38 +2848,21 @@ export class SubmissionService {
       );
     }
 
-    if (submissionId != null) {
-      this.setvalues(
-        submission.consolidated.values,
-        submission.consolidated.perValues,
-      );
-      this.savedValuesForIndicator = await this.getSavedIndicatorForVersion(
-        this.initiative_data.id,
-        this.submission_data.phase.id,
-        submissionId,
-      );
-      this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
-      this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
+    this.setvaluesCurrent(
+      this.savedValues.values,
+      this.savedValues.perValues,
+      this.savedValues.no_budget,
+    );
+    this.savedValuesForIndicator = await this.getSavedIndicator(
+      this.initiative_data.id,
+      this.phase.id,
+    );
+    this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
+    this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
 
-      await this.setAnaplanValuesVersion(submissionId);
-    } else {
-      this.setvaluesCurrent(
-        this.savedValues.values,
-        this.savedValues.perValues,
-        this.savedValues.no_budget,
-      );
-      this.savedValuesForIndicator = await this.getSavedIndicator(
-        this.initiative_data.id,
-        this.phase.id,
-      );
-      this.setvaluesForIndicators(this.savedValuesForIndicator, 1);
-      this.setPartnervaluesForIndicators(this.savedValuesForIndicator, 1);
-
-      await this.setAnaplanValues();
-    }
+    await this.setAnaplanValues();
 
     this.setTotalTargetForIndicators();
-    // if(!submissionId)
     this.setTotalTargetForIndicatorsForPartners();
     this.setItemIndicatorAndBudget();
     this.sammaryCalc();
@@ -2922,9 +2935,60 @@ export class SubmissionService {
 
     let file_name = 'Planning';
 
-    var wb = XLSX.utils.book_new();
+    var wb = await this.generateExcelSheets(
+      XLSX.utils.book_new(),
+      tocData,
+      organization,
+      anaplan,
+    );
 
-    if (organization && !anaplan && !zip && !submissionId) {
+    (wb.Workbook as any) = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
+    if (organization)
+      file_name = organization?.acronym
+        ? file_name +
+          `_${this.initiative_data?.official_code}_${organization.acronym}`
+        : file_name + '_' + this.initiative_data?.official_code;
+    else file_name = file_name + '_' + this.initiative_data?.official_code;
+
+    await XLSX.writeFile(
+      wb,
+      join(process.cwd(), 'generated_files', `${file_name}.xlsx`),
+      { cellStyles: true },
+    );
+    const file = createReadStream(
+      join(process.cwd(), 'generated_files', `${file_name}.xlsx`),
+    );
+
+    if (!zip) {
+      setTimeout(async () => {
+        try {
+          unlink(
+            join(process.cwd(), 'generated_files', `${file_name}.xlsx`),
+            null,
+          );
+        } catch (e) {}
+      }, 10000);
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${file_name}.xlsx"`,
+      );
+      res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+    }
+
+    return new StreamableFile(file);
+  }
+
+  async generateExcelSheets(
+    wb,
+    tocData,
+    organization = null,
+    anaplan = null,
+  ): Promise<XLSX.WorkBook> {
+    if (organization && !anaplan) {
       //  center Consolidated
       console.log('center Consolidated');
       const centerConsolidated = this.generateExcelCenterConsolidated(
@@ -2938,7 +3002,7 @@ export class SubmissionService {
       );
       XLSX.utils.book_append_sheet(wb, centerCross, 'Cross-Cutting');
 
-      // HLO for center
+      // this.assumptionsTomap for center
       const centerHighLevelOutput = await this.generateExcelCenterHLO(
         organization.code,
       );
@@ -2972,7 +3036,7 @@ export class SubmissionService {
 
       const anaplanSheet = this.generateExcelAnaplan(organization);
       XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
-    } else if (!organization && !anaplan && !zip && !submissionId) {
+    } else if (!organization && !anaplan) {
       //  summary Consolidated
       console.log('summary Consolidated');
       const summaryConsolidated = this.generateExcelSummaryConsolidated();
@@ -3012,186 +3076,15 @@ export class SubmissionService {
 
       const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
       XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
-    } else if (organization && anaplan && !zip && !submissionId) {
+    } else if (organization && anaplan) {
       console.log('generateExcelAnaplan');
       const anaplanSheet = this.generateExcelAnaplan(organization);
       XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
-    } else if (!organization && anaplan && !zip && !submissionId) {
+    } else if (!organization && anaplan) {
       const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
       XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
-    } else if (submissionId && !organization && !zip) {
-      //  summary Consolidated
-      const summaryConsolidated = this.generateExcelSummaryConsolidated();
-      XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'Summary');
-
-      // HLO for summary
-      const summaryHighLevelOutput = this.generateExcelSummaryHLO();
-      XLSX.utils.book_append_sheet(wb, summaryHighLevelOutput, 'HLO');
-
-      // Outcome for summary
-      const summaryOutcome = this.generateExcelSummaryOutcome();
-      XLSX.utils.book_append_sheet(wb, summaryOutcome, 'Outcome');
-
-      // melia for summary
-      const summaryMelia = this.generateExcelSummaryMelia();
-      XLSX.utils.book_append_sheet(wb, summaryMelia, 'Melia');
-
-      // project for summary
-      const summaryProject = this.generateExcelSummaryProject();
-      XLSX.utils.book_append_sheet(wb, summaryProject, 'Project');
-
-      // summary Cross-Cutting
-      const summaryCross = this.generateExcelSummaryCrossCutting();
-      XLSX.utils.book_append_sheet(wb, summaryCross, 'Cross-Cutting');
-
-      // synergy programs for summary
-      const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
-      XLSX.utils.book_append_sheet(
-        wb,
-        synergyProgramsSheet,
-        'Synergy programs',
-      );
-
-      // Partners for summary
-      const partnersSummarySheet = this.generateExcelSummaryPartner();
-      XLSX.utils.book_append_sheet(wb, partnersSummarySheet, 'Partner');
-
-      const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
-      XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
-    } else if (submissionId && !organization && zip) {
-      //  summary Consolidated
-      const summaryConsolidated = this.generateExcelSummaryConsolidated();
-      XLSX.utils.book_append_sheet(wb, summaryConsolidated, 'Summary');
-
-      // HLO for summary
-      const summaryHighLevelOutput = this.generateExcelSummaryHLO();
-      XLSX.utils.book_append_sheet(wb, summaryHighLevelOutput, 'HLO');
-
-      // Outcome for summary
-      const summaryOutcome = this.generateExcelSummaryOutcome();
-      XLSX.utils.book_append_sheet(wb, summaryOutcome, 'Outcome');
-
-      // melia for summary
-      const summaryMelia = this.generateExcelSummaryMelia();
-      XLSX.utils.book_append_sheet(wb, summaryMelia, 'MELIA');
-
-      // project for summary
-      const summaryProject = this.generateExcelSummaryProject();
-      XLSX.utils.book_append_sheet(wb, summaryProject, 'W3-Bilateral projects');
-
-      // summary Cross-Cutting
-      const summaryCross = this.generateExcelSummaryCrossCutting();
-      XLSX.utils.book_append_sheet(wb, summaryCross, 'Cross-Cutting');
-
-      // synergy programs for summary
-      const synergyProgramsSheet = this.generateExcelSummarySynergyPrograms();
-      XLSX.utils.book_append_sheet(
-        wb,
-        synergyProgramsSheet,
-        'Synergy programs',
-      );
-
-      // Partners for summary
-      const partnersSummarySheet = this.generateExcelSummaryPartner();
-      XLSX.utils.book_append_sheet(wb, partnersSummarySheet, 'Partner');
-
-      const anaplanSummarySheet = this.generateExcelSummaryAnaplan();
-      XLSX.utils.book_append_sheet(wb, anaplanSummarySheet, 'Anaplan');
-    } else if (submissionId && organization && zip) {
-      console.log('center Consolidated submissionId');
-      //  center Consolidated
-      const centerConsolidated = this.generateExcelCenterConsolidated(
-        organization.code,
-      );
-      XLSX.utils.book_append_sheet(wb, centerConsolidated, 'Summary');
-
-      // cenert Cross-Cutting
-      const centerCross = this.generateExcelCenterCrossCutting(
-        organization.code,
-      );
-      XLSX.utils.book_append_sheet(wb, centerCross, 'Cross-Cutting');
-
-      // HLO for center
-      const centerHighLevelOutput = await this.generateExcelCenterHLO(
-        organization.code,
-      );
-      XLSX.utils.book_append_sheet(wb, centerHighLevelOutput, 'HLO');
-
-      // Partners for centers
-      const partnersCenterSheet = this.generateExcelCenterPartner(
-        organization.code,
-      );
-      XLSX.utils.book_append_sheet(wb, partnersCenterSheet, 'Partner');
-
-      // const data = await this.getActualTocs(this.initiative_data.official_code);
-
-      if (this.submission_data.toc_data?.extra?.projects) {
-        const projectSheet = await this.generateExcelProject(
-          this.submission_data.toc_data?.extra?.projects,
-          organization,
-          'project',
-        );
-        XLSX.utils.book_append_sheet(wb, projectSheet, 'Project');
-      }
-
-      if (this.submission_data.toc_data?.extra?.melias) {
-        const meliaSheet = await this.generateExcelProject(
-          this.submission_data.toc_data?.extra?.melias,
-          organization,
-          'melia',
-        );
-        XLSX.utils.book_append_sheet(wb, meliaSheet, 'Melia');
-      }
-
-      const anaplanSheet = this.generateExcelAnaplan(organization);
-      XLSX.utils.book_append_sheet(wb, anaplanSheet, 'Anaplan');
     }
-    (wb.Workbook as any) = { fullCalcOnLoad: 1 }; // <calcPr fullCalcOnLoad="1"/>
-    if (organization)
-      file_name = organization?.acronym
-        ? file_name +
-          `_${this.initiative_data?.official_code}_${organization.acronym}`
-        : file_name + '_' + this.initiative_data?.official_code;
-    else file_name = file_name + '_' + this.initiative_data?.official_code;
-
-    await XLSX.writeFile(
-      wb,
-      join(process.cwd(), 'generated_files', `${file_name}.xlsx`),
-      { cellStyles: true },
-    );
-    const file = createReadStream(
-      join(process.cwd(), 'generated_files', `${file_name}.xlsx`),
-    );
-
-    setTimeout(async () => {
-      try {
-        unlink(
-          join(process.cwd(), 'generated_files', `${file_name}.xlsx`),
-          null,
-        );
-      } catch (e) {}
-    }, 9000);
-    if (!zip) {
-      res.setHeader(
-        'Content-Type',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      );
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${file_name}.xlsx"`,
-      );
-      res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
-    }
-
-    return new StreamableFile(file);
-
-    // return {
-    //   ConsolidatedData: ConsolidatedData,
-    //   summary_data: allData,
-    //   lockupArray: lockupArray,
-    //   partners: partnersData,
-    //   wps: this.wps
-    // };
+    return wb;
   }
 
   wpsTotalSum = 0;
@@ -4561,7 +4454,7 @@ export class SubmissionService {
 
     const centeredCellStyle = {
       ...cellStyle,
-      alignment: { ...cellStyle.alignment, horizontal: 'center' },
+      alignment: { ...cellStyle.alignment, horizontal: 'center', wrapText: true},
     };
 
     const subTotalStyle = {
@@ -4584,6 +4477,7 @@ export class SubmissionService {
         'High Level Outputs',
         'Budget (USD)',
         'Total budget (USD)',
+        'Budget Assumptions',
       ];
     else
       header = [
@@ -4592,6 +4486,7 @@ export class SubmissionService {
         'Supported outcomes',
         'AOW budget (USD)',
         'Total budget (USD)',
+        'Budget Assumptions',
       ];
 
     const { rows, mergeRanges, formulae } = this.flattenProjectData(
@@ -4600,13 +4495,17 @@ export class SubmissionService {
       type,
     );
 
-    const dataToSheet = rows.map((row) => [
+    const dataToSheet = rows.map((row) => {
+      console.log(`${row.aow =='AOW00' ? 'CROSS' :row.wp_official_code }`,row)
+
+      return [
       row.title,
       row.aow,
       row.highLevelOutput,
       row.budget,
       null,
-    ]);
+      this.assumptionsTomap?.[partner.code]?.[`${row.aow =='AOW00' ? 'CROSS' :row.wp_official_code }`]?.[row.id]
+    ]});
     const ws = XLSX.utils.aoa_to_sheet([header]);
     XLSX.utils.sheet_add_aoa(ws, dataToSheet, { origin: -1 });
 
@@ -4656,6 +4555,7 @@ export class SubmissionService {
         { c: 2, style: cellStyle },
         { c: 3, style: centeredCellStyle },
         { c: 4, style: centeredCellStyle },
+        { c: 5, style: centeredCellStyle },
       ];
       ws['!rows'] = [];
       ws['!rows'].push({
@@ -4710,15 +4610,18 @@ export class SubmissionService {
       if (resultCount > 0) {
         formulae.push({ cell: totalBudgetCell, formula: formulaString });
       }
-
+   console.log(item)
       item.results.forEach((result, index) => {
         const highLevelOutput = result.titles.join(' / ');
         const aowPlaceholder = result.group.ost_wp.acronym;
         const wp_official_code =
           result?.group?.ost_wp?.wp_official_code + '-' + type;
+       
         flattenedRows.push({
+          id:item.id,
           title: type == 'melia' ? item.title : item.name,
           aow: aowPlaceholder,
+          wp_official_code:wp_official_code,
           highLevelOutput: highLevelOutput,
           budget:
             this.displayBudgetValues?.[partner.code]?.[wp_official_code]?.[
@@ -6287,6 +6190,7 @@ export class SubmissionService {
       null,
       null,
       'Total Budget (USD)',
+      'Budget Assumptions',
     ]);
     ws_data.push([
       null,
@@ -6303,6 +6207,7 @@ export class SubmissionService {
     merges.push({ s: { r: 0, c: 1 }, e: { r: 1, c: 1 } });
     merges.push({ s: { r: 0, c: 2 }, e: { r: 0, c: 6 } });
     merges.push({ s: { r: 0, c: 7 }, e: { r: 1, c: 7 } });
+    merges.push({ s: { r: 0, c: 8 }, e: { r: 1, c: 8 } });
 
     let currentRowIndex = 2;
 
@@ -6329,7 +6234,6 @@ export class SubmissionService {
             item.quantitative_indicators.forEach(
               (indicator, indicatorIndex) => {
                 const isFirstIndicator = indicatorIndex === 0;
-
                 const row = [
                   wpTitleCell,
                   isFirstIndicator ? item.title : null,
@@ -6337,10 +6241,11 @@ export class SubmissionService {
                   indicator.type?.name || 'N/A',
                   this.getScope(indicator, 'item'),
                   this.getTargetValue(indicator?.targets, String(partner_code)),
-                  this.displayBudgetValuesIndicator[partner_code][wpCode]?.[
+                  this.displayBudgetValuesIndicator[String(partner_code)][wpCode]?.[
                     item.id
                   ]?.[indicator?.id] || 0,
                   null,
+                   this.assumptionsTomap?.[partner_code]?.[wpCode]?.[indicator.id]
                 ];
 
                 ws_data.push(row);
@@ -6415,6 +6320,7 @@ export class SubmissionService {
       { wch: 10 },
       { wch: 15 },
       { wch: 20 },
+      { wch: 30 },
     ];
 
     ws['!rows'] = [];
@@ -6873,165 +6779,7 @@ export class SubmissionService {
     return ws;
   }
 
-  // generateExcelCenterPartner(partner_code: any) {
-  //   const headerStyle = {
-  //     font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
-  //     alignment: { horizontal: "center", vertical: "center", wrapText: true },
-  //     fill: { fgColor: { rgb: "2B3C53" } },
-  //     border: {
-  //       top: { style: "thin" },
-  //       bottom: { style: "thin" },
-  //       left: { style: "thin" },
-  //       right: { style: "thin" },
-  //     },
-  //   };
-
-  //   const dataCellStyle = {
-  //     alignment: { horizontal: "center", vertical: "center", wrapText: true },
-  //     border: {
-  //       top: { style: "thin" },
-  //       bottom: { style: "thin" },
-  //       left: { style: "thin" },
-  //       right: { style: "thin" },
-  //     },
-  //   };
-
-  //   const subTotalRowStyle = {
-  //     font: { bold: true, color: { rgb: "000000" } },
-  //     fill: { fgColor: { rgb: "E6E6E6" } },
-  //     alignment: { horizontal: "center", vertical: "center", wrapText: true },
-  //     border: {
-  //       top: { style: "thin" },
-  //       bottom: { style: "thin" },
-  //       left: { style: "thin" },
-  //       right: { style: "thin" },
-  //     },
-  //   };
-
-  //   const wpVerticalTitleStyle = {
-  //     font: { bold: true, color: { rgb: "FFFFFF" } },
-  //     fill: { fgColor: { rgb: "2B3C53" } },
-  //     alignment: { horizontal: "center", vertical: "center" },
-  //     border: {
-  //       top: { style: "thin" },
-  //       bottom: { style: "thin" },
-  //       left: { style: "thin" },
-  //       right: { style: "thin" },
-  //     },
-  //   };
-
-  //   const ws_data = [];
-  //   const merges = [];
-
-  //   ws_data.push(["AOW", "Partner", "High level outputs", "Geographic location", "Total Budget (USD)"]);
-  //   let currentRowIndex = 1;
-
-  //   this.actualWps.forEach((wp) => {
-  //     const wpCode = wp.ost_wp.wp_official_code + "-partners";
-  //     const wpItems = this.partnersData[partner_code][wpCode] || [];
-
-  //     const validPartners = wpItems
-  //     .filter(
-  //       (item) =>
-  //         item.selectedCountries &&
-  //         item.selectedCountries.length > 0 &&
-  //         item.selectedCountries.some((country) => country.centerCode === partner_code)
-  //     )
-  //     .map((item) => ({
-  //       ...item,
-  //       selectedCountries: item.selectedCountries.filter(
-  //         (country) => country.centerCode === partner_code
-  //       ),
-  //     }));
-  //     if (validPartners.length === 0) return;
-
-  //     const wpStartRow = currentRowIndex;
-
-  //     validPartners.forEach((item) => {
-  //       const startRowForItem = currentRowIndex;
-  //       const wpTitleCell = wp.ost_wp.acronym;
-
-  //       if (item.selectedCountries && item.selectedCountries.length > 0) {
-  //         const numCountries = item.selectedCountries.length;
-
-  //         item.selectedCountries.forEach((country, idx) => {
-  //           ws_data.push([
-  //             idx === 0 ? wpTitleCell : null,
-  //             idx === 0 ? item.name : null,
-
-  //             item.results,
-  //             country.countries || "N/A",
-  //             idx === 0 ? this.budgetValues[partner_code][wpCode]?.[item.id] || 0 : null,
-  //           ]);
-  //           currentRowIndex++;
-  //         });
-
-  //         // Merge partner name column (B)
-  //         if (numCountries > 1) {
-  //           merges.push({ s: { r: startRowForItem, c: 1 }, e: { r: startRowForItem + numCountries - 1, c: 1 } });
-  //           // Merge budget column (E)
-  //           merges.push({ s: { r: startRowForItem, c: 4 }, e: { r: startRowForItem + numCountries - 1, c: 4 } });
-  //         }
-  //       }
-  //     });
-
-  //     ws_data.push([
-  //       null,
-  //       "Contracted Partners budget Subtotal",
-  //       null,
-  //       null,
-  //       this.wp_budgets[partner_code][wpCode] || 0,
-  //     ]);
-
-  //     merges.push({ s: { r: currentRowIndex, c: 1 }, e: { r: currentRowIndex, c: 3 } }); // Merge B-D for subtotal
-  //     currentRowIndex++;
-
-  //     const wpEndRow = currentRowIndex - 1;
-  //     merges.push({ s: { r: wpStartRow, c: 0 }, e: { r: wpEndRow, c: 0 } });
-  //   });
-
-  //   const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  //   ws["!merges"] = merges;
-
-  //   ws["!cols"] = [
-  //     { wch: 8 },  // A
-  //     { wch: 40 }, // B
-  //     { wch: 60 }, // C
-  //     { wch: 30 }, // D
-  //     { wch: 15 }, // E
-  //   ];
-
-  //   ws["!rows"] = [];
-
-  //   // ---- STYLING ----
-  //   for (let R = 0; R < ws_data.length; ++R) {
-  //     const isHeader = R === 0;
-  //     const isSubtotal = ws_data[R][1] === "Contracted Partners budget Subtotal";
-
-  //     ws["!rows"][R] = { hpt: isHeader ? 30 : isSubtotal ? 25 : 70 };
-
-  //     for (let C = 0; C < ws_data[R].length; ++C) {
-  //       const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-  //       const cell = ws[cellAddress];
-  //       if (!cell) continue;
-
-  //       if (isHeader) cell.s = headerStyle;
-  //       else if (isSubtotal) cell.s = subTotalRowStyle;
-  //       else cell.s = dataCellStyle;
-  //     }
-  //   }
-
-  //   // ---- STYLE FOR WP VERTICAL TITLE ----
-  //   merges.forEach((merge) => {
-  //     if (merge.s.c === 0 && merge.e.c === 0) {
-  //       const cellAddress = XLSX.utils.encode_cell(merge.s);
-  //       if (ws[cellAddress]) ws[cellAddress].s = wpVerticalTitleStyle;
-  //     }
-  //   });
-
-  //   return ws;
-  // }
-
+  
   generateExcelCenterPartner(partner_code: any) {
     const headerStyle = {
       font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' } },
@@ -7091,6 +6839,7 @@ export class SubmissionService {
       'High level outputs',
       'Geographic location',
       'Total Budget (USD)',
+      'Budeget Assumptions',
     ]);
     let currentRowIndex = 1;
 
@@ -7134,6 +6883,7 @@ export class SubmissionService {
               idx === 0
                 ? this.displayBudgetValues[partner_code][wpCode]?.[item.id] || 0
                 : null,
+                this.assumptionsTomap?.[partner_code]?.[wpCode]?.[item.id]
             ]);
             currentRowIndex++;
           });
@@ -7263,6 +7013,7 @@ export class SubmissionService {
           wp.ost_wp.acronym,
           item.title,
           this.summaryBudgets[wpCode][item.id],
+          this.assumptionsTomap?.['CROSS-Cross-Cutting']?.[wpCode]?.[item.id]
         ];
         ws_data.push(row);
         currentRowIndex++;
@@ -7348,6 +7099,7 @@ export class SubmissionService {
       'Cross-Cutting',
       'Description',
       'Pooled Funded (USD)',
+      'Budget Assumptions'
     ]);
 
     let currentRowIndex = 1;
@@ -7364,6 +7116,7 @@ export class SubmissionService {
           item.title,
           item.description,
           this.budgetValues[partner_code][wpCode][item.id],
+          this.assumptionsTomap?.[partner_code]?.[wpCode]?.[item.id]
         ];
         ws_data.push(row);
         currentRowIndex++;
