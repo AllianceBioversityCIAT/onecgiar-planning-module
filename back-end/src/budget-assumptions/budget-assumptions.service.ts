@@ -16,6 +16,7 @@ export class BudgetAssumptionsService {
           where: {
             organization_code: data.organization_code,
             item_id: data.item_id,
+            initiative_id: data.initiative_id,
             wp_id: data.wp_id,
             type: data.type,
             phase_id: data.phase_id
@@ -27,20 +28,21 @@ export class BudgetAssumptionsService {
         return await this.repo.delete(id);
       }
 
-      async find(id: string) {
+      async find(id: string,initiative_id:number) {
         let activePhase = await this.phaseService.findActivePhase();
 
         return await this.repo.find({
-          where: { item_id: id, phase_id: activePhase.id },
+          where: { item_id: id, phase_id: activePhase.id,initiative_id },
           relations: ['organization']
         });
       }
 
-      findAll(id: number) {
+      findAll(id: number,initiative_id) {
         return this.repo.find({
           where: {
+            initiative_id,
             phase: {
-              id: id
+              id: id,
             }
           }
         });
@@ -55,6 +57,7 @@ export class BudgetAssumptionsService {
             organization_code: data.organization_code,
             item_id: data.item_id,
             wp_id: data.wp_id,
+            initiative_id: data?.initiative_id,
             type: data.type,
             phase: { id: activePhase.id }, 
           },

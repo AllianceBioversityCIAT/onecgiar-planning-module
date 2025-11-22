@@ -1890,7 +1890,7 @@ this.tocSubmissionData = toc_data.info
       'custom-OUTCOME'
     ];
 
-    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
     this.socket.connect();
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
@@ -1958,7 +1958,7 @@ this.tocSubmissionData = toc_data.info
       this.budgetValues[partner_code][wp_id][item_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] =
         Math.round(budgetValue);
-      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
       this.hasBudgetAssumptions(partner_code, item_id, wp_id);
       this.hasBudgetAssumptionsSummary(item_id, wp_id);
 
@@ -1971,7 +1971,7 @@ this.tocSubmissionData = toc_data.info
       const { partner_code, wp_id, item_id, indicator_id, budgetValue, subTotalBudgetIndicator } = data;
       this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
-      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
       this.hasBudgetAssumptions(partner_code, item_id, wp_id);
       this.hasBudgetAssumptionsSummary(item_id, wp_id);
 
@@ -3443,6 +3443,7 @@ totalConsolidatedTargetPartner: any;
       organization_code: partner,
       item_id: item_id,
       wp_id: wp_id,
+      initiative_id:this.initiative_data.id,
       item_budget: budget,
       type: type,
       phase_id: this.phase.id,
@@ -3460,7 +3461,7 @@ totalConsolidatedTargetPartner: any;
     }).afterClosed()
     .subscribe(async dialogResult => {
       if (dialogResult) {
-        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
         this.hasBudgetAssumptions(dialogResult.data.organization_code, dialogResult.data.item_id, dialogResult.data.wp_id);
         this.validateCenter(partner )
       }
@@ -3480,7 +3481,8 @@ totalConsolidatedTargetPartner: any;
     this.dialog
     .open(BudgetAssumptionSummaryComponent, {
       data: {
-        item_id
+        item_id,
+      initiative_id:  this.initiative_data.id
       },
       width: '800px',
       maxWidth: '850px',
