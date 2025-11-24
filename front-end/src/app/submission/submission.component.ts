@@ -557,23 +557,8 @@ if(!this.timeCalcForIndicator[item_id])
     } else return false;
   }
   partnerStatusChange(event: any, partnerCode: number) {
-    let index = 0;
-    if (!this.isCenter) {
-      index =
-        this.partners
-          .map((d: any) => {
-            return d.id;
-          })
-          .indexOf(partnerCode) + 1;
-    } else {
-      index = this.partners
-        .map((d: any) => {
-          return d.id;
-        })
-        .indexOf(partnerCode);
-    }
-    this.InitData();
-    this.selectedTabIndex = index;
+
+    // this.InitData();
   }
 
   tabChanged(organization: any) {
