@@ -4630,11 +4630,6 @@ export class SubmissionService {
     );
 
     const dataToSheet = rows.map((row) => {
-      console.log(
-        `${row.aow == 'AOW00' ? 'CROSS' : row.wp_official_code}`,
-        row,
-      );
-
       return [
         row.title,
         row.aow,
@@ -4750,7 +4745,6 @@ export class SubmissionService {
       if (resultCount > 0) {
         formulae.push({ cell: totalBudgetCell, formula: formulaString });
       }
-      console.log(item);
       item.results.forEach((result, index) => {
         const highLevelOutput = result.titles.join(' / ');
         const aowPlaceholder = result.group.ost_wp.acronym;
