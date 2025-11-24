@@ -47,6 +47,7 @@ import * as stream from 'stream';
 import * as archiver from 'archiver';
 import { Readable } from 'stream';
 import { PhasesService } from 'src/phases/phases.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @UseGuards(JwtAuthGuard)
 @ApiTags('submission')
@@ -364,6 +365,7 @@ export class SubmissionController {
                   ((d.category == 'WP' && !d.group) ||
                     d.category == 'OUTPUT' ||
                     d.category == 'EOI' ||
+                    d.category == 'IA' ||
                     d.category == 'OUTCOME') &&
                   d?.flow_id == dd?.data?.version_id,
               )
@@ -430,7 +432,7 @@ export class SubmissionController {
             const meliaMap = new Map<string, any>();
             // helper: escape any HTML in titles (safe rendering)
             const escapeHtml = (s: string) =>
-              s.replace(
+              s?.replace(
                 /[&<>"']/g,
                 (c) =>
                   ({
@@ -463,12 +465,16 @@ export class SubmissionController {
                       existing.supported_outcome = new Set(arr);
                     }
 
-                    (existing.supported_outcome as Set<string>).add(data.title);
+                    (existing.supported_outcome as Set<string>).add(
+                      data.title || data.type.name,
+                    );
                   } else {
                     meliaMap.set(key, {
                       id: melia.id,
                       parent_id: data.group,
-                      supported_outcome: new Set<string>([data.title]),
+                      supported_outcome: new Set<string>([
+                        data.title || data.type.name,
+                      ]),
                       category: 'Melia',
                       ...melia,
                     });
@@ -699,6 +705,45 @@ export class SubmissionController {
       false,
       false,
     );
+  }
+
+  @Get('check-erros/byid/:id')
+  @ApiBearerAuth()
+  async checkErros(
+    @Param('id') initId,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const init = await this.initService.findOne(initId);
+    const toc_data = await this.getTocs(
+      init.synchronized == true ? init.official_code : initId,
+    );
+    return await this.submissionService.checkErros(init, toc_data, true);
+  }
+
+  @Cron(CronExpression.EVERY_5_MINUTES, {
+    name: 'check-all-erros-and-toc-changes',
+  })
+  async checkAllErros(@Res({ passthrough: true }) res: Response) {
+    console.log('check-erros');
+    try {
+      const inits = await this.initService.findAll();
+      let results = [];
+      for (let init of inits) {
+        const toc_data = await this.getTocs(
+          init.synchronized == true ? init.official_code : init.id,
+        );
+        const checked = await this.submissionService.checkErros(
+          init,
+          toc_data,
+          true,
+        );
+        results.push({ ...checked, official_code: init.official_code });
+        console.log(init.official_code, checked.missingCount);
+      }
+      return results;
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   @Post('export/:phase_id')

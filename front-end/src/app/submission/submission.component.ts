@@ -2011,6 +2011,15 @@ this.tocSubmissionData = toc_data.info
       this.initiative_data = data.initiative_data;
     });
 
+    this.socket.on("refreshPORB", async (data: any) => {
+      if (data?.initiative_id == this.params.id) {
+        this.toastrService.info(
+          "We updated your PORB to match the latest TOC. Refreshing now...",
+        );
+        await this.refresh();
+      }
+    });
+
     this.socket.on("changeSubmissionStatus", async (data: any) => {
       this.initStatus = data.newSubmittionStatus.status
       this.initiative_data = await this.submissionService.getInitiative(

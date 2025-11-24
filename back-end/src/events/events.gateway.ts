@@ -1,4 +1,4 @@
-import { Logger, OnModuleInit, Req, UseGuards } from '@nestjs/common';
+import { forwardRef, Inject, Logger, OnModuleInit, Req, UseGuards } from '@nestjs/common';
 import {
   MessageBody,
   SubscribeMessage,
@@ -20,7 +20,11 @@ export class EventsGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
   planing_data: any = planing_data;
-  constructor(private submissionService: SubmissionService, private phaseService: PhasesService) {}
+  constructor(
+    @Inject(forwardRef(() => SubmissionService))
+    private submissionService: SubmissionService,
+    private phaseService: PhasesService,
+  ) {}
 
   @SubscribeMessage('setDataValue')
   changePer(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {

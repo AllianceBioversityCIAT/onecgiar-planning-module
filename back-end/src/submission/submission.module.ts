@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
 import { SubmissionController } from './submission.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -36,6 +36,7 @@ import { BudgetAssumptionsModule } from 'src/budget-assumptions/budget-assumptio
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { ConstantsModule } from 'src/constants/constants.module';
 import { Constants } from 'src/entities/constants.entity';
+import { EventsModule } from 'src/events/events.module';
 
 @Module({
   imports: [
@@ -70,7 +71,8 @@ import { Constants } from 'src/entities/constants.entity';
     InitiativesModule,
     PeriodsModule,
     AnaplanModule,
-    BudgetAssumptionsModule
+    BudgetAssumptionsModule,
+    forwardRef(() => EventsModule),
   ],
   controllers: [SubmissionController],
   providers: [SubmissionService, EmailService],
