@@ -41,6 +41,7 @@ import { BudgetAssumptionsService } from 'src/budget-assumptions/budget-assumpti
 import { Response } from 'express';
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { Constants } from 'src/entities/constants.entity';
+import { isNotIn } from 'class-validator';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -2288,7 +2289,7 @@ export class SubmissionService {
         assumption.item_id
       ] = assumption.budget_assumptions;
     }
-   
+
     if (submission) {
       tocData = submission.toc_data as any;
       this.results = tocData.results;
@@ -2980,6 +2981,97 @@ export class SubmissionService {
     }
 
     return new StreamableFile(file);
+  }
+
+  async checkErros(init: Initiative, toc_data, to_delete:boolean = false) {
+    this.phase = await this.PhasesService.findActivePhase();
+    const results = await this.resultRepository.find({
+      where: {
+        initiative_id: init.id,
+        phase_id: this.phase.id,
+        submission_id: IsNull(),
+        budget: Not(In(['', '0'])),
+        type: 'INDICATOR',
+      },
+      relations: ['workPackage', 'organization'],
+    });
+
+    const outputs_toc = toc_data.results
+      .filter((d) => d?.category?.includes('OUTPUT'))
+      .flatMap((d) =>
+        d.quantitative_indicators.flatMap((indicator) => {
+          return {
+            result_uuid: indicator.related_node_id || indicator.id,
+            parent_id: d.related_node_id || d.id,
+            output: d.title,
+            KPI_description: indicator.description,
+            organizations: indicator?.targets.flatMap((d) =>
+              d?.centers?.flatMap((d) => d.code),
+            ),
+          };
+        }),
+      );
+
+    const outputs_planning = results.map((d) => {
+      return {
+        result_uuid: d.result_uuid,
+        parent_id: d.parent_id,
+        ...d,
+      };
+    });
+
+    // i need to compair outputs_planning with outputs_toc and the items that not exist in outputs_toc i need to return it
+    // Compare outputs_planning with outputs_toc and return missing items
+    const matches = [];
+    const missing = [];
+
+    for (const planItem of outputs_planning) {
+      const exists = outputs_toc.some(
+        (tocItem) =>
+          tocItem.result_uuid === planItem.result_uuid &&
+          tocItem.parent_id === planItem.parent_id &&
+          tocItem.organizations.includes(planItem?.organization_code),
+      );
+
+      if (exists) {
+        matches.push(planItem);
+      } else {
+        const missing_from = outputs_toc.filter(
+          (tocItem) => tocItem.parent_id === planItem.parent_id,
+        );
+
+        missing.push({
+          ...planItem,
+
+          missing_from: Array.from(new Set(missing_from.map((d) => d.output))),
+        });
+      }
+    }
+    if(to_delete){
+    const user = await this.userRepository.findOne({ where: { id: 1 } });
+   await this.resultRepository.delete({id:In(missing.map(d=>d.id))})
+    for (let miss of missing) {
+     const deleted = await this.budgetAssumptionsService.deleteW(miss.result_uuid, miss.workPackage.wp_official_code, this.phase.id, +init.id, miss.organization_code)
+     console.log(deleted);
+      await this.saveWpBudget(
+        +init.id,
+        {
+          budget: miss.budget,
+          partner_code: miss.organization_code,
+          phaseId: this.phase.id,
+          wp_id: miss.workPackage.wp_official_code,
+        },
+        user,
+      );
+    }
+
+    }
+
+    return {
+      matchCount: matches.length,
+      missingCount: missing.length,
+      missingItems: missing,
+    };
   }
 
   async generateExcelSheets(
@@ -4454,7 +4546,11 @@ export class SubmissionService {
 
     const centeredCellStyle = {
       ...cellStyle,
-      alignment: { ...cellStyle.alignment, horizontal: 'center', wrapText: true},
+      alignment: {
+        ...cellStyle.alignment,
+        horizontal: 'center',
+        wrapText: true,
+      },
     };
 
     const subTotalStyle = {
@@ -4496,16 +4592,22 @@ export class SubmissionService {
     );
 
     const dataToSheet = rows.map((row) => {
-      console.log(`${row.aow =='AOW00' ? 'CROSS' :row.wp_official_code }`,row)
+      console.log(
+        `${row.aow == 'AOW00' ? 'CROSS' : row.wp_official_code}`,
+        row,
+      );
 
       return [
-      row.title,
-      row.aow,
-      row.highLevelOutput,
-      row.budget,
-      null,
-      this.assumptionsTomap?.[partner.code]?.[`${row.aow =='AOW00' ? 'CROSS' :row.wp_official_code }`]?.[row.id]
-    ]});
+        row.title,
+        row.aow,
+        row.highLevelOutput,
+        row.budget,
+        null,
+        this.assumptionsTomap?.[partner.code]?.[
+          `${row.aow == 'AOW00' ? 'CROSS' : row.wp_official_code}`
+        ]?.[row.id],
+      ];
+    });
     const ws = XLSX.utils.aoa_to_sheet([header]);
     XLSX.utils.sheet_add_aoa(ws, dataToSheet, { origin: -1 });
 
@@ -4610,18 +4712,18 @@ export class SubmissionService {
       if (resultCount > 0) {
         formulae.push({ cell: totalBudgetCell, formula: formulaString });
       }
-   console.log(item)
+      console.log(item);
       item.results.forEach((result, index) => {
         const highLevelOutput = result.titles.join(' / ');
         const aowPlaceholder = result.group.ost_wp.acronym;
         const wp_official_code =
           result?.group?.ost_wp?.wp_official_code + '-' + type;
-       
+
         flattenedRows.push({
-          id:item.id,
+          id: item.id,
           title: type == 'melia' ? item.title : item.name,
           aow: aowPlaceholder,
-          wp_official_code:wp_official_code,
+          wp_official_code: wp_official_code,
           highLevelOutput: highLevelOutput,
           budget:
             this.displayBudgetValues?.[partner.code]?.[wp_official_code]?.[
@@ -6241,11 +6343,13 @@ export class SubmissionService {
                   indicator.type?.name || 'N/A',
                   this.getScope(indicator, 'item'),
                   this.getTargetValue(indicator?.targets, String(partner_code)),
-                  this.displayBudgetValuesIndicator[String(partner_code)][wpCode]?.[
-                    item.id
-                  ]?.[indicator?.id] || 0,
+                  this.displayBudgetValuesIndicator[String(partner_code)][
+                    wpCode
+                  ]?.[item.id]?.[indicator?.id] || 0,
                   null,
-                   this.assumptionsTomap?.[partner_code]?.[wpCode]?.[indicator.id]
+                  this.assumptionsTomap?.[partner_code]?.[wpCode]?.[
+                    indicator.id
+                  ],
                 ];
 
                 ws_data.push(row);
@@ -6779,7 +6883,6 @@ export class SubmissionService {
     return ws;
   }
 
-  
   generateExcelCenterPartner(partner_code: any) {
     const headerStyle = {
       font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' } },
@@ -6883,7 +6986,7 @@ export class SubmissionService {
               idx === 0
                 ? this.displayBudgetValues[partner_code][wpCode]?.[item.id] || 0
                 : null,
-                this.assumptionsTomap?.[partner_code]?.[wpCode]?.[item.id]
+              this.assumptionsTomap?.[partner_code]?.[wpCode]?.[item.id],
             ]);
             currentRowIndex++;
           });
@@ -7013,7 +7116,7 @@ export class SubmissionService {
           wp.ost_wp.acronym,
           item.title,
           this.summaryBudgets[wpCode][item.id],
-          this.assumptionsTomap?.['CROSS-Cross-Cutting']?.[wpCode]?.[item.id]
+          this.assumptionsTomap?.['CROSS-Cross-Cutting']?.[wpCode]?.[item.id],
         ];
         ws_data.push(row);
         currentRowIndex++;
@@ -7099,7 +7202,7 @@ export class SubmissionService {
       'Cross-Cutting',
       'Description',
       'Pooled Funded (USD)',
-      'Budget Assumptions'
+      'Budget Assumptions',
     ]);
 
     let currentRowIndex = 1;
@@ -7116,7 +7219,7 @@ export class SubmissionService {
           item.title,
           item.description,
           this.budgetValues[partner_code][wpCode][item.id],
-          this.assumptionsTomap?.[partner_code]?.[wpCode]?.[item.id]
+          this.assumptionsTomap?.[partner_code]?.[wpCode]?.[item.id],
         ];
         ws_data.push(row);
         currentRowIndex++;
