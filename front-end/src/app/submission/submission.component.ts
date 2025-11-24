@@ -149,6 +149,9 @@ getFirstError(partner: any,section:string): string | null {
   noValuesAssigned: any = {};
   partnersStatus: any = {};
   centerHasError: any = {};
+  aowHasError: any = {};
+  w3HasError: any = {};
+  meliaHasError: any = {};
   itemHasError: any = {};
   geoLocationErrors: any = {};
   itemIndicatorHasError: any = {};
@@ -1105,6 +1108,9 @@ if(!this.timeCalcForIndicator[item_id])
     this.noValuesAssigned = {};
     this.partnersStatus = {};
     this.centerHasError = {};
+    this.aowHasError = {};
+    this.w3HasError = {};
+    this.meliaHasError = {};
     this.itemHasError = {};
     this.geoLocationErrors = {};
     this.itemIndicatorHasError = {};
@@ -1361,12 +1367,23 @@ this.tocSubmissionData = toc_data.info
         this.noValuesAssigned[partner.code] = {};
       if (!this.centerHasError[partner.code])
         this.centerHasError[partner.code] = false;
+      if (!this.aowHasError[partner.code])
+        this.aowHasError[partner.code] = {};
+      if (!this.w3HasError[partner.code])
+        this.w3HasError[partner.code] = false;
+      if (!this.meliaHasError[partner.code])
+        this.meliaHasError[partner.code] = false;
       if (!this.itemHasError[partner.code])
         this.itemHasError[partner.code] = {};
       if (!this.geoLocationErrors[partner.code])
         this.geoLocationErrors[partner.code] = {};
       if (!this.itemIndicatorHasError[partner.code])
         this.itemIndicatorHasError[partner.code] = {};
+      this.actualWps?.forEach((wp: any) => {
+        if (this.aowHasError[partner.code][wp.ost_wp.wp_official_code] === undefined) {
+          this.aowHasError[partner.code][wp.ost_wp.wp_official_code] = false;
+        }
+      });
 
       for(let wp of this.actualWps) {
         if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code]) {
@@ -2997,6 +3014,12 @@ this.submitDialog()
   let message = "";
 
   const visited = new Set<string>(); // will hold official codes per partner
+  this.aowHasError[partner_code] = this.aowHasError[partner_code] || {};
+  this.w3HasError[partner_code] = false;
+  this.meliaHasError[partner_code] = false;
+  this.actualWps?.forEach((wp: any) => {
+    this.aowHasError[partner_code][wp.ost_wp.wp_official_code] = false;
+  });
 
   const partnerWps = Object.keys(this.partnersData[partner_code] || {});
   for (const wp of this.actualWps)
@@ -3005,6 +3028,15 @@ this.submitDialog()
           if (!result.valid) {
               valid = false;
               message = result.message;
+              const isProject = wp_id.toLowerCase().includes('-project');
+              const isMelia = wp_id.toLowerCase().includes('-melia');
+              if (isProject) {
+                this.w3HasError[partner_code] = true;
+              } else if (isMelia) {
+                this.meliaHasError[partner_code] = true;
+              } else {
+                this.aowHasError[partner_code][wp.ost_wp.wp_official_code] = true;
+              }
               // if one failure is enough, you can break earlier:
               // break;
             }
@@ -3148,6 +3180,15 @@ this.submitDialog()
       this.params.id,
       this.organizationSelected
     );
+  }
+  hasAowError(partnerCode: any, wpOfficialCode: string): boolean {
+    return !!this.aowHasError?.[partnerCode]?.[wpOfficialCode];
+  }
+  hasW3Error(partnerCode: any): boolean {
+    return !!this.w3HasError?.[partnerCode];
+  }
+  hasMeliaError(partnerCode: any): boolean {
+    return !!this.meliaHasError?.[partnerCode];
   }
 
 
