@@ -3052,7 +3052,26 @@ export class SubmissionService {
         });
       }
     }
-    if (to_delete) {
+    if (to_delete && missing.length) {
+      const totalPlanning = outputs_planning.length;
+      const missingRatio =
+        totalPlanning === 0 ? 1 : missing.length / totalPlanning;
+
+      // Safety guard: if TOC is empty or most items would be removed, skip deletion
+      if (!outputs_toc.length || missingRatio >= 0.5) {
+        return {
+          matchCount: matches.length,
+          missingCount: missing.length,
+          missingItems: missing,
+          deletionSkipped: true,
+          skipReason: !outputs_toc.length
+            ? 'Deletion skipped because TOC data is empty.'
+            : `Deletion skipped because ${Math.round(
+                missingRatio * 100,
+              )}% of items are missing.`,
+        };
+      }
+
       const user = await this.userRepository.findOne({ where: { id: 1 } });
       await this.resultRepository.delete({ id: In(missing.map((d) => d.id)) });
       for (let miss of missing) {

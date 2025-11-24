@@ -725,21 +725,25 @@ export class SubmissionController {
   })
   async checkAllErros(@Res({ passthrough: true }) res: Response) {
     console.log('check-erros');
-    const inits = await this.initService.findAll();
-    let results = [];
-    for (let init of inits) {
-      const toc_data = await this.getTocs(
-        init.synchronized == true ? init.official_code : init.id,
-      );
-      const checked = await this.submissionService.checkErros(
-        init,
-        toc_data,
-        true,
-      );
-      results.push({ ...checked, official_code: init.official_code });
-      console.log(init.official_code, checked.missingCount);
+    try {
+      const inits = await this.initService.findAll();
+      let results = [];
+      for (let init of inits) {
+        const toc_data = await this.getTocs(
+          init.synchronized == true ? init.official_code : init.id,
+        );
+        const checked = await this.submissionService.checkErros(
+          init,
+          toc_data,
+          true,
+        );
+        results.push({ ...checked, official_code: init.official_code });
+        console.log(init.official_code, checked.missingCount);
+      }
+      return results;
+    } catch (e) {
+      console.error(e);
     }
-    return results;
   }
 
   @Post('export/:phase_id')
