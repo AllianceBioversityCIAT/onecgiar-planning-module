@@ -1668,8 +1668,15 @@
           *ngFor="let wp of actualWps?.slice(0, 1)"
          
          
-          label="{{ wp.ost_wp.acronym }}"
         >
+          <ng-template mat-tab-label>
+            <span>{{ wp.ost_wp.acronym }}</span>
+            <mat-icon
+              *ngIf="hasAowError(partner.code, wp.ost_wp.wp_official_code)"
+              style="color: red"
+              >error_outline</mat-icon
+            >
+          </ng-template>
           <mat-card>
             <div class="plural-head">
               <mat-card-title class="card-title-table"
@@ -2751,12 +2758,19 @@
           [disableRipple]="true"
           dynamicHeight="true"
         >
-          <mat-tab
-            *ngFor="let wp of actualWps; let i = index; first as isFirst; last as isLast"
+        <mat-tab
+          *ngFor="let wp of actualWps; let i = index; first as isFirst; last as isLast"
            
            
-            label="{{ wp.ost_wp.acronym }}"
           >
+            <ng-template mat-tab-label>
+              <span>{{ wp.ost_wp.acronym }}</span>
+              <mat-icon
+                *ngIf="hasAowError(partner.code, wp.ost_wp.wp_official_code)"
+                style="color: red"
+                >error_outline</mat-icon
+              >
+            </ng-template>
             <mat-card>
               <div class="plural-head">
                 <mat-card-title class="card-title-table"
@@ -4134,7 +4148,15 @@
 
 
 
-          <mat-tab label="W3/Bilateral">
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <span>W3/Bilateral</span>
+              <mat-icon
+                *ngIf="hasW3Error(partner.code)"
+                style="color: red"
+                >error_outline</mat-icon
+              >
+            </ng-template>
             <ng-container *ngIf="partnerProjects[partner.code].length">
             <mat-card>
               <div class="sub-head">
@@ -4340,7 +4362,15 @@
 
 
 
-          <mat-tab label="MELIA Study">
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <span>MELIA Study</span>
+              <mat-icon
+                *ngIf="hasMeliaError(partner.code)"
+                style="color: red"
+                >error_outline</mat-icon
+              >
+            </ng-template>
             <ng-container *ngIf="partnersMelia.length">
             <mat-card>
               <div class="sub-head">
