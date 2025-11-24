@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -42,6 +44,7 @@ import { Response } from 'express';
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { Constants } from 'src/entities/constants.entity';
 import { isNotIn } from 'class-validator';
+import { EventsGateway } from 'src/events/events.gateway';
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -86,6 +89,8 @@ export class SubmissionService {
     private readonly httpService: HttpService,
     @InjectRepository(Constants)
     private constantsRepository: Repository<Constants>,
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway: EventsGateway,
   ) {}
   sort(query) {
     if (query?.sort) {
@@ -3047,24 +3052,38 @@ export class SubmissionService {
         });
       }
     }
-    if(to_delete){
-    const user = await this.userRepository.findOne({ where: { id: 1 } });
-   await this.resultRepository.delete({id:In(missing.map(d=>d.id))})
-    for (let miss of missing) {
-     const deleted = await this.budgetAssumptionsService.deleteW(miss.result_uuid, miss.workPackage.wp_official_code, this.phase.id, +init.id, miss.organization_code)
-     console.log(deleted);
-      await this.saveWpBudget(
-        +init.id,
-        {
-          budget: miss.budget,
-          partner_code: miss.organization_code,
-          phaseId: this.phase.id,
-          wp_id: miss.workPackage.wp_official_code,
-        },
-        user,
-      );
-    }
-
+    if (to_delete) {
+      const user = await this.userRepository.findOne({ where: { id: 1 } });
+      await this.resultRepository.delete({ id: In(missing.map((d) => d.id)) });
+      for (let miss of missing) {
+        const deleted = await this.budgetAssumptionsService.deleteW(
+          miss.result_uuid,
+          miss.workPackage.wp_official_code,
+          this.phase.id,
+          +init.id,
+          miss.organization_code,
+        );
+        console.log(deleted);
+        await this.saveWpBudget(
+          +init.id,
+          {
+            budget: miss.budget,
+            partner_code: miss.organization_code,
+            phaseId: this.phase.id,
+            wp_id: miss.workPackage.wp_official_code,
+          },
+          user,
+        );
+      }
+      if (missing.length) {
+        // Tell connected clients to reload PORB data after automatic cleanup
+        this.eventsGateway.server?.emit('refreshPORB', {
+          initiative_id: init.id,
+          official_code: init.official_code,
+          missingCount: missing.length,
+          phase_id: this.phase.id,
+        });
+      }
     }
 
     return {

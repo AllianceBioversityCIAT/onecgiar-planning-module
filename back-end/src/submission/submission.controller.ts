@@ -465,12 +465,16 @@ export class SubmissionController {
                       existing.supported_outcome = new Set(arr);
                     }
 
-                    (existing.supported_outcome as Set<string>).add(data.title || data.type.name );
+                    (existing.supported_outcome as Set<string>).add(
+                      data.title || data.type.name,
+                    );
                   } else {
                     meliaMap.set(key, {
                       id: melia.id,
                       parent_id: data.group,
-                      supported_outcome: new Set<string>([data.title || data.type.name]),
+                      supported_outcome: new Set<string>([
+                        data.title || data.type.name,
+                      ]),
                       category: 'Melia',
                       ...melia,
                     });
@@ -713,25 +717,29 @@ export class SubmissionController {
     const toc_data = await this.getTocs(
       init.synchronized == true ? init.official_code : initId,
     );
-    return await this.submissionService.checkErros(init,toc_data,false);
+    return await this.submissionService.checkErros(init, toc_data, true);
   }
 
-    //  @Cron(CronExpression.EVERY_10_MINUTES, {
-    //      name: 'check-all-erros-and-toc-changes',
-    //    })
+  @Cron(CronExpression.EVERY_5_MINUTES, {
+    name: 'check-all-erros-and-toc-changes',
+  })
   async checkAllErros(@Res({ passthrough: true }) res: Response) {
-    console.log('check-erros')
+    console.log('check-erros');
     const inits = await this.initService.findAll();
-   let  results = []
+    let results = [];
     for (let init of inits) {
       const toc_data = await this.getTocs(
         init.synchronized == true ? init.official_code : init.id,
       );
-      const checked = await this.submissionService.checkErros(init, toc_data,true)
-      results.push({...checked,official_code: init.official_code}) ;
-      console.log(init.official_code,checked.missingCount )
+      const checked = await this.submissionService.checkErros(
+        init,
+        toc_data,
+        true,
+      );
+      results.push({ ...checked, official_code: init.official_code });
+      console.log(init.official_code, checked.missingCount);
     }
-    return results
+    return results;
   }
 
   @Post('export/:phase_id')
