@@ -63,7 +63,6 @@ export class AnaplanService {
   async createOrUpdate(data: any, user: any) { 
     let workPackageObject = await this.workPackageRepo.findOneBy({
       wp_official_code: data.wp_id,
-      initiative_id:data.initiative_id
     });
     const initiativeObject = await this.initiativeRepository.findOneBy({
       id: data.initiative_id,
