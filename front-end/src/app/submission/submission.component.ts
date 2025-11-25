@@ -1133,7 +1133,7 @@ if(!this.timeCalcForIndicator[item_id])
           return d;
         });
     }
-  const toc_data = await this.submissionService.getTocData(this.initiative_data.synchronized == true ? this.params.code : this.params.id).catch(e=>{
+  const toc_data = await this.submissionService.getTocData(this.initiative_data.official_code).catch(e=>{
         this.dialog
           .open(CustomMessageComponent, {
             disableClose: true,
@@ -1778,17 +1778,18 @@ this.tocSubmissionData = toc_data.info
   anaplanValues: any[] = [];
   allCenterCountryValues: any[] = [];
   async ngOnInit() {
+    this.params = this.activatedRoute?.snapshot.params;
+    this.initiative_data = await this.submissionService.getInitiative( this.params.id );
+    if(this.initiative_data.official_code != this.params.code){
+    this.router.navigateByUrl('/')
+    return;
+    }
     this.socket.on('connect_error', this.handelDisconnect);
     this.socket.on('disconnect', this.handelDisconnect);
     this.socket.on('connect', this.handelConnect);
     this.user = this.AuthService.getLoggedInUser();
-    this.params = this.activatedRoute?.snapshot.params;
     this.phase = await this.phasesService.getActivePhase();
     this.user_info = this.userService.getLogedInUser();
-    this.initiative_data = await this.submissionService.getInitiative(
-      this.params.id
-    );
-
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
