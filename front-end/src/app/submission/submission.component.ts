@@ -1771,6 +1771,14 @@ this.tocSubmissionData = toc_data.info
     this.dialog.closeAll();
   }
 
+  emitOnlineUserPresence() {
+    if (!this.initiative_data?.id) return;
+    this.socket.emit('userOnline', {
+      initiative_id: this.initiative_data.id,
+      sp: this.initiative_data.official_code || this.params?.code,
+    });
+  }
+
   user_info: any;
   my_roles: any;
   allBudgetAssumptions: any[] = [];
@@ -1786,7 +1794,10 @@ this.tocSubmissionData = toc_data.info
     }
     this.socket.on('connect_error', this.handelDisconnect);
     this.socket.on('disconnect', this.handelDisconnect);
-    this.socket.on('connect', this.handelConnect);
+    this.socket.on('connect', () => {
+      this.handelConnect();
+      this.emitOnlineUserPresence();
+    });
     this.user = this.AuthService.getLoggedInUser();
     this.phase = await this.phasesService.getActivePhase();
     this.user_info = this.userService.getLogedInUser();
@@ -1895,6 +1906,9 @@ this.tocSubmissionData = toc_data.info
 
     this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
     this.socket.connect();
+    if ((this.socket as any).ioSocket?.connected) {
+      this.emitOnlineUserPresence();
+    }
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
       this.changes(partner_code, wp_id, item_id, per_id, value);

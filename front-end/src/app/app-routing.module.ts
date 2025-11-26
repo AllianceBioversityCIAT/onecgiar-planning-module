@@ -34,6 +34,7 @@ import { TeamMemberComponent } from "./archive/team-member/team-member.component
 import { TableComponent } from "./archive/table/table.component";
 import { VersionComponent } from "./archive/version/version.component";
 import { ExportComponent } from "./admin/export/export.component";
+import { OnlineUsersComponent } from "./admin/online-users/online-users.component";
 
 const routes: Routes = [
   {
@@ -88,6 +89,7 @@ const routes: Routes = [
       { path: "sync-init", component: SyncInitComponent },
       { path: "archive", component: ArchivedComponent },
       { path: "export", component: ExportComponent },
+      { path: "online-users", component: OnlineUsersComponent },
 
     ],
   },
