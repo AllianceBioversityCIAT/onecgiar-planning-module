@@ -3001,6 +3001,8 @@ export class SubmissionService {
       relations: ['workPackage', 'organization'],
     });
 
+    const wps = toc_data.results
+      .filter((d) => d?.category?.includes('WP'))
     const outputs_toc = toc_data.results
       .filter((d) => d?.category?.includes('OUTPUT'))
       .flatMap((d) =>
@@ -3013,10 +3015,10 @@ export class SubmissionService {
             organizations: indicator?.targets.flatMap((d) =>
               d?.centers?.flatMap((d) => d.code),
             ),
+            wp_official_code: wps.filter(w=>w.id == d.group)?.[0]?.ost_wp?.wp_official_code || null ,
           };
         }),
       );
-
     const outputs_planning = results.map((d) => {
       return {
         result_uuid: d.result_uuid,
@@ -3035,7 +3037,9 @@ export class SubmissionService {
         (tocItem) =>
           tocItem.result_uuid === planItem.result_uuid &&
           tocItem.parent_id === planItem.parent_id &&
-          tocItem.organizations.includes(planItem?.organization_code),
+          tocItem.organizations.includes(planItem?.organization_code) && 
+          tocItem.wp_official_code === planItem.workPackage.wp_official_code && 
+          tocItem.wp_official_code != null
       );
 
       if (exists) {
