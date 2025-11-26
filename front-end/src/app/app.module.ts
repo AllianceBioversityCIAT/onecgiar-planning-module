@@ -111,6 +111,7 @@ import { GeographicLocationComponent } from './submission/geographic-location/ge
 import { StickyOnScrollDirective } from "./sticky-on-scroll.directive";
 import { SubmitMessageComponent } from './submission/submit-message/submit-message.component';
 import { ExportComponent } from './admin/export/export.component';
+import { OnlineUsersComponent } from './admin/online-users/online-users.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 
@@ -182,7 +183,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     GeographicLocationComponent,
     StickyOnScrollDirective,
     SubmitMessageComponent,
-    ExportComponent
+    ExportComponent,
+    OnlineUsersComponent
   ],
   imports: [ 
     BrowserModule,

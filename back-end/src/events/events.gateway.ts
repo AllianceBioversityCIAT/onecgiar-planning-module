@@ -1,30 +1,104 @@
-import { forwardRef, Inject, Logger, OnModuleInit, Req, UseGuards } from '@nestjs/common';
+import { forwardRef, Inject, Logger, OnModuleInit } from '@nestjs/common';
 import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
   ConnectedSocket,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { planing_data } from './defalut';
 import { SubmissionService } from 'src/submission/submission.service';
 import { PhasesService } from 'src/phases/phases.service';
+import { UsersService } from 'src/users/users.service';
+import { verify } from 'jsonwebtoken';
+
+interface OnlineUser {
+  socketId: string;
+  userId: number;
+  fullName: string;
+  email: string;
+  sp?: string;
+  initiative_id?: number;
+  connectedAt: string;
+}
 
 @WebSocketGateway({
   cors: {
     origin: '*',
   },
 })
-export class EventsGateway implements OnModuleInit {
+export class EventsGateway implements OnModuleInit, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
   planing_data: any = planing_data;
+  private readonly logger = new Logger(EventsGateway.name);
+  private onlineUsers = new Map<string, OnlineUser>();
   constructor(
     @Inject(forwardRef(() => SubmissionService))
     private submissionService: SubmissionService,
     private phaseService: PhasesService,
+    private usersService: UsersService,
   ) {}
+
+  private getTokenFromSocket(socket: Socket): string | null {
+    const headerToken =
+      (socket.handshake.headers?.authorization as string) ||
+      (socket.handshake.headers?.Authorization as string);
+    const queryToken = socket.handshake.query?.Authorization as string;
+    const rawToken = headerToken || queryToken;
+    if (!rawToken) return null;
+    const [scheme, token] = rawToken.split(' ');
+    return token || rawToken;
+  }
+
+  private async resolveSocketUser(socket: Socket) {
+    const token = this.getTokenFromSocket(socket);
+    if (!token) return null;
+    try {
+      const decoded = verify(token, process.env.JWT_SECRET_KEY) as any;
+      return await this.usersService.findOne(decoded.id);
+    } catch (error) {
+      this.logger.warn(`Failed to resolve socket user: ${error.message}`);
+      return null;
+    }
+  }
+
+  private getOnlineUsersList() {
+    return Array.from(this.onlineUsers.values());
+  }
+
+  private broadcastOnlineUsers() {
+    this.server.emit('onlineUsers', this.getOnlineUsersList());
+  }
+
+  @SubscribeMessage('userOnline')
+  async userOnline(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    const user = await this.resolveSocketUser(socket);
+    if (!user) return;
+
+    const onlineUser: OnlineUser = {
+      socketId: socket.id,
+      userId: user.id,
+      fullName: `${user.first_name} ${user.last_name}`,
+      email: user.email,
+      sp: data?.sp,
+      initiative_id: data?.initiative_id,
+      connectedAt: new Date().toISOString(),
+    };
+
+    this.onlineUsers.set(socket.id, onlineUser);
+    this.broadcastOnlineUsers();
+    return onlineUser;
+  }
+
+  @SubscribeMessage('getOnlineUsers')
+  handleGetOnlineUsers(@ConnectedSocket() socket: Socket) {
+    const onlineUsers = this.getOnlineUsersList();
+    socket.emit('onlineUsers', onlineUsers);
+    return onlineUsers;
+  }
 
   @SubscribeMessage('setDataValue')
   changePer(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
@@ -116,12 +190,16 @@ export class EventsGateway implements OnModuleInit {
     this.server.emit('setSelectedCountrySummaryRemove', { wp, selectedCountries, result_id });
   }
 
+  handleDisconnect(socket: Socket) {
+    if (this.onlineUsers.delete(socket.id)) {
+      this.broadcastOnlineUsers();
+    }
+    this.logger.log(`Socket disconnected: ${socket.id}`);
+  }
+
   onModuleInit() {
     this.server?.on('connect', (socket) => {
-      socket.on('disconnect', (data) => {
-        console.log('disconnect');
-      });
-      console.log('connect and send data');
+      this.logger.log(`Socket connected: ${socket.id}`);
     });
   }
 }
