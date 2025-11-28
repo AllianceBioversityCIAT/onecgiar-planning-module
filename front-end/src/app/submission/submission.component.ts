@@ -98,8 +98,20 @@ getFirstError(partner: any,section:string): string | null {
 
   for (const wp of this.wps) {
     const key = wp?.ost_wp?.wp_official_code + '-'+section;
-    if (this.errors[partner.code]?.[key]) {
-      return this.errors[partner.code][key];
+    const message = this.errors[partner.code]?.[key];
+
+    // Skip pooled-funding mismatch warning on W3/Bilateral tab
+    if (
+      section === 'project' &&
+      message?.includes(
+        'The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.'
+      )
+    ) {
+      continue;
+    }
+
+    if (message) {
+      return message;
     }
   }
   return null;
