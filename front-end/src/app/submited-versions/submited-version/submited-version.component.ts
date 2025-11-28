@@ -2038,7 +2038,7 @@ totalConsolidatedTargetPartner: any;
         }
       }
     }
-   
+   let targetsCounted:any=[];
     for (let wp of this.actualWps) {
       const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
     
@@ -2066,7 +2066,7 @@ totalConsolidatedTargetPartner: any;
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] = 0;
               }
               const value = parseFloat(target[this.submission_data.phase.reportingYear]); 
-              if (!isNaN(value)) {
+             if (!isNaN(value) && !targetsCounted.includes(target.id)) {
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
               }
             }
