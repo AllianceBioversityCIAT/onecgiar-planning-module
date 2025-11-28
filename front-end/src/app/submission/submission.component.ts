@@ -98,8 +98,20 @@ getFirstError(partner: any,section:string): string | null {
 
   for (const wp of this.wps) {
     const key = wp?.ost_wp?.wp_official_code + '-'+section;
-    if (this.errors[partner.code]?.[key]) {
-      return this.errors[partner.code][key];
+    const message = this.errors[partner.code]?.[key];
+
+    // Skip pooled-funding mismatch warning on W3/Bilateral tab
+    if (
+      section === 'project' &&
+      message?.includes(
+        'The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.'
+      )
+    ) {
+      continue;
+    }
+
+    if (message) {
+      return message;
     }
   }
   return null;
@@ -3035,6 +3047,8 @@ this.submitDialog()
   this.actualWps?.forEach((wp: any) => {
     this.aowHasError[partner_code][wp.ost_wp.wp_official_code] = false;
   });
+  const pooledFundingMismatchMsg =
+    "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
 
   const partnerWps = Object.keys(this.partnersData[partner_code] || {});
   for (const wp of this.actualWps)
@@ -3045,8 +3059,12 @@ this.submitDialog()
               message = result.message;
               const isProject = wp_id.toLowerCase().includes('-project');
               const isMelia = wp_id.toLowerCase().includes('-melia');
+              const isPooledFundingMismatch =
+                message?.includes(pooledFundingMismatchMsg);
               if (isProject) {
-                this.w3HasError[partner_code] = true;
+                if (!isPooledFundingMismatch) {
+                  this.w3HasError[partner_code] = true;
+                }
               } else if (isMelia) {
                 this.meliaHasError[partner_code] = true;
               } else {
