@@ -3464,17 +3464,18 @@ totalConsolidatedTargetPartner: any;
         }
       }
     }
-   
+    let targetsCounted:any=[];
     for (let wp of this.actualWps) {
       const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
     
       for (let wpData of wpDataArray) {
         const wpCode = wpData.ost_wp?.wp_official_code || wp.ost_wp.wp_official_code;
-    
+     
         for (let indicator of wpData.quantitative_indicators || []) {
           const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
             ? indicator.type.value
             : indicator?.type?.value + '-' + wpData.category;
+        
           for (let target of indicator.targets || []) {
             for (let targetPartner of target.centers || []) {
               const partnerCode = targetPartner.code;
@@ -3492,7 +3493,8 @@ totalConsolidatedTargetPartner: any;
               }
     
               const value = parseFloat(target[this.phase.reportingYear]); 
-              if (!isNaN(value)) {
+              if (!isNaN(value) && !targetsCounted.includes(target.id)) {
+                targetsCounted.push(target.id)
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
               }
             }

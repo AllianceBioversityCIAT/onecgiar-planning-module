@@ -3909,7 +3909,7 @@ export class SubmissionService {
         }
       }
     }
-
+ let targetsCounted:any=[];
     for (let wp of this.actualWps) {
       const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
 
@@ -3947,7 +3947,8 @@ export class SubmissionService {
               }
 
               const value = parseFloat(target[this.phase.reportingYear]);
-              if (!isNaN(value)) {
+                if (!isNaN(value) && !targetsCounted.includes(target.id)) {
+                   targetsCounted.push(target.id)
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][
                   indicatorType
                 ] += value;
