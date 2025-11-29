@@ -43,8 +43,8 @@ import { BudgetAssumptionsService } from 'src/budget-assumptions/budget-assumpti
 import { Response } from 'express';
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { Constants } from 'src/entities/constants.entity';
-import { isNotIn } from 'class-validator';
 import { EventsGateway } from 'src/events/events.gateway';
+
 @Injectable()
 export class SubmissionService {
   constructor(
@@ -1210,6 +1210,53 @@ export class SubmissionService {
       parts.unshift(part);
     }
     return parts.join(',');
+  }
+
+   async saveWpBudgetNoHisory(initiativeId: number, data: any, user,submission_id) {
+    const { partner_code, wp_id, budget, phaseId } = data;
+    const initiativeObject = await this.initiativeRepository.findOneBy({
+      id: initiativeId,
+    });
+    let workPackageObject = await this.workPackageRepository.findOneBy({
+      wp_official_code: wp_id,
+    });
+    if (!workPackageObject) {
+      workPackageObject = this.workPackageRepository.create();
+      workPackageObject.name = wp_id;
+      workPackageObject.initiative_id = initiativeObject.id;
+      workPackageObject.wp_official_code = wp_id;
+      workPackageObject.initiative_status = initiativeObject.status;
+      workPackageObject.initiative_offical_code =
+        initiativeObject.official_code;
+        
+      await this.workPackageRepository.save(workPackageObject);
+    }
+    let oldWpBudget = await this.wpBudgetRepository.findOneBy({
+      initiative_id: initiativeId,
+      organization_code: partner_code,
+      wp_id: workPackageObject.wp_id,
+      submission_id: submission_id,
+      phase_id: phaseId,
+    });
+
+    if (oldWpBudget) {
+      oldWpBudget.budget = budget;
+console.log('oldWpBudget',oldWpBudget)
+      await this.wpBudgetRepository.save(oldWpBudget)
+    } else {
+      console.log('New WpBudget',oldWpBudget)
+      const data: any = {
+        initiative_id: initiativeId,
+        organization_code: partner_code,
+        wp_id: workPackageObject.wp_id,
+        budget: budget,
+        submission_id: submission_id,
+        phase_id: phaseId,
+      };
+      const newWpBudget =  this.wpBudgetRepository.create(data);
+      await this.wpBudgetRepository.save(newWpBudget);
+    }
+    return { message: 'Data saved' };
   }
 
   async saveWpBudget(initiativeId: number, data: any, user) {
@@ -2987,7 +3034,130 @@ export class SubmissionService {
 
     return new StreamableFile(file);
   }
+async checkWpBudgetsConsistency(init: Initiative,phase:Phase,submission_id){
+ const results_wp_budget = await this.resultRepository  .createQueryBuilder("r")
+  .select("r.wp_id", "wp_id")
+  .addSelect("SUM(r.budget)", "total_budget")
+  .leftJoinAndSelect('r.workPackage','wp')
+  .leftJoinAndSelect('r.organization', 'org')
+  .where('r.submission_id = :submission_id',{submission_id})
+  .andWhere('r.initiative_id = :initiative_id',{initiative_id: init.id})
+  .andWhere('r.phase_id = :phase_id',{phase_id: phase.id})
+  .groupBy("r.wp_id")
+  .addGroupBy("r.organization_code")
+  
+  
+  .getRawMany();
 
+
+const wp_budget = await this.wpBudgetRepository.createQueryBuilder("w")
+  .select("w.wp_id", "wp_id")
+   .addSelect("w.budget", "total_budget")
+  .leftJoinAndSelect('w.workPackage','wp')
+  .leftJoinAndSelect('w.organization', 'org')
+  .where('w.submission_id = :submission_id',{submission_id})
+  .andWhere('w.initiative_id = :initiative_id',{initiative_id: init.id})
+  .andWhere('w.phase_id = :phase_id',{phase_id: phase.id})
+  .getRawMany();
+
+let matched_results:any = [];
+ for (let wp of wp_budget){
+
+ const matched =  results_wp_budget.filter(r=>r.wp_id == wp.wp_id && r.org_code == wp.org_code)?.[0];
+if(Number(wp?.total_budget || 0) != Number(matched?.total_budget || 0))
+ matched_results.push({wp: wp?.total_budget|| 0 ,result:matched?.total_budget || 0 ,wp_id:wp.wp_id,org_code : wp.org_code,org_name: wp.org_name , wp_name:wp.wp_name ,wp_official_code :wp.wp_wp_official_code})
+ }
+  const user = await this.userRepository.findOne({ where: { id: 1 } });
+
+  for (let res of   matched_results){
+console.log('Upate AOW budget',res, init.latest_submission_id);
+    await  this.saveWpBudgetNoHisory(
+              +init.id,
+              {
+                budget: String(res.result) ,
+                partner_code: res.org_code,
+                phaseId: phase.id,
+                wp_id: res.wp_official_code,
+              },
+              user,
+              init.latest_submission_id
+            );
+  }
+  
+  return matched_results
+
+}
+
+  async checkCrossErros(init: Initiative, to_delete:boolean = false) {
+    this.phase = await this.PhasesService.findActivePhase();
+    const results = await this.resultRepository.find({
+      where: {
+        initiative_id: init.id,
+        phase_id: this.phase.id,
+        submission_id: init.latest_submission_id,
+        budget: Not(In(['', '0'])),
+        type: 'Cross-Cutting',
+      },
+      relations: ['workPackage', 'organization'],
+    });
+
+  const cross = await this.CrossCuttingRepository.find({
+       where:{
+         initiative_id: init.id,
+         submission_id: init.latest_submission_id,
+       }
+   })
+   const missing = []
+   const matches = []
+   for (const result of results) {
+      if(!cross.map(c=>c.id).includes(result.result_uuid))
+        missing.push(result)
+      else
+      matches.push(result)
+   }
+
+
+     if (to_delete && missing.length) {
+      const totalPlanning = results.length;
+      const missingRatio =
+        totalPlanning === 0 ? 1 : missing.length / totalPlanning;
+
+      // Safety guard: if TOC is empty or most items would be removed, skip deletion
+      if (!results.length || missingRatio >= 0.5) {
+        return {
+          matchCount: matches.length,
+          missingCount: missing.length,
+          missingItems: missing,
+          deletionSkipped: true,
+          skipReason: !results.length
+            ? 'Deletion skipped because TOC data is empty.'
+            : `Deletion skipped because ${Math.round(
+                missingRatio * 100,
+              )}% of items are missing.`,
+        };
+      }
+
+     
+      await this.resultRepository.delete({ id: In(missing.map((d) => d.id)) });
+      for (let miss of missing) {
+        const deleted = await this.budgetAssumptionsService.deleteW(
+          miss.result_uuid,
+          miss.workPackage.wp_official_code,
+          this.phase.id,
+          +init.id,
+          miss.organization_code,
+        );
+        console.log(deleted);
+       
+      }
+    }
+
+    return {
+      matchCount: matches.length,
+      missingCount: missing.length,
+      missingItems: missing,
+    };
+  }
   async checkErros(init: Initiative, toc_data, to_delete:boolean = false) {
     this.phase = await this.PhasesService.findActivePhase();
     const results = await this.resultRepository.find({
