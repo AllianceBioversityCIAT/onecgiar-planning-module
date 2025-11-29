@@ -3118,26 +3118,7 @@ console.log('Upate AOW budget',res, init.latest_submission_id);
 
 
      if (to_delete && missing.length) {
-      const totalPlanning = results.length;
-      const missingRatio =
-        totalPlanning === 0 ? 1 : missing.length / totalPlanning;
 
-      // Safety guard: if TOC is empty or most items would be removed, skip deletion
-      if (!results.length || missingRatio >= 0.5) {
-        return {
-          matchCount: matches.length,
-          missingCount: missing.length,
-          missingItems: missing,
-          deletionSkipped: true,
-          skipReason: !results.length
-            ? 'Deletion skipped because TOC data is empty.'
-            : `Deletion skipped because ${Math.round(
-                missingRatio * 100,
-              )}% of items are missing.`,
-        };
-      }
-
-     
       await this.resultRepository.delete({ id: In(missing.map((d) => d.id)) });
       for (let miss of missing) {
         const deleted = await this.budgetAssumptionsService.deleteW(
