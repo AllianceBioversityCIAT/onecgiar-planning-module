@@ -720,9 +720,36 @@ export class SubmissionController {
     return await this.submissionService.checkErros(init, toc_data, true);
   }
 
-  @Cron(CronExpression.EVERY_5_MINUTES, {
-    name: 'check-all-erros-and-toc-changes',
-  })
+  @Get('check-wp/byid/:id')
+  @ApiBearerAuth()
+  async checkWpbudgets(@Param('id') initId: number) {
+    
+
+    const phase = await this.phasesService.findActivePhase();
+      const inits = await this.initService.findAll();
+      let results = [];
+      for (let init of inits) {
+   results.push( await this.submissionService.checkCrossErros(init, true));
+     results.push( await this.submissionService.checkWpBudgetsConsistency(init, phase,init.latest_submission_id));
+      }
+
+      return results
+  }
+
+    @Get('check-wp/all')
+  @ApiBearerAuth()
+  async checkWpsbudgets(@Param('id') initId: number) {
+    
+    const init = await this.initService.findOne(initId);
+    const phase = await this.phasesService.findActivePhase();
+    await this.submissionService.checkCrossErros(init, true);
+    return this.submissionService.checkWpBudgetsConsistency(init, phase,init.latest_submission_id);
+    
+  }
+
+  // @Cron(CronExpression.EVERY_5_MINUTES, {
+  //   name: 'check-all-erros-and-toc-changes',
+  // })
   async checkAllErros(@Res({ passthrough: true }) res: Response) {
     console.log('check-erros');
     try {
