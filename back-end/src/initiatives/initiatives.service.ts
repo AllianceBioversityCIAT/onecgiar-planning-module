@@ -891,9 +891,11 @@ async findOne(id: number) {
       ])
       .addSelect('SUM(wp_budget.budget)', 'wp_budget_total')
       .leftJoinAndSelect('submissions.wp_budget', 'wp_budget')
+       .leftJoinAndSelect('wp_budget.workPackage', 'wp_budget_wp')
       .leftJoinAndSelect('wp_budget.phase', 'phase')
       .andWhere('phase.id = :phase_id', { phase_id: query.phase_id })
       .leftJoinAndSelect('wp_budget.organization', 'organization')
+      .andWhere(`LOWER(wp_budget_wp.name) NOT LIKE '%project%'`)
       .andWhere(
         new Brackets((qb) => {
           if (query.initiatives) {
