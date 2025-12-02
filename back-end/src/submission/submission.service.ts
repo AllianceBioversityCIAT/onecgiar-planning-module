@@ -3266,6 +3266,185 @@ console.log('Upate AOW budget',res, init.latest_submission_id);
       missingItems: missing,
     };
   }
+  async checTypeErros(init: Initiative, toc_data, to_update:boolean = false) {
+      this.phase = await this.PhasesService.findActivePhase();
+      const results = await this.resultRepository.find({
+        where: {
+          initiative_id: init.id,
+          phase_id: this.phase.id,
+          submission_id: IsNull(),
+          budget: Not(In(['', '0'])),
+          type: 'INDICATOR',
+        },
+        relations: ['workPackage', 'organization'],
+      });
+
+      const wps = toc_data.results
+        .filter((d) => d?.category?.includes('WP'))
+      const outputs_toc = toc_data.results
+        .filter((d) => d?.category?.includes('OUTPUT'))
+        .flatMap((d) =>
+          d.quantitative_indicators.flatMap((indicator) => {
+            return {
+              result_uuid: indicator.related_node_id || indicator.id,
+              indicator_type : indicator?.type?.value  == 'custom' ? indicator?.type?.value+'-OUTPUT' :indicator?.type?.value,
+              parent_id: d.related_node_id || d.id,
+              output: d.title,
+              KPI_description: indicator.description,
+              organizations: indicator?.targets.flatMap((d) =>
+                d?.centers?.flatMap((d) => d.code),
+              ),
+              wp_official_code: wps.filter(w=>w.id == d.group)?.[0]?.ost_wp?.wp_official_code || null ,
+            };
+          }),
+        );
+      const outputs_planning = results.map((d) => {
+        return {
+          result_uuid: d.result_uuid,
+          parent_id: d.parent_id,
+          ...d,
+        };
+      });
+      // i need to compair outputs_planning with outputs_toc and the items that not exist in outputs_toc i need to return it
+      // Compare outputs_planning with outputs_toc and return missing items
+      const matches = [];
+      const missing = [];
+
+      for (const planItem of outputs_planning) {
+        const exists = outputs_toc.some(
+          (tocItem) =>
+            tocItem.result_uuid === planItem.result_uuid &&
+            tocItem.parent_id === planItem.parent_id &&
+            tocItem.organizations.includes(planItem?.organization_code) && 
+            tocItem.wp_official_code === planItem.workPackage.wp_official_code && 
+            tocItem.wp_official_code != null &&
+            tocItem.indicator_type == planItem.indicator_type
+        );
+
+        if (exists) {
+          matches.push({planItem});
+        } else {
+
+
+          missing.push({
+            id:planItem.id,
+            result_uuid: planItem.result_uuid,
+              parent_id: planItem.result_uuid,
+              toc_indicator_type : outputs_toc.filter(
+                (tocItem) =>
+                  tocItem.result_uuid === planItem.result_uuid &&
+                  tocItem.parent_id === planItem.parent_id &&
+                  tocItem.organizations.includes(planItem?.organization_code) && 
+                  tocItem.wp_official_code === planItem.workPackage.wp_official_code && 
+                  tocItem.wp_official_code != null
+              )[0].indicator_type,
+              planning_indicator_type : planItem.indicator_type 
+          });
+        }
+      }
+
+
+      if(to_update && missing.length){
+        for(let item of missing)
+        await this.resultRepository.update(item.id,{indicator_type:item.toc_indicator_type})
+      }
+    
+      return {
+        matchCount: matches.length,
+        missingCount: missing.length,
+        missingItems: missing,
+      };
+    }
+
+      async checTypeErrosSubmited(init: Initiative, toc_data,submission_id, to_update:boolean = false) {
+      this.phase = await this.PhasesService.findActivePhase();
+      const results = await this.resultRepository.find({
+        where: {
+          initiative_id: init.id,
+          phase_id: this.phase.id,
+          submission_id,
+          budget: Not(In(['', '0'])),
+          type: 'INDICATOR',
+        },
+        relations: ['workPackage', 'organization'],
+      });
+
+      const wps = toc_data.results
+        .filter((d) => d?.category?.includes('WP'))
+      const outputs_toc = toc_data.results
+        .filter((d) => d?.category?.includes('OUTPUT'))
+        .flatMap((d) =>
+          d.quantitative_indicators.flatMap((indicator) => {
+            return {
+              result_uuid: indicator.related_node_id || indicator.id,
+              indicator_type : indicator?.type?.value  == 'custom' ? indicator?.type?.value+'-OUTPUT' :indicator?.type?.value,
+              parent_id: d.related_node_id || d.id,
+              output: d.title,
+              KPI_description: indicator.description,
+              organizations: indicator?.targets.flatMap((d) =>
+                d?.centers?.flatMap((d) => d.code),
+              ),
+              wp_official_code: wps.filter(w=>w.id == d.group)?.[0]?.ost_wp?.wp_official_code || null ,
+            };
+          }),
+        );
+      const outputs_planning = results.map((d) => {
+        return {
+          result_uuid: d.result_uuid,
+          parent_id: d.parent_id,
+          ...d,
+        };
+      });
+      // i need to compair outputs_planning with outputs_toc and the items that not exist in outputs_toc i need to return it
+      // Compare outputs_planning with outputs_toc and return missing items
+      const matches = [];
+      const missing = [];
+
+      for (const planItem of outputs_planning) {
+        const exists = outputs_toc.some(
+          (tocItem) =>
+            tocItem.result_uuid === planItem.result_uuid &&
+            tocItem.parent_id === planItem.parent_id &&
+            tocItem.organizations.includes(planItem?.organization_code) && 
+            tocItem.wp_official_code === planItem.workPackage.wp_official_code && 
+            tocItem.wp_official_code != null &&
+            tocItem.indicator_type == planItem.indicator_type
+        );
+
+        if (exists) {
+          matches.push({planItem});
+        } else {
+
+
+          missing.push({
+            id:planItem.id,
+            result_uuid: planItem.result_uuid,
+              parent_id: planItem.result_uuid,
+              toc_indicator_type : outputs_toc.filter(
+                (tocItem) =>
+                  tocItem.result_uuid === planItem.result_uuid &&
+                  tocItem.parent_id === planItem.parent_id &&
+                  tocItem.organizations.includes(planItem?.organization_code) && 
+                  tocItem.wp_official_code === planItem.workPackage.wp_official_code && 
+                  tocItem.wp_official_code != null
+              )[0].indicator_type,
+              planning_indicator_type : planItem.indicator_type 
+          });
+        }
+      }
+
+
+      if(to_update && missing.length){
+        for(let item of missing)
+        await this.resultRepository.update(item.id,{indicator_type:item.toc_indicator_type})
+      }
+    
+      return {
+        matchCount: matches.length,
+        missingCount: missing.length,
+        missingItems: missing,
+      };
+    }
 
   async generateExcelSheets(
     wb,
