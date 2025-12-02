@@ -720,6 +720,53 @@ export class SubmissionController {
     return await this.submissionService.checkErros(init, toc_data, true);
   }
 
+    @Get('check-erros-check-erros-types/for-All')
+  @ApiBearerAuth()
+  async checkTypeErrosForAll(@Param('id') initId: number) {
+    
+
+    const phase = await this.phasesService.findActivePhase();
+      const inits = await this.initService.findAll();
+      let results = [];
+      for (let init of inits) {
+         const toc_data = await this.getTocs(
+      init.synchronized == true ? init.official_code : initId,
+    );
+      results.push( await this.submissionService.checTypeErros(init, toc_data, true));
+         const sub_data = await this.submissionService.findSubmissionsById(init.latest_submission_id);
+      results.push( await this.submissionService.checTypeErrosSubmited(init, sub_data.toc_data,init.latest_submission_id, true));
+      console.log('fixing Type for => '+init.official_code)
+      }
+
+      return results
+  }
+
+    @Get('check-erros-type/byid/:id')
+  @ApiBearerAuth()
+  async checkTypeErros(
+    @Param('id') initId,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const init = await this.initService.findOne(initId);
+    const toc_data = await this.getTocs(
+      init.synchronized == true ? init.official_code : initId,
+    );
+    return await this.submissionService.checTypeErros(init, toc_data, true);
+  }
+
+      @Get('check-erros-type-submited/byid/:id')
+  @ApiBearerAuth()
+  async checTypeErrosSubmited(
+    @Param('id') initId,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const init = await this.initService.findOne(initId);
+   const sub_data = await this.submissionService.findSubmissionsById(init.latest_submission_id);
+    return await this.submissionService.checTypeErrosSubmited(init, sub_data.toc_data,init.latest_submission_id, true);
+  }
+
+  
+
   @Get('check-wp/byid/:id')
   @ApiBearerAuth()
   async checkWpbudgets(@Param('id') initId: number) {
