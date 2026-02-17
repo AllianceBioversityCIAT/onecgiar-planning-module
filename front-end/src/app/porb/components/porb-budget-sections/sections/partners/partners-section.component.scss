@@ -1,0 +1,190 @@
+.additional-section {
+  margin-top: 1.6rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-family: "Poppins", sans-serif;
+    font-size: 1.8rem;
+    color: #212537;
+  }
+}
+
+.table-box {
+  overflow: hidden;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.8rem;
+}
+
+.table-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #ffffff;
+  padding-bottom: 0.4rem;
+}
+
+.table-scroll {
+  max-height: calc(70vh - 5rem);
+  overflow: auto;
+}
+
+.tool-input,
+.tool-select {
+  height: 3.2rem;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 6px;
+  padding: 0 0.8rem;
+  font-size: 1.3rem;
+  color: #0f212f;
+  background: #ffffff;
+}
+
+.tool-input {
+  min-width: 240px;
+}
+
+.tool-select {
+  min-width: 180px;
+}
+
+.export-btn {
+  height: 3.2rem;
+  border: 0;
+  border-radius: 6px;
+  background: #5569dd;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 500;
+  padding: 0 1rem;
+  cursor: pointer;
+}
+
+.additional-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 0;
+  table-layout: fixed;
+
+  th,
+  td {
+    border: 1px solid #b9b9b9b5;
+    padding: 0.65rem 0.7rem;
+    font-size: 1.3rem;
+    color: #0f212f;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    vertical-align: top;
+    font-family: "Poppins", sans-serif;
+    overflow: hidden;
+  }
+
+  th {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 500;
+    background: linear-gradient(to right, #2a2e45, #212537);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .row-title {
+    text-align: left;
+    font-weight: 500;
+    background: #ffffff;
+    white-space: normal;
+  }
+
+  tr.deleted-row td {
+    background: #ffe7e7;
+    color: #b42318;
+  }
+
+  tr.row-error td {
+    background: #fff3f3;
+  }
+}
+
+.row-error-icon {
+  position: absolute;
+  left: -2.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dc3545;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  z-index: 3;
+}
+
+.budget-cell-with-error {
+  position: relative;
+  overflow: visible !important;
+}
+
+.budget-input {
+  width: 100%;
+  min-width: 90px;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 4px;
+  padding: 0.4rem 0.45rem;
+  font-size: 1.3rem;
+  color: #0f212f;
+  background: #ffffff;
+  text-align: center;
+
+  &.is-saving {
+    background: #f2f5ff;
+  }
+}
+
+.assumption-input {
+  width: 100%;
+  min-width: 190px;
+  min-height: 3.2rem;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 4px;
+  padding: 0.4rem 0.45rem;
+  font-size: 1.3rem;
+  color: #0f212f;
+  background: #ffffff;
+  resize: vertical;
+
+  &.is-saving {
+    background: #f2f5ff;
+  }
+}
+
+.geo-select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+::ng-deep .geo-select .ng-select-container {
+  width: 100%;
+  max-width: 100%;
+  min-height: 3.2rem;
+  border-color: #b9b9b9b5;
+  box-sizing: border-box;
+}
+
+::ng-deep .geo-select .ng-value-container {
+  min-width: 0;
+  overflow: hidden;
+}

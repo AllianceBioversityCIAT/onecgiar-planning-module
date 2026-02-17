@@ -1,0 +1,56 @@
+<div class="table-box">
+  <div class="table-tools">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search bilateral rows"
+      [(ngModel)]="search"
+    />
+    <button type="button" class="export-btn" (click)="export()">Export Excel</button>
+  </div>
+
+  <div class="table-scroll">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th>Outputs</th>
+          <th>Bilateral Name</th>
+          <th>Budget</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of filteredRows; let i = index" [class.deleted-row]="row.toc_is_deleted" [class.row-error]="rowHasValidationError(row)">
+          <td
+            class="row-title"
+            *ngIf="isGroupedCellStart(filteredRows, i, 'bilateral_outputs')"
+            [attr.rowspan]="getGroupedCellRowspan(filteredRows, i, 'bilateral_outputs')"
+          >
+            {{ row.bilateral_outputs || "-" }}
+          </td>
+          <td>{{ row.bilateral_name || "-" }}</td>
+          <td class="budget-cell-with-error">
+            <app-budget-and-assumption
+              [(value)]="row.bilateral_budget"
+              [(assumption)]="row.bilateral_assumption"
+              [isSaving]="savingIds.has(row.id)"
+              (commit)="saveRow(row)"
+              (assumptionCommit)="saveRow(row)"
+              (pasteBudget)="pasteFromSpreadsheet($event, i, 'bilateral_budget', 'bilateral_assumption')"
+            ></app-budget-and-assumption>
+            <span
+              *ngIf="rowHasValidationError(row)"
+              class="row-error-icon"
+              matTooltip="Budget requires assumption"
+              matTooltipPosition="left"
+            >
+              !
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="3">No data found for selected filters.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

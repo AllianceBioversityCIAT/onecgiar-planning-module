@@ -113,6 +113,16 @@ import { SubmitMessageComponent } from './submission/submit-message/submit-messa
 import { ExportComponent } from './admin/export/export.component';
 import { OnlineUsersComponent } from './admin/online-users/online-users.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { PorbComponent } from "./porb/porb.component";
+import { PorbOverviewComponent } from "./porb/components/porb-overview/porb-overview.component";
+import { PorbSidebarComponent } from "./porb/components/porb-sidebar/porb-sidebar.component";
+import { PorbBudgetSectionsComponent } from "./porb/components/porb-budget-sections/porb-budget-sections.component";
+import { PoolSectionComponent } from "./porb/components/porb-budget-sections/sections/pool/pool-section.component";
+import { PartnersSectionComponent } from "./porb/components/porb-budget-sections/sections/partners/partners-section.component";
+import { W3SectionComponent } from "./porb/components/porb-budget-sections/sections/w3/w3-section.component";
+import { MeliaSectionComponent } from "./porb/components/porb-budget-sections/sections/melia/melia-section.component";
+import { AnaplanSectionComponent } from "./porb/components/porb-budget-sections/sections/anaplan/anaplan-section.component";
+import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sections/shared/budget-and-assumption/budget-and-assumption.component";
 
 
 @NgModule({
@@ -184,7 +194,17 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     StickyOnScrollDirective,
     SubmitMessageComponent,
     ExportComponent,
-    OnlineUsersComponent
+    OnlineUsersComponent,
+    PorbComponent,
+    PorbOverviewComponent,
+    PorbSidebarComponent,
+    PorbBudgetSectionsComponent,
+    PoolSectionComponent,
+    PartnersSectionComponent,
+    W3SectionComponent,
+    MeliaSectionComponent,
+    AnaplanSectionComponent,
+    BudgetAndAssumptionComponent
   ],
   imports: [ 
     BrowserModule,

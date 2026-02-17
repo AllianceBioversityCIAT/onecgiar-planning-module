@@ -1,0 +1,42 @@
+<div class="budget-assumption-wrap">
+  <input
+    class="budget-input"
+    type="text"
+    [ngModel]="value ?? ''"
+    (ngModelChange)="onValueChange($event)"
+    (blur)="onBlur()"
+    (paste)="onPaste($event)"
+    [disabled]="disabled"
+    [class.is-saving]="isSaving"
+  />
+
+  <button
+    *ngIf="assumptionEnabled"
+    type="button"
+    class="assumption-icon"
+    [ngClass]="{
+      'state-disabled': iconState === 'disabled',
+      'state-active': iconState === 'active',
+      'state-completed': iconState === 'completed'
+    }"
+    [disabled]="iconState === 'disabled'"
+    (click)="openAssumptionModal()"
+    title="Assumption"
+  >
+    <mat-icon>description</mat-icon>
+  </button>
+</div>
+
+<div class="assumption-modal-backdrop" *ngIf="showAssumptionModal" (click)="closeAssumptionModal()"></div>
+<div class="assumption-modal" *ngIf="showAssumptionModal">
+  <div class="assumption-modal-header">Assumption</div>
+  <textarea
+    class="assumption-textarea"
+    [(ngModel)]="draftAssumption"
+    placeholder="Enter assumption..."
+  ></textarea>
+  <div class="assumption-modal-actions">
+    <button type="button" class="btn-cancel" (click)="closeAssumptionModal()">Cancel</button>
+    <button type="button" class="btn-save" (click)="saveAssumption()">Save</button>
+  </div>
+</div>

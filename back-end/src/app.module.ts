@@ -27,6 +27,7 @@ import { ArchiveModule } from './archive/archive.module';
 import { BudgetAssumptionsModule } from './budget-assumptions/budget-assumptions.module';
 import { AnaplanModule } from './anaplan/anaplan.module';
 import { ClarisaCountryModule } from './clarisa-country/clarisa-country.module';
+import { PorbModule } from './porb/porb.module';
 
 @Module({
   controllers:[AppController],
@@ -41,7 +42,7 @@ import { ClarisaCountryModule } from './clarisa-country/clarisa-country.module';
         password: process.env.DATABASE_PASSWORD,
         database: process.env.DATABASE_NAME,
         type: 'mysql',
-        synchronize: false,
+        synchronize: true,
         entities: [`dist/**/*.entity{.ts,.js}`],
         autoLoadEntities: true,
         namingStrategy: new SnakeNamingStrategy(),
@@ -68,6 +69,7 @@ import { ClarisaCountryModule } from './clarisa-country/clarisa-country.module';
     BudgetAssumptionsModule,
     AnaplanModule,
     ClarisaCountryModule,
+    PorbModule,
     
   ],
 })

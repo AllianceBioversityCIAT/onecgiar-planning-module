@@ -1,0 +1,126 @@
+.budget-assumption-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.budget-input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 90px;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 4px;
+  padding: 0.4rem 0.45rem;
+  font-size: 1.3rem;
+  color: #0f212f;
+  background: #ffffff;
+  text-align: center;
+
+  &.is-saving {
+    background: #f2f5ff;
+  }
+}
+
+.assumption-icon {
+  width: 2.8rem;
+  height: 2.8rem;
+  min-width: 2.8rem;
+  border-radius: 6px;
+  border: 1px solid #c7cfdb;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  mat-icon {
+    font-size: 1.7rem;
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  &.state-disabled {
+    color: #9ca3af;
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    cursor: not-allowed;
+  }
+
+  &.state-active {
+    color: #1d4ed8;
+    background: #eef4ff;
+    border-color: #93c5fd;
+  }
+
+  &.state-completed {
+    color: #0f766e;
+    background: #ecfdf5;
+    border-color: #34d399;
+  }
+}
+
+.assumption-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 1300;
+}
+
+.assumption-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(540px, calc(100vw - 2rem));
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #d8deea;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.22);
+  z-index: 1301;
+  padding: 1rem;
+}
+
+.assumption-modal-header {
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.6rem;
+}
+
+.assumption-textarea {
+  width: 100%;
+  min-height: 130px;
+  border: 1px solid #c7cfdb;
+  border-radius: 8px;
+  padding: 0.7rem;
+  resize: vertical;
+  font-size: 1.3rem;
+  color: #111827;
+}
+
+.assumption-modal-actions {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.btn-cancel,
+.btn-save {
+  border: 0;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.btn-save {
+  background: #2563eb;
+  color: #ffffff;
+}

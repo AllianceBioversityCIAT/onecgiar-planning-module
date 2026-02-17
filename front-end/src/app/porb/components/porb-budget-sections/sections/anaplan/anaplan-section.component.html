@@ -1,0 +1,47 @@
+<div class="table-box">
+  <div class="table-tools" *ngIf="rows.length">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search account"
+      [(ngModel)]="search"
+    />
+    <select class="tool-select" [(ngModel)]="filterAccount">
+      <option value="">All Accounts</option>
+      <option *ngFor="let option of accountOptions" [value]="option">{{ option }}</option>
+    </select>
+    <button type="button" class="export-btn" (click)="export()">Export Excel</button>
+  </div>
+
+  <div class="table-scroll" *ngIf="rows.length">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th>Main Accounts</th>
+          <th>Total budget (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of filteredRows">
+          <td class="row-title">{{ row.account }}</td>
+          <td>
+            <app-budget-and-assumption
+              [(value)]="row.porb_budget"
+              [assumptionEnabled]="false"
+              [isSaving]="savingIds.has(row.anaplan_id)"
+              (commit)="saveRow(row)"
+            ></app-budget-and-assumption>
+          </td>
+        </tr>
+
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="2">No data found for selected filters.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="!rows.length">
+    No Anaplan records found for the selected Center and AOW.
+  </div>
+</div>

@@ -1,0 +1,36 @@
+<section class="additional-section">
+  <h2>{{ selectedExtraNavigation }} (Example Table)</h2>
+
+  <ng-container [ngSwitch]="selectedExtraNavigation">
+    <app-pool-section
+      *ngSwitchCase="'Pool funding HLO'"
+      [rows]="poolFundingRows"
+      (budgetUpdated)="budgetUpdated.emit()"
+    ></app-pool-section>
+
+    <app-partners-section
+      *ngSwitchCase="'Partners'"
+      [rows]="partnersRows"
+      [selectedCenterId]="selectedCenterId"
+      (budgetUpdated)="budgetUpdated.emit()"
+    ></app-partners-section>
+
+    <app-w3-section
+      *ngSwitchCase="'W3/Bilatral'"
+      [rows]="w3Rows"
+      (budgetUpdated)="budgetUpdated.emit()"
+    ></app-w3-section>
+
+    <app-melia-section
+      *ngSwitchCase="'MELIA Study'"
+      [rows]="meliaRows"
+      (budgetUpdated)="budgetUpdated.emit()"
+    ></app-melia-section>
+
+    <app-anaplan-section
+      *ngSwitchCase="'Anaplan'"
+      [rows]="anaplanRows"
+      (budgetUpdated)="budgetUpdated.emit()"
+    ></app-anaplan-section>
+  </ng-container>
+</section>

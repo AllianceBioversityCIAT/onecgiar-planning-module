@@ -1,0 +1,56 @@
+<div class="table-box">
+  <div class="table-tools">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search MELIA"
+      [(ngModel)]="search"
+    />
+    <button type="button" class="export-btn" (click)="export()">Export Excel</button>
+  </div>
+
+  <div class="table-scroll">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th>Outputs</th>
+          <th>Melia Name</th>
+          <th>Budget</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of filteredRows; let i = index" [class.deleted-row]="row.toc_is_deleted" [class.row-error]="rowHasValidationError(row)">
+          <td
+            class="row-title"
+            *ngIf="isGroupedCellStart(filteredRows, i, 'melia_outputs')"
+            [attr.rowspan]="getGroupedCellRowspan(filteredRows, i, 'melia_outputs')"
+          >
+            {{ row.melia_outputs || "-" }}
+          </td>
+          <td>{{ row.melia_name || "-" }}</td>
+          <td class="budget-cell-with-error">
+            <app-budget-and-assumption
+              [(value)]="row.melia_budget"
+              [(assumption)]="row.melia_assumption"
+              [isSaving]="savingIds.has(row.id)"
+              (commit)="saveRow(row)"
+              (assumptionCommit)="saveRow(row)"
+              (pasteBudget)="pasteFromSpreadsheet($event, i, 'melia_budget', 'melia_assumption')"
+            ></app-budget-and-assumption>
+            <span
+              *ngIf="rowHasValidationError(row)"
+              class="row-error-icon"
+              matTooltip="Budget requires assumption"
+              matTooltipPosition="left"
+            >
+              !
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="3">No data found for selected filters.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

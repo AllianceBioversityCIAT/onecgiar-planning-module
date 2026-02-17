@@ -1,0 +1,88 @@
+<div class="table-box">
+  <div class="table-tools">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search partner or location"
+      [(ngModel)]="search"
+    />
+    <select class="tool-select" [(ngModel)]="filterContracted">
+      <option value="">All</option>
+      <option *ngFor="let option of contractedOptions" [value]="option">{{ option }}</option>
+    </select>
+    <button type="button" class="export-btn" (click)="export()">Export Excel</button>
+  </div>
+
+  <div class="table-scroll">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th>Outputs</th>
+          <th>Partner Name</th>
+          <th>Contracted</th>
+          <th>Geo</th>
+          <th>Budget</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let row of filteredRows; let i = index" [class.deleted-row]="row.toc_is_deleted" [class.row-error]="rowHasValidationError(row)">
+        <td
+          class="row-title"
+          *ngIf="isGroupedCellStart(filteredRows, i, 'partner_outputs')"
+          [attr.rowspan]="getGroupedCellRowspan(filteredRows, i, 'partner_outputs')"
+        >
+          {{ row.partner_outputs || "-" }}
+        </td>
+        <td>{{ row.partner_name || "-" }}</td>
+        <td>
+          <input
+            type="checkbox"
+            [checked]="isContracted(row)"
+            (change)="row.partner_is_contracted = $any($event.target).checked ? '1' : '0'; saveRow(row)"
+          />
+        </td>
+        <td>
+          <ng-select
+            class="geo-select"
+            [items]="countryOptions"
+            bindLabel="name"
+            bindValue="code"
+            [multiple]="true"
+            [clearable]="true"
+            [searchable]="true"
+            [closeOnSelect]="false"
+            [appendTo]="'body'"
+            [disabled]="!isContracted(row)"
+            [(ngModel)]="row.partner_country_codes"
+            placeholder="Select countries"
+            (change)="saveRow(row)"
+          >
+          </ng-select>
+        </td>
+          <td class="budget-cell-with-error">
+            <app-budget-and-assumption
+              [(value)]="row.partner_budget"
+              [(assumption)]="row.partner_assumption"
+              [disabled]="!isContracted(row)"
+              [isSaving]="savingIds.has(row.id)"
+              (commit)="saveRow(row)"
+              (assumptionCommit)="saveRow(row)"
+              (pasteBudget)="pasteFromSpreadsheet($event, i, 'partner_budget', 'partner_geo')"
+            ></app-budget-and-assumption>
+            <span
+              *ngIf="rowHasValidationError(row)"
+              class="row-error-icon"
+              [matTooltip]="rowErrorMessage(row)"
+              matTooltipPosition="left"
+            >
+              !
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="5">No data found for selected filters.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,74 @@
+<section class="porb-page">
+  <nav class="porb-breadcrumb">
+    <a routerLink="/">Programs</a>
+    <span>/</span>
+    <a
+      [routerLink]="[
+        '/program',
+        initiative?.id,
+        initiative?.official_code,
+        'porb'
+      ]"
+      >PORB</a
+    >
+  </nav>
+
+  <app-porb-overview
+    *ngIf="initiative"
+    [initiative]="initiative"
+    [onlineProgramUsers]="onlineProgramUsers"
+    (exportOverview)="exportOverviewExcel()"
+  ></app-porb-overview>
+
+  <div class="porb-layout" *ngIf="!loading">
+    <app-porb-sidebar
+      [centers]="displayedCenters"
+      [aows]="displayedAows"
+      [extraNavigationItems]="extraNavigationItems"
+      [selectedCenter]="selectedCenter"
+      [selectedAow]="selectedAow"
+      [selectedExtraNavigation]="selectedExtraNavigation"
+      [selectedCenterKey]="selectedCenterKey"
+      [centersCollapsed]="centersCollapsed"
+      [aowsCollapsed]="aowsCollapsed"
+      [completedCenterCodes]="completedCenterCodes"
+      [selectedCenterCompleted]="isSelectedCenterCompleted"
+      [centerStatusUpdating]="centerStatusUpdating"
+      [sectionValidation]="sectionValidation"
+      [centerErrorCodes]="centerErrorCodes"
+      [aowErrorIds]="aowErrorIds"
+      [consolidationIndicators]="consolidationIndicators"
+      [consolidationBudgetSummary]="consolidationBudgetSummary"
+      (toggleCenters)="toggleCentersCollapsed()"
+      (toggleAows)="toggleAowsCollapsed()"
+      (selectCenter)="onSelectCenter($event)"
+      (selectAow)="onSelectAow($event)"
+      (selectExtra)="onSelectExtraNavigation($event)"
+      (toggleSelectedCenterCompletion)="onToggleSelectedCenterCompletion()"
+    ></app-porb-sidebar>
+
+    <main class="porb-content">
+      <section class="porb-placeholder" *ngIf="!isPorbSelectionComplete">
+        <h2>Complete Selections to View PORB</h2>
+        <p>
+          Select a <strong>Center</strong>, an <strong>AOW</strong>, and one
+          <strong>Additional</strong> section from the left navigation.
+        </p>
+      </section>
+
+      <app-porb-budget-sections
+        *ngIf="isPorbSelectionComplete"
+        [selectedExtraNavigation]="selectedExtraNavigation"
+        [selectedCenterId]="selectedCenterIdForSections"
+        [poolFundingRows]="poolFundingRows"
+        [partnersRows]="partnersRows"
+        [w3Rows]="w3Rows"
+        [meliaRows]="meliaRows"
+        [anaplanRows]="anaplanRows"
+        (budgetUpdated)="onBudgetUpdated()"
+      ></app-porb-budget-sections>
+    </main>
+  </div>
+
+  <div class="loading" *ngIf="loading">Loading PORB...</div>
+</section>
