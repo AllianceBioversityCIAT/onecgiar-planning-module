@@ -123,6 +123,7 @@ import { W3SectionComponent } from "./porb/components/porb-budget-sections/secti
 import { MeliaSectionComponent } from "./porb/components/porb-budget-sections/sections/melia/melia-section.component";
 import { AnaplanSectionComponent } from "./porb/components/porb-budget-sections/sections/anaplan/anaplan-section.component";
 import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sections/shared/budget-and-assumption/budget-and-assumption.component";
+import { CrossSectionComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-section.component";
 
 
 @NgModule({
@@ -204,7 +205,8 @@ import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sect
     W3SectionComponent,
     MeliaSectionComponent,
     AnaplanSectionComponent,
-    BudgetAndAssumptionComponent
+    BudgetAndAssumptionComponent,
+    CrossSectionComponent
   ],
   imports: [ 
     BrowserModule,

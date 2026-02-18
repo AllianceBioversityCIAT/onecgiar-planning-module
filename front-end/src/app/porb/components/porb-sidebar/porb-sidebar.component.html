@@ -48,7 +48,7 @@
 
     <div
       class="nav-panel aows-panel"
-      [class.expanded]="selectedCenter"
+      [class.disabled]="!selectedCenter"
       [class.collapsed]="aowsCollapsed"
     >
       <div class="nav-header">
@@ -62,50 +62,60 @@
           {{ aowsCollapsed ? "+" : "-" }}
         </button>
       </div>
-      <button
-        *ngFor="let aow of aows"
-        type="button"
-        class="nav-item"
-        [class.active]="
-          (selectedAow?.id && aow?.id && selectedAow?.id === aow?.id) ||
-          (selectedAow?.wpCode && selectedAow?.wpCode === aow?.wpCode) ||
-          (selectedAow?.code && selectedAow?.code === aow?.code)
-        "
-        (click)="selectAow.emit(aow)"
-      >
-        <span class="section-label">{{ getAowLabel(aow, aowsCollapsed) }}</span>
-        <span
-          *ngIf="hasAowError(aow)"
-          class="section-error-icon"
-          [matTooltip]="'This AOW has validation errors for selected center'"
-          matTooltipPosition="right"
-          (click)="$event.stopPropagation()"
+      <ng-container *ngIf="selectedCenter; else aowLockedState">
+        <button
+          *ngFor="let aow of aows"
+          type="button"
+          class="nav-item"
+          [class.active]="
+            (selectedAow?.id && aow?.id && selectedAow?.id === aow?.id) ||
+            (selectedAow?.wpCode && selectedAow?.wpCode === aow?.wpCode) ||
+            (selectedAow?.code && selectedAow?.code === aow?.code)
+          "
+          (click)="selectAow.emit(aow)"
         >
-          !
-        </span>
-      </button>
+          <span class="section-label">{{ getAowLabel(aow, aowsCollapsed) }}</span>
+          <span
+            *ngIf="hasAowError(aow)"
+            class="section-error-icon"
+            [matTooltip]="'This AOW has validation errors for selected center'"
+            matTooltipPosition="right"
+            (click)="$event.stopPropagation()"
+          >
+            !
+          </span>
+        </button>
+      </ng-container>
+      <ng-template #aowLockedState>
+        <p class="nav-empty-state">Select Center first</p>
+      </ng-template>
     </div>
 
-    <div class="nav-panel extra-nav-panel" [class.expanded]="selectedAow">
+    <div class="nav-panel extra-nav-panel" [class.disabled]="!selectedAow">
       <h3>Budget Sections</h3>
-      <button
-        *ngFor="let item of extraNavigationItems"
-        type="button"
-        class="nav-item"
-        [class.active]="selectedExtraNavigation === item"
-        (click)="selectExtra.emit(item)"
-      >
-        <span class="section-label">{{ item }}</span>
-        <span
-          *ngIf="hasSectionError(item)"
-          class="section-error-icon"
-          [matTooltip]="getSectionError(item)"
-          matTooltipPosition="right"
-          (click)="$event.stopPropagation()"
+      <ng-container *ngIf="selectedAow; else sectionLockedState">
+        <button
+          *ngFor="let item of extraNavigationItems"
+          type="button"
+          class="nav-item"
+          [class.active]="selectedExtraNavigation === item"
+          (click)="selectExtra.emit(item)"
         >
-          !
-        </span>
-      </button>
+          <span class="section-label">{{ item }}</span>
+          <span
+            *ngIf="hasSectionError(item)"
+            class="section-error-icon"
+            [matTooltip]="getSectionError(item)"
+            matTooltipPosition="right"
+            (click)="$event.stopPropagation()"
+          >
+            !
+          </span>
+        </button>
+      </ng-container>
+      <ng-template #sectionLockedState>
+        <p class="nav-empty-state">Select AOW first</p>
+      </ng-template>
     </div>
   </div>
 

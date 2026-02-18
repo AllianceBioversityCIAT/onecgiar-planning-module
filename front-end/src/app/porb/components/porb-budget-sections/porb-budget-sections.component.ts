@@ -7,11 +7,14 @@ import { Component, EventEmitter, Input, Output } from "@angular/core";
 })
 export class PorbBudgetSectionsComponent {
   @Input() selectedExtraNavigation: string | null = null;
+  @Input() selectedProgramId: number | undefined;
   @Input() selectedCenterId: number | undefined;
+  @Input() selectedPorbAowId: number | undefined;
   @Input() poolFundingRows: any[] = [];
   @Input() partnersRows: any[] = [];
   @Input() w3Rows: any[] = [];
   @Input() meliaRows: any[] = [];
   @Input() anaplanRows: any[] = [];
+  @Input() crossRows: any[] = [];
   @Output() budgetUpdated = new EventEmitter<void>();
 }

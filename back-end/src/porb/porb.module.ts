@@ -14,6 +14,8 @@ import { PorbAnaplan } from 'src/entities/porb-anaplan.entity';
 import { Anaplan } from 'src/entities/anaplan.entity';
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
+import { CrossCutting } from 'src/entities/cross-cutting.entity';
+import { PorbCross } from 'src/entities/porb-cross.entity';
 import { SubmissionModule } from 'src/submission/submission.module';
 import { InitiativesModule } from 'src/initiatives/initiatives.module';
 import { PhasesModule } from 'src/phases/phases.module';
@@ -32,6 +34,8 @@ import { PhasesModule } from 'src/phases/phases.module';
       Anaplan,
       AnaplanValues,
       WorkPackage,
+      CrossCutting,
+      PorbCross,
     ]),
     HttpModule,
     SubmissionModule,

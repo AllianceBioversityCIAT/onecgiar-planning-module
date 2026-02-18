@@ -1,0 +1,159 @@
+.table-box {
+  overflow-x: auto;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.8rem;
+}
+
+.table-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.tool-input {
+  height: 3.2rem;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 6px;
+  padding: 0 0.8rem;
+  font-size: 1.3rem;
+  color: #0f212f;
+  background: #ffffff;
+  min-width: 240px;
+}
+
+.export-btn,
+.add-btn,
+.save-btn,
+.cancel-btn {
+  height: 3.2rem;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 500;
+  padding: 0 1rem;
+  cursor: pointer;
+}
+
+.export-btn {
+  background: #5569dd;
+}
+
+.add-btn {
+  margin-left: auto;
+  background: #198754;
+}
+
+.save-btn {
+  background: #5569dd;
+}
+
+.cancel-btn {
+  background: #6b7280;
+}
+
+.create-row {
+  border: 1px solid #dce1f5;
+  border-radius: 6px;
+  background: #f8f9ff;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.create-input {
+  height: 3.2rem;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 6px;
+  padding: 0 0.8rem;
+  font-size: 1.3rem;
+  color: #0f212f;
+  background: #ffffff;
+}
+
+.create-input.title {
+  min-width: 280px;
+  flex: 1;
+}
+
+.create-input.description {
+  min-width: 300px;
+  flex: 1;
+}
+
+.table-scroll {
+  max-height: 58vh;
+  overflow: auto;
+}
+
+.additional-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 880px;
+
+  th,
+  td {
+    border: 1px solid #b9b9b9b5;
+    padding: 0.65rem 0.7rem;
+    font-size: 1.3rem;
+    color: #0f212f;
+    text-align: center;
+    white-space: nowrap;
+    font-family: "Poppins", sans-serif;
+  }
+
+  th {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 500;
+    background: linear-gradient(to right, #2a2e45, #212537);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .row-title {
+    text-align: left;
+    font-weight: 500;
+    white-space: normal;
+  }
+
+  .row-description {
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+.budget-cell-with-error {
+  position: relative;
+}
+
+.row-error-icon {
+  position: absolute;
+  left: -1.15rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: #dc3545;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.empty-state {
+  color: #475569;
+  font-size: 1.3rem;
+  padding: 0.2rem;
+}

@@ -55,6 +55,14 @@
             >
               !
             </span>
+            <span
+              *ngIf="row.toc_is_deleted"
+              class="row-deleted-icon"
+              matTooltip="This row no longer exists in TOC"
+              matTooltipPosition="left"
+            >
+              i
+            </span>
           </td>
         </tr>
         <tr *ngIf="!filteredRows.length">

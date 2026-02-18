@@ -129,6 +129,19 @@ export class PorbController {
     );
   }
 
+  @Get('cross')
+  getCross(
+    @Query('program_id', ParseIntPipe) program_id: number,
+    @Query('porb_aow_id') porb_aow_id?: string,
+    @Query('center_id') center_id?: string,
+  ) {
+    return this.porbService.getCross(
+      program_id,
+      this.parseOptionalNumber(porb_aow_id),
+      this.parseOptionalNumber(center_id),
+    );
+  }
+
   @Patch('hlo/:id')
   updateHlo(
     @Param('id', ParseIntPipe) id: number,
@@ -205,6 +218,58 @@ export class PorbController {
         data.budget != null && data.budget !== ('' as any)
           ? Number(data.budget)
           : null,
+    });
+  }
+
+  @Patch('cross')
+  updateCross(
+    @Body()
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      cross_cutting_id: string;
+      budget?: number | null;
+      assumption?: string;
+    },
+  ) {
+    return this.porbService.updateCross({
+      program_id: Number(data.program_id),
+      porb_aow_id: Number(data.porb_aow_id),
+      center_id: Number(data.center_id),
+      cross_cutting_id: String(data.cross_cutting_id),
+      budget:
+        data.budget != null && data.budget !== ('' as any)
+          ? Number(data.budget)
+          : null,
+      assumption: String(data.assumption || ''),
+    });
+  }
+
+  @Post('cross')
+  createCross(
+    @Body()
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      title: string;
+      description?: string;
+      budget?: number | null;
+      assumption?: string;
+    },
+  ) {
+    return this.porbService.createCross({
+      program_id: Number(data.program_id),
+      porb_aow_id: Number(data.porb_aow_id),
+      center_id: Number(data.center_id),
+      title: String(data.title || ''),
+      description: String(data.description || ''),
+      budget:
+        data.budget != null && data.budget !== ('' as any)
+          ? Number(data.budget)
+          : null,
+      assumption: String(data.assumption || ''),
     });
   }
 

@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { PorbAow } from 'src/entities/porb-aow.entity';
 import { PorbHlo } from 'src/entities/porb-hlo.entity';
 import { PorbPartner } from 'src/entities/porb-partner.entity';
@@ -16,6 +16,8 @@ import { PorbAnaplan } from 'src/entities/porb-anaplan.entity';
 import { Anaplan } from 'src/entities/anaplan.entity';
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
+import { CrossCutting } from 'src/entities/cross-cutting.entity';
+import { PorbCross } from 'src/entities/porb-cross.entity';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import { AxiosError } from 'axios';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
@@ -48,17 +50,26 @@ export class PorbService {
     private readonly anaplanValuesRepository: Repository<AnaplanValues>,
     @InjectRepository(WorkPackage)
     private readonly workPackageRepository: Repository<WorkPackage>,
-        private readonly initService: InitiativesService,
-        private readonly phasesService: PhasesService,
-        private readonly httpService: HttpService,
-          private readonly submissionService: SubmissionService,
+    @InjectRepository(CrossCutting)
+    private readonly crossCuttingRepository: Repository<CrossCutting>,
+    @InjectRepository(PorbCross)
+    private readonly porbCrossRepository: Repository<PorbCross>,
+    private readonly initService: InitiativesService,
+    private readonly phasesService: PhasesService,
+    private readonly httpService: HttpService,
+    private readonly submissionService: SubmissionService,
   ) {}
 
-  getAows(program_id: number) {
-    return this.porbAowRepository.find({
-      where: { program_id },
-      order: { aow_name: 'ASC' },
-    });
+  async getAows(program_id: number) {
+    return this.porbAowRepository
+      .createQueryBuilder('aow')
+      .where('aow.program_id = :program_id', { program_id })
+      .andWhere('(aow.toc_is_deleted = :isDeleted OR aow.toc_is_deleted IS NULL)', {
+        isDeleted: false,
+      })
+      .orderBy('aow.aow_acrnum', 'ASC')
+      .addOrderBy('aow.aow_name', 'ASC')
+      .getMany();
   }
 
   getHlos(program_id: number, porb_aow_id?: number, center_id?: number) {
@@ -269,7 +280,7 @@ export class PorbService {
   }
 
   async getValidation(program_id: number, porb_aow_id?: number, center_id?: number) {
-    const sectionNames = ['Pool funding HLO', 'Partners', 'W3/Bilatral', 'MELIA Study', 'Anaplan'];
+    const sectionNames = ['Pool funding HLO', 'Partners', 'W3/Bilatral', 'MELIA Study', 'Anaplan', 'Cross Cutting'];
     const emptyResult: Record<string, { hasError: boolean; message: string }> = {};
     sectionNames.forEach((name) => {
       emptyResult[name] = { hasError: false, message: '' };
@@ -279,7 +290,7 @@ export class PorbService {
       return emptyResult;
     }
 
-    const [hlos, partners, contractedRows, w3Rows, meliaRows] = await Promise.all([
+    const [hlos, partners, contractedRows, w3Rows, meliaRows, crossRows, selectedAow] = await Promise.all([
       this.porbHloRepository.find({
         where: { program_id, porb_aow_id, center_id },
       }),
@@ -295,6 +306,10 @@ export class PorbService {
       this.porbMeliaRepository.find({
         where: { program_id, porb_aow_id, center_id },
       }),
+      this.porbCrossRepository.find({
+        where: { program_id, porb_aow_id, center_id },
+      }),
+      this.porbAowRepository.findOne({ where: { id: porb_aow_id } }),
     ]);
 
     const hasAssumption = (value: any) => String(value ?? '').trim().length > 0;
@@ -365,6 +380,20 @@ export class PorbService {
     };
 
     emptyResult['Anaplan'] = { hasError: false, message: '' };
+    const isCrossAow =
+      String(selectedAow?.aow_acrnum || '')
+        .trim()
+        .toUpperCase() === 'AOW00';
+    const crossMissing = crossRows.filter(
+      (row) => parseBudget(row?.budget) > 0 && !hasAssumption(row?.assumption),
+    ).length;
+    emptyResult['Cross Cutting'] = {
+      hasError: isCrossAow && crossMissing > 0,
+      message:
+        isCrossAow && crossMissing > 0
+          ? `${crossMissing} row(s) have budget but missing assumption.`
+          : '',
+    };
     return emptyResult;
   }
 
@@ -373,12 +402,13 @@ export class PorbService {
     const aowErrorIds = new Set<number>();
     const includeAowForCenter = center_id != null;
 
-    const [hlos, bilaterals, melias, partners, contractedRows] = await Promise.all([
+    const [hlos, bilaterals, melias, partners, contractedRows, crossRows] = await Promise.all([
       this.porbHloRepository.find({ where: { program_id } }),
       this.porbBilateralRepository.find({ where: { program_id } }),
       this.porbMeliaRepository.find({ where: { program_id } }),
       this.porbPartnerRepository.find({ where: { program_id } }),
       this.porbContractedPartnerRepository.find({ where: { program_id } }),
+      this.porbCrossRepository.find({ where: { program_id } }),
     ]);
 
     const hasAssumption = (value: any) => String(value ?? '').trim().length > 0;
@@ -414,6 +444,12 @@ export class PorbService {
     for (const row of melias) {
       if (row?.toc_is_deleted) continue;
       if (parseBudget(row?.melia_budget) > 0 && !hasAssumption(row?.melia_assumption)) {
+        pushError(row?.center_id, row?.porb_aow_id);
+      }
+    }
+
+    for (const row of crossRows) {
+      if (parseBudget(row?.budget) > 0 && !hasAssumption(row?.assumption)) {
         pushError(row?.center_id, row?.porb_aow_id);
       }
     }
@@ -502,6 +538,56 @@ export class PorbService {
         account: account.label,
         source_budget: sourceMap.get(account.id) ?? null,
         porb_budget: saved?.budget ?? null,
+      };
+    });
+  }
+
+  async getCross(program_id: number, porb_aow_id?: number, center_id?: number) {
+    if (porb_aow_id == null || center_id == null) {
+      return [];
+    }
+
+    const selectedAow = await this.porbAowRepository.findOne({
+      where: { id: porb_aow_id, program_id },
+    });
+    if (!selectedAow || String(selectedAow.aow_acrnum || '').toUpperCase() !== 'AOW00') {
+      return [];
+    }
+
+    const crossItems = await this.crossCuttingRepository.find({
+      where: {
+        initiative_id: program_id,
+        submission_id: IsNull(),
+      },
+      order: { title: 'ASC' },
+    });
+    if (!crossItems.length) {
+      return [];
+    }
+
+    const crossIds = crossItems.map((item) => String(item.id));
+    const savedRows = await this.porbCrossRepository.find({
+      where: {
+        program_id,
+        porb_aow_id,
+        center_id,
+        cross_cutting_id: In(crossIds),
+      },
+    });
+    const savedMap = new Map<string, PorbCross>();
+    savedRows.forEach((row) => savedMap.set(String(row.cross_cutting_id), row));
+
+    return crossItems.map((item) => {
+      const saved = savedMap.get(String(item.id));
+      return {
+        program_id,
+        porb_aow_id,
+        center_id,
+        cross_cutting_id: String(item.id),
+        title: item.title || '',
+        description: item.description || '',
+        budget: saved?.budget ?? null,
+        assumption: saved?.assumption || '',
       };
     });
   }
@@ -692,6 +778,93 @@ export class PorbService {
     return this.porbAnaplanRepository.save(created);
   }
 
+  async updateCross(data: {
+    program_id: number;
+    porb_aow_id: number;
+    center_id: number;
+    cross_cutting_id: string;
+    budget?: number | null;
+    assumption?: string;
+  }) {
+    const existing = await this.porbCrossRepository.findOne({
+      where: {
+        program_id: data.program_id,
+        porb_aow_id: data.porb_aow_id,
+        center_id: data.center_id,
+        cross_cutting_id: data.cross_cutting_id,
+      },
+    });
+
+    if (existing) {
+      await this.porbCrossRepository.update(existing.id, {
+        budget: data.budget ?? null,
+        assumption: String(data.assumption || ''),
+      });
+      return this.porbCrossRepository.findOne({ where: { id: existing.id } });
+    }
+
+    const created = this.porbCrossRepository.create({
+      program_id: data.program_id,
+      porb_aow_id: data.porb_aow_id,
+      center_id: data.center_id,
+      cross_cutting_id: data.cross_cutting_id,
+      budget: data.budget ?? null,
+      assumption: String(data.assumption || ''),
+    });
+    return this.porbCrossRepository.save(created);
+  }
+
+  async createCross(data: {
+    program_id: number;
+    porb_aow_id: number;
+    center_id: number;
+    title: string;
+    description?: string;
+    budget?: number | null;
+    assumption?: string;
+  }) {
+    const title = String(data.title || '').trim();
+    if (!title) {
+      throw new BadRequestException('Cross cutting title is required.');
+    }
+
+    const selectedAow = await this.porbAowRepository.findOne({
+      where: { id: data.porb_aow_id, program_id: data.program_id },
+    });
+    if (!selectedAow || String(selectedAow.aow_acrnum || '').toUpperCase() !== 'AOW00') {
+      throw new BadRequestException('Cross cutting rows are only available for AOW00.');
+    }
+
+    const cross = await this.crossCuttingRepository.save(
+      this.crossCuttingRepository.create({
+        initiative_id: data.program_id,
+        title,
+        description: String(data.description || ''),
+        submission_id: null,
+      }),
+    );
+
+    await this.updateCross({
+      program_id: data.program_id,
+      porb_aow_id: data.porb_aow_id,
+      center_id: data.center_id,
+      cross_cutting_id: String(cross.id),
+      budget: data.budget ?? null,
+      assumption: String(data.assumption || ''),
+    });
+
+    return {
+      program_id: data.program_id,
+      porb_aow_id: data.porb_aow_id,
+      center_id: data.center_id,
+      cross_cutting_id: String(cross.id),
+      title: cross.title || '',
+      description: cross.description || '',
+      budget: data.budget ?? null,
+      assumption: String(data.assumption || ''),
+    };
+  }
+
   private toNumber(value: any): number {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
@@ -784,6 +957,7 @@ export class PorbService {
   }
 
   async importTocToPorbTables(programId: number, officialCode: string) {
+    const CROSS_AOW_TOC_ID = '00000000-0000-0000-0000-000000000000';
     const activePhase =
       await this.submissionService.PhasesService.findActivePhase();
     const tocData: any = await this.getTocs(officialCode);
@@ -814,6 +988,18 @@ export class PorbService {
       })
       .filter(Boolean);
 
+    const hasCrossAow = aowRows.some(
+      (row: any) => String(row?.aow_acrnum || '').trim().toUpperCase() === 'AOW00',
+    );
+    if (!hasCrossAow) {
+      aowRows.push({
+        program_id: programId,
+        toc_id: CROSS_AOW_TOC_ID,
+        aow_name: 'Cross Cutting',
+        aow_acrnum: 'AOW00',
+      });
+    }
+
     if (!aowRows.length) {
       throw new BadRequestException('No AOW (WP) rows found in TOC data.');
     }
@@ -823,8 +1009,28 @@ export class PorbService {
     });
     const existingAowByTocId = new Map<string, PorbAow>();
     existingAows.forEach((row) => existingAowByTocId.set(String(row.toc_id), row));
+    const existingCrossAow = existingAows.find(
+      (row) => String(row?.aow_acrnum || '').trim().toUpperCase() === 'AOW00',
+    );
+    const hasExistingCrossAow = !!existingCrossAow;
+    if (existingCrossAow && String(existingCrossAow.toc_id) !== CROSS_AOW_TOC_ID) {
+      await this.porbAowRepository.update(existingCrossAow.id, { toc_id: CROSS_AOW_TOC_ID });
+      existingCrossAow.toc_id = CROSS_AOW_TOC_ID;
+      existingAowByTocId.set(CROSS_AOW_TOC_ID, existingCrossAow);
+    }
 
-    const newAowRows = aowRows.filter((row: any) => !existingAowByTocId.has(String(row.toc_id)));
+    const newAowRows = aowRows.filter((row: any) => {
+      if (existingAowByTocId.has(String(row.toc_id))) {
+        return false;
+      }
+      if (
+        hasExistingCrossAow &&
+        String(row?.aow_acrnum || '').trim().toUpperCase() === 'AOW00'
+      ) {
+        return false;
+      }
+      return true;
+    });
     const savedAows = newAowRows.length ? await this.porbAowRepository.save(newAowRows) : [];
     const allAows = [...existingAows, ...savedAows];
 
@@ -832,6 +1038,23 @@ export class PorbService {
     for (const aow of allAows) {
       aowByTocId.set(String(aow.toc_id), aow);
     }
+    const crossAow =
+      allAows.find(
+        (row) => String(row?.aow_acrnum || '').trim().toUpperCase() === 'AOW00',
+      ) || null;
+    const resolveParentAow = (...tocRefs: any[]): PorbAow | null => {
+      for (const tocRef of tocRefs) {
+        const key = String(tocRef || '').trim();
+        if (!key) {
+          continue;
+        }
+        const found = aowByTocId.get(key);
+        if (found) {
+          return found;
+        }
+      }
+      return crossAow;
+    };
     await this.syncTocDeletedFlags(
       this.porbAowRepository,
       existingAows as any,
@@ -841,7 +1064,7 @@ export class PorbService {
     const outputNodes = results.filter((item: any) => item?.category === 'OUTPUT');
     const hloRows: any[] = [];
     for (const item of outputNodes) {
-      const parentAow = aowByTocId.get(String(item?.group || ''));
+      const parentAow = resolveParentAow(item?.group, item?.parent_id);
       for (const indicator of item?.quantitative_indicators || []) {
         for (const target of indicator?.targets || []) {
           for (const center of target?.centers || []) {
@@ -873,12 +1096,38 @@ export class PorbService {
     const existingHlos = await this.porbHloRepository.find({
       where: { program_id: programId },
     });
+    const existingHloByKey = new Map<string, PorbHlo>();
+    existingHlos.forEach((row) =>
+      existingHloByKey.set(`${String(row.toc_id)}::${Number(row.center_id)}`, row),
+    );
     const existingHloKeys = new Set(
       existingHlos.map((row) => `${String(row.toc_id)}::${Number(row.center_id)}`),
     );
     const newHloRows = hloRows.filter(
       (row) => !existingHloKeys.has(`${String(row.toc_id)}::${Number(row.center_id)}`),
     );
+    const hloUpdates = hloRows
+      .map((row) => {
+        const key = `${String(row.toc_id)}::${Number(row.center_id)}`;
+        const existing = existingHloByKey.get(key);
+        if (!existing) {
+          return null;
+        }
+        const nextAowId = row?.porb_aow_id ?? null;
+        const currentAowId = existing?.porb_aow_id ?? null;
+        if (Number(currentAowId || 0) === Number(nextAowId || 0)) {
+          return null;
+        }
+        return { id: existing.id, porb_aow_id: nextAowId };
+      })
+      .filter(Boolean) as Array<{ id: number; porb_aow_id: number | null }>;
+    if (hloUpdates.length) {
+      await Promise.all(
+        hloUpdates.map((item) =>
+          this.porbHloRepository.update(item.id, { porb_aow_id: item.porb_aow_id }),
+        ),
+      );
+    }
     const savedHlos = newHloRows.length ? await this.porbHloRepository.save(newHloRows) : [];
     await this.syncTocDeletedFlags(
       this.porbHloRepository,
@@ -888,7 +1137,7 @@ export class PorbService {
 
     const partnerNodes = results.filter((item: any) => item?.category === 'partners');
     const partnerRows = partnerNodes.map((item: any) => {
-      const parentAow = aowByTocId.get(String(item?.parent_id || item?.group || ''));
+      const parentAow = resolveParentAow(item?.parent_id, item?.group);
       return this.porbPartnerRepository.create({
         program_id: programId,
         porb_aow_id: parentAow?.id ?? null,
@@ -903,6 +1152,27 @@ export class PorbService {
     });
     const existingPartnerByTocId = new Map<string, PorbPartner>();
     existingPartners.forEach((row) => existingPartnerByTocId.set(String(row.toc_id), row));
+    const partnerUpdates = partnerRows
+      .map((row: any) => {
+        const existing = existingPartnerByTocId.get(String(row.toc_id));
+        if (!existing) {
+          return null;
+        }
+        const nextAowId = row?.porb_aow_id ?? null;
+        const currentAowId = existing?.porb_aow_id ?? null;
+        if (Number(currentAowId || 0) === Number(nextAowId || 0)) {
+          return null;
+        }
+        return { id: existing.id, porb_aow_id: nextAowId };
+      })
+      .filter(Boolean) as Array<{ id: number; porb_aow_id: number | null }>;
+    if (partnerUpdates.length) {
+      await Promise.all(
+        partnerUpdates.map((item) =>
+          this.porbPartnerRepository.update(item.id, { porb_aow_id: item.porb_aow_id }),
+        ),
+      );
+    }
     const newPartnerRows = partnerRows.filter(
       (row) => !existingPartnerByTocId.has(String(row.toc_id)),
     );
@@ -917,7 +1187,7 @@ export class PorbService {
 
     const bilateralNodes = results.filter((item: any) => item?.category === 'Project');
     const bilateralRows = bilateralNodes.map((item: any) => {
-      const parentAow = aowByTocId.get(String(item?.parent_id || item?.group || ''));
+      const parentAow = resolveParentAow(item?.parent_id, item?.group);
       const centerId = Number(item?.center?.code);
       if (!Number.isFinite(centerId)) {
         return null;
@@ -938,9 +1208,35 @@ export class PorbService {
     const existingBilaterals = await this.porbBilateralRepository.find({
       where: { program_id: programId },
     });
+    const existingBilateralByKey = new Map<string, PorbBilateral>();
+    existingBilaterals.forEach((row) =>
+      existingBilateralByKey.set(`${String(row.toc_id)}::${Number(row.center_id)}`, row),
+    );
     const existingBilateralKeys = new Set(
       existingBilaterals.map((row) => `${String(row.toc_id)}::${Number(row.center_id)}`),
     );
+    const bilateralUpdates = validBilateralRows
+      .map((row: any) => {
+        const key = `${String(row.toc_id)}::${Number(row.center_id)}`;
+        const existing = existingBilateralByKey.get(key);
+        if (!existing) {
+          return null;
+        }
+        const nextAowId = row?.porb_aow_id ?? null;
+        const currentAowId = existing?.porb_aow_id ?? null;
+        if (Number(currentAowId || 0) === Number(nextAowId || 0)) {
+          return null;
+        }
+        return { id: existing.id, porb_aow_id: nextAowId };
+      })
+      .filter(Boolean) as Array<{ id: number; porb_aow_id: number | null }>;
+    if (bilateralUpdates.length) {
+      await Promise.all(
+        bilateralUpdates.map((item) =>
+          this.porbBilateralRepository.update(item.id, { porb_aow_id: item.porb_aow_id }),
+        ),
+      );
+    }
     const newBilateralRows = validBilateralRows.filter(
       (row) => !existingBilateralKeys.has(`${String(row.toc_id)}::${Number(row.center_id)}`),
     );
@@ -954,33 +1250,121 @@ export class PorbService {
     );
 
     const meliaNodes = results.filter((item: any) => item?.category === 'Melia');
-    const meliaRows = meliaNodes.map((item: any) => {
-      const parentAow = aowByTocId.get(String(item?.parent_id || item?.group || ''));
+    const meliaRows: any[] = [];
+    const meliaRowKeySet = new Set<string>();
+    for (const item of meliaNodes) {
       const centerId = Number(item?.center?.code);
       if (!Number.isFinite(centerId)) {
-        return null;
+        continue;
       }
-      return this.porbMeliaRepository.create({
-        program_id: programId,
-        porb_aow_id: parentAow?.id ?? null,
-        toc_id: String(item?.id || ''),
-        center_id: centerId,
-        melia_name: item?.title || item?.name || 'Melia',
-        melia_outputs: this.stripHtml(item?.supported_outcome || ''),
-        melia_budget: 0,
-        melia_assumption: '',
-        toc_is_deleted: false,
-      });
-    });
+console.log('Processing Melia node:', item);
+      const groupKeys = new Set<string>();
+      let hasEmptyGroup = false;
+      const meliaResults = Array.isArray(item?.results) ? item.results : [];
+      for (const resultItem of meliaResults) {
+        const rawGroup =
+          resultItem?.group?.related_node_id ??
+          resultItem?.group?.id ??
+          resultItem?.group;
+        const groupKey = String(rawGroup ?? '').trim();
+        if (groupKey) {
+          groupKeys.add(groupKey);
+        } else {
+          hasEmptyGroup = true;
+        }
+      }
+
+      if (!groupKeys.size) {
+        const fallbackGroup = String(item?.parent_id || item?.group || '').trim();
+        if (fallbackGroup) {
+          groupKeys.add(fallbackGroup);
+        }
+      }
+
+      const targetAows = new Map<number, PorbAow>();
+      for (const groupKey of groupKeys) {
+        const parentAow = resolveParentAow(groupKey);
+        if (parentAow?.id != null) {
+          targetAows.set(Number(parentAow.id), parentAow);
+        }
+      }
+
+      if (!targetAows.size && crossAow?.id != null) {
+        targetAows.set(Number(crossAow.id), crossAow);
+      }
+
+      if (hasEmptyGroup && crossAow?.id != null) {
+        targetAows.set(Number(crossAow.id), crossAow);
+      }
+
+      if (targetAows.size > 1 && crossAow?.id != null) {
+        targetAows.set(Number(crossAow.id), crossAow);
+      }
+
+      for (const [, targetAow] of targetAows) {
+        const key = `${String(item?.id || '')}::${centerId}::${Number(targetAow?.id || 0)}`;
+        if (meliaRowKeySet.has(key)) {
+          continue;
+        }
+        meliaRowKeySet.add(key);
+        meliaRows.push(
+          this.porbMeliaRepository.create({
+            program_id: programId,
+            porb_aow_id: targetAow?.id ?? null,
+            toc_id: String(item?.id || ''),
+            center_id: centerId,
+            melia_name: item?.title || item?.name || 'Melia',
+            melia_outputs: this.stripHtml(item?.supported_outcome || ''),
+            melia_budget: 0,
+            melia_assumption: '',
+            toc_is_deleted: false,
+          }),
+        );
+      }
+    }
     const validMeliaRows = meliaRows.filter(Boolean);
     const existingMeliaRows = await this.porbMeliaRepository.find({
       where: { program_id: programId },
     });
-    const existingMeliaKeys = new Set(
-      existingMeliaRows.map((row) => `${String(row.toc_id)}::${Number(row.center_id)}`),
+    const existingMeliaByKey = new Map<string, PorbMelia>();
+    existingMeliaRows.forEach((row) =>
+      existingMeliaByKey.set(
+        `${String(row.toc_id)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
+        row,
+      ),
     );
+    const existingMeliaKeys = new Set(
+      existingMeliaRows.map(
+        (row) => `${String(row.toc_id)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
+      ),
+    );
+    const meliaUpdates = validMeliaRows
+      .map((row: any) => {
+        const key = `${String(row.toc_id)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
+        const existing = existingMeliaByKey.get(key);
+        if (!existing) {
+          return null;
+        }
+        const nextAowId = row?.porb_aow_id ?? null;
+        const currentAowId = existing?.porb_aow_id ?? null;
+        if (Number(currentAowId || 0) === Number(nextAowId || 0)) {
+          return null;
+        }
+        return { id: existing.id, porb_aow_id: nextAowId };
+      })
+      .filter(Boolean) as Array<{ id: number; porb_aow_id: number | null }>;
+    if (meliaUpdates.length) {
+      await Promise.all(
+        meliaUpdates.map((item) =>
+          this.porbMeliaRepository.update(item.id, { porb_aow_id: item.porb_aow_id }),
+        ),
+      );
+    }
     const newMeliaRows = validMeliaRows.filter(
-      (row) => !existingMeliaKeys.has(`${String(row.toc_id)}::${Number(row.center_id)}`),
+      (row) =>
+        !existingMeliaKeys.has(
+          `${String(row.toc_id)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
+        ),
     );
     const savedMelias = newMeliaRows.length ? await this.porbMeliaRepository.save(newMeliaRows) : [];
     await this.syncTocDeletedFlags(

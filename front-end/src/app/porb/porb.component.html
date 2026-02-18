@@ -48,27 +48,100 @@
     ></app-porb-sidebar>
 
     <main class="porb-content">
-      <section class="porb-placeholder" *ngIf="!isPorbSelectionComplete">
-        <h2>Complete Selections to View PORB</h2>
-        <p>
-          Select a <strong>Center</strong>, an <strong>AOW</strong>, and one
-          <strong>Additional</strong> section from the left navigation.
-        </p>
-      </section>
-
       <app-porb-budget-sections
         *ngIf="isPorbSelectionComplete"
         [selectedExtraNavigation]="selectedExtraNavigation"
+        [selectedProgramId]="initiativeId || undefined"
         [selectedCenterId]="selectedCenterIdForSections"
+        [selectedPorbAowId]="selectedPorbAowIdForSections"
         [poolFundingRows]="poolFundingRows"
         [partnersRows]="partnersRows"
         [w3Rows]="w3Rows"
         [meliaRows]="meliaRows"
         [anaplanRows]="anaplanRows"
+        [crossRows]="crossRows"
         (budgetUpdated)="onBudgetUpdated()"
       ></app-porb-budget-sections>
     </main>
   </div>
 
-  <div class="loading" *ngIf="loading">Loading PORB...</div>
+  <div class="porb-skeleton" *ngIf="loading">
+    <div class="skeleton-breadcrumb-row">
+      <div class="skeleton-block sk-line sk-breadcrumb-a"></div>
+      <div class="skeleton-block sk-line sk-breadcrumb-sep"></div>
+      <div class="skeleton-block sk-line sk-breadcrumb-b"></div>
+    </div>
+
+    <div class="skeleton-overview-card">
+      <div class="skeleton-overview-left">
+        <div class="skeleton-block sk-chip"></div>
+        <div class="skeleton-block sk-title"></div>
+        <div class="skeleton-block sk-subtitle"></div>
+      </div>
+      <div class="skeleton-overview-right">
+        <div class="skeleton-block sk-online-label"></div>
+        <div class="skeleton-avatars">
+          <div class="skeleton-block sk-avatar"></div>
+          <div class="skeleton-block sk-avatar"></div>
+          <div class="skeleton-block sk-avatar"></div>
+        </div>
+        <div class="skeleton-actions">
+          <div class="skeleton-block sk-action"></div>
+          <div class="skeleton-block sk-action"></div>
+          <div class="skeleton-block sk-action"></div>
+          <div class="skeleton-block sk-action"></div>
+          <div class="skeleton-block sk-action"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="skeleton-layout">
+      <div class="skeleton-sidebar">
+        <div class="skeleton-nav-row">
+          <div class="skeleton-panel">
+            <div class="skeleton-block sk-panel-title"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+          </div>
+          <div class="skeleton-panel">
+            <div class="skeleton-block sk-panel-title"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+          </div>
+          <div class="skeleton-panel">
+            <div class="skeleton-block sk-panel-title"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+            <div class="skeleton-block sk-nav-item"></div>
+          </div>
+        </div>
+        <div class="skeleton-panel skeleton-consolidation">
+          <div class="skeleton-block sk-panel-title"></div>
+          <div class="skeleton-block sk-table-head"></div>
+          <div class="skeleton-block sk-table-row"></div>
+          <div class="skeleton-block sk-table-row"></div>
+          <div class="skeleton-block sk-table-row"></div>
+        </div>
+      </div>
+
+      <div class="skeleton-content-card">
+        <div class="skeleton-block sk-content-title"></div>
+        <div class="skeleton-content-toolbar">
+          <div class="skeleton-block sk-filter"></div>
+          <div class="skeleton-block sk-filter"></div>
+          <div class="skeleton-block sk-filter"></div>
+        </div>
+        <div class="skeleton-block sk-table-head"></div>
+        <div class="skeleton-block sk-table-row"></div>
+        <div class="skeleton-block sk-table-row"></div>
+        <div class="skeleton-block sk-table-row"></div>
+        <div class="skeleton-block sk-table-row"></div>
+      </div>
+    </div>
+  </div>
 </section>

@@ -34,7 +34,7 @@
           {{ row.partner_outputs || "-" }}
         </td>
         <td>{{ row.partner_name || "-" }}</td>
-        <td>
+        <td class="contracted-cell">
           <input
             type="checkbox"
             [checked]="isContracted(row)"
@@ -76,6 +76,14 @@
               matTooltipPosition="left"
             >
               !
+            </span>
+            <span
+              *ngIf="row.toc_is_deleted"
+              class="row-deleted-icon"
+              matTooltip="This row no longer exists in TOC"
+              matTooltipPosition="left"
+            >
+              i
             </span>
           </td>
         </tr>

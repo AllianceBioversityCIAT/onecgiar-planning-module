@@ -1,0 +1,80 @@
+<div class="table-box">
+  <div class="table-tools">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search item"
+      [(ngModel)]="search"
+    />
+    <button type="button" class="export-btn" (click)="export()" [disabled]="!rows.length">
+      Export Excel
+    </button>
+    <button type="button" class="add-btn" (click)="onAddNewClick()">
+      + Add New
+    </button>
+  </div>
+
+  <div class="create-row" *ngIf="showCreateRow">
+    <input
+      class="create-input title"
+      type="text"
+      placeholder="Cross cutting title"
+      [(ngModel)]="newTitle"
+    />
+    <input
+      class="create-input description"
+      type="text"
+      placeholder="Description (optional)"
+      [(ngModel)]="newDescription"
+    />
+    <button type="button" class="save-btn" (click)="createRow()" [disabled]="creating || !newTitle.trim()">
+      Save
+    </button>
+    <button type="button" class="cancel-btn" (click)="cancelCreate()" [disabled]="creating">
+      Cancel
+    </button>
+  </div>
+
+  <div class="table-scroll" *ngIf="rows.length">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th>Cross Cutting Item</th>
+          <th>Description</th>
+          <th>Total budget (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of filteredRows">
+          <td class="row-title">{{ row.title }}</td>
+          <td class="row-description">{{ row.description }}</td>
+          <td class="budget-cell-with-error">
+            <app-budget-and-assumption
+              [(value)]="row.budget"
+              [(assumption)]="row.assumption"
+              [isSaving]="savingIds.has(row.cross_cutting_id)"
+              (commit)="saveRow(row)"
+              (assumptionCommit)="saveRow(row)"
+            ></app-budget-and-assumption>
+            <span
+              *ngIf="rowHasValidationError(row)"
+              class="row-error-icon"
+              matTooltip="Budget requires assumption"
+              matTooltipPosition="left"
+            >
+              !
+            </span>
+          </td>
+        </tr>
+
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="3">No data found for selected filters.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="!rows.length">
+    No Cross Cutting records found for the selected Center and AOW00.
+  </div>
+</div>

@@ -20,7 +20,7 @@ export class PorbComponent implements OnInit, OnDestroy {
 
   centers: any[] = [];
   aows: any[] = [];
-  extraNavigationItems: string[] = [
+  baseExtraNavigationItems: string[] = [
     "Pool funding HLO",
     "Partners",
     "W3/Bilatral",
@@ -40,6 +40,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   w3Rows: any[] = [];
   meliaRows: any[] = [];
   anaplanRows: any[] = [];
+  crossRows: any[] = [];
   sectionValidation: Record<string, { hasError: boolean; message: string }> = {};
   centerErrorCodes: string[] = [];
   aowErrorIds: number[] = [];
@@ -100,7 +101,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     }
     this.centers = Array.isArray(centers) ? centers : [];
 
-    await this.loadAowsFromDatabaseOrToc(initiativeId);
+    await this.loadAowsFromDatabase(initiativeId);
     await this.applySelectionFromUrl();
 
     this.setupOnlineUsersStream();
@@ -112,33 +113,16 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.socketConnectSub?.unsubscribe();
   }
 
-  private async loadAowsFromDatabaseOrToc(programId: number) {
+  private async loadAowsFromDatabase(programId: number) {
     const dbAows = await this.porbService.getAows(programId);
-    if (Array.isArray(dbAows) && dbAows.length) {
-      this.aows = dbAows.map((item: any) => ({
-        id: item.id,
-        code: item.aow_acrnum || "",
-        title: item.aow_name || "AOW",
-        toc_id: item.toc_id || "",
-      }));
-      return;
-    }
-
-    const tocData = await this.submissionService.getTocData(
-      this.initiative.official_code
-    );
-    const results = tocData?.results || [];
-    this.aows = results
-      .filter((item: any) => item?.category === "WP" && !item?.group)
-      .map((item: any) => ({
-        code: item?.ost_wp?.acronym || "",
-        title: item?.ost_wp?.name || item?.title || "AOW",
-        toc_id: item?.result_uuid || item?.id || "",
-      }))
-      .filter((item: any) => item.code || item.title)
-      .sort((a: any, b: any) =>
-        `${a.code} ${a.title}`.localeCompare(`${b.code} ${b.title}`)
-      );
+    this.aows = Array.isArray(dbAows)
+      ? dbAows.map((item: any) => ({
+          id: item.id,
+          code: item.aow_acrnum || "",
+          title: item.aow_name || "AOW",
+          toc_id: item.toc_id || "",
+        }))
+      : [];
   }
 
   private setupOnlineUsersStream() {
@@ -226,13 +210,15 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.w3Rows = [];
     this.meliaRows = [];
     this.anaplanRows = [];
+    this.crossRows = [];
   }
 
   private resetSectionValidation() {
     this.sectionValidation = {};
-    this.extraNavigationItems.forEach((item) => {
+    this.baseExtraNavigationItems.forEach((item) => {
       this.sectionValidation[item] = { hasError: false, message: "" };
     });
+    this.sectionValidation["Cross Cutting"] = { hasError: false, message: "" };
   }
 
   private async refreshSectionValidation() {
@@ -336,10 +322,33 @@ export class PorbComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (this.selectedCenter && this.selectedAow) {
+    if (!this.selectedCenter && this.centers.length) {
+      this.selectedCenter = this.centers[0];
+      this.centersCollapsed = true;
+    }
+
+    if (!this.selectedAow && this.aows.length) {
+      this.selectedAow = this.aows[0];
+      this.aowsCollapsed = true;
+    }
+
+    if (!this.selectedExtraNavigation && this.extraNavigationItems.length) {
+      this.selectedExtraNavigation = this.extraNavigationItems[0];
+    }
+
+    if (
+      this.selectedExtraNavigation &&
+      !this.extraNavigationItems.includes(this.selectedExtraNavigation)
+    ) {
+      this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
+    }
+
+    if (this.selectedCenter && this.selectedAow && this.selectedExtraNavigation) {
       this.resetSectionValidation();
       await this.loadBudgetRows();
     }
+
+    this.syncSelectionToUrl();
   }
 
   private syncSelectionToUrl() {
@@ -409,6 +418,12 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.anaplanRows = Array.isArray(anaplan) ? anaplan : [];
       return;
     }
+
+    if (this.selectedExtraNavigation === "Cross Cutting") {
+      const cross = await this.porbService.getCross(programId, porbAowId, centerId);
+      this.crossRows = Array.isArray(cross) ? cross : [];
+      return;
+    }
   }
 
   private async loadConsolidation(
@@ -456,12 +471,26 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.centers;
   }
 
+  get extraNavigationItems(): string[] {
+    const selectedAowCode = String(
+      this.selectedAow?.code || this.selectedAow?.aow_acrnum || ""
+    ).toUpperCase();
+    if (selectedAowCode === "AOW00") {
+      return [...this.baseExtraNavigationItems, "Cross Cutting"];
+    }
+    return this.baseExtraNavigationItems;
+  }
+
   get displayedAows(): any[] {
     return this.aows;
   }
 
   get selectedCenterIdForSections(): number | undefined {
     return this.getSelectedCenterId();
+  }
+
+  get selectedPorbAowIdForSections(): number | undefined {
+    return this.getSelectedPorbAowId();
   }
 
   get selectedCenterKey(): string | null {
@@ -526,6 +555,9 @@ export class PorbComponent implements OnInit, OnDestroy {
   async onSelectAow(aow: any) {
     this.selectedAow = aow;
     this.aowsCollapsed = true;
+    if (!this.extraNavigationItems.includes(this.selectedExtraNavigation || "")) {
+      this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
+    }
     this.resetSectionValidation();
     this.syncSelectionToUrl();
     await this.loadBudgetRows();

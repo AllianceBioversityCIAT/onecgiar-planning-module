@@ -10,11 +10,22 @@ export class PorbService {
   constructor(private http: HttpClient) {}
 
   async getAows(programId: number) {
-    return firstValueFrom(
+    const response = await firstValueFrom(
       this.http
         .get(`${environment.api_url}/porb/aow/${programId}`)
         .pipe(map((d: any) => d))
     ).catch(() => []);
+
+    if (Array.isArray(response)) {
+      return response;
+    }
+    if (Array.isArray((response as any)?.data)) {
+      return (response as any).data;
+    }
+    if (Array.isArray((response as any)?.results)) {
+      return (response as any).results;
+    }
+    return [];
   }
 
   async getHlos(
@@ -55,6 +66,14 @@ export class PorbService {
     centerId?: number
   ) {
     return this.getByFilter("anaplan", programId, porbAowId, centerId);
+  }
+
+  async getCross(
+    programId: number,
+    porbAowId?: number,
+    centerId?: number
+  ) {
+    return this.getByFilter("cross", programId, porbAowId, centerId);
   }
 
   async getConsolidation(
@@ -131,8 +150,35 @@ export class PorbService {
     ).catch(() => false);
   }
 
+  async updateCross(data: {
+    program_id: number;
+    porb_aow_id: number;
+    center_id: number;
+    cross_cutting_id: string;
+    budget?: number | null;
+    assumption?: string;
+  }) {
+    return firstValueFrom(
+      this.http.patch(`${environment.api_url}/porb/cross`, data).pipe(map((d: any) => d))
+    ).catch(() => false);
+  }
+
+  async createCross(data: {
+    program_id: number;
+    porb_aow_id: number;
+    center_id: number;
+    title: string;
+    description?: string;
+    budget?: number | null;
+    assumption?: string;
+  }) {
+    return firstValueFrom(
+      this.http.post(`${environment.api_url}/porb/cross`, data).pipe(map((d: any) => d))
+    ).catch(() => false);
+  }
+
   private async getByFilter(
-    section: "hlo" | "partner" | "bilateral" | "melia" | "anaplan" | "consolidation" | "validation" | "validation-summary",
+    section: "hlo" | "partner" | "bilateral" | "melia" | "anaplan" | "cross" | "consolidation" | "validation" | "validation-summary",
     programId: number,
     porbAowId?: number,
     centerId?: number

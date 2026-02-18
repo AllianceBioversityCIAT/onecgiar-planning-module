@@ -104,8 +104,8 @@
   }
 
   tr.deleted-row td {
-    background: #ffe7e7;
-    color: #b42318;
+    background: #fff4e5;
+    color: #9a3412;
   }
 
   tr.row-error td {
@@ -131,9 +131,34 @@
   z-index: 3;
 }
 
+.row-deleted-icon {
+  position: absolute;
+  right: -4.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f59e0b;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  z-index: 3;
+}
+
 .budget-cell-with-error {
   position: relative;
   overflow: visible !important;
+  vertical-align: middle !important;
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.35rem !important;
+}
+
+.budget-cell-with-error app-budget-and-assumption {
+  display: block;
 }
 
 .budget-input {

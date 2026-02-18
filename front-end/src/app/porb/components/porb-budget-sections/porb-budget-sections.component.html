@@ -32,5 +32,14 @@
       [rows]="anaplanRows"
       (budgetUpdated)="budgetUpdated.emit()"
     ></app-anaplan-section>
+
+    <app-cross-section
+      *ngSwitchCase="'Cross Cutting'"
+      [rows]="crossRows"
+      [selectedProgramId]="selectedProgramId"
+      [selectedPorbAowId]="selectedPorbAowId"
+      [selectedCenterId]="selectedCenterId"
+      (budgetUpdated)="budgetUpdated.emit()"
+    ></app-cross-section>
   </ng-container>
 </section>
