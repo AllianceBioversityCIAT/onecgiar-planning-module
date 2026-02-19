@@ -13,12 +13,14 @@
     >
   </nav>
 
-  <app-porb-overview
-    *ngIf="initiative"
-    [initiative]="initiative"
-    [onlineProgramUsers]="onlineProgramUsers"
-    (exportOverview)="exportOverviewExcel()"
-  ></app-porb-overview>
+  <div data-tour-anchor="porb-overview">
+    <app-porb-overview
+      *ngIf="initiative"
+      [initiative]="initiative"
+      [onlineProgramUsers]="onlineProgramUsers"
+      (exportOverview)="exportOverviewExcel()"
+    ></app-porb-overview>
+  </div>
 
   <div class="porb-layout" *ngIf="!loading">
     <app-porb-sidebar
@@ -144,4 +146,10 @@
       </div>
     </div>
   </div>
+
+  <app-porb-tour
+    [open]="showTour"
+    [steps]="tourSteps"
+    (closed)="onTourClosed()"
+  ></app-porb-tour>
 </section>

@@ -1,6 +1,6 @@
 <aside class="side-navigation">
   <div class="nav-panels-row">
-    <div class="nav-panel centers-panel" [class.collapsed]="centersCollapsed">
+    <div class="nav-panel centers-panel" [class.collapsed]="centersCollapsed" data-tour-anchor="porb-centers-nav">
       <div class="nav-header">
         <h3>Centers</h3>
         <button
@@ -50,6 +50,7 @@
       class="nav-panel aows-panel"
       [class.disabled]="!selectedCenter"
       [class.collapsed]="aowsCollapsed"
+      data-tour-anchor="porb-aow-nav"
     >
       <div class="nav-header">
         <h3>AOWs</h3>
@@ -91,7 +92,7 @@
       </ng-template>
     </div>
 
-    <div class="nav-panel extra-nav-panel" [class.disabled]="!selectedAow">
+    <div class="nav-panel extra-nav-panel" [class.disabled]="!selectedAow" data-tour-anchor="porb-sections-nav">
       <h3>Budget Sections</h3>
       <ng-container *ngIf="selectedAow; else sectionLockedState">
         <button
@@ -119,7 +120,7 @@
     </div>
   </div>
 
-  <div class="nav-panel consolidation-panel" *ngIf="selectedAow && consolidationBudgetSummary">
+  <div class="nav-panel consolidation-panel" *ngIf="selectedAow && consolidationBudgetSummary" data-tour-anchor="porb-consolidation">
     <h3>Consolidated ({{ selectedAow?.code }})</h3>
     <table class="consolidation-table indicators-table">
       <thead>

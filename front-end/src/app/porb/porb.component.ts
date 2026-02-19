@@ -6,6 +6,7 @@ import { SubmissionService } from "../services/submission.service";
 import { AppSocket } from "../socket.service";
 import { UserService } from "../services/user.service";
 import { PorbService } from "../services/porb.service";
+import { PorbTourStep } from "./components/porb-tour/porb-tour.component";
 
 @Component({
   selector: "app-porb",
@@ -59,6 +60,70 @@ export class PorbComponent implements OnInit, OnDestroy {
   currentUserName = "";
   currentUserEmail = "";
   centerStatusUpdating = false;
+  showTour = false;
+  private readonly porbTourStorageKey = "porb_tour_seen_v1";
+  tourSteps: PorbTourStep[] = [
+    {
+      anchorId: "porb-overview",
+      title: "PORB Overview",
+      description:
+        "This area shows the selected program context and quick summary information for PORB.",
+    },
+    {
+      anchorId: "porb-online-users",
+      title: "Online Collaborators",
+      description:
+        "These user initials show who is currently online and working in this program.",
+    },
+    {
+      anchorId: "porb-overview-actions",
+      title: "Quick Actions",
+      description:
+        "Use these icon buttons to open summary, team versions, export, and submission pages quickly.",
+    },
+    {
+      anchorId: "porb-centers-nav",
+      title: "Center Navigation",
+      description:
+        "Select the center you are budgeting for. You can also mark center completion from this panel.",
+    },
+    {
+      anchorId: "porb-aow-nav",
+      title: "AOW Navigation",
+      description:
+        "Select an AOW. Errors on AOW rows indicate budget/assumption issues that need review.",
+    },
+    {
+      anchorId: "porb-sections-nav",
+      title: "Budget Sections",
+      description:
+        "Pick a section (HLO, Partners, W3, MELIA, Anaplan, Cross Cutting) to open the editable budget table.",
+    },
+    {
+      anchorId: "porb-consolidation",
+      title: "Consolidation",
+      description:
+        "This table summarizes totals and indicator-level budgets for the selected center and AOW.",
+    },
+    {
+      anchorId: "porb-section-tools",
+      title: "Table Tools",
+      description:
+        "Use search and filters to find rows, and Export Excel to download the currently visible table.",
+    },
+    {
+      anchorId: "porb-budget-input",
+      title: "Budget Input",
+      description:
+        "Enter budget directly in table cells. You can also paste values from spreadsheet for faster entry.",
+    },
+    {
+      anchorId: "porb-assumption-icon",
+      title: "Assumption Requirement",
+      description:
+        "Use the assumption icon beside budget to add assumptions. If budget exists, assumption is required and row error icons will appear when missing.",
+    },
+  ];
 
   private onlineUsersSub?: Subscription;
   private socketConnectSub?: Subscription;
@@ -106,6 +171,7 @@ export class PorbComponent implements OnInit, OnDestroy {
 
     this.setupOnlineUsersStream();
     this.loading = false;
+    this.openTourIfFirstVisit();
   }
 
   ngOnDestroy(): void {
@@ -650,5 +716,28 @@ export class PorbComponent implements OnInit, OnDestroy {
       return;
     }
     await this.submissionService.excelCurrent(this.initiative.id);
+  }
+
+  private openTourIfFirstVisit() {
+    try {
+      const seen = localStorage.getItem(this.porbTourStorageKey);
+      if (seen === "1") {
+        return;
+      }
+      setTimeout(() => {
+        this.showTour = true;
+      }, 250);
+    } catch {
+      // ignore localStorage access issues
+    }
+  }
+
+  onTourClosed() {
+    this.showTour = false;
+    try {
+      localStorage.setItem(this.porbTourStorageKey, "1");
+    } catch {
+      // ignore localStorage access issues
+    }
   }
 }

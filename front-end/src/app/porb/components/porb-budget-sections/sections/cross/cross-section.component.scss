@@ -96,6 +96,7 @@
   width: 100%;
   border-collapse: collapse;
   min-width: 880px;
+  table-layout: fixed;
 
   th,
   td {
@@ -104,7 +105,9 @@
     font-size: 1.3rem;
     color: #0f212f;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     font-family: "Poppins", sans-serif;
   }
 
@@ -127,6 +130,21 @@
   .row-description {
     text-align: left;
     white-space: normal;
+  }
+
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 34%;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 46%;
+  }
+
+  th:nth-child(3),
+  td:nth-child(3) {
+    width: 20%;
   }
 }
 

@@ -1,5 +1,5 @@
 <div class="table-box">
-  <div class="table-tools">
+  <div class="table-tools" data-tour-anchor="porb-section-tools">
     <input
       class="tool-input"
       type="text"
@@ -39,7 +39,18 @@
           <td>{{ row.hlo_geo || "-" }}</td>
           <td>{{ row.hlo_target ?? "-" }}</td>
           <td class="budget-cell-with-error">
+            <span *ngIf="i === 0" data-tour-anchor="porb-budget-input">
+              <app-budget-and-assumption
+                [(value)]="row.hlo_budget"
+                [(assumption)]="row.hlo_assumption"
+                [isSaving]="savingIds.has(row.id)"
+                (commit)="saveRow(row)"
+                (assumptionCommit)="saveRow(row)"
+                (pasteBudget)="pasteFromSpreadsheet($event, i, 'hlo_budget', 'hlo_assumption')"
+              ></app-budget-and-assumption>
+            </span>
             <app-budget-and-assumption
+              *ngIf="i !== 0"
               [(value)]="row.hlo_budget"
               [(assumption)]="row.hlo_assumption"
               [isSaving]="savingIds.has(row.id)"
@@ -50,6 +61,7 @@
             <span
               *ngIf="rowHasValidationError(row)"
               class="row-error-icon"
+              [attr.data-tour-anchor]="i === 0 ? 'porb-row-error' : null"
               matTooltip="Budget requires assumption"
               matTooltipPosition="left"
             >

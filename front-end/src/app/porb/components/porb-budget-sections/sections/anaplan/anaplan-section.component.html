@@ -1,5 +1,5 @@
 <div class="table-box">
-  <div class="table-tools" *ngIf="rows.length">
+  <div class="table-tools" *ngIf="rows.length" data-tour-anchor="porb-section-tools">
     <input
       class="tool-input"
       type="text"
@@ -26,6 +26,7 @@
           <td class="row-title">{{ row.account }}</td>
           <td>
             <app-budget-and-assumption
+              [attr.data-tour-anchor]="row === filteredRows[0] ? 'porb-budget-input' : null"
               [(value)]="row.porb_budget"
               [assumptionEnabled]="false"
               [isSaving]="savingIds.has(row.anaplan_id)"

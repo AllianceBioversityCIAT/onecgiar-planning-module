@@ -1,5 +1,5 @@
 <div class="table-box">
-  <div class="table-tools">
+  <div class="table-tools" data-tour-anchor="porb-section-tools">
     <input
       class="tool-input"
       type="text"
@@ -30,6 +30,7 @@
           <td>{{ row.bilateral_name || "-" }}</td>
           <td class="budget-cell-with-error">
             <app-budget-and-assumption
+              [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
               [(value)]="row.bilateral_budget"
               [(assumption)]="row.bilateral_assumption"
               [isSaving]="savingIds.has(row.id)"
@@ -40,6 +41,7 @@
             <span
               *ngIf="rowHasValidationError(row)"
               class="row-error-icon"
+              [attr.data-tour-anchor]="i === 0 ? 'porb-row-error' : null"
               matTooltip="Budget requires assumption"
               matTooltipPosition="left"
             >

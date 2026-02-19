@@ -59,7 +59,8 @@
 .additional-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 840px;
+  min-width: 720px;
+  table-layout: fixed;
 
   th,
   td {
@@ -68,7 +69,9 @@
     font-size: 1.3rem;
     color: #0f212f;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     font-family: "Poppins", sans-serif;
   }
 
@@ -84,6 +87,16 @@
     font-weight: 500;
     background: #ffffff;
     white-space: normal;
+  }
+
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 70%;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 30%;
   }
 }
 

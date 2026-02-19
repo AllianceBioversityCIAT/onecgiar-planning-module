@@ -1,5 +1,5 @@
 <div class="table-box">
-  <div class="table-tools">
+  <div class="table-tools" data-tour-anchor="porb-section-tools">
     <input
       class="tool-input"
       type="text"
@@ -37,6 +37,7 @@
         <td class="contracted-cell">
           <input
             type="checkbox"
+            [attr.data-tour-anchor]="i === 0 ? 'porb-partner-contracted' : null"
             [checked]="isContracted(row)"
             (change)="row.partner_is_contracted = $any($event.target).checked ? '1' : '0'; saveRow(row)"
           />
@@ -61,6 +62,7 @@
         </td>
           <td class="budget-cell-with-error">
             <app-budget-and-assumption
+              [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
               [(value)]="row.partner_budget"
               [(assumption)]="row.partner_assumption"
               [disabled]="!isContracted(row)"
@@ -72,6 +74,7 @@
             <span
               *ngIf="rowHasValidationError(row)"
               class="row-error-icon"
+              [attr.data-tour-anchor]="i === 0 ? 'porb-row-error' : null"
               [matTooltip]="rowErrorMessage(row)"
               matTooltipPosition="left"
             >

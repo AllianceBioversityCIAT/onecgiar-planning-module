@@ -124,6 +124,7 @@ import { MeliaSectionComponent } from "./porb/components/porb-budget-sections/se
 import { AnaplanSectionComponent } from "./porb/components/porb-budget-sections/sections/anaplan/anaplan-section.component";
 import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sections/shared/budget-and-assumption/budget-and-assumption.component";
 import { CrossSectionComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-section.component";
+import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.component";
 
 
 @NgModule({
@@ -206,7 +207,8 @@ import { CrossSectionComponent } from "./porb/components/porb-budget-sections/se
     MeliaSectionComponent,
     AnaplanSectionComponent,
     BudgetAndAssumptionComponent,
-    CrossSectionComponent
+    CrossSectionComponent,
+    PorbTourComponent
   ],
   imports: [ 
     BrowserModule,
