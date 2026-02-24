@@ -115,8 +115,6 @@ import { OnlineUsersComponent } from './admin/online-users/online-users.componen
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { PorbComponent } from "./porb/porb.component";
 import { PorbOverviewComponent } from "./porb/components/porb-overview/porb-overview.component";
-import { PorbSidebarComponent } from "./porb/components/porb-sidebar/porb-sidebar.component";
-import { PorbBudgetSectionsComponent } from "./porb/components/porb-budget-sections/porb-budget-sections.component";
 import { PoolSectionComponent } from "./porb/components/porb-budget-sections/sections/pool/pool-section.component";
 import { PartnersSectionComponent } from "./porb/components/porb-budget-sections/sections/partners/partners-section.component";
 import { W3SectionComponent } from "./porb/components/porb-budget-sections/sections/w3/w3-section.component";
@@ -199,8 +197,6 @@ import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.compone
     OnlineUsersComponent,
     PorbComponent,
     PorbOverviewComponent,
-    PorbSidebarComponent,
-    PorbBudgetSectionsComponent,
     PoolSectionComponent,
     PartnersSectionComponent,
     W3SectionComponent,

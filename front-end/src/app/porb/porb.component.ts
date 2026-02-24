@@ -7,6 +7,7 @@ import { AppSocket } from "../socket.service";
 import { UserService } from "../services/user.service";
 import { PorbService } from "../services/porb.service";
 import { PorbTourStep } from "./components/porb-tour/porb-tour.component";
+import { MatTabChangeEvent } from "@angular/material/tabs";
 
 @Component({
   selector: "app-porb",
@@ -33,8 +34,9 @@ export class PorbComponent implements OnInit, OnDestroy {
   selectedAow: any = null;
   selectedExtraNavigation: string | null = null;
 
-  centersCollapsed = false;
-  aowsCollapsed = false;
+  selectedTabIndex = 0;
+  selectedAowTabIndex = 0;
+  selectedSectionTabIndex = 0;
 
   poolFundingRows: any[] = [];
   partnersRows: any[] = [];
@@ -61,6 +63,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   currentUserEmail = "";
   centerStatusUpdating = false;
   showTour = false;
+  private suppressChildTabEvents = false;
   private readonly porbTourStorageKey = "porb_tour_seen_v1";
   tourSteps: PorbTourStep[] = [
     {
@@ -82,19 +85,19 @@ export class PorbComponent implements OnInit, OnDestroy {
         "Use these icon buttons to open summary, team versions, export, and submission pages quickly.",
     },
     {
-      anchorId: "porb-centers-nav",
+      anchorId: "porb-center-tabs",
       title: "Center Navigation",
       description:
-        "Select the center you are budgeting for. You can also mark center completion from this panel.",
+        "Select the center you are budgeting for. The Summary tab shows overall consolidation.",
     },
     {
-      anchorId: "porb-aow-nav",
+      anchorId: "porb-aow-tabs",
       title: "AOW Navigation",
       description:
-        "Select an AOW. Errors on AOW rows indicate budget/assumption issues that need review.",
+        "Select an AOW. Errors on AOW tabs indicate budget/assumption issues that need review.",
     },
     {
-      anchorId: "porb-sections-nav",
+      anchorId: "porb-section-tabs",
       title: "Budget Sections",
       description:
         "Pick a section (HLO, Partners, W3, MELIA, Anaplan, Cross Cutting) to open the editable budget table.",
@@ -355,51 +358,65 @@ export class PorbComponent implements OnInit, OnDestroy {
     const centerParam = query.get("center");
     const aowParam = query.get("aow");
     const sectionParam = query.get("section");
+    const tabParam = query.get("tab");
+
+    // Support both old (center/aow/section) and new (tab) URL params
+    if (tabParam != null) {
+      const tabIndex = Number(tabParam);
+      if (Number.isFinite(tabIndex) && tabIndex >= 0) {
+        this.selectedTabIndex = tabIndex;
+      }
+    }
 
     if (centerParam) {
-      const center = this.centers.find(
+      const centerIndex = this.centers.findIndex(
         (item: any) =>
           String(item?.code) === centerParam ||
           String(item?.id) === centerParam ||
           String(item?.acronym) === centerParam
       );
-      if (center) {
-        this.selectedCenter = center;
-        this.centersCollapsed = true;
+      if (centerIndex >= 0) {
+        this.selectedCenter = this.centers[centerIndex];
+        this.selectedTabIndex = centerIndex + 1; // +1 because index 0 is Summary
       }
     }
 
     if (aowParam) {
-      const aow = this.aows.find(
+      const aowIndex = this.aows.findIndex(
         (item: any) => String(item?.id) === aowParam || String(item?.code) === aowParam
       );
-      if (aow) {
-        this.selectedAow = aow;
-        this.aowsCollapsed = true;
+      if (aowIndex >= 0) {
+        this.selectedAow = this.aows[aowIndex];
+        this.selectedAowTabIndex = aowIndex;
       }
     }
 
     if (sectionParam) {
-      const selectedSection = this.extraNavigationItems.find(
+      const sectionIndex = this.extraNavigationItems.findIndex(
         (item) => this.getSectionSlug(item) === sectionParam || item === sectionParam
       );
-      if (selectedSection) {
-        this.selectedExtraNavigation = selectedSection;
+      if (sectionIndex >= 0) {
+        this.selectedExtraNavigation = this.extraNavigationItems[sectionIndex];
+        this.selectedSectionTabIndex = sectionIndex;
       }
     }
 
+    // Defaults
     if (!this.selectedCenter && this.centers.length) {
       this.selectedCenter = this.centers[0];
-      this.centersCollapsed = true;
+      if (this.selectedTabIndex === 0) {
+        this.selectedTabIndex = 1;
+      }
     }
 
     if (!this.selectedAow && this.aows.length) {
       this.selectedAow = this.aows[0];
-      this.aowsCollapsed = true;
+      this.selectedAowTabIndex = 0;
     }
 
     if (!this.selectedExtraNavigation && this.extraNavigationItems.length) {
       this.selectedExtraNavigation = this.extraNavigationItems[0];
+      this.selectedSectionTabIndex = 0;
     }
 
     if (
@@ -407,6 +424,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       !this.extraNavigationItems.includes(this.selectedExtraNavigation)
     ) {
       this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
+      this.selectedSectionTabIndex = 0;
     }
 
     if (this.selectedCenter && this.selectedAow && this.selectedExtraNavigation) {
@@ -533,10 +551,6 @@ export class PorbComponent implements OnInit, OnDestroy {
     return !!(this.selectedCenter && this.selectedAow && this.selectedExtraNavigation);
   }
 
-  get displayedCenters(): any[] {
-    return this.centers;
-  }
-
   get extraNavigationItems(): string[] {
     const selectedAowCode = String(
       this.selectedAow?.code || this.selectedAow?.aow_acrnum || ""
@@ -545,10 +559,6 @@ export class PorbComponent implements OnInit, OnDestroy {
       return [...this.baseExtraNavigationItems, "Cross Cutting"];
     }
     return this.baseExtraNavigationItems;
-  }
-
-  get displayedAows(): any[] {
-    return this.aows;
   }
 
   get selectedCenterIdForSections(): number | undefined {
@@ -596,6 +606,32 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.centerErrorCodes.includes(centerCode);
   }
 
+  isCenterCompleted(center: any): boolean {
+    const key = this.getCenterKey(center);
+    if (!key) {
+      return false;
+    }
+    return this.completedCenterCodes.includes(key);
+  }
+
+  hasCenterError(center: any): boolean {
+    const key = this.getCenterKey(center);
+    return !!key && this.centerErrorCodes.includes(key);
+  }
+
+  hasAowError(aow: any): boolean {
+    const aowId = Number(aow?.id);
+    return Number.isFinite(aowId) && this.aowErrorIds.includes(aowId);
+  }
+
+  hasSectionError(section: string): boolean {
+    return !!this.sectionValidation?.[section]?.hasError;
+  }
+
+  getSectionError(section: string): string {
+    return this.sectionValidation?.[section]?.message || "";
+  }
+
   getInitials(fullName: string): string {
     const parts = (fullName || "")
       .trim()
@@ -610,29 +646,67 @@ export class PorbComponent implements OnInit, OnDestroy {
     return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
   }
 
-  async onSelectCenter(center: any) {
-    this.selectedCenter = center;
-    this.centersCollapsed = true;
-    this.resetSectionValidation();
-    this.syncSelectionToUrl();
-    await this.loadBudgetRows();
-  }
+  async onCenterTabChanged(event: MatTabChangeEvent) {
+    this.selectedTabIndex = event.index;
 
-  async onSelectAow(aow: any) {
-    this.selectedAow = aow;
-    this.aowsCollapsed = true;
-    if (!this.extraNavigationItems.includes(this.selectedExtraNavigation || "")) {
-      this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
+    if (event.index === 0) {
+      // Summary tab — no center selected
+      return;
     }
-    this.resetSectionValidation();
-    this.syncSelectionToUrl();
-    await this.loadBudgetRows();
+
+    const centerIndex = event.index - 1;
+    if (centerIndex >= 0 && centerIndex < this.centers.length) {
+      this.suppressChildTabEvents = true;
+      this.selectedCenter = this.centers[centerIndex];
+      this.selectedAowTabIndex = 0;
+      this.selectedSectionTabIndex = 0;
+
+      if (this.aows.length) {
+        this.selectedAow = this.aows[0];
+      }
+      if (this.extraNavigationItems.length) {
+        this.selectedExtraNavigation = this.extraNavigationItems[0];
+      }
+
+      this.resetSectionValidation();
+      this.syncSelectionToUrl();
+      await this.loadBudgetRows();
+      this.suppressChildTabEvents = false;
+    }
   }
 
-  async onSelectExtraNavigation(item: string) {
-    this.selectedExtraNavigation = item;
-    this.syncSelectionToUrl();
-    await this.loadBudgetRows();
+  async onAowTabChanged(event: MatTabChangeEvent) {
+    if (this.suppressChildTabEvents) {
+      return;
+    }
+
+    this.suppressChildTabEvents = true;
+    this.selectedAowTabIndex = event.index;
+    this.selectedSectionTabIndex = 0;
+
+    if (event.index >= 0 && event.index < this.aows.length) {
+      this.selectedAow = this.aows[event.index];
+      this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
+
+      this.resetSectionValidation();
+      this.syncSelectionToUrl();
+      await this.loadBudgetRows();
+    }
+    this.suppressChildTabEvents = false;
+  }
+
+  async onSectionTabChanged(event: MatTabChangeEvent) {
+    if (this.suppressChildTabEvents) {
+      return;
+    }
+
+    this.selectedSectionTabIndex = event.index;
+
+    if (event.index >= 0 && event.index < this.extraNavigationItems.length) {
+      this.selectedExtraNavigation = this.extraNavigationItems[event.index];
+      this.syncSelectionToUrl();
+      await this.loadBudgetRows();
+    }
   }
 
   async onBudgetUpdated() {
@@ -695,20 +769,6 @@ export class PorbComponent implements OnInit, OnDestroy {
     } finally {
       this.centerStatusUpdating = false;
     }
-  }
-
-  toggleCentersCollapsed() {
-    if (!this.selectedCenter) {
-      return;
-    }
-    this.centersCollapsed = !this.centersCollapsed;
-  }
-
-  toggleAowsCollapsed() {
-    if (!this.selectedCenter || !this.selectedAow) {
-      return;
-    }
-    this.aowsCollapsed = !this.aowsCollapsed;
   }
 
   async exportOverviewExcel() {
