@@ -7,7 +7,6 @@ import { AppSocket } from "../socket.service";
 import { UserService } from "../services/user.service";
 import { PorbService } from "../services/porb.service";
 import { PorbTourStep } from "./components/porb-tour/porb-tour.component";
-import { MatTabChangeEvent } from "@angular/material/tabs";
 
 @Component({
   selector: "app-porb",
@@ -34,9 +33,8 @@ export class PorbComponent implements OnInit, OnDestroy {
   selectedAow: any = null;
   selectedExtraNavigation: string | null = null;
 
-  selectedTabIndex = 0;
-  selectedAowTabIndex = 0;
-  selectedSectionTabIndex = 0;
+  // "summary" when Summary view is active, otherwise the selected center
+  activeView: "summary" | "center" = "center";
 
   poolFundingRows: any[] = [];
   partnersRows: any[] = [];
@@ -63,7 +61,6 @@ export class PorbComponent implements OnInit, OnDestroy {
   currentUserEmail = "";
   centerStatusUpdating = false;
   showTour = false;
-  private suppressChildTabEvents = false;
   private readonly porbTourStorageKey = "porb_tour_seen_v1";
   tourSteps: PorbTourStep[] = [
     {
@@ -94,7 +91,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       anchorId: "porb-aow-tabs",
       title: "AOW Navigation",
       description:
-        "Select an AOW. Errors on AOW tabs indicate budget/assumption issues that need review.",
+        "Select an AOW. Errors on AOW items indicate budget/assumption issues that need review.",
     },
     {
       anchorId: "porb-section-tabs",
@@ -358,65 +355,49 @@ export class PorbComponent implements OnInit, OnDestroy {
     const centerParam = query.get("center");
     const aowParam = query.get("aow");
     const sectionParam = query.get("section");
-    const tabParam = query.get("tab");
-
-    // Support both old (center/aow/section) and new (tab) URL params
-    if (tabParam != null) {
-      const tabIndex = Number(tabParam);
-      if (Number.isFinite(tabIndex) && tabIndex >= 0) {
-        this.selectedTabIndex = tabIndex;
-      }
-    }
 
     if (centerParam) {
-      const centerIndex = this.centers.findIndex(
+      const center = this.centers.find(
         (item: any) =>
           String(item?.code) === centerParam ||
           String(item?.id) === centerParam ||
           String(item?.acronym) === centerParam
       );
-      if (centerIndex >= 0) {
-        this.selectedCenter = this.centers[centerIndex];
-        this.selectedTabIndex = centerIndex + 1; // +1 because index 0 is Summary
+      if (center) {
+        this.selectedCenter = center;
+        this.activeView = "center";
       }
     }
 
     if (aowParam) {
-      const aowIndex = this.aows.findIndex(
+      const aow = this.aows.find(
         (item: any) => String(item?.id) === aowParam || String(item?.code) === aowParam
       );
-      if (aowIndex >= 0) {
-        this.selectedAow = this.aows[aowIndex];
-        this.selectedAowTabIndex = aowIndex;
+      if (aow) {
+        this.selectedAow = aow;
       }
     }
 
     if (sectionParam) {
-      const sectionIndex = this.extraNavigationItems.findIndex(
+      const section = this.extraNavigationItems.find(
         (item) => this.getSectionSlug(item) === sectionParam || item === sectionParam
       );
-      if (sectionIndex >= 0) {
-        this.selectedExtraNavigation = this.extraNavigationItems[sectionIndex];
-        this.selectedSectionTabIndex = sectionIndex;
+      if (section) {
+        this.selectedExtraNavigation = section;
       }
     }
 
-    // Defaults
     if (!this.selectedCenter && this.centers.length) {
       this.selectedCenter = this.centers[0];
-      if (this.selectedTabIndex === 0) {
-        this.selectedTabIndex = 1;
-      }
+      this.activeView = "center";
     }
 
     if (!this.selectedAow && this.aows.length) {
       this.selectedAow = this.aows[0];
-      this.selectedAowTabIndex = 0;
     }
 
     if (!this.selectedExtraNavigation && this.extraNavigationItems.length) {
       this.selectedExtraNavigation = this.extraNavigationItems[0];
-      this.selectedSectionTabIndex = 0;
     }
 
     if (
@@ -424,7 +405,6 @@ export class PorbComponent implements OnInit, OnDestroy {
       !this.extraNavigationItems.includes(this.selectedExtraNavigation)
     ) {
       this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
-      this.selectedSectionTabIndex = 0;
     }
 
     if (this.selectedCenter && this.selectedAow && this.selectedExtraNavigation) {
@@ -614,6 +594,11 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.completedCenterCodes.includes(key);
   }
 
+  isCenterSelected(center: any): boolean {
+    const key = this.getCenterKey(center);
+    return !!key && key === this.selectedCenterKey;
+  }
+
   hasCenterError(center: any): boolean {
     const key = this.getCenterKey(center);
     return !!key && this.centerErrorCodes.includes(key);
@@ -622,6 +607,10 @@ export class PorbComponent implements OnInit, OnDestroy {
   hasAowError(aow: any): boolean {
     const aowId = Number(aow?.id);
     return Number.isFinite(aowId) && this.aowErrorIds.includes(aowId);
+  }
+
+  isAowSelected(aow: any): boolean {
+    return this.selectedAow?.id != null && this.selectedAow.id === aow?.id;
   }
 
   hasSectionError(section: string): boolean {
@@ -646,67 +635,51 @@ export class PorbComponent implements OnInit, OnDestroy {
     return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
   }
 
-  async onCenterTabChanged(event: MatTabChangeEvent) {
-    this.selectedTabIndex = event.index;
-
-    if (event.index === 0) {
-      // Summary tab — no center selected
-      return;
-    }
-
-    const centerIndex = event.index - 1;
-    if (centerIndex >= 0 && centerIndex < this.centers.length) {
-      this.suppressChildTabEvents = true;
-      this.selectedCenter = this.centers[centerIndex];
-      this.selectedAowTabIndex = 0;
-      this.selectedSectionTabIndex = 0;
-
-      if (this.aows.length) {
-        this.selectedAow = this.aows[0];
-      }
-      if (this.extraNavigationItems.length) {
-        this.selectedExtraNavigation = this.extraNavigationItems[0];
-      }
-
-      this.resetSectionValidation();
-      this.syncSelectionToUrl();
-      await this.loadBudgetRows();
-      this.suppressChildTabEvents = false;
-    }
+  selectSummary() {
+    this.activeView = "summary";
   }
 
-  async onAowTabChanged(event: MatTabChangeEvent) {
-    if (this.suppressChildTabEvents) {
+  async selectCenter(center: any) {
+    if (this.isCenterSelected(center) && this.activeView === "center") {
       return;
     }
+    this.selectedCenter = center;
+    this.activeView = "center";
 
-    this.suppressChildTabEvents = true;
-    this.selectedAowTabIndex = event.index;
-    this.selectedSectionTabIndex = 0;
+    if (this.aows.length && !this.selectedAow) {
+      this.selectedAow = this.aows[0];
+    }
+    if (this.extraNavigationItems.length && !this.selectedExtraNavigation) {
+      this.selectedExtraNavigation = this.extraNavigationItems[0];
+    }
 
-    if (event.index >= 0 && event.index < this.aows.length) {
-      this.selectedAow = this.aows[event.index];
+    this.resetSectionValidation();
+    this.syncSelectionToUrl();
+    await this.loadBudgetRows();
+  }
+
+  async selectAow(aow: any) {
+    if (this.isAowSelected(aow)) {
+      return;
+    }
+    this.selectedAow = aow;
+
+    if (!this.extraNavigationItems.includes(this.selectedExtraNavigation || "")) {
       this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
-
-      this.resetSectionValidation();
-      this.syncSelectionToUrl();
-      await this.loadBudgetRows();
     }
-    this.suppressChildTabEvents = false;
+
+    this.resetSectionValidation();
+    this.syncSelectionToUrl();
+    await this.loadBudgetRows();
   }
 
-  async onSectionTabChanged(event: MatTabChangeEvent) {
-    if (this.suppressChildTabEvents) {
+  async selectSection(section: string) {
+    if (this.selectedExtraNavigation === section) {
       return;
     }
-
-    this.selectedSectionTabIndex = event.index;
-
-    if (event.index >= 0 && event.index < this.extraNavigationItems.length) {
-      this.selectedExtraNavigation = this.extraNavigationItems[event.index];
-      this.syncSelectionToUrl();
-      await this.loadBudgetRows();
-    }
+    this.selectedExtraNavigation = section;
+    this.syncSelectionToUrl();
+    await this.loadBudgetRows();
   }
 
   async onBudgetUpdated() {

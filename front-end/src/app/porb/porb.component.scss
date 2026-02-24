@@ -16,96 +16,122 @@
   }
 }
 
-// Primary center tabs
-.porb-primary-tabs {
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
-  width: 100%;
+// Nav list (replaces mat-tab-group at all 3 levels)
+.porb-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0;
+  overflow-x: auto;
+  border-bottom: 2px solid #e5e7ef;
 }
 
-:host ::ng-deep {
-  // Level 1: Primary tabs (Summary + Centers) — larger, bold
-  .porb-primary-tabs > .mat-mdc-tab-header .mdc-tab__text-label {
-    font-size: 1.6rem;
-    font-weight: 600;
-    font-family: "Poppins", sans-serif;
-    letter-spacing: 0.02em;
-  }
-
-  .porb-primary-tabs > .mat-mdc-tab-header .mdc-tab--active .mdc-tab__text-label {
-    color: #5569dd;
-  }
-
-  .porb-primary-tabs > .mat-mdc-tab-header .mdc-tab-indicator__content--underline {
-    border-color: #5569dd;
-  }
-
-  // Level 2: AOW tabs — medium
-  .porb-aow-tabs > .mat-mdc-tab-header .mdc-tab__text-label {
-    font-size: 1.4rem;
-    font-weight: 500;
-    font-family: "Poppins", sans-serif;
-  }
-
-  .porb-aow-tabs > .mat-mdc-tab-header .mdc-tab--active .mdc-tab__text-label {
-    color: #2a2e45;
-  }
-
-  .porb-aow-tabs > .mat-mdc-tab-header .mdc-tab-indicator__content--underline {
-    border-color: #2a2e45;
-  }
-
-  .porb-aow-tabs {
-    margin-top: 0.8rem;
-  }
-
-  // Level 3: Section tabs — smaller, lighter
-  .porb-section-tabs > .mat-mdc-tab-header .mdc-tab__text-label {
-    font-size: 1.3rem;
-    font-weight: 400;
-    font-family: "Poppins", sans-serif;
-  }
-
-  .porb-section-tabs > .mat-mdc-tab-header .mdc-tab--active .mdc-tab__text-label {
-    color: #0f212f;
-    font-weight: 500;
-  }
-
-  .porb-section-tabs > .mat-mdc-tab-header .mdc-tab-indicator__content--underline {
-    border-color: #94a3b8;
-  }
-
-  .porb-section-tabs {
-    margin-top: 0.4rem;
-  }
-
-  mat-tab-body {
-    margin-top: 0.8rem;
-  }
-}
-
-// Tab label icons
-.tab-icon-check {
-  color: #198754;
-  font-size: 1.8rem;
-  margin-left: 0.4rem;
-  vertical-align: middle;
-}
-
-.tab-icon-error {
-  color: #dc3545;
-  font-size: 1.8rem;
-  margin-left: 0.4rem;
-  vertical-align: middle;
-}
-
-.center-tab-label {
+.porb-nav__item {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+  border: none;
+  background: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: "Poppins", sans-serif;
+  color: #475569;
+  position: relative;
+  transition: color 0.15s, background-color 0.15s;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #212537;
+  }
+
+  &--active {
+    color: #5569dd;
+    font-weight: 600;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -2px;
+      height: 2px;
+      background: #5569dd;
+    }
+  }
+
+  &--completed {
+    color: #166534;
+  }
+
+  &--completed#{&}--active {
+    color: #198754;
+
+    &::after {
+      background: #198754;
+    }
+  }
 }
 
-// Summary tab
+// Level 1: Centers — larger text
+.porb-nav--centers .porb-nav__item {
+  font-size: 1.5rem;
+  padding: 0.7rem 1.4rem;
+}
+
+// Level 2: AOWs — medium
+.porb-nav--aows {
+  margin-top: 0.8rem;
+
+  .porb-nav__item {
+    font-size: 1.35rem;
+    padding: 0.55rem 1rem;
+  }
+
+  .porb-nav__item--active {
+    color: #2a2e45;
+
+    &::after {
+      background: #2a2e45;
+    }
+  }
+}
+
+// Level 3: Sections — smaller
+.porb-nav--sections {
+  margin-top: 0.6rem;
+
+  .porb-nav__item {
+    font-size: 1.25rem;
+    padding: 0.5rem 0.9rem;
+  }
+
+  .porb-nav__item--active {
+    color: #0f212f;
+
+    &::after {
+      background: #94a3b8;
+    }
+  }
+}
+
+// Nav icons (check / error)
+.nav-icon {
+  font-size: 1.6rem;
+  vertical-align: middle;
+  margin-left: 0.2rem;
+}
+
+.nav-icon--check {
+  color: #198754;
+}
+
+.nav-icon--error {
+  color: #dc3545;
+}
+
+// Summary view
 .porb-summary-tab {
   padding: 1.6rem 0;
 }
@@ -185,14 +211,14 @@
   color: #5569dd;
 }
 
-// Center header within center tab
+// Center header
 .porb-center-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1.2rem 0;
   border-bottom: 1px solid #e5e7ef;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.4rem;
 
   h2 {
     margin: 0;
@@ -215,9 +241,10 @@
   padding: 1rem 0;
 }
 
-// Consolidation tables
+// Consolidation
 .porb-consolidation-section {
-  margin-top: 1.6rem;
+  margin-top: 1rem;
+  margin-bottom: 0.6rem;
   padding: 1.2rem;
   border: 1px solid #e5e7ef;
   border-radius: 8px;
@@ -377,7 +404,6 @@
   height: 2.6rem;
 }
 
-// Tab bar skeleton
 .skeleton-tab-bar {
   display: flex;
   gap: 1.2rem;
@@ -462,8 +488,7 @@
     align-items: flex-start;
   }
 
-  .totals-table td {
-    display: block;
-    width: 100%;
+  .porb-nav {
+    flex-wrap: wrap;
   }
 }

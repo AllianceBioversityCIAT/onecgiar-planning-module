@@ -22,16 +22,33 @@
     ></app-porb-overview>
   </div>
 
-  <!-- Tab-based navigation (3 levels) -->
-  <mat-tab-group
-    *ngIf="!loading"
-    class="porb-primary-tabs"
-    [selectedIndex]="selectedTabIndex"
-    (selectedTabChange)="onCenterTabChanged($event)"
-    data-tour-anchor="porb-center-tabs"
-  >
-    <!-- Tab 0: Summary -->
-    <mat-tab label="Summary">
+  <div class="porb-main" *ngIf="!loading">
+    <!-- Level 1: Center nav list -->
+    <nav class="porb-nav porb-nav--centers" data-tour-anchor="porb-center-tabs">
+      <button
+        type="button"
+        class="porb-nav__item"
+        [class.porb-nav__item--active]="activeView === 'summary'"
+        (click)="selectSummary()"
+      >
+        Summary
+      </button>
+      <button
+        *ngFor="let center of centers"
+        type="button"
+        class="porb-nav__item"
+        [class.porb-nav__item--active]="activeView === 'center' && isCenterSelected(center)"
+        [class.porb-nav__item--completed]="isCenterCompleted(center)"
+        (click)="selectCenter(center)"
+      >
+        {{ center?.acronym || center?.name }}
+        <mat-icon class="nav-icon nav-icon--check" *ngIf="isCenterCompleted(center)">check_circle_outline</mat-icon>
+        <mat-icon class="nav-icon nav-icon--error" *ngIf="hasCenterError(center)">error_outline</mat-icon>
+      </button>
+    </nav>
+
+    <!-- Summary view -->
+    <div class="porb-view" *ngIf="activeView === 'summary'">
       <div class="porb-summary-tab">
         <div class="risk-report-box">
           <div class="risk-report-title-box">
@@ -70,7 +87,6 @@
           </div>
         </div>
 
-        <!-- Summary consolidation -->
         <div class="porb-consolidation-section" *ngIf="consolidationBudgetSummary">
           <h3>Consolidation Overview</h3>
           <table class="consolidation-table consolidation-flat">
@@ -99,22 +115,14 @@
           </table>
         </div>
       </div>
-    </mat-tab>
+    </div>
 
-    <!-- Tab 1..N: One per center -->
-    <mat-tab *ngFor="let center of centers">
-      <ng-template mat-tab-label>
-        <span class="center-tab-label">
-          {{ center?.acronym || center?.name }}
-        </span>
-        <mat-icon class="tab-icon-check" *ngIf="isCenterCompleted(center)">check_circle_outline</mat-icon>
-        <mat-icon class="tab-icon-error" *ngIf="hasCenterError(center)">error_outline</mat-icon>
-      </ng-template>
-
+    <!-- Center view -->
+    <div class="porb-view" *ngIf="activeView === 'center' && selectedCenter">
       <!-- Center header -->
       <div class="porb-center-header">
         <div class="center-header-left">
-          <h2>{{ center?.name || center?.acronym }}</h2>
+          <h2>{{ selectedCenter?.name || selectedCenter?.acronym }}</h2>
         </div>
         <div class="center-header-right">
           <button
@@ -130,111 +138,113 @@
         </div>
       </div>
 
-      <!-- Level 2: AOW tabs -->
-      <mat-tab-group
-        class="porb-aow-tabs"
-        [selectedIndex]="selectedAowTabIndex"
-        (selectedTabChange)="onAowTabChanged($event)"
-        data-tour-anchor="porb-aow-tabs"
-      >
-        <mat-tab *ngFor="let aow of aows">
-          <ng-template mat-tab-label>
-            <span>{{ aow.code }}</span>
-            <mat-icon class="tab-icon-error" *ngIf="hasAowError(aow)">error_outline</mat-icon>
-          </ng-template>
+      <!-- Level 2: AOW nav list -->
+      <nav class="porb-nav porb-nav--aows" data-tour-anchor="porb-aow-tabs">
+        <button
+          *ngFor="let aow of aows"
+          type="button"
+          class="porb-nav__item"
+          [class.porb-nav__item--active]="isAowSelected(aow)"
+          (click)="selectAow(aow)"
+        >
+          {{ aow.code }}
+          <mat-icon class="nav-icon nav-icon--error" *ngIf="hasAowError(aow)">error_outline</mat-icon>
+        </button>
+      </nav>
 
-          <!-- Consolidation right after AOW tab content starts -->
-          <div class="porb-consolidation-section" *ngIf="consolidationBudgetSummary" data-tour-anchor="porb-consolidation">
-            <h4>Consolidated ({{ aow.code }})</h4>
-            <table class="consolidation-table consolidation-flat">
-              <thead>
-                <tr>
-                  <th>Pool HLO</th>
-                  <th>Partners</th>
-                  <th>MELIA</th>
-                  <th>W3/Bilateral</th>
-                  <th>Anaplan</th>
-                  <th>Pooled Total</th>
-                  <th>Consolidated Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{{ consolidationBudgetSummary.poolHlo }}</td>
-                  <td>{{ consolidationBudgetSummary.partners }}</td>
-                  <td>{{ consolidationBudgetSummary.melia }}</td>
-                  <td>{{ consolidationBudgetSummary.w3 }}</td>
-                  <td>{{ consolidationBudgetSummary.anaplan }}</td>
-                  <td>{{ consolidationBudgetSummary.pooledTotal }}</td>
-                  <td>{{ consolidationBudgetSummary.consolidatedTotal }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+      <!-- Consolidation -->
+      <div class="porb-consolidation-section" *ngIf="consolidationBudgetSummary" data-tour-anchor="porb-consolidation">
+        <h4>Consolidated ({{ selectedAow?.code }})</h4>
+        <table class="consolidation-table consolidation-flat">
+          <thead>
+            <tr>
+              <th>Pool HLO</th>
+              <th>Partners</th>
+              <th>MELIA</th>
+              <th>W3/Bilateral</th>
+              <th>Anaplan</th>
+              <th>Pooled Total</th>
+              <th>Consolidated Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{ consolidationBudgetSummary.poolHlo }}</td>
+              <td>{{ consolidationBudgetSummary.partners }}</td>
+              <td>{{ consolidationBudgetSummary.melia }}</td>
+              <td>{{ consolidationBudgetSummary.w3 }}</td>
+              <td>{{ consolidationBudgetSummary.anaplan }}</td>
+              <td>{{ consolidationBudgetSummary.pooledTotal }}</td>
+              <td>{{ consolidationBudgetSummary.consolidatedTotal }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-          <!-- Level 3: Budget section tabs -->
-          <mat-tab-group
-            class="porb-section-tabs"
-            [selectedIndex]="selectedSectionTabIndex"
-            (selectedTabChange)="onSectionTabChanged($event)"
-            data-tour-anchor="porb-section-tabs"
-          >
-            <mat-tab *ngFor="let section of extraNavigationItems">
-              <ng-template mat-tab-label>
-                <span>{{ section }}</span>
-                <mat-icon class="tab-icon-error" *ngIf="hasSectionError(section)" [matTooltip]="getSectionError(section)">error_outline</mat-icon>
-              </ng-template>
+      <!-- Level 3: Section nav list -->
+      <nav class="porb-nav porb-nav--sections" data-tour-anchor="porb-section-tabs">
+        <button
+          *ngFor="let section of extraNavigationItems"
+          type="button"
+          class="porb-nav__item"
+          [class.porb-nav__item--active]="selectedExtraNavigation === section"
+          (click)="selectSection(section)"
+        >
+          {{ section }}
+          <mat-icon
+            class="nav-icon nav-icon--error"
+            *ngIf="hasSectionError(section)"
+            [matTooltip]="getSectionError(section)"
+          >error_outline</mat-icon>
+        </button>
+      </nav>
 
-              <!-- Budget section content -->
-              <div class="porb-section-content">
-                <ng-container [ngSwitch]="section">
-                  <app-pool-section
-                    *ngSwitchCase="'Pool funding HLO'"
-                    [rows]="poolFundingRows"
-                    (budgetUpdated)="onBudgetUpdated()"
-                  ></app-pool-section>
+      <!-- Section content (single ngSwitch, no destroy/recreate on nav click) -->
+      <div class="porb-section-content" *ngIf="isPorbSelectionComplete">
+        <ng-container [ngSwitch]="selectedExtraNavigation">
+          <app-pool-section
+            *ngSwitchCase="'Pool funding HLO'"
+            [rows]="poolFundingRows"
+            (budgetUpdated)="onBudgetUpdated()"
+          ></app-pool-section>
 
-                  <app-partners-section
-                    *ngSwitchCase="'Partners'"
-                    [rows]="partnersRows"
-                    [selectedCenterId]="selectedCenterIdForSections"
-                    (budgetUpdated)="onBudgetUpdated()"
-                  ></app-partners-section>
+          <app-partners-section
+            *ngSwitchCase="'Partners'"
+            [rows]="partnersRows"
+            [selectedCenterId]="selectedCenterIdForSections"
+            (budgetUpdated)="onBudgetUpdated()"
+          ></app-partners-section>
 
-                  <app-w3-section
-                    *ngSwitchCase="'W3/Bilatral'"
-                    [rows]="w3Rows"
-                    (budgetUpdated)="onBudgetUpdated()"
-                  ></app-w3-section>
+          <app-w3-section
+            *ngSwitchCase="'W3/Bilatral'"
+            [rows]="w3Rows"
+            (budgetUpdated)="onBudgetUpdated()"
+          ></app-w3-section>
 
-                  <app-melia-section
-                    *ngSwitchCase="'MELIA Study'"
-                    [rows]="meliaRows"
-                    (budgetUpdated)="onBudgetUpdated()"
-                  ></app-melia-section>
+          <app-melia-section
+            *ngSwitchCase="'MELIA Study'"
+            [rows]="meliaRows"
+            (budgetUpdated)="onBudgetUpdated()"
+          ></app-melia-section>
 
-                  <app-anaplan-section
-                    *ngSwitchCase="'Anaplan'"
-                    [rows]="anaplanRows"
-                    (budgetUpdated)="onBudgetUpdated()"
-                  ></app-anaplan-section>
+          <app-anaplan-section
+            *ngSwitchCase="'Anaplan'"
+            [rows]="anaplanRows"
+            (budgetUpdated)="onBudgetUpdated()"
+          ></app-anaplan-section>
 
-                  <app-cross-section
-                    *ngSwitchCase="'Cross Cutting'"
-                    [rows]="crossRows"
-                    [selectedProgramId]="initiativeId || undefined"
-                    [selectedPorbAowId]="selectedPorbAowIdForSections"
-                    [selectedCenterId]="selectedCenterIdForSections"
-                    (budgetUpdated)="onBudgetUpdated()"
-                  ></app-cross-section>
-                </ng-container>
-              </div>
-            </mat-tab>
-          </mat-tab-group>
-        </mat-tab>
-      </mat-tab-group>
-    </mat-tab>
-  </mat-tab-group>
+          <app-cross-section
+            *ngSwitchCase="'Cross Cutting'"
+            [rows]="crossRows"
+            [selectedProgramId]="initiativeId || undefined"
+            [selectedPorbAowId]="selectedPorbAowIdForSections"
+            [selectedCenterId]="selectedCenterIdForSections"
+            (budgetUpdated)="onBudgetUpdated()"
+          ></app-cross-section>
+        </ng-container>
+      </div>
+    </div>
+  </div>
 
   <!-- Loading skeleton -->
   <div class="porb-skeleton" *ngIf="loading">
@@ -267,7 +277,6 @@
       </div>
     </div>
 
-    <!-- Tab bar skeleton -->
     <div class="skeleton-tab-bar">
       <div class="skeleton-block sk-tab"></div>
       <div class="skeleton-block sk-tab"></div>
