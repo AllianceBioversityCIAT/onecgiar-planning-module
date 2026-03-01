@@ -84,6 +84,26 @@ export class PorbService {
     return this.getByFilter("consolidation", programId, porbAowId, centerId);
   }
 
+  async getSummaryConsolidation(programId: number) {
+    let params = new HttpParams().set("program_id", String(programId));
+    return firstValueFrom(
+      this.http
+        .get(`${environment.api_url}/porb/summary-consolidation`, { params })
+        .pipe(map((d: any) => d))
+    ).catch(() => ({ rows: [], totals: {} }));
+  }
+
+  async getSummaryAowDetail(programId: number, porbAowId: number) {
+    let params = new HttpParams()
+      .set("program_id", String(programId))
+      .set("porb_aow_id", String(porbAowId));
+    return firstValueFrom(
+      this.http
+        .get(`${environment.api_url}/porb/summary-aow-detail`, { params })
+        .pipe(map((d: any) => d))
+    ).catch(() => ({ hlos: [], partners: [], melia: [], bilateral: [], subtotals: {} }));
+  }
+
   async getValidation(
     programId: number,
     porbAowId?: number,

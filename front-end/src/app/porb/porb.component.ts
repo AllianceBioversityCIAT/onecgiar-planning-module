@@ -48,6 +48,14 @@ export class PorbComponent implements OnInit, OnDestroy {
   consolidationIndicatorsData: Array<{ title: string; target: number; budget: number }> = [];
   consolidationBudgetSummaryData: any = null;
 
+  summaryConsolidationRows: any[] = [];
+  summaryConsolidationTotals: any = {};
+  summaryLoading = false;
+
+  summarySelectedAow: any = null;
+  summaryAowDetail: any = null;
+  summaryAowDetailLoading = false;
+
   onlineProgramUsers: Array<{
     userId: number;
     name: string;
@@ -527,6 +535,47 @@ export class PorbComponent implements OnInit, OnDestroy {
     };
   }
 
+  get formattedSummaryRows() {
+    return this.summaryConsolidationRows.map((row) => ({
+      ...row,
+      innovationBudgetFmt: this.formatCurrency(this.toNumber(row.innovationBudget)),
+      knowledgeBudgetFmt: this.formatCurrency(this.toNumber(row.knowledgeBudget)),
+      capacityBudgetFmt: this.formatCurrency(this.toNumber(row.capacityBudget)),
+      othersBudgetFmt: this.formatCurrency(this.toNumber(row.othersBudget)),
+      partnerBudgetFmt: this.formatCurrency(this.toNumber(row.partnerBudget)),
+      meliaBudgetFmt: this.formatCurrency(this.toNumber(row.meliaBudget)),
+      totalPooledFundingFmt: this.formatCurrency(this.toNumber(row.totalPooledFunding)),
+      w3BudgetFmt: this.formatCurrency(this.toNumber(row.w3Budget)),
+      poolHloFmt: this.formatCurrency(
+        this.toNumber(row.innovationBudget) +
+        this.toNumber(row.knowledgeBudget) +
+        this.toNumber(row.capacityBudget) +
+        this.toNumber(row.othersBudget)
+      ),
+      consolidatedTotalFmt: this.formatCurrency(
+        this.toNumber(row.totalPooledFunding) + this.toNumber(row.w3Budget)
+      ),
+    }));
+  }
+
+  get formattedSummaryTotals() {
+    const t = this.summaryConsolidationTotals || {};
+    return {
+      innovationTarget: this.toNumber(t.innovationTarget),
+      innovationBudgetFmt: this.formatCurrency(this.toNumber(t.innovationBudget)),
+      knowledgeTarget: this.toNumber(t.knowledgeTarget),
+      knowledgeBudgetFmt: this.formatCurrency(this.toNumber(t.knowledgeBudget)),
+      capacityTarget: this.toNumber(t.capacityTarget),
+      capacityBudgetFmt: this.formatCurrency(this.toNumber(t.capacityBudget)),
+      othersTarget: this.toNumber(t.othersTarget),
+      othersBudgetFmt: this.formatCurrency(this.toNumber(t.othersBudget)),
+      partnerBudgetFmt: this.formatCurrency(this.toNumber(t.partnerBudget)),
+      meliaBudgetFmt: this.formatCurrency(this.toNumber(t.meliaBudget)),
+      totalPooledFundingFmt: this.formatCurrency(this.toNumber(t.totalPooledFunding)),
+      w3BudgetFmt: this.formatCurrency(this.toNumber(t.w3Budget)),
+    };
+  }
+
   get isPorbSelectionComplete(): boolean {
     return !!(this.selectedCenter && this.selectedAow && this.selectedExtraNavigation);
   }
@@ -635,8 +684,92 @@ export class PorbComponent implements OnInit, OnDestroy {
     return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
   }
 
-  selectSummary() {
+  async selectSummary() {
     this.activeView = "summary";
+    if (!this.initiativeId) return;
+    this.summaryLoading = true;
+    try {
+      const data = await this.porbService.getSummaryConsolidation(this.initiativeId);
+      this.summaryConsolidationRows = Array.isArray(data?.rows) ? data.rows : [];
+      this.summaryConsolidationTotals = data?.totals || {};
+      // Auto-select first AOW for detail view
+      if (this.aows.length && !this.summarySelectedAow) {
+        this.selectSummaryAow(this.aows[0]);
+      }
+    } finally {
+      this.summaryLoading = false;
+    }
+  }
+
+  async selectSummaryAow(aow: any) {
+    if (this.summarySelectedAow?.id === aow?.id) return;
+    this.summarySelectedAow = aow;
+    if (!this.initiativeId || !aow?.id) return;
+    this.summaryAowDetailLoading = true;
+    try {
+      this.summaryAowDetail = await this.porbService.getSummaryAowDetail(
+        this.initiativeId,
+        aow.id
+      );
+    } finally {
+      this.summaryAowDetailLoading = false;
+    }
+  }
+
+  get groupedHlos(): Array<{ name: string; rows: any[]; totalBudget: number }> {
+    const hlos: any[] = this.summaryAowDetail?.hlos || [];
+    const withBudget = hlos.filter((h) => (Number(h?.hlo_budget) || 0) > 0);
+    const map = new Map<string, any[]>();
+    for (const hlo of withBudget) {
+      const key = hlo.hlo_name || "";
+      const list = map.get(key) || [];
+      list.push(hlo);
+      map.set(key, list);
+    }
+    const groups: Array<{ name: string; rows: any[]; totalBudget: number }> = [];
+    for (const [name, rows] of map) {
+      const totalBudget = rows.reduce(
+        (sum, r) => sum + (Number(r?.hlo_budget) || 0),
+        0
+      );
+      groups.push({ name, rows, totalBudget });
+    }
+    return groups;
+  }
+
+  get filteredMelia(): any[] {
+    return (this.summaryAowDetail?.melia || []).filter(
+      (m: any) => (Number(m?.melia_budget) || 0) > 0
+    );
+  }
+
+  get filteredBilateral(): any[] {
+    return (this.summaryAowDetail?.bilateral || []).filter(
+      (b: any) => (Number(b?.bilateral_budget) || 0) > 0
+    );
+  }
+
+  get filteredPartners(): any[] {
+    return (this.summaryAowDetail?.partners || []).filter(
+      (p: any) => (Number(p?.partner_budget) || 0) > 0
+    );
+  }
+
+  get filteredCross(): any[] {
+    return (this.summaryAowDetail?.cross || []).filter(
+      (c: any) => (Number(c?.budget) || 0) > 0
+    );
+  }
+
+  get summaryAowSubtotals() {
+    const s = this.summaryAowDetail?.subtotals || {};
+    return {
+      hlo: this.formatCurrency(this.toNumber(s.hlo)),
+      partners: this.formatCurrency(this.toNumber(s.partners)),
+      melia: this.formatCurrency(this.toNumber(s.melia)),
+      bilateral: this.formatCurrency(this.toNumber(s.bilateral)),
+      cross: this.formatCurrency(this.toNumber(s.cross)),
+    };
   }
 
   async selectCenter(center: any) {

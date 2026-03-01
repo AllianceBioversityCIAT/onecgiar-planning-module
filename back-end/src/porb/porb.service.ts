@@ -279,6 +279,176 @@ export class PorbService {
     };
   }
 
+  async getSummaryConsolidation(program_id: number) {
+    const aows = await this.porbAowRepository
+      .createQueryBuilder('aow')
+      .where('aow.program_id = :program_id', { program_id })
+      .andWhere('(aow.toc_is_deleted = :isDeleted OR aow.toc_is_deleted IS NULL)', {
+        isDeleted: false,
+      })
+      .orderBy('aow.aow_acrnum', 'ASC')
+      .addOrderBy('aow.aow_name', 'ASC')
+      .getMany();
+
+    if (!aows.length) {
+      return { rows: [], totals: {} };
+    }
+
+    const aowIds = aows.map((a) => a.id);
+
+    // Bulk-load all data for this program (no center filter = all centers)
+    const [allHlos, allPartners, allContracted, allMelia, allBilateral, allAnaplan] = await Promise.all([
+      this.porbHloRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
+      this.porbPartnerRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
+      this.porbContractedPartnerRepository.find({ where: { program_id } }),
+      this.porbMeliaRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
+      this.porbBilateralRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
+      this.porbAnaplanRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
+    ]);
+
+    // Group HLOs by porb_aow_id
+    const hlosByAow = new Map<number, typeof allHlos>();
+    for (const row of allHlos) {
+      const list = hlosByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      hlosByAow.set(row.porb_aow_id, list);
+    }
+
+    // Group partners by porb_aow_id, and build a set of partner IDs per AOW
+    const partnersByAow = new Map<number, typeof allPartners>();
+    for (const row of allPartners) {
+      const list = partnersByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      partnersByAow.set(row.porb_aow_id, list);
+    }
+
+    // Map contracted partners by porb_partner_id
+    const contractedByPartnerId = new Map<number, PorbContractedPartner[]>();
+    for (const row of allContracted) {
+      const list = contractedByPartnerId.get(row.porb_partner_id) || [];
+      list.push(row);
+      contractedByPartnerId.set(row.porb_partner_id, list);
+    }
+
+    // Group melia by porb_aow_id
+    const meliaByAow = new Map<number, typeof allMelia>();
+    for (const row of allMelia) {
+      const list = meliaByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      meliaByAow.set(row.porb_aow_id, list);
+    }
+
+    // Group bilateral by porb_aow_id
+    const bilateralByAow = new Map<number, typeof allBilateral>();
+    for (const row of allBilateral) {
+      const list = bilateralByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      bilateralByAow.set(row.porb_aow_id, list);
+    }
+
+    // Group anaplan by porb_aow_id
+    const anaplanByAow = new Map<number, typeof allAnaplan>();
+    for (const row of allAnaplan) {
+      const list = anaplanByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      anaplanByAow.set(row.porb_aow_id, list);
+    }
+
+    const totals = {
+      innovationTarget: 0, innovationBudget: 0,
+      knowledgeTarget: 0, knowledgeBudget: 0,
+      capacityTarget: 0, capacityBudget: 0,
+      othersTarget: 0, othersBudget: 0,
+      partnerBudget: 0, meliaBudget: 0,
+      totalPooledFunding: 0, w3Budget: 0,
+      anaplanBudget: 0, consolidatedTotal: 0,
+    };
+
+    const rows = aows.map((aow) => {
+      const hlos = hlosByAow.get(aow.id) || [];
+      const partners = partnersByAow.get(aow.id) || [];
+      const meliaRows = meliaByAow.get(aow.id) || [];
+      const bilateralRows = bilateralByAow.get(aow.id) || [];
+
+      // Classify HLOs by type
+      const ind = {
+        innovationTarget: 0, innovationBudget: 0,
+        knowledgeTarget: 0, knowledgeBudget: 0,
+        capacityTarget: 0, capacityBudget: 0,
+        othersTarget: 0, othersBudget: 0,
+      };
+      for (const row of hlos) {
+        const type = String(row?.hlo_type || '').toLowerCase();
+        const target = Number(row?.hlo_target) || 0;
+        const budget = Number(row?.hlo_budget) || 0;
+        if (type.includes('innovation')) {
+          ind.innovationTarget += target;
+          ind.innovationBudget += budget;
+        } else if (type.includes('knowledge')) {
+          ind.knowledgeTarget += target;
+          ind.knowledgeBudget += budget;
+        } else if (type.includes('capacity')) {
+          ind.capacityTarget += target;
+          ind.capacityBudget += budget;
+        } else {
+          ind.othersTarget += target;
+          ind.othersBudget += budget;
+        }
+      }
+
+      // Partner budget: sum contracted partner budgets for this AOW's partners
+      const partnerIdSet = new Set(partners.map((p) => p.id));
+      let partnerBudget = 0;
+      for (const [partnerId, contractedList] of contractedByPartnerId) {
+        if (partnerIdSet.has(partnerId)) {
+          for (const c of contractedList) {
+            partnerBudget += Number(c?.budget) || 0;
+          }
+        }
+      }
+
+      const meliaBudget = meliaRows.reduce((sum, r) => sum + (Number(r?.melia_budget) || 0), 0);
+      const w3Budget = bilateralRows.reduce((sum, r) => sum + (Number(r?.bilateral_budget) || 0), 0);
+      const anaplanRows = anaplanByAow.get(aow.id) || [];
+      const anaplanBudget = anaplanRows.reduce((sum, r) => sum + (Number(r?.budget) || 0), 0);
+      const totalPooledFunding =
+        ind.innovationBudget + ind.knowledgeBudget + ind.capacityBudget +
+        ind.othersBudget + partnerBudget + meliaBudget;
+      const consolidatedTotal = totalPooledFunding + w3Budget;
+
+      // Accumulate totals
+      totals.innovationTarget += ind.innovationTarget;
+      totals.innovationBudget += ind.innovationBudget;
+      totals.knowledgeTarget += ind.knowledgeTarget;
+      totals.knowledgeBudget += ind.knowledgeBudget;
+      totals.capacityTarget += ind.capacityTarget;
+      totals.capacityBudget += ind.capacityBudget;
+      totals.othersTarget += ind.othersTarget;
+      totals.othersBudget += ind.othersBudget;
+      totals.partnerBudget += partnerBudget;
+      totals.meliaBudget += meliaBudget;
+      totals.totalPooledFunding += totalPooledFunding;
+      totals.w3Budget += w3Budget;
+      totals.anaplanBudget += anaplanBudget;
+      totals.consolidatedTotal += consolidatedTotal;
+
+      return {
+        aowId: aow.id,
+        aowCode: aow.aow_acrnum || '',
+        aowName: aow.aow_name || '',
+        ...ind,
+        partnerBudget,
+        meliaBudget,
+        totalPooledFunding,
+        w3Budget,
+        anaplanBudget,
+        consolidatedTotal,
+      };
+    });
+
+    return { rows, totals };
+  }
+
   async getValidation(program_id: number, porb_aow_id?: number, center_id?: number) {
     const sectionNames = ['Pool funding HLO', 'Partners', 'W3/Bilatral', 'MELIA Study', 'Anaplan', 'Cross Cutting'];
     const emptyResult: Record<string, { hasError: boolean; message: string }> = {};
@@ -954,6 +1124,66 @@ export class PorbService {
     if (idsToRestore.length) {
       await repository.update({ id: In(idsToRestore) }, { toc_is_deleted: false });
     }
+  }
+
+  async getSummaryAowDetail(program_id: number, porb_aow_id: number) {
+    const [hlos, partners, melia, bilateral, selectedAow] = await Promise.all([
+      this.getHlos(program_id, porb_aow_id),
+      this.getPartners(program_id, porb_aow_id),
+      this.getMelia(program_id, porb_aow_id),
+      this.getBilaterals(program_id, porb_aow_id),
+      this.porbAowRepository.findOne({ where: { id: porb_aow_id, program_id } }),
+    ]);
+
+    // Cross-cutting only applies to AOW00
+    let cross: any[] = [];
+    const isAow00 = String(selectedAow?.aow_acrnum || '').toUpperCase() === 'AOW00';
+    if (isAow00) {
+      const crossItems = await this.crossCuttingRepository.find({
+        where: { initiative_id: program_id, submission_id: IsNull() },
+        order: { title: 'ASC' },
+      });
+      if (crossItems.length) {
+        const crossIds = crossItems.map((item) => String(item.id));
+        const savedRows = await this.porbCrossRepository.find({
+          where: { program_id, porb_aow_id, cross_cutting_id: In(crossIds) },
+        });
+        // Aggregate budgets per cross_cutting_id across all centers
+        const budgetMap = new Map<string, number>();
+        for (const row of savedRows) {
+          const key = String(row.cross_cutting_id);
+          budgetMap.set(key, (budgetMap.get(key) || 0) + (Number(row.budget) || 0));
+        }
+        cross = crossItems.map((item) => ({
+          cross_cutting_id: String(item.id),
+          title: item.title || '',
+          description: item.description || '',
+          budget: budgetMap.get(String(item.id)) || 0,
+        }));
+      }
+    }
+
+    const subtotals = {
+      hlo: hlos.reduce((sum, row) => sum + (Number(row?.hlo_budget) || 0), 0),
+      partners: (partners as any[]).reduce(
+        (sum, row) => sum + (Number(row?.partner_budget) || 0),
+        0,
+      ),
+      melia: melia.reduce(
+        (sum, row) => sum + (Number(row?.melia_budget) || 0),
+        0,
+      ),
+      bilateral: bilateral.reduce(
+        (sum, row) => sum + (Number(row?.bilateral_budget) || 0),
+        0,
+      ),
+      cross: cross.reduce(
+        (sum, row) => sum + (Number(row?.budget) || 0),
+        0,
+      ),
+    };
+
+    return { hlos, partners, melia, bilateral, cross, isAow00, subtotals };
   }
 
   async importTocToPorbTables(programId: number, officialCode: string) {

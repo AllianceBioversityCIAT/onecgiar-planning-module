@@ -92,6 +92,21 @@ export class PorbController {
     );
   }
 
+  @Get('summary-consolidation')
+  getSummaryConsolidation(
+    @Query('program_id', ParseIntPipe) program_id: number,
+  ) {
+    return this.porbService.getSummaryConsolidation(program_id);
+  }
+
+  @Get('summary-aow-detail')
+  getSummaryAowDetail(
+    @Query('program_id', ParseIntPipe) program_id: number,
+    @Query('porb_aow_id', ParseIntPipe) porb_aow_id: number,
+  ) {
+    return this.porbService.getSummaryAowDetail(program_id, porb_aow_id);
+  }
+
   @Get('validation')
   getValidation(
     @Query('program_id', ParseIntPipe) program_id: number,
