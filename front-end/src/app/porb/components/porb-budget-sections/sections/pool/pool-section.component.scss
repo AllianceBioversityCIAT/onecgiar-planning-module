@@ -96,16 +96,21 @@
   }
 
   th:nth-child(5),
-  td:nth-child(5) {
-    width: 7%;
-    text-align: right;
+  th:nth-child(6) {
+    text-align: center;
     vertical-align: middle;
   }
 
-  th:nth-child(6),
-  td:nth-child(6) {
+  th:nth-child(5) {
+    width: 7%;
+  }
+
+  th:nth-child(6) {
     width: 14%;
-    text-align: right;
+  }
+
+  .num-cell {
+    text-align: center;
     vertical-align: middle;
   }
 

@@ -47,7 +47,7 @@
             (change)="row.partner_is_contracted = $any($event.target).checked ? '1' : '0'; saveRow(row)"
           />
         </td>
-        <td>
+        <td class="geo-cell">
           <ng-select
             class="geo-select"
             [items]="countryOptions"
@@ -65,7 +65,7 @@
           >
           </ng-select>
         </td>
-          <td class="budget-cell-with-error">
+          <td class="budget-cell-with-error num-cell">
             <app-budget-and-assumption
               [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
               [(value)]="row.partner_budget"

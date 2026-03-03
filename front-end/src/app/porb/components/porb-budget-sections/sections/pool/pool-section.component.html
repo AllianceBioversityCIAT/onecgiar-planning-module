@@ -37,8 +37,8 @@
           <td>{{ row.hlo_type || "-" }}</td>
           <td>{{ row.hlo_description || "-" }}</td>
           <td>{{ row.hlo_geo || "-" }}</td>
-          <td>{{ row.hlo_target ?? "-" }}</td>
-          <td class="budget-cell-with-error">
+          <td class="num-cell">{{ row.hlo_target ?? "-" }}</td>
+          <td class="budget-cell-with-error num-cell">
             <span *ngIf="i === 0" data-tour-anchor="porb-budget-input">
               <app-budget-and-assumption
                 [(value)]="row.hlo_budget"

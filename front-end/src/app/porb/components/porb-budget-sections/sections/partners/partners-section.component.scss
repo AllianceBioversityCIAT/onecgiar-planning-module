@@ -97,23 +97,28 @@
     width: 24%;
   }
 
-  th:nth-child(3),
-  td:nth-child(3) {
+  th:nth-child(3) {
     width: 8%;
     text-align: center;
-    vertical-align: middle;
   }
 
-  th:nth-child(4),
-  td:nth-child(4) {
+  th:nth-child(4) {
     width: 24%;
   }
 
-  th:nth-child(5),
-  td:nth-child(5) {
+  th:nth-child(5) {
     width: 18%;
-    text-align: right;
-    vertical-align: middle;
+    text-align: center;
+  }
+
+  .contracted-cell,
+  .geo-cell,
+  .num-cell {
+    vertical-align: middle !important;
+  }
+
+  .num-cell {
+    text-align: center;
   }
 
   .row-title {
@@ -183,7 +188,6 @@
 
 .contracted-cell {
   text-align: center !important;
-  vertical-align: middle !important;
 }
 
 .geo-select {

@@ -96,10 +96,14 @@
     width: 40%;
   }
 
-  th:nth-child(3),
-  td:nth-child(3) {
+  th:nth-child(3) {
     width: 20%;
-    text-align: right;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .num-cell {
+    text-align: center;
     vertical-align: middle;
   }
 

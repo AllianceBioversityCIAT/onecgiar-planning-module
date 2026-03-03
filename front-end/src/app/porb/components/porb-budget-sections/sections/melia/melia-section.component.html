@@ -32,7 +32,7 @@
             {{ row.melia_outputs || "-" }}
           </td>
           <td>{{ row.melia_name || "-" }}</td>
-          <td class="budget-cell-with-error">
+          <td class="budget-cell-with-error num-cell">
             <app-budget-and-assumption
               [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
               [(value)]="row.melia_budget"

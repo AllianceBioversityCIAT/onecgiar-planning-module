@@ -48,7 +48,7 @@
         <tr *ngFor="let row of filteredRows">
           <td class="row-title">{{ row.title }}</td>
           <td class="row-description">{{ row.description }}</td>
-          <td class="budget-cell-with-error">
+          <td class="budget-cell-with-error num-cell">
             <app-budget-and-assumption
               [attr.data-tour-anchor]="row === filteredRows[0] ? 'porb-budget-input' : null"
               [(value)]="row.budget"
