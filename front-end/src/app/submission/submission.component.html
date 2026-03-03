@@ -15,7 +15,7 @@
               'program',
               initiative_data.id,
               initiative_data.official_code,
-              'submission'
+              'porb'
             ]"
             class="risk-nav-link"
             ><span class="line">&nbsp;</span
@@ -30,7 +30,7 @@
           <a
             routerLink="/program/{{ initiative_data.id }}/{{
               initiative_data.official_code
-            }}/submission"
+            }}/porb"
             class="risk-nav-link"
             >Complete the PORB</a
           >
@@ -150,7 +150,7 @@
                     (initUser?.role == 'Contributor' || initUser?.role == 'Financial Focal Point' || initUser?.role == 'MELIA Focal Point') && user?.role == 'user'
                   }"
                 >
-                  Cancel Submission
+                  Cancel PORB
                 </button>
               </div>
             </div>

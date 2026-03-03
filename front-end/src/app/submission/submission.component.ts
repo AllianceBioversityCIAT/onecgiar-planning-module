@@ -743,7 +743,7 @@ if(!this.timeCalcForIndicator[item_id])
       this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
-          title: "Cancel submission",
+          title: "Cancel PORB",
           custom_message_1: `Are you sure to clear all data ?`,
           custom_message_2: `All the data you added will be removed.`,
         },
@@ -2095,8 +2095,8 @@ this.tocSubmissionData = toc_data.info
     this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
-          title: "Cancel submission",
-          message: `Are you sure you want to Cancel submission ?`,
+          title: "Cancel PORB",
+          message: `Are you sure you want to cancel PORB?`,
         },
       })
       .afterClosed()

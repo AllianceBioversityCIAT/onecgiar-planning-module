@@ -15,6 +15,7 @@ type CountryOption = {
 export class PartnersSectionComponent implements OnInit, OnChanges {
   @Input() rows: any[] = [];
   @Input() selectedCenterId: number | undefined;
+  @Input() canEdit: boolean = true;
   @Output() budgetUpdated = new EventEmitter<void>();
 
   search = "";

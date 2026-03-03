@@ -6,6 +6,9 @@
       <p class="initiative-description">
         Select Center, AOW, then Additional section to continue.
       </p>
+      <span class="submission-status-badge" [ngClass]="statusClass">
+        {{ submissionStatus }}
+      </span>
     </div>
 
     <div class="overview-right">
@@ -34,7 +37,7 @@
             '/program',
             initiative?.id,
             initiative?.official_code,
-            'submission'
+            'porb'
           ]"
         >
           <mat-icon>dashboard</mat-icon>
@@ -71,18 +74,24 @@
         >
           <mat-icon>download</mat-icon>
         </button>
-        <a
+        <button
+          *ngIf="submissionStatus === 'Pending' && submissionId"
+          type="button"
+          class="icon-btn cancel-submit"
+          title="Cancel PORB"
+          (click)="cancelSubmissionClicked.emit()"
+        >
+          <mat-icon>cancel</mat-icon>
+        </button>
+        <button
+          *ngIf="canSubmit && submissionStatus === 'Draft'"
+          type="button"
           class="icon-btn submit"
-          title="Submit"
-          [routerLink]="[
-            '/program',
-            initiative?.id,
-            initiative?.official_code,
-            'submission'
-          ]"
+          title="Submit PORB"
+          (click)="submitClicked.emit()"
         >
           <mat-icon>send</mat-icon>
-        </a>
+        </button>
       </div>
     </div>
   </div>

@@ -7,9 +7,21 @@ import {
   Patch,
   Post,
   Query,
+  Request,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from 'src/role/roles.guard';
+import { Roles } from 'src/role/roles.decorator';
+import { Role } from 'src/role/role.enum';
 import { PorbService } from './porb.service';
 
+@UseGuards(JwtAuthGuard)
+@ApiTags('porb')
+@ApiBearerAuth()
 @Controller('porb')
 export class PorbController {
   constructor(private readonly porbService: PorbService) {}
@@ -161,6 +173,7 @@ export class PorbController {
   updateHlo(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: { hlo_budget?: number; hlo_assumption?: string },
+    @Request() req,
   ) {
     return this.porbService.updateHlo(id, {
       hlo_budget: data.hlo_budget,
@@ -180,6 +193,7 @@ export class PorbController {
       partner_budget?: number | null;
       partner_assumption?: string;
     },
+    @Request() req,
   ) {
     return this.porbService.updatePartner(id, {
       partner_is_contracted: data.partner_is_contracted,
@@ -195,6 +209,7 @@ export class PorbController {
   updateBilateral(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: { bilateral_budget?: number; bilateral_assumption?: string },
+    @Request() req,
   ) {
     return this.porbService.updateBilateral(id, {
       bilateral_budget: data.bilateral_budget,
@@ -206,6 +221,7 @@ export class PorbController {
   updateMelia(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: { melia_budget?: number; melia_assumption?: string },
+    @Request() req,
   ) {
     return this.porbService.updateMelia(id, {
       melia_budget: data.melia_budget,
@@ -223,6 +239,7 @@ export class PorbController {
       anaplan_id: number;
       budget?: number | null;
     },
+    @Request() req,
   ) {
     return this.porbService.updateAnaplan({
       program_id: Number(data.program_id),
@@ -247,6 +264,7 @@ export class PorbController {
       budget?: number | null;
       assumption?: string;
     },
+    @Request() req,
   ) {
     return this.porbService.updateCross({
       program_id: Number(data.program_id),
@@ -273,6 +291,7 @@ export class PorbController {
       budget?: number | null;
       assumption?: string;
     },
+    @Request() req,
   ) {
     return this.porbService.createCross({
       program_id: Number(data.program_id),
@@ -288,13 +307,96 @@ export class PorbController {
     });
   }
 
-  // Temporary endpoint for TOC -> PORB import
+  @Post('submit/:program_id')
+  submitPorb(
+    @Param('program_id', ParseIntPipe) program_id: number,
+    @Request() req,
+  ) {
+    return this.porbService.submitPorb(program_id, req.user);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Patch('status/:id')
+  updateSubmissionStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: { status: string; status_reason?: string },
+    @Request() req,
+  ) {
+    return this.porbService.updateSubmissionStatus(id, data, req.user);
+  }
+
+  @Patch('cancel/:id')
+  cancelSubmission(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req,
+  ) {
+    return this.porbService.cancelSubmission(id, req.user);
+  }
+
+  @Patch('center/status')
+  updateCenterStatus(@Body() data: any, @Request() req) {
+    return this.porbService.updateCenterStatus(data, req.user);
+  }
+
+  @Patch('center/validate')
+  updateCenterValidate(@Body() data: any, @Request() req) {
+    return this.porbService.updateCenterValidate(data, req.user);
+  }
+
+  @Get('excel/:program_id')
+  async exportExcel(
+    @Param('program_id', ParseIntPipe) program_id: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.porbService.generatePorbExcel(program_id, undefined, res);
+  }
+
+  @Post('excel/:program_id/center')
+  async exportExcelForCenter(
+    @Param('program_id', ParseIntPipe) program_id: number,
+    @Body() data: { center_id: number },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.porbService.generatePorbExcel(program_id, Number(data.center_id), res);
+  }
+
+  // Temporary endpoint for TOC -> PORB import (single program)
   @Post('temp/import-toc')
   tempImportToc(
     @Body() data: { program_id?: number; official_code?: string } = {},
+    @Request() req,
   ) {
     const programId = Number(data?.program_id ?? 45);
     const officialCode = data?.official_code || 'SP01';
     return this.porbService.importTocToPorbTables(programId, officialCode);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('bulk-import-toc')
+  bulkImportToc(@Body() data: { program_ids?: number[] }) {
+    return this.porbService.bulkImportToc(data?.program_ids);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('migrate-submission-data')
+  bulkMigrateSubmissionData(@Body() data: { program_ids?: number[] }) {
+    return this.porbService.bulkMigrateSubmissionData(data?.program_ids);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('import-and-migrate')
+  importAndMigrate(@Body() data: { program_ids?: number[] }) {
+    return this.porbService.bulkImportAndMigrate(data?.program_ids);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Get('verify-migration/:program_id')
+  verifyMigration(@Param('program_id', ParseIntPipe) program_id: number) {
+    return this.porbService.verifyMigration(program_id);
   }
 }

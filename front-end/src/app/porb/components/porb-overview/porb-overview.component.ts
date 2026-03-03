@@ -14,6 +14,20 @@ export class PorbOverviewComponent {
     initials: string;
     connectedAt?: string;
   }> = [];
+  @Input() submissionStatus: string = "Draft";
+  @Input() submissionId: number | null = null;
+  @Input() canSubmit: boolean = false;
 
   @Output() exportOverview = new EventEmitter<void>();
+  @Output() submitClicked = new EventEmitter<void>();
+  @Output() cancelSubmissionClicked = new EventEmitter<void>();
+
+  get statusClass(): string {
+    switch (this.submissionStatus) {
+      case "Pending": return "status-pending";
+      case "Approved": return "status-approved";
+      case "Rejected": return "status-rejected";
+      default: return "status-draft";
+    }
+  }
 }

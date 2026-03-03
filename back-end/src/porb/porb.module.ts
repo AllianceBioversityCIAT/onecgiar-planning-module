@@ -16,9 +16,18 @@ import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
 import { CrossCutting } from 'src/entities/cross-cutting.entity';
 import { PorbCross } from 'src/entities/porb-cross.entity';
+import { CenterStatus } from 'src/entities/center-status.entity';
+import { Organization } from 'src/entities/organization.entity';
+import { Submission } from 'src/entities/submission.entity';
+import { User } from 'src/entities/user.entity';
+import { History } from 'src/entities/history.entity';
+import { Initiative } from 'src/entities/initiative.entity';
+import { Result } from 'src/entities/result.entity';
+import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
 import { SubmissionModule } from 'src/submission/submission.module';
 import { InitiativesModule } from 'src/initiatives/initiatives.module';
 import { PhasesModule } from 'src/phases/phases.module';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
@@ -36,11 +45,20 @@ import { PhasesModule } from 'src/phases/phases.module';
       WorkPackage,
       CrossCutting,
       PorbCross,
+      CenterStatus,
+      Organization,
+      Submission,
+      User,
+      History,
+      Initiative,
+      Result,
+      BudgetAssumptions,
     ]),
     HttpModule,
     SubmissionModule,
     InitiativesModule,
     PhasesModule,
+    EmailModule,
   ],
   controllers: [PorbController],
   providers: [PorbService],

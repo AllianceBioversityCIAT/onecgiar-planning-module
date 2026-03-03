@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { firstValueFrom, map } from "rxjs";
 import { environment } from "src/environments/environment";
+import * as saveAs from "file-saver";
 
 @Injectable({
   providedIn: "root",
@@ -195,6 +196,122 @@ export class PorbService {
     return firstValueFrom(
       this.http.post(`${environment.api_url}/porb/cross`, data).pipe(map((d: any) => d))
     ).catch(() => false);
+  }
+
+  async getSubmissionStatus(programId: number) {
+    return firstValueFrom(
+      this.http
+        .get(`${environment.api_url}/porb/submission/${programId}`)
+        .pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async submitPorb(programId: number) {
+    return firstValueFrom(
+      this.http
+        .post(`${environment.api_url}/porb/submit/${programId}`, {})
+        .pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async updateSubmissionStatus(id: number, data: { status: string; status_reason?: string }) {
+    return firstValueFrom(
+      this.http
+        .patch(`${environment.api_url}/porb/status/${id}`, data)
+        .pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async cancelSubmission(id: number) {
+    return firstValueFrom(
+      this.http
+        .patch(`${environment.api_url}/porb/cancel/${id}`, {})
+        .pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async markStatus(
+    organization_code: string,
+    initiative_id: number,
+    phase_id: number,
+    status: boolean,
+    organization: any
+  ) {
+    return firstValueFrom(
+      this.http
+        .patch(`${environment.api_url}/porb/center/status`, {
+          organization_code,
+          initiative_id,
+          phase_id,
+          status,
+          organization,
+        })
+        .pipe(map((d: any) => d))
+    ).catch(() => false);
+  }
+
+  async markValidate(
+    organization_code: string,
+    initiative_id: number,
+    phase_id: number,
+    is_valid: boolean,
+    organization: any
+  ) {
+    return firstValueFrom(
+      this.http
+        .patch(`${environment.api_url}/porb/center/validate`, {
+          organization_code,
+          initiative_id,
+          phase_id,
+          is_valid,
+          organization,
+        })
+        .pipe(map((d: any) => d))
+    ).catch(() => false);
+  }
+
+  async exportExcel(programId: number) {
+    const response = await firstValueFrom(
+      this.http.get(`${environment.api_url}/porb/excel/${programId}`, {
+        responseType: "blob",
+        observe: "response",
+      })
+    );
+
+    const blob = response.body as Blob;
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = "PORB.xlsx";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+    saveAs(blob, filename);
+  }
+
+  async exportExcelForCenter(programId: number, centerId: number) {
+    const response = await firstValueFrom(
+      this.http.post(
+        `${environment.api_url}/porb/excel/${programId}/center`,
+        { center_id: centerId },
+        {
+          responseType: "blob",
+          observe: "response",
+        }
+      )
+    );
+
+    const blob = response.body as Blob;
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = "PORB.xlsx";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+    saveAs(blob, filename);
   }
 
   private async getByFilter(

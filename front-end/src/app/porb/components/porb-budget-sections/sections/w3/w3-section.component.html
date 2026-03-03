@@ -33,6 +33,7 @@
               [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
               [(value)]="row.bilateral_budget"
               [(assumption)]="row.bilateral_assumption"
+              [disabled]="!canEdit"
               [isSaving]="savingIds.has(row.id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"

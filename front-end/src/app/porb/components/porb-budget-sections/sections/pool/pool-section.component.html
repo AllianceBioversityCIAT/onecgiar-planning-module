@@ -43,6 +43,7 @@
               <app-budget-and-assumption
                 [(value)]="row.hlo_budget"
                 [(assumption)]="row.hlo_assumption"
+                [disabled]="!canEdit"
                 [isSaving]="savingIds.has(row.id)"
                 (commit)="saveRow(row)"
                 (assumptionCommit)="saveRow(row)"
@@ -53,6 +54,7 @@
               *ngIf="i !== 0"
               [(value)]="row.hlo_budget"
               [(assumption)]="row.hlo_assumption"
+              [disabled]="!canEdit"
               [isSaving]="savingIds.has(row.id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"

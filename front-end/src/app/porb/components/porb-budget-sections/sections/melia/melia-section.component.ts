@@ -8,6 +8,7 @@ import { PorbService } from "src/app/services/porb.service";
 })
 export class MeliaSectionComponent implements OnChanges {
   @Input() rows: any[] = [];
+  @Input() canEdit: boolean = true;
   @Output() budgetUpdated = new EventEmitter<void>();
 
   search = "";

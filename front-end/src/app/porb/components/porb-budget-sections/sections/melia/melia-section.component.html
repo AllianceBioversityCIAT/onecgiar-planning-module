@@ -33,6 +33,7 @@
               [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
               [(value)]="row.melia_budget"
               [(assumption)]="row.melia_assumption"
+              [disabled]="!canEdit"
               [isSaving]="savingIds.has(row.id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"

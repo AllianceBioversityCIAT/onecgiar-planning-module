@@ -11,6 +11,7 @@ export class CrossSectionComponent implements OnChanges {
   @Input() selectedProgramId: number | undefined;
   @Input() selectedPorbAowId: number | undefined;
   @Input() selectedCenterId: number | undefined;
+  @Input() canEdit: boolean = true;
   @Output() budgetUpdated = new EventEmitter<void>();
 
   search = "";

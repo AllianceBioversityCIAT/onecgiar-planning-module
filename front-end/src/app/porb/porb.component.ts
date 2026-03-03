@@ -7,6 +7,10 @@ import { AppSocket } from "../socket.service";
 import { UserService } from "../services/user.service";
 import { PorbService } from "../services/porb.service";
 import { PorbTourStep } from "./components/porb-tour/porb-tour.component";
+import { ROLES } from "../components/new-team-member/new-team-member.component";
+import { MatDialog } from "@angular/material/dialog";
+import { ConfirmComponent, ConfirmDialogModel } from "../confirm/confirm.component";
+import { ToastrService } from "ngx-toastr";
 
 @Component({
   selector: "app-porb",
@@ -68,6 +72,14 @@ export class PorbComponent implements OnInit, OnDestroy {
   currentUserName = "";
   currentUserEmail = "";
   centerStatusUpdating = false;
+  // canEditMap: keyed by center code string, value = true if user can edit that center
+  canEditMap: Record<string, boolean> = {};
+
+  submissionStatus: string = "Draft";
+  submissionId: number | null = null;
+  submitting = false;
+  cancellingSubmission = false;
+
   showTour = false;
   private readonly porbTourStorageKey = "porb_tour_seen_v1";
   tourSteps: PorbTourStep[] = [
@@ -143,7 +155,9 @@ export class PorbComponent implements OnInit, OnDestroy {
     private phasesService: PhasesService,
     private socket: AppSocket,
     private userService: UserService,
-    private porbService: PorbService
+    private porbService: PorbService,
+    private dialog: MatDialog,
+    private toastr: ToastrService
   ) {}
 
   async ngOnInit() {
@@ -173,6 +187,9 @@ export class PorbComponent implements OnInit, OnDestroy {
       centers = await this.submissionService.getOrganizations();
     }
     this.centers = Array.isArray(centers) ? centers : [];
+
+    await this.loadSubmissionStatus(initiativeId);
+    this.buildCanEditMap();
 
     await this.loadAowsFromDatabase(initiativeId);
     await this.applySelectionFromUrl();
@@ -271,6 +288,205 @@ export class PorbComponent implements OnInit, OnDestroy {
       return nested != null ? String(nested) : null;
     }
     return String(raw);
+  }
+
+  private async loadSubmissionStatus(programId: number) {
+    const submission = await this.porbService.getSubmissionStatus(programId);
+    if (submission && typeof submission === "object") {
+      this.submissionStatus = submission.status || "Draft";
+      this.submissionId = submission.id ?? null;
+    } else {
+      this.submissionStatus = "Draft";
+      this.submissionId = null;
+    }
+  }
+
+  /** Whether submission is locked (Pending or Approved → no editing) */
+  get isSubmissionLocked(): boolean {
+    return this.submissionStatus === "Pending" || this.submissionStatus === "Approved";
+  }
+
+  /** Whether the current user has a lead-level role to submit */
+  get canSubmit(): boolean {
+    if (this.isSubmissionLocked) {
+      return false;
+    }
+    const currentUser = this.userService.getLogedInUser();
+    if (currentUser?.role === "admin") {
+      return true;
+    }
+    const userId = this.currentUserId;
+    const roles: any[] = Array.isArray(this.initiative?.roles)
+      ? this.initiative.roles
+      : [];
+    const userRole = roles.find((r: any) => r?.user_id === userId);
+    if (!userRole) {
+      return false;
+    }
+    const roleName = userRole.role;
+    return (
+      roleName === ROLES.LEAD ||
+      roleName === ROLES.COORDINATOR ||
+      roleName === ROLES.CoLeader ||
+      roleName === ROLES.Financial_Focal_Point
+    );
+  }
+
+  async onSubmitClicked() {
+    const incompleteCenters = this.centers
+      .filter((c: any) => !this.isCenterCompleted(c))
+      .map((c: any) => c?.acronym || c?.name || "Unknown");
+
+    const message =
+      incompleteCenters.length > 0
+        ? `The following centers are not yet marked complete: ${incompleteCenters.join(", ")}. Are you sure you want to submit?`
+        : "Are you sure you want to submit the PORB data?";
+
+    const dialogRef = this.dialog.open(ConfirmComponent, {
+      data: new ConfirmDialogModel("Submit PORB", message),
+    });
+
+    dialogRef.afterClosed().subscribe(async (confirmed: boolean) => {
+      if (!confirmed || !this.initiativeId) {
+        return;
+      }
+      this.submitting = true;
+      try {
+        const result = await this.porbService.submitPorb(this.initiativeId);
+        if (result && typeof result === "object") {
+          this.submissionStatus = result.status || "Pending";
+          this.submissionId = result.id ?? null;
+          this.buildCanEditMap();
+          this.toastr.success("PORB submitted successfully");
+        } else {
+          this.toastr.error("Failed to submit PORB. Please try again.");
+        }
+      } finally {
+        this.submitting = false;
+      }
+    });
+  }
+
+  async onCancelSubmissionClicked() {
+    if (!this.submissionId) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmComponent, {
+      data: new ConfirmDialogModel(
+        "Cancel PORB",
+        "Are you sure you want to cancel this PORB submission? It will revert to Draft status."
+      ),
+    });
+
+    dialogRef.afterClosed().subscribe(async (confirmed: boolean) => {
+      if (!confirmed || !this.submissionId) {
+        return;
+      }
+      this.cancellingSubmission = true;
+      try {
+        const result = await this.porbService.cancelSubmission(this.submissionId);
+        if (result != null) {
+          this.submissionStatus = "Draft";
+          this.submissionId = null;
+          this.buildCanEditMap();
+          this.toastr.success("Submission cancelled");
+        } else {
+          this.toastr.error("Failed to cancel submission. Please try again.");
+        }
+      } finally {
+        this.cancellingSubmission = false;
+      }
+    });
+  }
+
+  private buildCanEditMap() {
+    const map: Record<string, boolean> = {};
+
+    // When Pending or Approved, nobody can edit
+    if (this.isSubmissionLocked) {
+      this.centers.forEach((center: any) => {
+        const key = this.getCenterKey(center);
+        if (key != null) {
+          map[key] = false;
+        }
+      });
+      this.canEditMap = map;
+      return;
+    }
+
+    const currentUser = this.userService.getLogedInUser();
+    const isAdmin = currentUser?.role === "admin";
+
+    if (isAdmin) {
+      // Admins can edit all centers
+      this.centers.forEach((center: any) => {
+        const key = this.getCenterKey(center);
+        if (key != null) {
+          map[key] = true;
+        }
+      });
+      this.canEditMap = map;
+      return;
+    }
+
+    const userId = this.currentUserId;
+    const roles: any[] = Array.isArray(this.initiative?.roles)
+      ? this.initiative.roles
+      : [];
+
+    const userRole = roles.find((r: any) => r?.user_id === userId);
+
+    if (!userRole) {
+      // No role found — default deny edit
+      this.centers.forEach((center: any) => {
+        const key = this.getCenterKey(center);
+        if (key != null) {
+          map[key] = false;
+        }
+      });
+      this.canEditMap = map;
+      return;
+    }
+
+    const roleName = userRole.role;
+    const isLeadRole =
+      roleName === ROLES.LEAD ||
+      roleName === ROLES.COORDINATOR ||
+      roleName === ROLES.CoLeader ||
+      roleName === ROLES.Financial_Focal_Point;
+
+    if (isLeadRole) {
+      // Lead-level roles can edit all centers
+      this.centers.forEach((center: any) => {
+        const key = this.getCenterKey(center);
+        if (key != null) {
+          map[key] = true;
+        }
+      });
+    } else {
+      // Contributors: can only edit assigned centers
+      const assignedCodes = new Set<string>(
+        (userRole.organizations || []).map((o: any) => String(o?.code))
+      );
+      this.centers.forEach((center: any) => {
+        const key = this.getCenterKey(center);
+        if (key != null) {
+          map[key] = assignedCodes.has(key);
+        }
+      });
+    }
+
+    this.canEditMap = map;
+  }
+
+  get canEditForSelectedCenter(): boolean {
+    const key = this.getCenterKey(this.selectedCenter);
+    if (key == null) {
+      return false;
+    }
+    // Default to true if map has no entry (e.g. admin case where map wasn't built yet)
+    return this.canEditMap[key] !== false;
   }
 
   private getSelectedPorbAowId(): number | undefined {
@@ -517,7 +733,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   get consolidationIndicators() {
     return this.consolidationIndicatorsData.map((item) => ({
       title: item.title,
-      target: this.toNumber(item.target),
+      target: this.formatCurrency(this.toNumber(item.target)),
       budget: this.formatCurrency(this.toNumber(item.budget)),
     }));
   }
@@ -538,12 +754,17 @@ export class PorbComponent implements OnInit, OnDestroy {
   get formattedSummaryRows() {
     return this.summaryConsolidationRows.map((row) => ({
       ...row,
+      innovationTargetFmt: this.formatCurrency(this.toNumber(row.innovationTarget)),
       innovationBudgetFmt: this.formatCurrency(this.toNumber(row.innovationBudget)),
+      knowledgeTargetFmt: this.formatCurrency(this.toNumber(row.knowledgeTarget)),
       knowledgeBudgetFmt: this.formatCurrency(this.toNumber(row.knowledgeBudget)),
+      capacityTargetFmt: this.formatCurrency(this.toNumber(row.capacityTarget)),
       capacityBudgetFmt: this.formatCurrency(this.toNumber(row.capacityBudget)),
+      othersTargetFmt: this.formatCurrency(this.toNumber(row.othersTarget)),
       othersBudgetFmt: this.formatCurrency(this.toNumber(row.othersBudget)),
       partnerBudgetFmt: this.formatCurrency(this.toNumber(row.partnerBudget)),
       meliaBudgetFmt: this.formatCurrency(this.toNumber(row.meliaBudget)),
+      crossBudgetFmt: this.formatCurrency(this.toNumber(row.crossBudget)),
       totalPooledFundingFmt: this.formatCurrency(this.toNumber(row.totalPooledFunding)),
       w3BudgetFmt: this.formatCurrency(this.toNumber(row.w3Budget)),
       poolHloFmt: this.formatCurrency(
@@ -561,16 +782,17 @@ export class PorbComponent implements OnInit, OnDestroy {
   get formattedSummaryTotals() {
     const t = this.summaryConsolidationTotals || {};
     return {
-      innovationTarget: this.toNumber(t.innovationTarget),
+      innovationTarget: this.formatCurrency(this.toNumber(t.innovationTarget)),
       innovationBudgetFmt: this.formatCurrency(this.toNumber(t.innovationBudget)),
-      knowledgeTarget: this.toNumber(t.knowledgeTarget),
+      knowledgeTarget: this.formatCurrency(this.toNumber(t.knowledgeTarget)),
       knowledgeBudgetFmt: this.formatCurrency(this.toNumber(t.knowledgeBudget)),
-      capacityTarget: this.toNumber(t.capacityTarget),
+      capacityTarget: this.formatCurrency(this.toNumber(t.capacityTarget)),
       capacityBudgetFmt: this.formatCurrency(this.toNumber(t.capacityBudget)),
-      othersTarget: this.toNumber(t.othersTarget),
+      othersTarget: this.formatCurrency(this.toNumber(t.othersTarget)),
       othersBudgetFmt: this.formatCurrency(this.toNumber(t.othersBudget)),
       partnerBudgetFmt: this.formatCurrency(this.toNumber(t.partnerBudget)),
       meliaBudgetFmt: this.formatCurrency(this.toNumber(t.meliaBudget)),
+      crossBudgetFmt: this.formatCurrency(this.toNumber(t.crossBudget)),
       totalPooledFundingFmt: this.formatCurrency(this.toNumber(t.totalPooledFunding)),
       w3BudgetFmt: this.formatCurrency(this.toNumber(t.w3Budget)),
     };
@@ -772,6 +994,51 @@ export class PorbComponent implements OnInit, OnDestroy {
     };
   }
 
+  /** Pre-formatted HLO rows for the AOW detail table (no decimals, comma-separated). */
+  get formattedGroupedHlos(): Array<{ name: string; rows: any[]; totalBudgetFmt: string }> {
+    return this.groupedHlos.map((group) => ({
+      name: group.name,
+      rows: group.rows.map((hlo) => ({
+        ...hlo,
+        hlo_target_fmt: this.formatCurrency(this.toNumber(hlo.hlo_target)),
+        hlo_budget_fmt: this.formatCurrency(this.toNumber(hlo.hlo_budget)),
+      })),
+      totalBudgetFmt: this.formatCurrency(group.totalBudget),
+    }));
+  }
+
+  /** Pre-formatted MELIA rows for the AOW detail table. */
+  get formattedMelia(): any[] {
+    return this.filteredMelia.map((m) => ({
+      ...m,
+      melia_budget_fmt: this.formatCurrency(this.toNumber(m.melia_budget)),
+    }));
+  }
+
+  /** Pre-formatted bilateral rows for the AOW detail table. */
+  get formattedBilateral(): any[] {
+    return this.filteredBilateral.map((b) => ({
+      ...b,
+      bilateral_budget_fmt: this.formatCurrency(this.toNumber(b.bilateral_budget)),
+    }));
+  }
+
+  /** Pre-formatted partners rows for the AOW detail table. */
+  get formattedPartners(): any[] {
+    return this.filteredPartners.map((p) => ({
+      ...p,
+      partner_budget_fmt: this.formatCurrency(this.toNumber(p.partner_budget)),
+    }));
+  }
+
+  /** Pre-formatted cross-cutting rows for the AOW detail table. */
+  get formattedCross(): any[] {
+    return this.filteredCross.map((c) => ({
+      ...c,
+      budget_fmt: this.formatCurrency(this.toNumber(c.budget)),
+    }));
+  }
+
   async selectCenter(center: any) {
     if (this.isCenterSelected(center) && this.activeView === "center") {
       return;
@@ -843,7 +1110,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       if (!this.isSelectedCenterCompleted && this.hasSelectedCenterErrors) {
         return;
       }
-      const result = await this.submissionService.markStatus(
+      const result = await this.porbService.markStatus(
         centerCode,
         this.initiativeId,
         this.activePhaseId,
@@ -878,10 +1145,21 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   async exportOverviewExcel() {
-    if (!this.initiative?.id) {
+    if (!this.initiativeId) {
       return;
     }
-    await this.submissionService.excelCurrent(this.initiative.id);
+    await this.porbService.exportExcel(this.initiativeId);
+  }
+
+  async exportCenterExcel() {
+    if (!this.initiativeId || !this.selectedCenter) {
+      return;
+    }
+    const centerId = this.getSelectedCenterId();
+    if (centerId == null) {
+      return;
+    }
+    await this.porbService.exportExcelForCenter(this.initiativeId, centerId);
   }
 
   private openTourIfFirstVisit() {

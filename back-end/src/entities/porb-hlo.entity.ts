@@ -39,7 +39,7 @@ export class PorbHlo {
   center: Organization;
 
   @ApiProperty()
-  @Column()
+  @Column({ type: 'mediumtext' })
   hlo_name: string;
 
   @ApiProperty()

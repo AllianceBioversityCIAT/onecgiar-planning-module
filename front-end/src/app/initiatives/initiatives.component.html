@@ -77,12 +77,12 @@
 
                    <button
                     class="color-icons-table-action"
-                    matTooltip="Submit your center activites"
+                    matTooltip="Open PORB page"
                     matTooltipPosition="above"
                     *ngIf="isContributor(row.roles) && user.role == 'user'"
                     routerLink="program/{{ row['id'] }}/{{
                       row['official_code']
-                    }}/submission"
+                    }}/porb"
                     mat-icon-button
                   >
                     <mat-icon>playlist_add_check</mat-icon>

@@ -5,6 +5,7 @@
     <app-pool-section
       *ngSwitchCase="'Pool funding HLO'"
       [rows]="poolFundingRows"
+      [canEdit]="canEdit"
       (budgetUpdated)="budgetUpdated.emit()"
     ></app-pool-section>
 
@@ -12,24 +13,28 @@
       *ngSwitchCase="'Partners'"
       [rows]="partnersRows"
       [selectedCenterId]="selectedCenterId"
+      [canEdit]="canEdit"
       (budgetUpdated)="budgetUpdated.emit()"
     ></app-partners-section>
 
     <app-w3-section
       *ngSwitchCase="'W3/Bilatral'"
       [rows]="w3Rows"
+      [canEdit]="canEdit"
       (budgetUpdated)="budgetUpdated.emit()"
     ></app-w3-section>
 
     <app-melia-section
       *ngSwitchCase="'MELIA Study'"
       [rows]="meliaRows"
+      [canEdit]="canEdit"
       (budgetUpdated)="budgetUpdated.emit()"
     ></app-melia-section>
 
     <app-anaplan-section
       *ngSwitchCase="'Anaplan'"
       [rows]="anaplanRows"
+      [canEdit]="canEdit"
       (budgetUpdated)="budgetUpdated.emit()"
     ></app-anaplan-section>
 
@@ -39,6 +44,7 @@
       [selectedProgramId]="selectedProgramId"
       [selectedPorbAowId]="selectedPorbAowId"
       [selectedCenterId]="selectedCenterId"
+      [canEdit]="canEdit"
       (budgetUpdated)="budgetUpdated.emit()"
     ></app-cross-section>
   </ng-container>

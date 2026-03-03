@@ -1,10 +1,17 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
+  StreamableFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Repository } from 'typeorm';
+import * as XLSX from 'xlsx-js-style';
+import { join } from 'path';
+import { createReadStream, unlink } from 'fs';
+import { Response } from 'express';
 import { PorbAow } from 'src/entities/porb-aow.entity';
 import { PorbHlo } from 'src/entities/porb-hlo.entity';
 import { PorbPartner } from 'src/entities/porb-partner.entity';
@@ -18,12 +25,21 @@ import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
 import { CrossCutting } from 'src/entities/cross-cutting.entity';
 import { PorbCross } from 'src/entities/porb-cross.entity';
+import { CenterStatus } from 'src/entities/center-status.entity';
+import { Organization } from 'src/entities/organization.entity';
+import { Submission, SubmissionStatus } from 'src/entities/submission.entity';
+import { User, userRole } from 'src/entities/user.entity';
+import { History } from 'src/entities/history.entity';
+import { Initiative } from 'src/entities/initiative.entity';
+import { Result } from 'src/entities/result.entity';
+import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import { AxiosError } from 'axios';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
 import { PhasesService } from 'src/phases/phases.service';
 import { HttpService } from '@nestjs/axios';
 import { SubmissionService } from 'src/submission/submission.service';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class PorbService {
@@ -54,10 +70,27 @@ export class PorbService {
     private readonly crossCuttingRepository: Repository<CrossCutting>,
     @InjectRepository(PorbCross)
     private readonly porbCrossRepository: Repository<PorbCross>,
+    @InjectRepository(Submission)
+    private readonly submissionRepository: Repository<Submission>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(History)
+    private readonly historyRepository: Repository<History>,
+    @InjectRepository(Initiative)
+    private readonly initiativeRepository: Repository<Initiative>,
+    @InjectRepository(CenterStatus)
+    private readonly centerStatusRepo: Repository<CenterStatus>,
+    @InjectRepository(Organization)
+    private readonly organizationRepo: Repository<Organization>,
+    @InjectRepository(Result)
+    private readonly resultRepository: Repository<Result>,
+    @InjectRepository(BudgetAssumptions)
+    private readonly budgetAssumptionsRepository: Repository<BudgetAssumptions>,
     private readonly initService: InitiativesService,
     private readonly phasesService: PhasesService,
     private readonly httpService: HttpService,
     private readonly submissionService: SubmissionService,
+    private readonly emailService: EmailService,
   ) {}
 
   async getAows(program_id: number) {
@@ -297,13 +330,13 @@ export class PorbService {
     const aowIds = aows.map((a) => a.id);
 
     // Bulk-load all data for this program (no center filter = all centers)
-    const [allHlos, allPartners, allContracted, allMelia, allBilateral, allAnaplan] = await Promise.all([
+    const [allHlos, allPartners, allMelia, allBilateral, allAnaplan, allCross] = await Promise.all([
       this.porbHloRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbPartnerRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
-      this.porbContractedPartnerRepository.find({ where: { program_id } }),
       this.porbMeliaRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbBilateralRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbAnaplanRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
+      this.porbCrossRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
     ]);
 
     // Group HLOs by porb_aow_id
@@ -314,20 +347,12 @@ export class PorbService {
       hlosByAow.set(row.porb_aow_id, list);
     }
 
-    // Group partners by porb_aow_id, and build a set of partner IDs per AOW
+    // Group partners by porb_aow_id
     const partnersByAow = new Map<number, typeof allPartners>();
     for (const row of allPartners) {
       const list = partnersByAow.get(row.porb_aow_id) || [];
       list.push(row);
       partnersByAow.set(row.porb_aow_id, list);
-    }
-
-    // Map contracted partners by porb_partner_id
-    const contractedByPartnerId = new Map<number, PorbContractedPartner[]>();
-    for (const row of allContracted) {
-      const list = contractedByPartnerId.get(row.porb_partner_id) || [];
-      list.push(row);
-      contractedByPartnerId.set(row.porb_partner_id, list);
     }
 
     // Group melia by porb_aow_id
@@ -354,12 +379,20 @@ export class PorbService {
       anaplanByAow.set(row.porb_aow_id, list);
     }
 
+    // Group cross-cutting by porb_aow_id
+    const crossByAow = new Map<number, typeof allCross>();
+    for (const row of allCross) {
+      const list = crossByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      crossByAow.set(row.porb_aow_id, list);
+    }
+
     const totals = {
       innovationTarget: 0, innovationBudget: 0,
       knowledgeTarget: 0, knowledgeBudget: 0,
       capacityTarget: 0, capacityBudget: 0,
       othersTarget: 0, othersBudget: 0,
-      partnerBudget: 0, meliaBudget: 0,
+      partnerBudget: 0, meliaBudget: 0, crossBudget: 0,
       totalPooledFunding: 0, w3Budget: 0,
       anaplanBudget: 0, consolidatedTotal: 0,
     };
@@ -396,24 +429,18 @@ export class PorbService {
         }
       }
 
-      // Partner budget: sum contracted partner budgets for this AOW's partners
-      const partnerIdSet = new Set(partners.map((p) => p.id));
-      let partnerBudget = 0;
-      for (const [partnerId, contractedList] of contractedByPartnerId) {
-        if (partnerIdSet.has(partnerId)) {
-          for (const c of contractedList) {
-            partnerBudget += Number(c?.budget) || 0;
-          }
-        }
-      }
+      // Partner budget: sum partner_budget from PorbPartner
+      const partnerBudget = partners.reduce((sum, p) => sum + (Number(p?.partner_budget) || 0), 0);
 
       const meliaBudget = meliaRows.reduce((sum, r) => sum + (Number(r?.melia_budget) || 0), 0);
       const w3Budget = bilateralRows.reduce((sum, r) => sum + (Number(r?.bilateral_budget) || 0), 0);
       const anaplanRows = anaplanByAow.get(aow.id) || [];
       const anaplanBudget = anaplanRows.reduce((sum, r) => sum + (Number(r?.budget) || 0), 0);
+      const crossRows = crossByAow.get(aow.id) || [];
+      const crossBudget = crossRows.reduce((sum, r) => sum + (Number(r?.budget) || 0), 0);
       const totalPooledFunding =
         ind.innovationBudget + ind.knowledgeBudget + ind.capacityBudget +
-        ind.othersBudget + partnerBudget + meliaBudget;
+        ind.othersBudget + partnerBudget + meliaBudget + crossBudget;
       const consolidatedTotal = totalPooledFunding + w3Budget;
 
       // Accumulate totals
@@ -427,6 +454,7 @@ export class PorbService {
       totals.othersBudget += ind.othersBudget;
       totals.partnerBudget += partnerBudget;
       totals.meliaBudget += meliaBudget;
+      totals.crossBudget += crossBudget;
       totals.totalPooledFunding += totalPooledFunding;
       totals.w3Budget += w3Budget;
       totals.anaplanBudget += anaplanBudget;
@@ -439,6 +467,7 @@ export class PorbService {
         ...ind,
         partnerBudget,
         meliaBudget,
+        crossBudget,
         totalPooledFunding,
         w3Budget,
         anaplanBudget,
@@ -1291,6 +1320,11 @@ export class PorbService {
       new Set(aowRows.map((row: any) => String(row.toc_id))),
     );
 
+    // Pre-load valid organization codes to skip unknown centers
+    const validOrgs = await this.organizationRepo.find({ select: ['code'] });
+    const validCenterIds = new Set(validOrgs.map((o) => Number(o.code)));
+    const skippedCenterIds = new Set<number>();
+
     const outputNodes = results.filter((item: any) => item?.category === 'OUTPUT');
     const hloRows: any[] = [];
     for (const item of outputNodes) {
@@ -1300,6 +1334,10 @@ export class PorbService {
           for (const center of target?.centers || []) {
             const centerId = Number(center?.code);
             if (!Number.isFinite(centerId)) {
+              continue;
+            }
+            if (!validCenterIds.has(centerId)) {
+              skippedCenterIds.add(centerId);
               continue;
             }
             hloRows.push(
@@ -1422,6 +1460,10 @@ export class PorbService {
       if (!Number.isFinite(centerId)) {
         return null;
       }
+      if (!validCenterIds.has(centerId)) {
+        skippedCenterIds.add(centerId);
+        return null;
+      }
       return this.porbBilateralRepository.create({
         program_id: programId,
         porb_aow_id: parentAow?.id ?? null,
@@ -1487,7 +1529,10 @@ export class PorbService {
       if (!Number.isFinite(centerId)) {
         continue;
       }
-console.log('Processing Melia node:', item);
+      if (!validCenterIds.has(centerId)) {
+        skippedCenterIds.add(centerId);
+        continue;
+      }
       const groupKeys = new Set<string>();
       let hasEmptyGroup = false;
       const meliaResults = Array.isArray(item?.results) ? item.results : [];
@@ -1612,6 +1657,534 @@ console.log('Processing Melia node:', item);
         partners: savedPartners.length,
         bilaterals: savedBilaterals.length,
         melias: savedMelias.length,
+      },
+      skipped_center_ids: skippedCenterIds.size
+        ? Array.from(skippedCenterIds)
+        : undefined,
+    };
+  }
+
+  async bulkImportToc(programIds?: number[]) {
+    let initiatives: Initiative[];
+    if (programIds?.length) {
+      initiatives = await this.initiativeRepository.find({
+        where: { id: In(programIds), archived: false },
+      });
+    } else {
+      initiatives = await this.initiativeRepository.find({
+        where: { archived: false },
+      });
+    }
+
+    const results: Array<{
+      program_id: number;
+      official_code: string;
+      status: 'success' | 'error';
+      detail?: any;
+      error?: string;
+    }> = [];
+
+    for (const initiative of initiatives) {
+      try {
+        const detail = await this.importTocToPorbTables(
+          initiative.id,
+          initiative.official_code,
+        );
+        results.push({
+          program_id: initiative.id,
+          official_code: initiative.official_code,
+          status: 'success',
+          detail,
+        });
+      } catch (err) {
+        results.push({
+          program_id: initiative.id,
+          official_code: initiative.official_code,
+          status: 'error',
+          error: err?.message || String(err),
+        });
+      }
+    }
+
+    return {
+      total: initiatives.length,
+      success: results.filter((r) => r.status === 'success').length,
+      failed: results.filter((r) => r.status === 'error').length,
+      results,
+    };
+  }
+
+  async migrateOneProgram(initiative: Initiative) {
+    const programId = initiative.id;
+    const submissionId = initiative.latest_submission_id;
+    if (!submissionId) {
+      return { program_id: programId, status: 'skipped', reason: 'no submission' };
+    }
+
+    const activePhase =
+      await this.submissionService.PhasesService.findActivePhase();
+
+    // 1. Load all PORB rows for this program
+    const porbHlos = await this.porbHloRepository.find({ where: { program_id: programId } });
+    const porbPartners = await this.porbPartnerRepository.find({ where: { program_id: programId } });
+    const porbBilaterals = await this.porbBilateralRepository.find({ where: { program_id: programId } });
+    const porbMelias = await this.porbMeliaRepository.find({ where: { program_id: programId } });
+    const porbCrosses = await this.porbCrossRepository.find({ where: { program_id: programId } });
+
+    // 2. Load old submission data
+    const oldResults = await this.resultRepository.find({
+      where: { submission_id: submissionId },
+    });
+    const budgetAssumptions = await this.budgetAssumptionsRepository.find({
+      where: { initiative_id: programId, phase_id: activePhase.id },
+    });
+
+    // 3. Build lookup maps for budget assumptions
+    const baByItemAndCenter = new Map<string, BudgetAssumptions>();
+    for (const ba of budgetAssumptions) {
+      baByItemAndCenter.set(`${ba.item_id}::${ba.organization_code}`, ba);
+    }
+
+    const counts = { hlos: 0, partners: 0, contracted_partners: 0, bilaterals: 0, melias: 0, cross: 0, anaplan: 0 };
+
+    // 4. Migrate HLOs
+    const hloResults = oldResults.filter(
+      (r) => r.type === 'INDICATOR' && !r.is_project,
+    );
+    for (const porbHlo of porbHlos) {
+      const matchingResult = hloResults.find(
+        (r) =>
+          r.result_uuid === porbHlo.toc_id &&
+          Number(r.organization_code) === porbHlo.center_id,
+      );
+      if (!matchingResult) continue;
+
+      const budget = parseFloat(matchingResult.budget) || 0;
+      const ba = baByItemAndCenter.get(
+        `${matchingResult.result_uuid}::${matchingResult.organization_code}`,
+      );
+      const assumption = ba?.budget_assumptions || '';
+
+      if (budget || assumption) {
+        await this.porbHloRepository.update(porbHlo.id, {
+          hlo_budget: budget || porbHlo.hlo_budget,
+          hlo_assumption: assumption || porbHlo.hlo_assumption,
+        });
+        counts.hlos++;
+      }
+    }
+
+    // 5. Migrate Partners
+    const partnerResults = oldResults.filter(
+      (r) => r.type == null && !r.is_project,
+    );
+    // Group partner results by parent_id → match to PorbPartner.toc_id
+    const partnerResultsByParent = new Map<string, Result[]>();
+    for (const r of partnerResults) {
+      if (!r.parent_id) continue;
+      const existing = partnerResultsByParent.get(r.parent_id) || [];
+      existing.push(r);
+      partnerResultsByParent.set(r.parent_id, existing);
+    }
+
+
+    for (const porbPartner of porbPartners) {
+      // Update partner-level assumption and budget from BudgetAssumptions
+      const ba = baByItemAndCenter.get(`${porbPartner.toc_id}::${programId}`);
+      if (ba) {
+        const partnerBudget = parseFloat(ba.item_budget) || 0;
+        const partnerAssumption = ba.budget_assumptions || '';
+        if (partnerBudget || partnerAssumption) {
+          await this.porbPartnerRepository.update(porbPartner.id, {
+            partner_budget: partnerBudget || porbPartner.partner_budget,
+            partner_assumption: partnerAssumption || porbPartner.partner_assumption,
+          });
+          counts.partners++;
+        }
+      }
+
+      // Create/update contracted partner rows with per-center budget
+      const centerResults = partnerResultsByParent.get(porbPartner.toc_id) || [];
+      for (const result of centerResults) {
+        const centerId = Number(result.organization_code);
+        if (!Number.isFinite(centerId)) continue;
+        const budget = parseFloat(result.budget) || 0;
+
+        const existingCP = await this.porbContractedPartnerRepository.findOne({
+          where: {
+            porb_partner_id: porbPartner.id,
+            center_id: centerId,
+            program_id: programId,
+          },
+        });
+
+        if (existingCP) {
+          if (budget) {
+            await this.porbContractedPartnerRepository.update(existingCP.id, { budget });
+            counts.contracted_partners++;
+          }
+        } else if (budget) {
+          await this.porbContractedPartnerRepository.save({
+            program_id: programId,
+            center_id: centerId,
+            porb_partner_id: porbPartner.id,
+            countries: '',
+            budget,
+          });
+          counts.contracted_partners++;
+        }
+      }
+    }
+
+    // Reset bilateral/melia budgets before re-applying (prevents stale data from previous runs)
+    if (porbBilaterals.length) {
+      await this.porbBilateralRepository
+        .createQueryBuilder()
+        .update()
+        .set({ bilateral_budget: 0, bilateral_assumption: '' })
+        .where('program_id = :programId', { programId })
+        .execute();
+    }
+    if (porbMelias.length) {
+      await this.porbMeliaRepository
+        .createQueryBuilder()
+        .update()
+        .set({ melia_budget: 0, melia_assumption: '' })
+        .where('program_id = :programId', { programId })
+        .execute();
+    }
+
+    // Build a map from AOW acrnum → porb_aow_id for matching BA wp_id to AOW
+    const allAowsForMigration = await this.porbAowRepository.find({
+      where: { program_id: programId },
+    });
+    const aowAcrnumToId = new Map<string, number>();
+    for (const aow of allAowsForMigration) {
+      aowAcrnumToId.set(String(aow.aow_acrnum || '').toUpperCase(), aow.id);
+    }
+    // Helper: extract porb_aow_id from BA wp_id (e.g., "SP01-AOW02-project" → AOW02 → id)
+    const getAowIdFromWpId = (wpId: string): number | null => {
+      const upper = String(wpId || '').toUpperCase();
+      // "CROSS-project" → AOW00
+      if (upper.startsWith('CROSS')) {
+        return aowAcrnumToId.get('AOW00') ?? null;
+      }
+      const aowMatch = upper.match(/(AOW\d+)/);
+      if (aowMatch) {
+        return aowAcrnumToId.get(aowMatch[1]) ?? null;
+      }
+      return null;
+    };
+
+    // 6. Migrate Bilaterals
+    const bilateralBAs = budgetAssumptions.filter(
+      (ba) => ba.wp_id && ba.wp_id.endsWith('-project'),
+    );
+    for (const porbBilateral of porbBilaterals) {
+      const matchingBA = bilateralBAs.find(
+        (ba) =>
+          ba.item_id === porbBilateral.toc_id &&
+          Number(ba.organization_code) === porbBilateral.center_id &&
+          getAowIdFromWpId(ba.wp_id) === porbBilateral.porb_aow_id,
+      );
+      if (!matchingBA) continue;
+
+      const budget = parseFloat(matchingBA.item_budget) || 0;
+      const assumption = matchingBA.budget_assumptions || '';
+
+      if (budget || assumption) {
+        await this.porbBilateralRepository.update(porbBilateral.id, {
+          bilateral_budget: budget || porbBilateral.bilateral_budget,
+          bilateral_assumption: assumption || porbBilateral.bilateral_assumption,
+        });
+        counts.bilaterals++;
+      }
+    }
+
+    // 7. Migrate MELIAs
+    const meliaBAs = budgetAssumptions.filter(
+      (ba) => ba.wp_id && ba.wp_id.endsWith('-melia'),
+    );
+    for (const porbMelia of porbMelias) {
+      const matchingBA = meliaBAs.find(
+        (ba) =>
+          ba.item_id === porbMelia.toc_id &&
+          Number(ba.organization_code) === porbMelia.center_id &&
+          getAowIdFromWpId(ba.wp_id) === porbMelia.porb_aow_id,
+      );
+      if (!matchingBA) continue;
+
+      const budget = parseFloat(matchingBA.item_budget) || 0;
+      const assumption = matchingBA.budget_assumptions || '';
+
+      if (budget || assumption) {
+        await this.porbMeliaRepository.update(porbMelia.id, {
+          melia_budget: budget || porbMelia.melia_budget,
+          melia_assumption: assumption || porbMelia.melia_assumption,
+        });
+        counts.melias++;
+      }
+    }
+
+    // 8. Migrate Cross-Cutting
+    // Live CC items (submission_id IS NULL) are the canonical list used by PorbCross.
+    // Submitted CC items (submission_id = submissionId) are copies with different UUIDs.
+    // Result rows reference submitted CC IDs via result_uuid.
+    // Strategy: map submitted CC → live CC by title, then match results.
+    const liveCrossItems = await this.crossCuttingRepository.find({
+      where: { initiative_id: programId, submission_id: IsNull() },
+    });
+    const submittedCrossItems = await this.crossCuttingRepository.find({
+      where: { initiative_id: programId, submission_id: submissionId },
+    });
+    const crossResults = oldResults.filter((r) => r.type === 'Cross-Cutting');
+    const crossBAs = budgetAssumptions.filter(
+      (ba) => ba.wp_id && ba.wp_id.endsWith('-Cross-Cutting'),
+    );
+
+    // Find the AOW00 row for this program
+    const crossAow = await this.porbAowRepository.findOne({
+      where: { program_id: programId, aow_acrnum: 'AOW00' },
+    });
+
+    if (crossAow && liveCrossItems.length) {
+      // Map submitted CC id → live CC id by matching title
+      const submittedToLiveMap = new Map<string, string>();
+      for (const subCC of submittedCrossItems) {
+        const liveMatch = liveCrossItems.find(
+          (lcc) => (lcc.title || '').trim() === (subCC.title || '').trim(),
+        );
+        if (liveMatch) {
+          submittedToLiveMap.set(String(subCC.id), String(liveMatch.id));
+        }
+      }
+
+      // Build a map of existing PorbCross rows
+      const existingCrossMap = new Map<string, PorbCross>();
+      for (const pc of porbCrosses) {
+        existingCrossMap.set(`${pc.cross_cutting_id}::${pc.center_id}`, pc);
+      }
+
+      // Results reference submitted CC via result_uuid
+      for (const result of crossResults) {
+        const submittedCcId = result.result_uuid;
+        const liveCcId = submittedToLiveMap.get(submittedCcId);
+        if (!liveCcId) continue;
+
+        const centerId = Number(result.organization_code);
+        if (!Number.isFinite(centerId)) continue;
+
+        const budget = parseFloat(result.budget) || 0;
+        const matchingBA = crossBAs.find(
+          (ba) =>
+            ba.item_id === submittedCcId &&
+            Number(ba.organization_code) === centerId,
+        );
+        // Also try matching by live CC id
+        const matchingBALive = !matchingBA
+          ? crossBAs.find(
+              (ba) =>
+                ba.item_id === liveCcId &&
+                Number(ba.organization_code) === centerId,
+            )
+          : null;
+        const assumption =
+          matchingBA?.budget_assumptions ||
+          matchingBALive?.budget_assumptions ||
+          '';
+
+        if (!budget && !assumption) continue;
+
+        const key = `${liveCcId}::${centerId}`;
+        const existing = existingCrossMap.get(key);
+
+        if (existing) {
+          await this.porbCrossRepository.update(existing.id, {
+            budget: budget || existing.budget,
+            assumption: assumption || existing.assumption,
+          });
+        } else {
+          await this.porbCrossRepository.save({
+            program_id: programId,
+            porb_aow_id: crossAow.id,
+            center_id: centerId,
+            cross_cutting_id: liveCcId,
+            budget: budget || null,
+            assumption: assumption || '',
+          });
+        }
+        counts.cross++;
+      }
+    }
+
+    // 9. Migrate Anaplan
+    // Load WorkPackages → map wp_official_code to porb_aow_id
+    const workPackages = await this.workPackageRepository.find({
+      where: { initiative_id: programId },
+    });
+    const allAows = await this.porbAowRepository.find({
+      where: { program_id: programId },
+    });
+    const aowByAcrnum = new Map<string, PorbAow>();
+    for (const aow of allAows) {
+      aowByAcrnum.set(String(aow.aow_acrnum || '').toUpperCase(), aow);
+    }
+    const wpIdToAow = new Map<number, PorbAow>();
+    for (const wp of workPackages) {
+      const rawCode = String(wp.wp_official_code || '').toUpperCase();
+      // wp_official_code is like "SP01-AOW02" — extract "AOW02" part
+      const aowMatch = rawCode.match(/(AOW\d+)$/);
+      const aowCode = aowMatch ? aowMatch[1] : rawCode;
+      const aow = aowByAcrnum.get(aowCode);
+      if (aow) {
+        wpIdToAow.set(wp.wp_id, aow);
+      }
+    }
+
+    // Load live AnaplanValues (submission_id IS NULL)
+    const anaplanWhere: any = {
+      initiative_id: programId,
+      submission_id: IsNull(),
+    };
+    if (activePhase?.id != null) {
+      anaplanWhere.phase_id = activePhase.id;
+    }
+    const liveAnaplanValues = await this.anaplanValuesRepository.find({
+      where: anaplanWhere,
+    });
+
+    // Load existing PorbAnaplan rows
+    const existingPorbAnaplan = await this.porbAnaplanRepository.find({
+      where: { program_id: programId },
+    });
+    const existingAnaplanMap = new Map<string, PorbAnaplan>();
+    for (const pa of existingPorbAnaplan) {
+      existingAnaplanMap.set(
+        `${pa.porb_aow_id}::${pa.center_id}::${pa.anaplan_id}`,
+        pa,
+      );
+    }
+
+    counts.anaplan = 0;
+    for (const av of liveAnaplanValues) {
+      const aow = wpIdToAow.get(av.wp_id);
+      if (!aow) continue;
+
+      const key = `${aow.id}::${av.organization_code}::${av.anaplan_id}`;
+      const existing = existingAnaplanMap.get(key);
+
+      if (existing) {
+        if (av.value && av.value !== existing.budget) {
+          await this.porbAnaplanRepository.update(existing.id, {
+            budget: av.value,
+          });
+          counts.anaplan++;
+        }
+      } else if (av.value) {
+        await this.porbAnaplanRepository.save({
+          program_id: programId,
+          porb_aow_id: aow.id,
+          center_id: av.organization_code,
+          anaplan_id: av.anaplan_id,
+          budget: av.value,
+        });
+        counts.anaplan++;
+      }
+    }
+
+    return { program_id: programId, status: 'success', counts };
+  }
+
+  async bulkMigrateSubmissionData(programIds?: number[]) {
+    let initiatives: Initiative[];
+    if (programIds?.length) {
+      initiatives = await this.initiativeRepository.find({
+        where: { id: In(programIds), archived: false },
+      });
+    } else {
+      initiatives = await this.initiativeRepository.find({
+        where: { archived: false },
+      });
+    }
+
+    const results: Array<any> = [];
+
+    for (const initiative of initiatives) {
+      try {
+        const detail = await this.migrateOneProgram(initiative);
+        results.push(detail);
+      } catch (err) {
+        results.push({
+          program_id: initiative.id,
+          status: 'error',
+          error: err?.message || String(err),
+        });
+      }
+    }
+
+    return {
+      total: initiatives.length,
+      success: results.filter((r) => r.status === 'success').length,
+      skipped: results.filter((r) => r.status === 'skipped').length,
+      failed: results.filter((r) => r.status === 'error').length,
+      results,
+    };
+  }
+
+  async bulkImportAndMigrate(programIds?: number[]) {
+    const tocResult = await this.bulkImportToc(programIds);
+    const migrateResult = await this.bulkMigrateSubmissionData(programIds);
+    return {
+      toc_import: tocResult,
+      data_migration: migrateResult,
+    };
+  }
+
+  async verifyMigration(programId: number) {
+    const porbHlos = await this.porbHloRepository.find({ where: { program_id: programId } });
+    const porbPartners = await this.porbPartnerRepository.find({ where: { program_id: programId } });
+    const porbBilaterals = await this.porbBilateralRepository.find({ where: { program_id: programId } });
+    const porbMelias = await this.porbMeliaRepository.find({ where: { program_id: programId } });
+    const porbCrosses = await this.porbCrossRepository.find({ where: { program_id: programId } });
+    const contractedPartners = await this.porbContractedPartnerRepository.find({ where: { program_id: programId } });
+    const porbAnaplan = await this.porbAnaplanRepository.find({ where: { program_id: programId } });
+
+    return {
+      program_id: programId,
+      hlos: {
+        total: porbHlos.length,
+        with_budget: porbHlos.filter((h) => h.hlo_budget && h.hlo_budget > 0).length,
+        without_budget: porbHlos.filter((h) => !h.hlo_budget || h.hlo_budget === 0).length,
+        with_assumption: porbHlos.filter((h) => h.hlo_assumption?.trim()).length,
+      },
+      partners: {
+        total: porbPartners.length,
+        with_assumption: porbPartners.filter((p) => p.partner_assumption?.trim()).length,
+        contracted_partners: contractedPartners.length,
+        contracted_with_budget: contractedPartners.filter((cp) => cp.budget && cp.budget > 0).length,
+      },
+      bilaterals: {
+        total: porbBilaterals.length,
+        with_budget: porbBilaterals.filter((b) => b.bilateral_budget && b.bilateral_budget > 0).length,
+        without_budget: porbBilaterals.filter((b) => !b.bilateral_budget || b.bilateral_budget === 0).length,
+        with_assumption: porbBilaterals.filter((b) => b.bilateral_assumption?.trim()).length,
+      },
+      melias: {
+        total: porbMelias.length,
+        with_budget: porbMelias.filter((m) => m.melia_budget && m.melia_budget > 0).length,
+        without_budget: porbMelias.filter((m) => !m.melia_budget || m.melia_budget === 0).length,
+        with_assumption: porbMelias.filter((m) => m.melia_assumption?.trim()).length,
+      },
+      cross: {
+        total: porbCrosses.length,
+        with_budget: porbCrosses.filter((c) => c.budget && c.budget > 0).length,
+        without_budget: porbCrosses.filter((c) => !c.budget || c.budget === 0).length,
+        with_assumption: porbCrosses.filter((c) => c.assumption?.trim()).length,
+      },
+      anaplan: {
+        total: porbAnaplan.length,
+        with_budget: porbAnaplan.filter((a) => a.budget && a.budget > 0).length,
+        without_budget: porbAnaplan.filter((a) => !a.budget || a.budget === 0).length,
       },
     };
   }
@@ -1929,5 +2502,643 @@ console.log('Processing Melia node:', item);
           ),
       );
     }
-  
+
+  /**
+   * Submit PORB data for a program, creating a new Submission record
+   * with a snapshot of the summary consolidation data.
+   */
+  async submitPorb(programId: number, reqUser: { id: number }) {
+    try {
+      const initiative = await this.initiativeRepository.findOne({
+        where: { id: programId },
+      });
+      if (!initiative) {
+        throw new NotFoundException(`Initiative with id ${programId} not found`);
+      }
+
+      const activePhase = await this.phasesService.findActivePhase();
+      if (!activePhase) {
+        throw new BadRequestException('No active phase found');
+      }
+
+      const user = await this.userRepository.findOneBy({ id: reqUser.id });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Snapshot the summary consolidation data as the submission payload
+      const consolidationSnapshot = await this.getSummaryConsolidation(programId);
+
+      const newSubmission = this.submissionRepository.create();
+      newSubmission.toc_data = JSON.stringify(consolidationSnapshot);
+      newSubmission.user = user;
+      newSubmission.phase = activePhase;
+      newSubmission.initiative = initiative;
+      newSubmission.status = SubmissionStatus.PENDING;
+
+      const saved = await this.submissionRepository.save(newSubmission, {
+        reload: true,
+      });
+
+      // Update initiative with latest submission reference
+      const date = new Date();
+      await this.initiativeRepository.update(programId, {
+        last_update_at: date,
+        last_submitted_at: date,
+        latest_submission_id: saved.id,
+      });
+
+      // Record history entry
+      const history = this.historyRepository.create();
+      history.resource_property = 'PORB Submit';
+      history.user_id = reqUser.id;
+      history.initiative_id = programId;
+      await this.historyRepository.save(history);
+      await this.initiativeRepository.update(programId, {
+        latest_history_id: history.id,
+      });
+
+      // Send notification emails to admins
+      const admins = await this.userRepository.find({
+        where: { role: userRole.ADMIN },
+      });
+      for (const admin of admins) {
+        this.emailService.sendEmailTobyVarabel(
+          admin, 3, initiative, null, null, null, null, null, null,
+        );
+      }
+
+      // Send notification emails to initiative leaders/coordinators
+      const initWithRoles = await this.initiativeRepository.findOne({
+        where: {
+          id: programId,
+          roles: { role: In(['Leader', 'Coordinator', 'Financial Focal Point']) },
+        },
+        relations: ['roles', 'roles.user'],
+      });
+      if (initWithRoles?.roles) {
+        for (const role of initWithRoles.roles) {
+          this.emailService.sendEmailTobyVarabel(
+            role.user, 4, initWithRoles, null, null, null, null, null, null,
+          );
+        }
+      }
+
+      return await this.submissionRepository.findOne({
+        where: { id: saved.id },
+        relations: ['user', 'phase'],
+      });
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to submit PORB data');
+    }
+  }
+
+  /**
+   * Approve or reject a PORB submission.
+   */
+  async updateSubmissionStatus(
+    submissionId: number,
+    data: { status: string; status_reason?: string },
+    reqUser: { id: number },
+  ) {
+    const submission = await this.submissionRepository.findOne({
+      where: { id: submissionId },
+      relations: ['initiative', 'initiative.roles', 'initiative.roles.user'],
+    });
+    if (!submission) {
+      throw new NotFoundException(`Submission with id ${submissionId} not found`);
+    }
+
+    if (
+      submission.status !== SubmissionStatus.PENDING &&
+      submission.status !== SubmissionStatus.DRAFT
+    ) {
+      throw new BadRequestException(
+        `Cannot update status of submission in '${submission.status}' state`,
+      );
+    }
+
+    const newStatus =
+      data.status === 'Approved'
+        ? SubmissionStatus.APPROVED
+        : data.status === 'Rejected'
+          ? SubmissionStatus.REJECTED
+          : null;
+
+    if (!newStatus) {
+      throw new BadRequestException(
+        'Status must be either "Approved" or "Rejected"',
+      );
+    }
+
+    await this.submissionRepository.update(submissionId, {
+      status: newStatus,
+      status_reason: data.status_reason || '',
+    } as any);
+
+    // Send notification emails to initiative team
+    if (submission.initiative?.roles) {
+      const emailVariableId = newStatus === SubmissionStatus.APPROVED ? 5 : 6;
+      for (const role of submission.initiative.roles) {
+        this.emailService.sendEmailTobyVarabel(
+          role.user,
+          emailVariableId,
+          submission.initiative,
+          role.role,
+          data.status_reason || null,
+          null,
+          null,
+          null,
+          null,
+        );
+      }
+    }
+
+    // Record history entry
+    const history = this.historyRepository.create();
+    history.resource_property =
+      newStatus === SubmissionStatus.APPROVED
+        ? `PORB Approved for version Id: ${submissionId}`
+        : `PORB Rejected for version Id: ${submissionId}`;
+    history.item_name = data.status;
+    history.user_id = reqUser.id;
+    history.initiative_id = submission.initiative_id;
+    await this.historyRepository.save(history);
+    await this.initiativeRepository.update(submission.initiative_id, {
+      latest_history_id: history.id,
+    });
+
+    return { success: true, status: newStatus };
+  }
+
+  /**
+   * Cancel a pending PORB submission, reverting its status to Draft.
+   */
+  async cancelSubmission(submissionId: number, reqUser: { id: number }) {
+    const submission = await this.submissionRepository.findOne({
+      where: { id: submissionId },
+      relations: ['user'],
+    });
+    if (!submission) {
+      throw new NotFoundException(`Submission with id ${submissionId} not found`);
+    }
+
+    if (submission.status !== SubmissionStatus.PENDING) {
+      throw new BadRequestException(
+        'Only pending submissions can be cancelled',
+      );
+    }
+
+    // Only the submitter or an admin can cancel
+    const currentUser = await this.userRepository.findOneBy({ id: reqUser.id });
+    const isSubmitter = submission.user?.id === reqUser.id;
+    const isAdmin = currentUser?.role === userRole.ADMIN;
+    if (!isSubmitter && !isAdmin) {
+      throw new ForbiddenException(
+        'Only the submitter or an admin can cancel this submission',
+      );
+    }
+
+    await this.submissionRepository.update(submissionId, {
+      status: SubmissionStatus.DRAFT,
+    });
+
+    // Record history entry
+    const history = this.historyRepository.create();
+    history.resource_property = `PORB Cancelled for version Id: ${submissionId}`;
+    history.item_name = SubmissionStatus.DRAFT;
+    history.user_id = reqUser.id;
+    history.initiative_id = submission.initiative_id;
+    await this.historyRepository.save(history);
+    await this.initiativeRepository.update(submission.initiative_id, {
+      latest_history_id: history.id,
+    });
+
+    return { success: true, status: SubmissionStatus.DRAFT };
+  }
+
+  async updateCenterStatus(data, reqUser) {
+    const { initiative_id, organization_code, phase_id, status, organization } = data;
+
+    let center_status: CenterStatus;
+    center_status = await this.centerStatusRepo.findOneBy({
+      initiative_id,
+      organization_code,
+      phase_id,
+    });
+
+    if (!center_status) center_status = this.centerStatusRepo.create();
+    center_status.initiative_id = initiative_id;
+    center_status.organization_code = organization_code;
+    center_status.phase_id = phase_id;
+    center_status.status = status;
+    if (status == false) center_status.is_valid = status;
+    await this.centerStatusRepo.save(center_status).then(
+      async (data) => {
+        if (data.status) {
+          const init = await this.initiativeRepository.findOne({
+            where: { id: initiative_id },
+            relations: ['roles', 'roles.user', 'roles.organizations'],
+          });
+
+          const usersRole = [];
+          init.roles.filter((d) => {
+            if (d.role == 'Leader' || d.role == 'Coordinator' || d.role == 'Financial Focal Point') {
+              usersRole.push(d);
+            } else if (d.role == 'Contributor') {
+              d.organizations.filter((x) => {
+                if (x.code == data.organization_code) {
+                  usersRole.push(d);
+                }
+              });
+            }
+          });
+          const users = usersRole.map((d) => d.user);
+
+          const userRoleDoAction = init.roles.filter(
+            (d) => d.user_id == reqUser.id,
+          );
+
+          for (let user of users) {
+            if (userRoleDoAction.length) {
+              this.emailService.sendEmailTobyVarabel(
+                user, 7, init, null, null, organization, userRoleDoAction, null, null,
+              );
+            } else {
+              this.emailService.sendEmailTobyVarabel(
+                user, 7, init, null, null, organization, [reqUser], null, null,
+              );
+            }
+          }
+        }
+        const history = this.historyRepository.create();
+        history.resource_property = data.status ? 'Mark as complete' : 'Mark as incomplete';
+        history.user_id = reqUser.id;
+        history.initiative_id = data.initiative_id;
+        history.organization_id = organization_code;
+        await this.historyRepository.save(history);
+        await this.initiativeRepository.update(initiative_id, {
+          latest_history_id: history.id,
+        });
+      },
+      (error) => {
+        console.error(error);
+      },
+    );
+
+    return { message: 'Data Saved' };
+  }
+
+  async updateCenterValidate(data, reqUser) {
+    const { initiative_id, organization_code, phase_id, is_valid, organization } = data;
+
+    let center_status: CenterStatus;
+    center_status = await this.centerStatusRepo.findOneBy({
+      initiative_id,
+      organization_code,
+      phase_id,
+    });
+
+    center_status.initiative_id = initiative_id;
+    center_status.organization_code = organization_code;
+    center_status.phase_id = phase_id;
+    center_status.is_valid = is_valid;
+    await this.centerStatusRepo.save(center_status).then(
+      async (data) => {
+        if (data.is_valid) {
+          const init = await this.initiativeRepository.findOne({
+            where: { id: initiative_id },
+            relations: ['roles', 'roles.user', 'roles.organizations'],
+          });
+
+          const usersRole = [];
+          init.roles.filter((d) => {
+            if (d.role == 'Leader' || d.role == 'Coordinator' || d.role == 'Financial Focal Point') {
+              usersRole.push(d);
+            } else if (d.role == 'Contributor') {
+              d.organizations.filter((x) => {
+                if (x.code == data.organization_code) {
+                  usersRole.push(d);
+                }
+              });
+            }
+          });
+          const users = usersRole.map((d) => d.user);
+
+          const userRoleDoAction = init.roles.filter(
+            (d) => d.user_id == reqUser.id,
+          );
+
+          for (let user of users) {
+            if (userRoleDoAction.length) {
+              this.emailService.sendEmailTobyVarabel(
+                user, 9, init, null, null, organization, userRoleDoAction, null, null,
+              );
+            } else {
+              this.emailService.sendEmailTobyVarabel(
+                user, 9, init, null, null, organization, [reqUser], null, null,
+              );
+            }
+          }
+        }
+        const history = this.historyRepository.create();
+        history.resource_property = data.is_valid ? 'Mark as valid' : 'Mark as invalid';
+        history.user_id = reqUser.id;
+        history.initiative_id = data.initiative_id;
+        history.organization_id = organization_code;
+        await this.historyRepository.save(history);
+        await this.initiativeRepository.update(initiative_id, {
+          latest_history_id: history.id,
+        });
+      },
+      (error) => {
+        console.error(error);
+      },
+    );
+
+    return { message: 'Data Saved' };
+  }
+
+  // ── Excel export ──────────────────────────────────────────────────────
+
+  private readonly headerStyle = {
+    font: { bold: true, sz: 11, color: { rgb: 'FFFFFF' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    fill: { fgColor: { rgb: '2B3C53' } },
+    border: {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } },
+    },
+  };
+
+  private readonly cellStyle = {
+    alignment: { vertical: 'top', wrapText: true },
+    border: {
+      top: { style: 'thin', color: { rgb: 'CCCCCC' } },
+      bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+      left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+      right: { style: 'thin', color: { rgb: 'CCCCCC' } },
+    },
+  };
+
+  private readonly numberStyle = {
+    ...this.cellStyle,
+    alignment: { ...this.cellStyle.alignment, horizontal: 'right' },
+    numFmt: '#,##0',
+  };
+
+  private applyHeaderStyle(ws: any, headerRowCount: number) {
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let R = 0; R < headerRowCount; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[addr]) ws[addr] = { v: '', t: 's' };
+        ws[addr].s = this.headerStyle;
+      }
+    }
+  }
+
+  private applyDataStyles(ws: any, headerRowCount: number, numberCols: number[]) {
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let R = headerRowCount; R <= range.e.r; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[addr]) continue;
+        ws[addr].s = numberCols.includes(C) ? this.numberStyle : this.cellStyle;
+      }
+    }
+  }
+
+  private getAowLabel(aowId: number, aowMap: Map<number, { code: string; name: string }>): string {
+    const aow = aowMap.get(aowId);
+    return aow ? `${aow.code}: ${aow.name}` : String(aowId);
+  }
+
+  async generatePorbExcel(programId: number, centerId: number | undefined, res: Response) {
+    const [aows, hlos, partners, bilaterals, melias, summaryData] = await Promise.all([
+      this.getAows(programId),
+      this.getHlos(programId, undefined, centerId),
+      this.getPartners(programId, undefined, centerId),
+      this.getBilaterals(programId, undefined, centerId),
+      this.getMelia(programId, undefined, centerId),
+      this.getSummaryConsolidation(programId),
+    ]);
+
+    // Build AOW lookup map
+    const aowMap = new Map<number, { code: string; name: string }>();
+    if (Array.isArray(aows)) {
+      for (const aow of aows) {
+        aowMap.set(aow.id, { code: aow.aow_acrnum || '', name: aow.aow_name || '' });
+      }
+    }
+
+    // Anaplan: load flat rows from repo with relation (getAnaplan requires per-aow/center)
+    const anaplanRows = await this.porbAnaplanRepository.find({
+      where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
+      relations: ['anaplan'],
+    });
+
+    // Cross: load flat rows and their cross-cutting items
+    const crossRows = await this.porbCrossRepository.find({
+      where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
+    });
+    const crossIds = [...new Set(crossRows.map((r) => r.cross_cutting_id))];
+    const crossItems = crossIds.length
+      ? await this.crossCuttingRepository.find({ where: { id: In(crossIds) } })
+      : [];
+    const crossItemMap = new Map<string, { title: string; description: string }>();
+    crossItems.forEach((c) =>
+      crossItemMap.set(String(c.id), { title: c.title || '', description: c.description || '' }),
+    );
+
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, this.generatePorbSummarySheet(summaryData), 'Summary');
+    XLSX.utils.book_append_sheet(wb, this.generatePorbHloSheet(Array.isArray(hlos) ? hlos : [], aowMap), 'HLO');
+    XLSX.utils.book_append_sheet(wb, this.generatePorbPartnerSheet(Array.isArray(partners) ? partners : [], aowMap), 'Partners');
+    XLSX.utils.book_append_sheet(wb, this.generatePorbBilateralSheet(Array.isArray(bilaterals) ? bilaterals : [], aowMap), 'W3-Bilateral');
+    XLSX.utils.book_append_sheet(wb, this.generatePorbMeliaSheet(Array.isArray(melias) ? melias : [], aowMap), 'MELIA');
+    XLSX.utils.book_append_sheet(wb, this.generatePorbAnaplanSheet(anaplanRows, aowMap), 'Anaplan');
+    XLSX.utils.book_append_sheet(wb, this.generatePorbCrossSheet(crossRows, aowMap, crossItemMap), 'Cross Cutting');
+
+    // Get initiative info for filename
+    const initiative = await this.initiativeRepository.findOne({ where: { id: programId } });
+    const code = initiative?.official_code || programId;
+    const fileName = centerId ? `PORB_${code}_center${centerId}` : `PORB_${code}`;
+
+    // Ensure generated_files dir exists
+    const dirPath = join(process.cwd(), 'generated_files');
+    const { mkdirSync, existsSync } = require('fs');
+    if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
+
+    // Write and stream
+    const filePath = join(dirPath, `${fileName}.xlsx`);
+    XLSX.writeFile(wb, filePath, { cellStyles: true });
+    const file = createReadStream(filePath);
+
+    setTimeout(() => {
+      try { unlink(filePath, () => {}); } catch {}
+    }, 10000);
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}.xlsx"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    return new StreamableFile(file);
+  }
+
+  private generatePorbSummarySheet(summaryData: any) {
+    const rows = Array.isArray(summaryData?.rows) ? summaryData.rows : [];
+    const totals = summaryData?.totals || {};
+
+    const headers = [
+      'Area of Work',
+      'Inn. Dev Target', 'Inn. Dev Budget',
+      'Know. Prod Target', 'Know. Prod Budget',
+      'Capacity Target', 'Capacity Budget',
+      'Others Target', 'Others Budget',
+      'Partner Budget', 'MELIA Budget',
+      'Total Pooled', 'W3/Bilateral',
+    ];
+
+    const data = rows.map((r: any) => [
+      `${r.aowCode || ''}: ${r.aowName || ''}`,
+      Number(r.innovationTarget) || 0, Number(r.innovationBudget) || 0,
+      Number(r.knowledgeTarget) || 0, Number(r.knowledgeBudget) || 0,
+      Number(r.capacityTarget) || 0, Number(r.capacityBudget) || 0,
+      Number(r.othersTarget) || 0, Number(r.othersBudget) || 0,
+      Number(r.partnerBudget) || 0, Number(r.meliaBudget) || 0,
+      Number(r.totalPooledFunding) || 0, Number(r.w3Budget) || 0,
+    ]);
+
+    // Add totals row
+    data.push([
+      'Total',
+      Number(totals.innovationTarget) || 0, Number(totals.innovationBudget) || 0,
+      Number(totals.knowledgeTarget) || 0, Number(totals.knowledgeBudget) || 0,
+      Number(totals.capacityTarget) || 0, Number(totals.capacityBudget) || 0,
+      Number(totals.othersTarget) || 0, Number(totals.othersBudget) || 0,
+      Number(totals.partnerBudget) || 0, Number(totals.meliaBudget) || 0,
+      Number(totals.totalPooledFunding) || 0, Number(totals.w3Budget) || 0,
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{ wch: 30 }, ...Array(12).fill({ wch: 15 })];
+    this.applyHeaderStyle(ws, 1);
+    this.applyDataStyles(ws, 1, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    return ws;
+  }
+
+  private generatePorbHloSheet(hlos: any[], aowMap: Map<number, { code: string; name: string }>) {
+    const headers = ['AOW', 'Name', 'Description', 'Type', 'Target', 'Budget', 'Assumption'];
+    const data = hlos.map((h: any) => [
+      this.getAowLabel(h.porb_aow_id, aowMap),
+      h.hlo_name || '',
+      h.hlo_description || '',
+      h.hlo_type || '',
+      Number(h.hlo_target) || 0,
+      Number(h.hlo_budget) || 0,
+      h.hlo_assumption || '',
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 40 }, { wch: 20 }, { wch: 10 }, { wch: 15 }, { wch: 40 }];
+    this.applyHeaderStyle(ws, 1);
+    this.applyDataStyles(ws, 1, [4, 5]);
+    return ws;
+  }
+
+  private generatePorbPartnerSheet(partners: any[], aowMap: Map<number, { code: string; name: string }>) {
+    const headers = ['AOW', 'Name', 'Outputs', 'Geographic Location', 'Budget', 'Assumption'];
+    const data = partners.map((p: any) => [
+      this.getAowLabel(p.porb_aow_id, aowMap),
+      p.partner_name || '',
+      p.partner_outputs || '',
+      p.partner_geo || 'Global',
+      Number(p.partner_budget) || 0,
+      p.partner_assumption || '',
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 40 }, { wch: 20 }, { wch: 15 }, { wch: 40 }];
+    this.applyHeaderStyle(ws, 1);
+    this.applyDataStyles(ws, 1, [4]);
+    return ws;
+  }
+
+  private generatePorbBilateralSheet(bilaterals: any[], aowMap: Map<number, { code: string; name: string }>) {
+    const headers = ['AOW', 'Project Name', 'Outputs', 'Budget', 'Assumption'];
+    const data = bilaterals.map((b: any) => [
+      this.getAowLabel(b.porb_aow_id, aowMap),
+      b.bilateral_name || '',
+      b.bilateral_outputs || '',
+      Number(b.bilateral_budget) || 0,
+      b.bilateral_assumption || '',
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 40 }, { wch: 15 }, { wch: 40 }];
+    this.applyHeaderStyle(ws, 1);
+    this.applyDataStyles(ws, 1, [3]);
+    return ws;
+  }
+
+  private generatePorbMeliaSheet(melias: any[], aowMap: Map<number, { code: string; name: string }>) {
+    const headers = ['AOW', 'Study', 'Outputs', 'Budget', 'Assumption'];
+    const data = melias.map((m: any) => [
+      this.getAowLabel(m.porb_aow_id, aowMap),
+      m.melia_name || '',
+      m.melia_outputs || '',
+      Number(m.melia_budget) || 0,
+      m.melia_assumption || '',
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 40 }, { wch: 15 }, { wch: 40 }];
+    this.applyHeaderStyle(ws, 1);
+    this.applyDataStyles(ws, 1, [3]);
+    return ws;
+  }
+
+  private generatePorbAnaplanSheet(anaplanRows: any[], aowMap: Map<number, { code: string; name: string }>) {
+    const headers = ['AOW', 'Center', 'Item', 'Budget'];
+    const data = anaplanRows.map((row: any) => [
+      this.getAowLabel(row.porb_aow_id, aowMap),
+      String(row.center_id || ''),
+      row.anaplan?.label || '',
+      Number(row.budget) || 0,
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 40 }, { wch: 15 }];
+    this.applyHeaderStyle(ws, 1);
+    this.applyDataStyles(ws, 1, [3]);
+    return ws;
+  }
+
+  private generatePorbCrossSheet(
+    crossRows: any[],
+    aowMap: Map<number, { code: string; name: string }>,
+    crossItemMap: Map<string, { title: string; description: string }>,
+  ) {
+    const headers = ['AOW', 'Title', 'Description', 'Budget', 'Assumption'];
+    const data = crossRows.map((c: any) => {
+      const item = crossItemMap.get(String(c.cross_cutting_id));
+      return [
+        this.getAowLabel(c.porb_aow_id, aowMap),
+        item?.title || '',
+        item?.description || '',
+        Number(c.budget) || 0,
+        c.assumption || '',
+      ];
+    });
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 30 }, { wch: 40 }, { wch: 15 }, { wch: 40 }];
+    this.applyHeaderStyle(ws, 1);
+    this.applyDataStyles(ws, 1, [3]);
+    return ws;
+  }
 }

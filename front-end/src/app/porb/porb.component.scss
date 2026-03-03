@@ -276,6 +276,7 @@
     font-size: 1.2rem;
     font-family: "Poppins", sans-serif;
     color: #0f212f;
+    vertical-align: middle;
   }
 
   th {
@@ -288,6 +289,13 @@
   td {
     background: #ffffff;
   }
+}
+
+// Utility class for numeric/budget/target cells across all PORB tables
+.num-cell {
+  text-align: center !important;
+  vertical-align: middle !important;
+  white-space: nowrap;
 }
 
 .consolidation-flat {
@@ -405,12 +413,9 @@
     white-space: normal;
   }
 
-  .text-center {
+  // Header cells for numeric columns are already centered via consolidation-table th rule
+  th.num-cell {
     text-align: center;
-  }
-
-  .text-right {
-    text-align: right;
   }
 
   .merged-cell {
@@ -430,7 +435,7 @@
       font-size: 1.3rem;
     }
 
-    td:last-child {
+    td.num-cell {
       font-weight: 700;
       font-size: 1.3rem;
     }

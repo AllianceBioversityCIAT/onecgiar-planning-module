@@ -29,6 +29,7 @@
               [attr.data-tour-anchor]="row === filteredRows[0] ? 'porb-budget-input' : null"
               [(value)]="row.porb_budget"
               [assumptionEnabled]="false"
+              [disabled]="!canEdit"
               [isSaving]="savingIds.has(row.anaplan_id)"
               (commit)="saveRow(row)"
             ></app-budget-and-assumption>

@@ -39,6 +39,7 @@
             type="checkbox"
             [attr.data-tour-anchor]="i === 0 ? 'porb-partner-contracted' : null"
             [checked]="isContracted(row)"
+            [disabled]="!canEdit"
             (change)="row.partner_is_contracted = $any($event.target).checked ? '1' : '0'; saveRow(row)"
           />
         </td>
@@ -53,7 +54,7 @@
             [searchable]="true"
             [closeOnSelect]="false"
             [appendTo]="'body'"
-            [disabled]="!isContracted(row)"
+            [disabled]="!isContracted(row) || !canEdit"
             [(ngModel)]="row.partner_country_codes"
             placeholder="Select countries"
             (change)="saveRow(row)"
@@ -65,7 +66,7 @@
               [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
               [(value)]="row.partner_budget"
               [(assumption)]="row.partner_assumption"
-              [disabled]="!isContracted(row)"
+              [disabled]="!isContracted(row) || !canEdit"
               [isSaving]="savingIds.has(row.id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"

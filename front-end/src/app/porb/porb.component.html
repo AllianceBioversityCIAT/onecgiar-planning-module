@@ -18,7 +18,12 @@
       *ngIf="initiative"
       [initiative]="initiative"
       [onlineProgramUsers]="onlineProgramUsers"
+      [submissionStatus]="submissionStatus"
+      [submissionId]="submissionId"
+      [canSubmit]="canSubmit"
       (exportOverview)="exportOverviewExcel()"
+      (submitClicked)="onSubmitClicked()"
+      (cancelSubmissionClicked)="onCancelSubmissionClicked()"
     ></app-porb-overview>
   </div>
 
@@ -121,13 +126,13 @@
               <tbody>
                 <tr *ngFor="let row of formattedSummaryRows">
                   <td class="aow-col">{{ row.aowCode }}: {{ row.aowName }}</td>
-                  <td>{{ row.innovationTarget }}</td>
+                  <td>{{ row.innovationTargetFmt }}</td>
                   <td>{{ row.innovationBudgetFmt }}</td>
-                  <td>{{ row.knowledgeTarget }}</td>
+                  <td>{{ row.knowledgeTargetFmt }}</td>
                   <td>{{ row.knowledgeBudgetFmt }}</td>
-                  <td>{{ row.capacityTarget }}</td>
+                  <td>{{ row.capacityTargetFmt }}</td>
                   <td>{{ row.capacityBudgetFmt }}</td>
-                  <td>{{ row.othersTarget }}</td>
+                  <td>{{ row.othersTargetFmt }}</td>
                   <td>{{ row.othersBudgetFmt }}</td>
                   <td>{{ row.partnerBudgetFmt }}</td>
                   <td>{{ row.meliaBudgetFmt }}</td>
@@ -187,30 +192,30 @@
                       <th rowspan="2">High Level Output</th>
                       <th rowspan="2">Description</th>
                       <th colspan="4">Key Performance Indicators</th>
-                      <th rowspan="2">Total Budget (USD)</th>
+                      <th rowspan="2" class="num-cell">Total Budget (USD)</th>
                     </tr>
                     <tr>
                       <th>Type</th>
                       <th>Geographic location</th>
-                      <th>Target</th>
-                      <th>Budget (USD)</th>
+                      <th class="num-cell">Target</th>
+                      <th class="num-cell">Budget (USD)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <ng-container *ngFor="let group of groupedHlos">
+                    <ng-container *ngFor="let group of formattedGroupedHlos">
                       <tr *ngFor="let hlo of group.rows; let i = index">
                         <td *ngIf="i === 0" [attr.rowspan]="group.rows.length" class="merged-cell">{{ group.name }}</td>
                         <td>{{ hlo.hlo_description }}</td>
                         <td>{{ hlo.hlo_type }}</td>
                         <td>{{ hlo.hlo_geo }}</td>
-                        <td class="text-center">{{ hlo.hlo_target }}</td>
-                        <td class="text-right">{{ hlo.hlo_budget | number:'1.2-2' }}</td>
-                        <td *ngIf="i === 0" [attr.rowspan]="group.rows.length" class="text-right merged-cell">{{ group.totalBudget | number:'1.2-2' }}</td>
+                        <td class="num-cell">{{ hlo.hlo_target_fmt }}</td>
+                        <td class="num-cell">{{ hlo.hlo_budget_fmt }}</td>
+                        <td *ngIf="i === 0" [attr.rowspan]="group.rows.length" class="num-cell merged-cell">{{ group.totalBudgetFmt }}</td>
                       </tr>
                     </ng-container>
                     <tr class="subtotal-row">
                       <td colspan="6" class="subtotal-label">HLO budget subtotal</td>
-                      <td class="text-right">{{ summaryAowSubtotals.hlo }}</td>
+                      <td class="num-cell">{{ summaryAowSubtotals.hlo }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -230,15 +235,15 @@
                     <tr>
                       <th>Outputs</th>
                       <th>Geographic location</th>
-                      <th>Budget (USD)</th>
+                      <th class="num-cell">Budget (USD)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let partner of filteredPartners">
+                    <tr *ngFor="let partner of formattedPartners">
                       <td>{{ partner.partner_name }}</td>
                       <td>{{ partner.partner_outputs }}</td>
                       <td>{{ partner.partner_geo || 'Global' }}</td>
-                      <td class="text-center">{{ partner.partner_budget | number:'1.2-2' }}</td>
+                      <td class="num-cell">{{ partner.partner_budget_fmt }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -255,19 +260,19 @@
                       <th>MELIA study</th>
                       <th>Supported outcomes</th>
                       <th>Location of Work</th>
-                      <th>Total budget (USD)</th>
+                      <th class="num-cell">Total budget (USD)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let m of filteredMelia">
+                    <tr *ngFor="let m of formattedMelia">
                       <td>{{ m.melia_name }}</td>
                       <td>{{ m.melia_outputs }}</td>
                       <td>Global</td>
-                      <td class="text-right">{{ m.melia_budget | number:'1.2-2' }}</td>
+                      <td class="num-cell">{{ m.melia_budget_fmt }}</td>
                     </tr>
                     <tr class="subtotal-row">
                       <td colspan="3" class="subtotal-label">MELIA budget subtotal</td>
-                      <td class="text-right">{{ summaryAowSubtotals.melia }}</td>
+                      <td class="num-cell">{{ summaryAowSubtotals.melia }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -283,18 +288,18 @@
                     <tr>
                       <th>Project title</th>
                       <th>High Level Output title</th>
-                      <th>W3/Bilateral Project (USD)</th>
+                      <th class="num-cell">W3/Bilateral Project (USD)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let b of filteredBilateral">
+                    <tr *ngFor="let b of formattedBilateral">
                       <td>{{ b.bilateral_name }}</td>
                       <td>{{ b.bilateral_outputs }}</td>
-                      <td class="text-right">{{ b.bilateral_budget | number:'1.2-2' }}</td>
+                      <td class="num-cell">{{ b.bilateral_budget_fmt }}</td>
                     </tr>
                     <tr class="subtotal-row">
                       <td colspan="2" class="subtotal-label">W3/Bilateral budget subtotal</td>
-                      <td class="text-right">{{ summaryAowSubtotals.bilateral }}</td>
+                      <td class="num-cell">{{ summaryAowSubtotals.bilateral }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -310,18 +315,18 @@
                     <tr>
                       <th>Title</th>
                       <th>Description</th>
-                      <th>Budget (USD)</th>
+                      <th class="num-cell">Budget (USD)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let c of filteredCross">
+                    <tr *ngFor="let c of formattedCross">
                       <td>{{ c.title }}</td>
                       <td>{{ c.description }}</td>
-                      <td class="text-right">{{ c.budget | number:'1.2-2' }}</td>
+                      <td class="num-cell">{{ c.budget_fmt }}</td>
                     </tr>
                     <tr class="subtotal-row">
                       <td colspan="2" class="subtotal-label">Cross Cutting budget subtotal</td>
-                      <td class="text-right">{{ summaryAowSubtotals.cross }}</td>
+                      <td class="num-cell">{{ summaryAowSubtotals.cross }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -365,7 +370,14 @@
         </div>
         <div class="center-header-right">
           <button
-            *ngIf="isSelectedCenterCompleted || !hasSelectedCenterErrors"
+            mat-raised-button
+            class="new-btns"
+            (click)="exportCenterExcel()"
+          >
+            Export Excel
+          </button>
+          <button
+            *ngIf="canEditForSelectedCenter && (isSelectedCenterCompleted || !hasSelectedCenterErrors)"
             mat-raised-button
             class="new-btns"
             [class.completed-btn]="isSelectedCenterCompleted"
@@ -444,6 +456,7 @@
           <app-pool-section
             *ngSwitchCase="'Pool funding HLO'"
             [rows]="poolFundingRows"
+            [canEdit]="canEditForSelectedCenter"
             (budgetUpdated)="onBudgetUpdated()"
           ></app-pool-section>
 
@@ -451,24 +464,28 @@
             *ngSwitchCase="'Partners'"
             [rows]="partnersRows"
             [selectedCenterId]="selectedCenterIdForSections"
+            [canEdit]="canEditForSelectedCenter"
             (budgetUpdated)="onBudgetUpdated()"
           ></app-partners-section>
 
           <app-w3-section
             *ngSwitchCase="'W3/Bilatral'"
             [rows]="w3Rows"
+            [canEdit]="canEditForSelectedCenter"
             (budgetUpdated)="onBudgetUpdated()"
           ></app-w3-section>
 
           <app-melia-section
             *ngSwitchCase="'MELIA Study'"
             [rows]="meliaRows"
+            [canEdit]="canEditForSelectedCenter"
             (budgetUpdated)="onBudgetUpdated()"
           ></app-melia-section>
 
           <app-anaplan-section
             *ngSwitchCase="'Anaplan'"
             [rows]="anaplanRows"
+            [canEdit]="canEditForSelectedCenter"
             (budgetUpdated)="onBudgetUpdated()"
           ></app-anaplan-section>
 
@@ -478,6 +495,7 @@
             [selectedProgramId]="initiativeId || undefined"
             [selectedPorbAowId]="selectedPorbAowIdForSections"
             [selectedCenterId]="selectedCenterIdForSections"
+            [canEdit]="canEditForSelectedCenter"
             (budgetUpdated)="onBudgetUpdated()"
           ></app-cross-section>
         </ng-container>

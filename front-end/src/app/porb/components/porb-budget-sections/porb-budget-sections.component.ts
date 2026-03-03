@@ -16,5 +16,6 @@ export class PorbBudgetSectionsComponent {
   @Input() meliaRows: any[] = [];
   @Input() anaplanRows: any[] = [];
   @Input() crossRows: any[] = [];
+  @Input() canEdit: boolean = true;
   @Output() budgetUpdated = new EventEmitter<void>();
 }

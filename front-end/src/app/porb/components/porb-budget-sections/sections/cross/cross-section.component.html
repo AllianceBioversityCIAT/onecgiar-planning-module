@@ -9,7 +9,7 @@
     <button type="button" class="export-btn" (click)="export()" [disabled]="!rows.length">
       Export Excel
     </button>
-    <button type="button" class="add-btn" (click)="onAddNewClick()">
+    <button type="button" class="add-btn" (click)="onAddNewClick()" *ngIf="canEdit">
       + Add New
     </button>
   </div>
@@ -53,6 +53,7 @@
               [attr.data-tour-anchor]="row === filteredRows[0] ? 'porb-budget-input' : null"
               [(value)]="row.budget"
               [(assumption)]="row.assumption"
+              [disabled]="!canEdit"
               [isSaving]="savingIds.has(row.cross_cutting_id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"

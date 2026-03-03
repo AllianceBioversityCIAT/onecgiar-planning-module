@@ -39,7 +39,7 @@ export class PorbMelia {
   center: Organization;
 
   @ApiProperty()
-  @Column()
+  @Column({ type: 'mediumtext' })
   melia_name: string;
 
   @ApiProperty()
