@@ -10,6 +10,10 @@
       <option value="">All</option>
       <option *ngFor="let option of contractedOptions" [value]="option">{{ option }}</option>
     </select>
+    <select class="tool-select" [(ngModel)]="filterCountry">
+      <option value="">All Countries</option>
+      <option *ngFor="let c of countryFilterOptions" [value]="c.code">{{ c.name }}</option>
+    </select>
     <button type="button" class="export-btn" (click)="export()">Export Excel</button>
   </div>
 
@@ -21,7 +25,7 @@
           <th>Partner Name</th>
           <th>Contracted</th>
           <th>Geo</th>
-          <th>Budget</th>
+          <th>Budget (USD)</th>
         </tr>
       </thead>
       <tbody>

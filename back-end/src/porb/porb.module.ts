@@ -24,6 +24,7 @@ import { History } from 'src/entities/history.entity';
 import { Initiative } from 'src/entities/initiative.entity';
 import { Result } from 'src/entities/result.entity';
 import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
+import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { SubmissionModule } from 'src/submission/submission.module';
 import { InitiativesModule } from 'src/initiatives/initiatives.module';
 import { PhasesModule } from 'src/phases/phases.module';
@@ -53,6 +54,7 @@ import { EmailModule } from 'src/email/email.module';
       Initiative,
       Result,
       BudgetAssumptions,
+      PartnerCountry,
     ]),
     HttpModule,
     SubmissionModule,

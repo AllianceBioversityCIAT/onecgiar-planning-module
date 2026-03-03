@@ -1,5 +1,4 @@
 .table-box {
-  overflow-x: auto;
   border: 1px solid #b9b9b9b5;
   border-radius: 8px;
   background: #ffffff;
@@ -88,14 +87,13 @@
 }
 
 .table-scroll {
-  max-height: 58vh;
-  overflow: auto;
+  overflow-x: auto;
 }
 
 .additional-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 880px;
+  min-width: 0;
   table-layout: fixed;
 
   th,
@@ -104,21 +102,19 @@
     padding: 0.65rem 0.7rem;
     font-size: 1.3rem;
     color: #0f212f;
-    text-align: center;
+    text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
+    vertical-align: top;
     font-family: "Poppins", sans-serif;
   }
 
   th {
     color: #ffffff;
     font-size: 1.4rem;
-    font-weight: 500;
+    font-weight: 600;
     background: linear-gradient(to right, #2a2e45, #212537);
-    position: sticky;
-    top: 0;
-    z-index: 2;
   }
 
   .row-title {
@@ -145,7 +141,7 @@
   th:nth-child(3),
   td:nth-child(3) {
     width: 20%;
-    text-align: center;
+    text-align: right;
     vertical-align: middle;
   }
 }
@@ -173,7 +169,25 @@
 }
 
 .empty-state {
-  color: #475569;
-  font-size: 1.3rem;
-  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.2rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  margin-top: 0.4rem;
+
+  mat-icon {
+    color: #94a3b8;
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  span {
+    font-family: "Poppins", sans-serif;
+    font-size: 1.25rem;
+    color: #64748b;
+    line-height: 1.5;
+  }
 }

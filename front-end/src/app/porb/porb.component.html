@@ -62,27 +62,6 @@
             </h1>
           </div>
           <div class="risk-report-btn-box">
-            <button
-              class="new-btns"
-              mat-raised-button
-              routerLink="/program/{{ initiative?.id }}/{{ initiative?.official_code }}/team-members"
-            >
-              Team Members
-            </button>
-            <button
-              class="new-btns"
-              mat-raised-button
-              routerLink="/program/{{ initiative?.id }}/{{ initiative?.official_code }}/submited-versions"
-            >
-              Submitted Versions
-            </button>
-            <button
-              class="new-btns"
-              mat-raised-button
-              (click)="exportOverviewExcel()"
-            >
-              Export Excel
-            </button>
           </div>
         </div>
 
@@ -370,20 +349,25 @@
         </div>
         <div class="center-header-right">
           <button
-            mat-raised-button
-            class="new-btns"
+            mat-stroked-button
+            class="center-action-btn center-export-btn"
+            [title]="'Export ' + (selectedCenter?.acronym || selectedCenter?.name) + ' data'"
             (click)="exportCenterExcel()"
           >
-            Export Excel
+            <mat-icon>download</mat-icon>
+            Export Center
           </button>
           <button
             *ngIf="canEditForSelectedCenter && (isSelectedCenterCompleted || !hasSelectedCenterErrors)"
-            mat-raised-button
-            class="new-btns"
-            [class.completed-btn]="isSelectedCenterCompleted"
+            mat-flat-button
+            class="center-action-btn"
+            [class.center-complete-btn]="!isSelectedCenterCompleted"
+            [class.center-incomplete-btn]="isSelectedCenterCompleted"
+            [title]="isSelectedCenterCompleted ? 'Mark ' + (selectedCenter?.acronym || selectedCenter?.name) + ' as incomplete' : 'Mark ' + (selectedCenter?.acronym || selectedCenter?.name) + ' as complete'"
             [disabled]="centerStatusUpdating"
             (click)="onToggleSelectedCenterCompletion()"
           >
+            <mat-icon>{{ isSelectedCenterCompleted ? 'undo' : 'check_circle' }}</mat-icon>
             {{ isSelectedCenterCompleted ? 'Mark Incomplete' : 'Mark Complete' }}
           </button>
         </div>

@@ -33,6 +33,7 @@ import { History } from 'src/entities/history.entity';
 import { Initiative } from 'src/entities/initiative.entity';
 import { Result } from 'src/entities/result.entity';
 import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
+import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import { AxiosError } from 'axios';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
@@ -86,6 +87,8 @@ export class PorbService {
     private readonly resultRepository: Repository<Result>,
     @InjectRepository(BudgetAssumptions)
     private readonly budgetAssumptionsRepository: Repository<BudgetAssumptions>,
+    @InjectRepository(PartnerCountry)
+    private readonly partnerCountryRepository: Repository<PartnerCountry>,
     private readonly initService: InitiativesService,
     private readonly phasesService: PhasesService,
     private readonly httpService: HttpService,
@@ -1747,6 +1750,22 @@ export class PorbService {
 
     const counts = { hlos: 0, partners: 0, contracted_partners: 0, bilaterals: 0, melias: 0, cross: 0, anaplan: 0 };
 
+    // 2b. Load partner country data for this program/phase
+    const partnerCountries = await this.partnerCountryRepository.find({
+      where: { initiative_id: programId, phase_id: activePhase.id },
+      relations: ['country'],
+    });
+    // Build lookup: "result_id::center_code" → comma-separated country names
+    const countriesByResultAndCenter = new Map<string, string[]>();
+    for (const pc of partnerCountries) {
+      const key = `${pc.result_id}::${pc.center_code}`;
+      const list = countriesByResultAndCenter.get(key) || [];
+      if (pc.country?.name) {
+        list.push(pc.country.name);
+      }
+      countriesByResultAndCenter.set(key, list);
+    }
+
     // 4. Migrate HLOs
     const hloResults = oldResults.filter(
       (r) => r.type === 'INDICATOR' && !r.is_project,
@@ -1803,12 +1822,18 @@ export class PorbService {
         }
       }
 
-      // Create/update contracted partner rows with per-center budget
+      // Create/update contracted partner rows with per-center budget and countries
       const centerResults = partnerResultsByParent.get(porbPartner.toc_id) || [];
       for (const result of centerResults) {
         const centerId = Number(result.organization_code);
         if (!Number.isFinite(centerId)) continue;
         const budget = parseFloat(result.budget) || 0;
+
+        // Look up countries for this specific result + center
+        const countryKey = `${result.result_uuid}::${result.organization_code}`;
+        const countryNames = countriesByResultAndCenter.get(countryKey) || [];
+        countryNames.sort();
+        const countries = countryNames.join(', ');
 
         const existingCP = await this.porbContractedPartnerRepository.findOne({
           where: {
@@ -1819,17 +1844,20 @@ export class PorbService {
         });
 
         if (existingCP) {
-          if (budget) {
-            await this.porbContractedPartnerRepository.update(existingCP.id, { budget });
+          const updates: Partial<PorbContractedPartner> = {};
+          if (budget) updates.budget = budget;
+          if (countries) updates.countries = countries;
+          if (Object.keys(updates).length) {
+            await this.porbContractedPartnerRepository.update(existingCP.id, updates);
             counts.contracted_partners++;
           }
-        } else if (budget) {
+        } else if (budget || countries) {
           await this.porbContractedPartnerRepository.save({
             program_id: programId,
             center_id: centerId,
             porb_partner_id: porbPartner.id,
-            countries: '',
-            budget,
+            countries,
+            budget: budget || 0,
           });
           counts.contracted_partners++;
         }

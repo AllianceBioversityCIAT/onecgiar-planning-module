@@ -42,34 +42,10 @@
         >
           <mat-icon>dashboard</mat-icon>
         </a>
-        <a
-          class="icon-btn"
-          title="Team Members"
-          [routerLink]="[
-            '/program',
-            initiative?.id,
-            initiative?.official_code,
-            'team-members'
-          ]"
-        >
-          <mat-icon>groups</mat-icon>
-        </a>
-        <a
-          class="icon-btn"
-          title="Submitted Versions"
-          [routerLink]="[
-            '/program',
-            initiative?.id,
-            initiative?.official_code,
-            'submited-versions'
-          ]"
-        >
-          <mat-icon>history</mat-icon>
-        </a>
         <button
           type="button"
           class="icon-btn"
-          title="Export Excel"
+          title="Export Summary"
           (click)="exportOverview.emit()"
         >
           <mat-icon>download</mat-icon>

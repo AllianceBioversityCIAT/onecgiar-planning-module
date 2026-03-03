@@ -13,7 +13,7 @@
     <button type="button" class="export-btn" (click)="export()">Export Excel</button>
   </div>
 
-  <div class="table-scroll" *ngIf="rows.length">
+  <div *ngIf="rows.length" class="table-scroll">
     <table class="additional-table">
       <thead>
         <tr>
@@ -44,6 +44,7 @@
   </div>
 
   <div class="empty-state" *ngIf="!rows.length">
-    No Anaplan records found for the selected Center and AOW.
+    <mat-icon>info_outline</mat-icon>
+    <span>No Anaplan records found for the selected Center and AOW. Budget data is imported from Anaplan.</span>
   </div>
 </div>

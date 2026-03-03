@@ -20,6 +20,7 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
 
   search = "";
   filterContracted = "";
+  filterCountry = "";
   savingIds = new Set<number>();
   countryOptions: CountryOption[] = [];
 
@@ -52,8 +53,17 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
     return ["Contracted", "Not Contracted"];
   }
 
+  get countryFilterOptions(): CountryOption[] {
+    const codesInData = new Set<number>();
+    this.rows.forEach((row) => {
+      this.getCountryCodes(row).forEach((code) => codesInData.add(code));
+    });
+    return this.countryOptions.filter((c) => codesInData.has(c.code));
+  }
+
   get filteredRows() {
     const search = this.search.trim().toLowerCase();
+    const filterCountryCode = this.filterCountry ? Number(this.filterCountry) : null;
     return this.rows.filter((row) => {
       const geoLabel = this.getCountryNamesLabel(row);
       const matchesSearch =
@@ -62,11 +72,14 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
         String(row.partner_outputs || "").toLowerCase().includes(search) ||
         geoLabel.toLowerCase().includes(search);
       const contracted = this.isContracted(row);
-      const matchesFilter =
+      const matchesContracted =
         !this.filterContracted ||
         (this.filterContracted === "Contracted" && contracted) ||
         (this.filterContracted === "Not Contracted" && !contracted);
-      return matchesSearch && matchesFilter;
+      const matchesCountry =
+        !filterCountryCode ||
+        this.getCountryCodes(row).includes(filterCountryCode);
+      return matchesSearch && matchesContracted && matchesCountry;
     });
   }
 

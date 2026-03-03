@@ -6,6 +6,10 @@
       placeholder="Search MELIA"
       [(ngModel)]="search"
     />
+    <select class="tool-select" [(ngModel)]="filterOutputs">
+      <option value="">All Outputs</option>
+      <option *ngFor="let option of outputOptions" [value]="option">{{ option }}</option>
+    </select>
     <button type="button" class="export-btn" (click)="export()">Export Excel</button>
   </div>
 
@@ -15,7 +19,7 @@
         <tr>
           <th>Outputs</th>
           <th>Melia Name</th>
-          <th>Budget</th>
+          <th>Budget (USD)</th>
         </tr>
       </thead>
       <tbody>

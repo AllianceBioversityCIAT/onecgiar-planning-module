@@ -233,10 +233,61 @@
   }
 }
 
-.completed-btn {
-  background-color: #e8f7ed !important;
-  color: #166534 !important;
-  border-color: #198754 !important;
+.center-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.center-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: "Poppins", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+  border-radius: 8px;
+  height: 3.6rem;
+  padding: 0 1.2rem;
+
+  mat-icon {
+    font-size: 1.8rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    line-height: 1.8rem;
+  }
+}
+
+.center-export-btn {
+  color: #2a2e45;
+  border-color: #c5cadf;
+
+  &:hover {
+    background: #f1f5f9;
+    border-color: #a0a8c0;
+  }
+}
+
+.center-complete-btn {
+  background-color: #5569dd;
+  color: #ffffff;
+
+  &:hover {
+    background-color: #3f53c8;
+  }
+}
+
+.center-incomplete-btn {
+  background-color: #e8f7ed;
+  color: #166534;
+
+  mat-icon {
+    color: #166534;
+  }
+
+  &:hover {
+    background-color: #d1f0dc;
+  }
 }
 
 // Section content area
@@ -282,7 +333,7 @@
   th {
     background: linear-gradient(to right, #2a2e45, #212537);
     color: #ffffff;
-    font-weight: 500;
+    font-weight: 600;
     text-align: center;
   }
 

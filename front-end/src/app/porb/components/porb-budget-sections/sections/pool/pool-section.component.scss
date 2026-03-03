@@ -1,16 +1,4 @@
-.additional-section {
-  margin-top: 1.6rem;
-
-  h2 {
-    margin: 0 0 1rem;
-    font-family: "Poppins", sans-serif;
-    font-size: 1.8rem;
-    color: #212537;
-  }
-}
-
 .table-box {
-  overflow: hidden;
   border: 1px solid #b9b9b9b5;
   border-radius: 8px;
   background: #ffffff;
@@ -23,16 +11,10 @@
   gap: 0.8rem;
   margin-bottom: 0.8rem;
   flex-wrap: wrap;
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: #ffffff;
-  padding-bottom: 0.4rem;
 }
 
 .table-scroll {
-  max-height: calc(70vh - 5rem);
-  overflow: auto;
+  overflow-x: auto;
 }
 
 .tool-input,
@@ -89,11 +71,8 @@
   th {
     color: #ffffff;
     font-size: 1.4rem;
-    font-weight: 500;
+    font-weight: 600;
     background: linear-gradient(to right, #2a2e45, #212537);
-    position: sticky;
-    top: 0;
-    z-index: 2;
   }
 
   th:nth-child(1),
@@ -119,14 +98,14 @@
   th:nth-child(5),
   td:nth-child(5) {
     width: 7%;
-    text-align: center;
+    text-align: right;
     vertical-align: middle;
   }
 
   th:nth-child(6),
   td:nth-child(6) {
     width: 14%;
-    text-align: center;
+    text-align: right;
     vertical-align: middle;
   }
 
@@ -193,37 +172,4 @@
 
 .budget-cell-with-error app-budget-and-assumption {
   display: block;
-}
-
-.budget-input {
-  width: 100%;
-  min-width: 90px;
-  border: 1px solid #b9b9b9b5;
-  border-radius: 4px;
-  padding: 0.4rem 0.45rem;
-  font-size: 1.3rem;
-  color: #0f212f;
-  background: #ffffff;
-  text-align: center;
-
-  &.is-saving {
-    background: #f2f5ff;
-  }
-}
-
-.assumption-input {
-  width: 100%;
-  min-width: 190px;
-  min-height: 3.2rem;
-  border: 1px solid #b9b9b9b5;
-  border-radius: 4px;
-  padding: 0.4rem 0.45rem;
-  font-size: 1.3rem;
-  color: #0f212f;
-  background: #ffffff;
-  resize: vertical;
-
-  &.is-saving {
-    background: #f2f5ff;
-  }
 }

@@ -12,6 +12,7 @@ export class W3SectionComponent implements OnChanges {
   @Output() budgetUpdated = new EventEmitter<void>();
 
   search = "";
+  filterOutputs = "";
   savingIds = new Set<number>();
 
   constructor(private porbService: PorbService) {}
@@ -22,15 +23,23 @@ export class W3SectionComponent implements OnChanges {
     }
   }
 
+  get outputOptions(): string[] {
+    return Array.from(
+      new Set(this.rows.map((row) => row.bilateral_outputs).filter(Boolean))
+    ).sort();
+  }
+
   get filteredRows() {
     const search = this.search.trim().toLowerCase();
     return this.rows.filter((row) => {
-      if (!search) return true;
-      return (
+      const matchesSearch =
+        !search ||
         String(row.bilateral_name || "").toLowerCase().includes(search) ||
         String(row.bilateral_outputs || "").toLowerCase().includes(search) ||
-        String(row.bilateral_assumption || "").toLowerCase().includes(search)
-      );
+        String(row.bilateral_assumption || "").toLowerCase().includes(search);
+      const matchesOutputs =
+        !this.filterOutputs || row.bilateral_outputs === this.filterOutputs;
+      return matchesSearch && matchesOutputs;
     });
   }
 
