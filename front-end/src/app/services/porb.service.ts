@@ -290,6 +290,26 @@ export class PorbService {
     saveAs(blob, filename);
   }
 
+  async exportZip(programId: number) {
+    const response = await firstValueFrom(
+      this.http.get(`${environment.api_url}/porb/excel/${programId}/zip`, {
+        responseType: "blob",
+        observe: "response",
+      })
+    );
+
+    const blob = response.body as Blob;
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = "PORB.zip";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+    saveAs(blob, filename);
+  }
+
   async exportExcelForCenter(programId: number, centerId: number) {
     const response = await firstValueFrom(
       this.http.post(

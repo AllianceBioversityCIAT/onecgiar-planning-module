@@ -22,6 +22,7 @@
       [submissionId]="submissionId"
       [canSubmit]="canSubmit"
       (exportOverview)="exportOverviewExcel()"
+      (exportAllZip)="exportAllZip()"
       (submitClicked)="onSubmitClicked()"
       (cancelSubmissionClicked)="onCancelSubmissionClicked()"
     ></app-porb-overview>
@@ -62,6 +63,15 @@
             </h1>
           </div>
           <div class="risk-report-btn-box">
+            <button
+              mat-stroked-button
+              class="center-action-btn center-export-btn"
+              title="Export Summary"
+              (click)="exportOverviewExcel()"
+            >
+              <mat-icon>download</mat-icon>
+              Export Summary
+            </button>
           </div>
         </div>
 
@@ -359,15 +369,13 @@
           </button>
           <button
             *ngIf="canEditForSelectedCenter && (isSelectedCenterCompleted || !hasSelectedCenterErrors)"
-            mat-flat-button
-            class="center-action-btn"
-            [class.center-complete-btn]="!isSelectedCenterCompleted"
-            [class.center-incomplete-btn]="isSelectedCenterCompleted"
+            mat-raised-button
+            class="new-btns mark-complete-btn"
+            [class.completed-btn]="isSelectedCenterCompleted"
             [title]="isSelectedCenterCompleted ? 'Mark ' + (selectedCenter?.acronym || selectedCenter?.name) + ' as incomplete' : 'Mark ' + (selectedCenter?.acronym || selectedCenter?.name) + ' as complete'"
             [disabled]="centerStatusUpdating"
             (click)="onToggleSelectedCenterCompletion()"
           >
-            <mat-icon>{{ isSelectedCenterCompleted ? 'undo' : 'check_circle' }}</mat-icon>
             {{ isSelectedCenterCompleted ? 'Mark Incomplete' : 'Mark Complete' }}
           </button>
         </div>

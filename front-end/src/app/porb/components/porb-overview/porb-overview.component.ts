@@ -19,6 +19,7 @@ export class PorbOverviewComponent {
   @Input() canSubmit: boolean = false;
 
   @Output() exportOverview = new EventEmitter<void>();
+  @Output() exportAllZip = new EventEmitter<void>();
   @Output() submitClicked = new EventEmitter<void>();
   @Output() cancelSubmissionClicked = new EventEmitter<void>();
 

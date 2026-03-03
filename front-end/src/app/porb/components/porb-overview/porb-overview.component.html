@@ -42,14 +42,30 @@
         >
           <mat-icon>dashboard</mat-icon>
         </a>
-        <button
-          type="button"
+        <a
           class="icon-btn"
-          title="Export Summary"
-          (click)="exportOverview.emit()"
+          title="Team Members"
+          [routerLink]="[
+            '/program',
+            initiative?.id,
+            initiative?.official_code,
+            'team-members'
+          ]"
         >
-          <mat-icon>download</mat-icon>
-        </button>
+          <mat-icon>groups</mat-icon>
+        </a>
+        <a
+          class="icon-btn"
+          title="Submitted Versions"
+          [routerLink]="[
+            '/program',
+            initiative?.id,
+            initiative?.official_code,
+            'submited-versions'
+          ]"
+        >
+          <mat-icon>history</mat-icon>
+        </a>
         <button
           *ngIf="submissionStatus === 'Pending' && submissionId"
           type="button"
@@ -58,6 +74,14 @@
           (click)="cancelSubmissionClicked.emit()"
         >
           <mat-icon>cancel</mat-icon>
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          title="Export All (ZIP)"
+          (click)="exportAllZip.emit()"
+        >
+          <mat-icon>folder_zip</mat-icon>
         </button>
         <button
           *ngIf="canSubmit && submissionStatus === 'Draft'"

@@ -352,6 +352,14 @@ export class PorbController {
     return this.porbService.generatePorbExcel(program_id, undefined, res);
   }
 
+  @Get('excel/:program_id/zip')
+  async exportZip(
+    @Param('program_id', ParseIntPipe) program_id: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.porbService.generatePorbZip(program_id, res);
+  }
+
   @Post('excel/:program_id/center')
   async exportExcelForCenter(
     @Param('program_id', ParseIntPipe) program_id: number,

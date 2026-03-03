@@ -177,6 +177,27 @@
   cursor: pointer;
 }
 
+.mark-complete-btn {
+  background: #198754 !important;
+  color: #ffffff !important;
+  border-color: #198754 !important;
+
+  &:hover {
+    background: #146c43 !important;
+  }
+}
+
+.mark-complete-btn.completed-btn {
+  background: #ffffff !important;
+  color: #6b7280 !important;
+  border-color: #d1d5db !important;
+
+  &:hover {
+    background: #f3f4f6 !important;
+    color: #4b5563 !important;
+  }
+}
+
 .form-container-4 {
   margin-bottom: 1.2rem;
 

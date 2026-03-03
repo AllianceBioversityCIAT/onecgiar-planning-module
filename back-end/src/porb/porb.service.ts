@@ -11,6 +11,7 @@ import { In, IsNull, Repository } from 'typeorm';
 import * as XLSX from 'xlsx-js-style';
 import { join } from 'path';
 import { createReadStream, unlink } from 'fs';
+import * as archiver from 'archiver';
 import { Response } from 'express';
 import { PorbAow } from 'src/entities/porb-aow.entity';
 import { PorbHlo } from 'src/entities/porb-hlo.entity';
@@ -3021,6 +3022,95 @@ export class PorbService {
     res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
 
     return new StreamableFile(file);
+  }
+
+  /**
+   * Generate a ZIP containing Summary.xlsx + one Excel per center
+   */
+  async generatePorbZip(programId: number, res: Response) {
+    const initiative = await this.initiativeRepository.findOne({ where: { id: programId } });
+    if (!initiative) throw new NotFoundException('Initiative not found');
+    const code = initiative.official_code || String(programId);
+
+    // Get active phase and assigned organizations (centers)
+    const activePhase = await this.submissionService.PhasesService.findActivePhase();
+    let centers = await this.phasesService.fetchAssignedOrganizations(
+      activePhase?.id,
+      programId,
+    );
+    if (!centers?.length) {
+      centers = await this.organizationRepo.find();
+    }
+
+    // Helper: generate an Excel workbook buffer (reuses existing logic)
+    const generateBuffer = async (centerId?: any): Promise<Buffer> => {
+      const [aows, hlos, partners, bilaterals, melias, summaryData] = await Promise.all([
+        this.getAows(programId),
+        this.getHlos(programId, undefined, centerId),
+        this.getPartners(programId, undefined, centerId),
+        this.getBilaterals(programId, undefined, centerId),
+        this.getMelia(programId, undefined, centerId),
+        this.getSummaryConsolidation(programId),
+      ]);
+
+      const aowMap = new Map<number, { code: string; name: string }>();
+      if (Array.isArray(aows)) {
+        for (const aow of aows) {
+          aowMap.set(aow.id, { code: aow.aow_acrnum || '', name: aow.aow_name || '' });
+        }
+      }
+
+      const anaplanRows = await this.porbAnaplanRepository.find({
+        where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
+        relations: ['anaplan'],
+      });
+
+      const crossRows = await this.porbCrossRepository.find({
+        where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
+      });
+      const crossIds = [...new Set(crossRows.map((r) => r.cross_cutting_id))];
+      const crossItems = crossIds.length
+        ? await this.crossCuttingRepository.find({ where: { id: In(crossIds) } })
+        : [];
+      const crossItemMap = new Map<string, { title: string; description: string }>();
+      crossItems.forEach((c) =>
+        crossItemMap.set(String(c.id), { title: c.title || '', description: c.description || '' }),
+      );
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, this.generatePorbSummarySheet(summaryData), 'Summary');
+      XLSX.utils.book_append_sheet(wb, this.generatePorbHloSheet(Array.isArray(hlos) ? hlos : [], aowMap), 'HLO');
+      XLSX.utils.book_append_sheet(wb, this.generatePorbPartnerSheet(Array.isArray(partners) ? partners : [], aowMap), 'Partners');
+      XLSX.utils.book_append_sheet(wb, this.generatePorbBilateralSheet(Array.isArray(bilaterals) ? bilaterals : [], aowMap), 'W3-Bilateral');
+      XLSX.utils.book_append_sheet(wb, this.generatePorbMeliaSheet(Array.isArray(melias) ? melias : [], aowMap), 'MELIA');
+      XLSX.utils.book_append_sheet(wb, this.generatePorbAnaplanSheet(anaplanRows, aowMap), 'Anaplan');
+      XLSX.utils.book_append_sheet(wb, this.generatePorbCrossSheet(crossRows, aowMap, crossItemMap), 'Cross Cutting');
+
+      return Buffer.from(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx', cellStyles: true }));
+    };
+
+    const zipName = `PORB_${code}`;
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${zipName}.zip"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    // Summary Excel (no centerId filter)
+    const summaryBuf = await generateBuffer(undefined);
+    archive.append(summaryBuf, { name: `${zipName}/Summary.xlsx` });
+
+    // Per-center Excel files
+    for (const center of centers) {
+      const centerCode = center.code;
+      const centerName = center.acronym || center.name || String(centerCode);
+      const buf = await generateBuffer(centerCode);
+      archive.append(buf, { name: `${zipName}/${centerName}.xlsx` });
+    }
+
+    await archive.finalize();
   }
 
   private generatePorbSummarySheet(summaryData: any) {

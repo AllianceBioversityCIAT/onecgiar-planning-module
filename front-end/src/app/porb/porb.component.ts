@@ -1151,6 +1151,13 @@ export class PorbComponent implements OnInit, OnDestroy {
     await this.porbService.exportExcel(this.initiativeId);
   }
 
+  async exportAllZip() {
+    if (!this.initiativeId) {
+      return;
+    }
+    await this.porbService.exportZip(this.initiativeId);
+  }
+
   async exportCenterExcel() {
     if (!this.initiativeId || !this.selectedCenter) {
       return;
