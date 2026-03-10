@@ -122,6 +122,7 @@ import { MeliaSectionComponent } from "./porb/components/porb-budget-sections/se
 import { AnaplanSectionComponent } from "./porb/components/porb-budget-sections/sections/anaplan/anaplan-section.component";
 import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sections/shared/budget-and-assumption/budget-and-assumption.component";
 import { CrossSectionComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-section.component";
+import { CrossAddDialogComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-add-dialog.component";
 import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.component";
 
 
@@ -204,6 +205,7 @@ import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.compone
     AnaplanSectionComponent,
     BudgetAndAssumptionComponent,
     CrossSectionComponent,
+    CrossAddDialogComponent,
     PorbTourComponent
   ],
   imports: [ 

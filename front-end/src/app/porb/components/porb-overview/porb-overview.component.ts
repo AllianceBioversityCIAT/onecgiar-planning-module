@@ -22,6 +22,7 @@ export class PorbOverviewComponent {
   @Output() exportAllZip = new EventEmitter<void>();
   @Output() submitClicked = new EventEmitter<void>();
   @Output() cancelSubmissionClicked = new EventEmitter<void>();
+  @Output() historyClicked = new EventEmitter<void>();
 
   get statusClass(): string {
     switch (this.submissionStatus) {

@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Initiative } from './initiative.entity';
 import { Organization } from './organization.entity';
+import { PorbAow } from './porb-aow.entity';
 import { PorbPartner } from './porb-partner.entity';
 
 @Entity('porb_contracted_partners')
@@ -35,10 +36,22 @@ export class PorbContractedPartner {
   porb_partner: PorbPartner;
 
   @ApiProperty()
+  @Column()
+  porb_aow_id: number;
+
+  @ManyToOne(() => PorbAow, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'porb_aow_id' })
+  porb_aow: PorbAow;
+
+  @ApiProperty()
   @Column({ type: 'mediumtext' })
   countries: string;
 
   @ApiProperty()
   @Column({ type: 'float', nullable: true })
   budget: number;
+
+  @ApiProperty()
+  @Column({ type: 'mediumtext', nullable: true })
+  assumption: string;
 }

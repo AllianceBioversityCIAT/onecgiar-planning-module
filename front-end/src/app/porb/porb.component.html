@@ -25,6 +25,7 @@
       (exportAllZip)="exportAllZip()"
       (submitClicked)="onSubmitClicked()"
       (cancelSubmissionClicked)="onCancelSubmissionClicked()"
+      (historyClicked)="openHistoryDialog()"
     ></app-porb-overview>
   </div>
 
@@ -218,11 +219,8 @@
                 <table class="consolidation-table summary-detail-table">
                   <thead>
                     <tr>
-                      <th rowspan="2">Partner name</th>
-                      <th colspan="3">Key Performance Indicators</th>
-                    </tr>
-                    <tr>
-                      <th>Outputs</th>
+                      <th>Partner name</th>
+                      <th>Center</th>
                       <th>Geographic location</th>
                       <th class="num-cell">Budget (USD)</th>
                     </tr>
@@ -230,9 +228,9 @@
                   <tbody>
                     <tr *ngFor="let partner of formattedPartners">
                       <td>{{ partner.partner_name }}</td>
-                      <td>{{ partner.partner_outputs }}</td>
-                      <td>{{ partner.partner_geo || 'Global' }}</td>
-                      <td class="num-cell">{{ partner.partner_budget_fmt }}</td>
+                      <td>{{ partner.center_name }}</td>
+                      <td>{{ partner.countries || 'Global' }}</td>
+                      <td class="num-cell">{{ partner.budget_fmt }}</td>
                     </tr>
                   </tbody>
                 </table>

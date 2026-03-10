@@ -10,6 +10,7 @@ import { PorbTourStep } from "./components/porb-tour/porb-tour.component";
 import { ROLES } from "../components/new-team-member/new-team-member.component";
 import { MatDialog } from "@angular/material/dialog";
 import { ConfirmComponent, ConfirmDialogModel } from "../confirm/confirm.component";
+import { HistoryOfChangeComponent } from "../submission/history-of-change/history-of-change.component";
 import { ToastrService } from "ngx-toastr";
 
 @Component({
@@ -397,6 +398,21 @@ export class PorbComponent implements OnInit, OnDestroy {
       } finally {
         this.cancellingSubmission = false;
       }
+    });
+  }
+
+  openHistoryDialog() {
+    if (!this.initiativeId) {
+      return;
+    }
+    this.dialog.open(HistoryOfChangeComponent, {
+      width: "750px",
+      maxWidth: "90vw",
+      height: "80vh",
+      maxHeight: "85vh",
+      data: {
+        initiative_id: this.initiativeId,
+      },
     });
   }
 
@@ -807,7 +823,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.selectedAow?.code || this.selectedAow?.aow_acrnum || ""
     ).toUpperCase();
     if (selectedAowCode === "AOW00") {
-      return [...this.baseExtraNavigationItems, "Cross Cutting"];
+      return ["Cross Cutting", ...this.baseExtraNavigationItems.filter(i => i !== "Pool funding HLO")];
     }
     return this.baseExtraNavigationItems;
   }
@@ -972,8 +988,8 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   get filteredPartners(): any[] {
-    return (this.summaryAowDetail?.partners || []).filter(
-      (p: any) => (Number(p?.partner_budget) || 0) > 0
+    return (this.summaryAowDetail?.contractedPartners || []).filter(
+      (p: any) => (Number(p?.budget) || 0) > 0
     );
   }
 
@@ -1027,7 +1043,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   get formattedPartners(): any[] {
     return this.filteredPartners.map((p) => ({
       ...p,
-      partner_budget_fmt: this.formatCurrency(this.toNumber(p.partner_budget)),
+      budget_fmt: this.formatCurrency(this.toNumber(p.budget)),
     }));
   }
 
@@ -1086,6 +1102,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (!this.initiativeId || !this.selectedCenter || !this.selectedAow) {
       return;
     }
+    await this.loadBudgetRows();
     await this.loadConsolidation(
       this.initiativeId,
       this.getSelectedPorbAowId(),

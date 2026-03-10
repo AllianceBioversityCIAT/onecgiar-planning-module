@@ -3228,10 +3228,10 @@ this.submitDialog()
   openHistoryDialog(initiative_id: number) {
     this.dialog
       .open(HistoryOfChangeComponent, {
-        width: '600px',
-        maxWidth: '700px',
-        maxHeight: '500px',
-        height: '500px',
+        width: '750px',
+        maxWidth: '90vw',
+        height: '80vh',
+        maxHeight: '85vh',
         data: {
           initiative_id: initiative_id
         },

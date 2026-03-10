@@ -170,6 +170,7 @@ export class PorbService {
         partner_geo: countryNames.length ? countryNames.join(', '):null,
         partner_country_codes: selectedCountryCodes,
         partner_budget: contracted?.budget ?? null,
+        partner_assumption: contracted?.assumption ?? '',
       };
     });
   }
@@ -334,13 +335,14 @@ export class PorbService {
     const aowIds = aows.map((a) => a.id);
 
     // Bulk-load all data for this program (no center filter = all centers)
-    const [allHlos, allPartners, allMelia, allBilateral, allAnaplan, allCross] = await Promise.all([
+    const [allHlos, allPartners, allMelia, allBilateral, allAnaplan, allCross, allContractedPartners] = await Promise.all([
       this.porbHloRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbPartnerRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbMeliaRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbBilateralRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbAnaplanRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbCrossRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
+      this.porbContractedPartnerRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
     ]);
 
     // Group HLOs by porb_aow_id
@@ -391,6 +393,14 @@ export class PorbService {
       crossByAow.set(row.porb_aow_id, list);
     }
 
+    // Group contracted partners by porb_aow_id
+    const contractedByAow = new Map<number, typeof allContractedPartners>();
+    for (const row of allContractedPartners) {
+      const list = contractedByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      contractedByAow.set(row.porb_aow_id, list);
+    }
+
     const totals = {
       innovationTarget: 0, innovationBudget: 0,
       knowledgeTarget: 0, knowledgeBudget: 0,
@@ -433,8 +443,9 @@ export class PorbService {
         }
       }
 
-      // Partner budget: sum partner_budget from PorbPartner
-      const partnerBudget = partners.reduce((sum, p) => sum + (Number(p?.partner_budget) || 0), 0);
+      // Partner budget: sum from contracted partners
+      const contractedRows = contractedByAow.get(aow.id) || [];
+      const partnerBudget = contractedRows.reduce((sum, cp) => sum + (Number(cp?.budget) || 0), 0);
 
       const meliaBudget = meliaRows.reduce((sum, r) => sum + (Number(r?.melia_budget) || 0), 0);
       const w3Budget = bilateralRows.reduce((sum, r) => sum + (Number(r?.bilateral_budget) || 0), 0);
@@ -540,8 +551,7 @@ export class PorbService {
     let contractedMissingBudgetOrAssumption = 0;
     for (const contracted of relevantContracted) {
       const budget = parseBudget(contracted?.budget);
-      const partner = partnerById.get(contracted.porb_partner_id);
-      const assumption = partner?.partner_assumption;
+      const assumption = contracted?.assumption;
 
       if (budget > 0 && !hasAssumption(assumption)) {
         partnerBudgetMissingAssumption += 1;
@@ -667,12 +677,12 @@ export class PorbService {
       const partner = partnerById.get(contracted?.porb_partner_id);
       if (!partner) continue;
       const budget = parseBudget(contracted?.budget);
-      const hasPartnerAssumption = hasAssumption(partner?.partner_assumption);
-      if (budget > 0 && !hasPartnerAssumption) {
+      const hasContractedAssumption = hasAssumption(contracted?.assumption);
+      if (budget > 0 && !hasContractedAssumption) {
         pushError(contracted?.center_id, partner?.porb_aow_id);
         continue;
       }
-      if (budget <= 0 || !hasPartnerAssumption) {
+      if (budget <= 0 || !hasContractedAssumption) {
         pushError(contracted?.center_id, partner?.porb_aow_id);
       }
     }
@@ -795,9 +805,64 @@ export class PorbService {
     });
   }
 
-  async updateHlo(id: number, data: Partial<PorbHlo>) {
+  private async logHistory(opts: {
+    initiative_id: number;
+    user_id?: number;
+    item_name?: string;
+    resource_property: string;
+    old_value?: string;
+    new_value?: string;
+    organization_id?: number;
+  }) {
+    const h = this.historyRepository.create(opts);
+    const saved = await this.historyRepository.save(h);
+    await this.initiativeRepository.update(opts.initiative_id, {
+      latest_history_id: saved.id,
+    });
+  }
+
+  async updateHlo(
+    id: number,
+    data: Partial<PorbHlo>,
+    reqUser?: { id: number },
+  ) {
+    const existing = await this.porbHloRepository.findOne({ where: { id } });
     await this.porbHloRepository.update(id, data);
-    return this.porbHloRepository.findOne({ where: { id } });
+    const updated = await this.porbHloRepository.findOne({ where: { id } });
+
+    if (existing && updated) {
+      const itemName = existing.hlo_name || '';
+      if (
+        data.hlo_budget !== undefined &&
+        String(existing.hlo_budget ?? '') !== String(data.hlo_budget ?? '')
+      ) {
+        await this.logHistory({
+          initiative_id: existing.program_id,
+          user_id: reqUser?.id,
+          item_name: itemName,
+          resource_property: 'HLO Budget',
+          old_value: String(existing.hlo_budget ?? ''),
+          new_value: String(data.hlo_budget ?? ''),
+          organization_id: existing.center_id,
+        });
+      }
+      if (
+        data.hlo_assumption !== undefined &&
+        (existing.hlo_assumption ?? '') !== (data.hlo_assumption ?? '')
+      ) {
+        await this.logHistory({
+          initiative_id: existing.program_id,
+          user_id: reqUser?.id,
+          item_name: itemName,
+          resource_property: 'HLO Assumption',
+          old_value: existing.hlo_assumption ?? '',
+          new_value: data.hlo_assumption ?? '',
+          organization_id: existing.center_id,
+        });
+      }
+    }
+
+    return updated;
   }
 
   async updatePartner(
@@ -805,11 +870,11 @@ export class PorbService {
     data: {
       partner_is_contracted?: boolean | string;
       center_id?: number | string;
-      partner_geo?: string;
       partner_country_codes?: Array<number | string>;
       partner_budget?: number | null;
-      partner_assumption?: string;
+      assumption?: string;
     },
+    reqUser?: { id: number },
   ) {
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) {
@@ -826,7 +891,12 @@ export class PorbService {
     }
     const selectedCountryCodes = this.normalizeCountryCodes(data.partner_country_codes);
 
-    let partnerGeo = data.partner_geo ?? partner.partner_geo ?? '';
+    // Capture old contracted values for history tracking before update
+    const oldContracted = await this.porbContractedPartnerRepository.findOne({
+      where: { porb_partner_id: id, center_id: centerId },
+    });
+    const oldBudget = oldContracted?.budget ?? null;
+    const oldAssumption = oldContracted?.assumption ?? '';
 
     if (isContracted) {
       if (!selectedCountryCodes.length) {
@@ -841,9 +911,6 @@ export class PorbService {
         throw new BadRequestException('Selected countries are invalid.');
       }
       const countries = this.serializeCountryCodes(countryCodes);
-      const countriesLabel = validCountries.map((country) => country.name).join(', ');
-      partnerGeo = countriesLabel;
-
       const contractedBudget =
         data.partner_budget != null && data.partner_budget !== ('' as any)
           ? Number(data.partner_budget)
@@ -853,19 +920,24 @@ export class PorbService {
         where: { porb_partner_id: id, center_id: centerId },
       });
 
+      const contractedAssumption = data.assumption ?? '';
+
       if (existing) {
         await this.porbContractedPartnerRepository.update(existing.id, {
           center_id: centerId,
           countries,
           budget: contractedBudget,
+          assumption: contractedAssumption,
         });
       } else {
         const row = this.porbContractedPartnerRepository.create({
           program_id: partner.program_id,
           center_id: centerId,
           porb_partner_id: id,
+          porb_aow_id: partner.porb_aow_id,
           countries,
           budget: contractedBudget,
+          assumption: contractedAssumption,
         });
         await this.porbContractedPartnerRepository.save(row);
       }
@@ -873,12 +945,6 @@ export class PorbService {
     } else {
       await this.porbContractedPartnerRepository.delete({ porb_partner_id: id, center_id: centerId });
     }
-
-    await this.porbPartnerRepository.update(id, {
-      partner_geo: partnerGeo,
-      partner_budget: null,
-      partner_assumption: data.partner_assumption ?? partner.partner_assumption ?? '',
-    });
 
     const updated = await this.porbPartnerRepository.findOne({ where: { id } });
     const contracted = await this.porbContractedPartnerRepository.findOne({
@@ -894,10 +960,36 @@ export class PorbService {
       ? await this.clarisaCountryRepository.find({ where: { code: In(selectedCodes) } })
       : [];
 
+    // Track partner changes
+    const itemName = partner.partner_name || '';
+    const newBudget = contracted?.budget ?? null;
+    const newAssumption = contracted?.assumption ?? '';
+    if (String(oldBudget ?? '') !== String(newBudget ?? '')) {
+      await this.logHistory({
+        initiative_id: partner.program_id,
+        user_id: reqUser?.id,
+        item_name: itemName,
+        resource_property: 'Partner Budget',
+        old_value: String(oldBudget ?? ''),
+        new_value: String(newBudget ?? ''),
+      });
+    }
+    if (oldAssumption !== newAssumption) {
+      await this.logHistory({
+        initiative_id: partner.program_id,
+        user_id: reqUser?.id,
+        item_name: itemName,
+        resource_property: 'Partner Assumption',
+        old_value: oldAssumption,
+        new_value: newAssumption,
+      });
+    }
+
+    const countryNames = selectedCountries.map((c) => c.name).filter(Boolean);
     return {
       ...updated,
-      partner_geo: partnerGeo,
-      partner_assumption: updated.partner_assumption ?? '',
+      partner_geo: countryNames.length ? countryNames.join(', ') : null,
+      partner_assumption: contracted?.assumption ?? '',
       partner_country_codes: selectedCodes,
       partner_budget: contracted?.budget ?? null,
       partner_is_contracted: contracted ? '1' : '0',
@@ -938,23 +1030,116 @@ export class PorbService {
     return JSON.stringify(codes);
   }
 
-  async updateBilateral(id: number, data: Partial<PorbBilateral>) {
+  async updateBilateral(
+    id: number,
+    data: Partial<PorbBilateral>,
+    reqUser?: { id: number },
+  ) {
+    const existing = await this.porbBilateralRepository.findOne({
+      where: { id },
+    });
     await this.porbBilateralRepository.update(id, data);
-    return this.porbBilateralRepository.findOne({ where: { id } });
+    const updated = await this.porbBilateralRepository.findOne({
+      where: { id },
+    });
+
+    if (existing && updated) {
+      const itemName = existing.bilateral_name || '';
+      if (
+        data.bilateral_budget !== undefined &&
+        String(existing.bilateral_budget ?? '') !==
+          String(data.bilateral_budget ?? '')
+      ) {
+        await this.logHistory({
+          initiative_id: existing.program_id,
+          user_id: reqUser?.id,
+          item_name: itemName,
+          resource_property: 'W3/Bilateral Budget',
+          old_value: String(existing.bilateral_budget ?? ''),
+          new_value: String(data.bilateral_budget ?? ''),
+          organization_id: existing.center_id,
+        });
+      }
+      if (
+        data.bilateral_assumption !== undefined &&
+        (existing.bilateral_assumption ?? '') !==
+          (data.bilateral_assumption ?? '')
+      ) {
+        await this.logHistory({
+          initiative_id: existing.program_id,
+          user_id: reqUser?.id,
+          item_name: itemName,
+          resource_property: 'W3/Bilateral Assumption',
+          old_value: existing.bilateral_assumption ?? '',
+          new_value: data.bilateral_assumption ?? '',
+          organization_id: existing.center_id,
+        });
+      }
+    }
+
+    return updated;
   }
 
-  async updateMelia(id: number, data: Partial<PorbMelia>) {
+  async updateMelia(
+    id: number,
+    data: Partial<PorbMelia>,
+    reqUser?: { id: number },
+  ) {
+    const existing = await this.porbMeliaRepository.findOne({
+      where: { id },
+    });
     await this.porbMeliaRepository.update(id, data);
-    return this.porbMeliaRepository.findOne({ where: { id } });
+    const updated = await this.porbMeliaRepository.findOne({
+      where: { id },
+    });
+
+    if (existing && updated) {
+      const itemName = existing.melia_name || '';
+      if (
+        data.melia_budget !== undefined &&
+        String(existing.melia_budget ?? '') !==
+          String(data.melia_budget ?? '')
+      ) {
+        await this.logHistory({
+          initiative_id: existing.program_id,
+          user_id: reqUser?.id,
+          item_name: itemName,
+          resource_property: 'MELIA Budget',
+          old_value: String(existing.melia_budget ?? ''),
+          new_value: String(data.melia_budget ?? ''),
+          organization_id: existing.center_id,
+        });
+      }
+      if (
+        data.melia_assumption !== undefined &&
+        (existing.melia_assumption ?? '') !==
+          (data.melia_assumption ?? '')
+      ) {
+        await this.logHistory({
+          initiative_id: existing.program_id,
+          user_id: reqUser?.id,
+          item_name: itemName,
+          resource_property: 'MELIA Assumption',
+          old_value: existing.melia_assumption ?? '',
+          new_value: data.melia_assumption ?? '',
+          organization_id: existing.center_id,
+        });
+      }
+    }
+
+    return updated;
   }
 
-  async updateAnaplan(data: {
-    program_id: number;
-    porb_aow_id: number;
-    center_id: number;
-    anaplan_id: number;
-    budget?: number | null;
-  }) {
+  async updateAnaplan(
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      anaplan_id: number;
+      budget?: number | null;
+    },
+    reqUser?: { id: number },
+  ) {
     const existing = await this.porbAnaplanRepository.findOne({
       where: {
         program_id: data.program_id,
@@ -965,9 +1150,26 @@ export class PorbService {
     });
 
     if (existing) {
+      const oldBudget = existing.budget;
       await this.porbAnaplanRepository.update(existing.id, {
         budget: data.budget ?? null,
       });
+
+      if (String(oldBudget ?? '') !== String(data.budget ?? '')) {
+        const anaplan = await this.anaplanRepository.findOne({
+          where: { id: data.anaplan_id },
+        });
+        await this.logHistory({
+          initiative_id: data.program_id,
+          user_id: reqUser?.id,
+          item_name: anaplan?.label || `Anaplan #${data.anaplan_id}`,
+          resource_property: 'Anaplan Budget',
+          old_value: String(oldBudget ?? ''),
+          new_value: String(data.budget ?? ''),
+          organization_id: data.center_id,
+        });
+      }
+
       return this.porbAnaplanRepository.findOne({ where: { id: existing.id } });
     }
 
@@ -978,17 +1180,37 @@ export class PorbService {
       anaplan_id: data.anaplan_id,
       budget: data.budget ?? null,
     });
-    return this.porbAnaplanRepository.save(created);
+    const saved = await this.porbAnaplanRepository.save(created);
+
+    if (data.budget != null) {
+      const anaplan = await this.anaplanRepository.findOne({
+        where: { id: data.anaplan_id },
+      });
+      await this.logHistory({
+        initiative_id: data.program_id,
+        user_id: reqUser?.id,
+        item_name: anaplan?.label || `Anaplan #${data.anaplan_id}`,
+        resource_property: 'Anaplan Budget',
+        old_value: '',
+        new_value: String(data.budget ?? ''),
+        organization_id: data.center_id,
+      });
+    }
+
+    return saved;
   }
 
-  async updateCross(data: {
-    program_id: number;
-    porb_aow_id: number;
-    center_id: number;
-    cross_cutting_id: string;
-    budget?: number | null;
-    assumption?: string;
-  }) {
+  async updateCross(
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      cross_cutting_id: string;
+      budget?: number | null;
+      assumption?: string;
+    },
+    reqUser?: { id: number },
+  ) {
     const existing = await this.porbCrossRepository.findOne({
       where: {
         program_id: data.program_id,
@@ -998,11 +1220,44 @@ export class PorbService {
       },
     });
 
+    // Resolve the cross-cutting title for history logging
+    const crossCutting = await this.crossCuttingRepository.findOne({
+      where: { id: data.cross_cutting_id },
+    });
+    const itemName = crossCutting?.title || `Cross Cutting #${data.cross_cutting_id}`;
+
     if (existing) {
+      const oldBudget = existing.budget;
+      const oldAssumption = existing.assumption ?? '';
+
       await this.porbCrossRepository.update(existing.id, {
         budget: data.budget ?? null,
         assumption: String(data.assumption || ''),
       });
+
+      if (String(oldBudget ?? '') !== String(data.budget ?? '')) {
+        await this.logHistory({
+          initiative_id: data.program_id,
+          user_id: reqUser?.id,
+          item_name: itemName,
+          resource_property: 'Cross Cutting Budget',
+          old_value: String(oldBudget ?? ''),
+          new_value: String(data.budget ?? ''),
+          organization_id: data.center_id,
+        });
+      }
+      if (oldAssumption !== String(data.assumption || '')) {
+        await this.logHistory({
+          initiative_id: data.program_id,
+          user_id: reqUser?.id,
+          item_name: itemName,
+          resource_property: 'Cross Cutting Assumption',
+          old_value: oldAssumption,
+          new_value: String(data.assumption || ''),
+          organization_id: data.center_id,
+        });
+      }
+
       return this.porbCrossRepository.findOne({ where: { id: existing.id } });
     }
 
@@ -1017,15 +1272,18 @@ export class PorbService {
     return this.porbCrossRepository.save(created);
   }
 
-  async createCross(data: {
-    program_id: number;
-    porb_aow_id: number;
-    center_id: number;
-    title: string;
-    description?: string;
-    budget?: number | null;
-    assumption?: string;
-  }) {
+  async createCross(
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      title: string;
+      description?: string;
+      budget?: number | null;
+      assumption?: string;
+    },
+    reqUser?: { id: number },
+  ) {
     const title = String(data.title || '').trim();
     if (!title) {
       throw new BadRequestException('Cross cutting title is required.');
@@ -1054,6 +1312,15 @@ export class PorbService {
       cross_cutting_id: String(cross.id),
       budget: data.budget ?? null,
       assumption: String(data.assumption || ''),
+    });
+
+    await this.logHistory({
+      initiative_id: data.program_id,
+      user_id: reqUser?.id,
+      item_name: title,
+      resource_property: 'New Cross Cutting Item',
+      new_value: title,
+      organization_id: data.center_id,
     });
 
     return {
@@ -1160,13 +1427,44 @@ export class PorbService {
   }
 
   async getSummaryAowDetail(program_id: number, porb_aow_id: number) {
-    const [hlos, partners, melia, bilateral, selectedAow] = await Promise.all([
+    const [hlos, partners, melia, bilateral, contractedPartners, selectedAow] = await Promise.all([
       this.getHlos(program_id, porb_aow_id),
       this.getPartners(program_id, porb_aow_id),
       this.getMelia(program_id, porb_aow_id),
       this.getBilaterals(program_id, porb_aow_id),
+      this.porbContractedPartnerRepository.find({
+        where: { program_id, porb_aow_id },
+        relations: ['porb_partner', 'center'],
+      }),
       this.porbAowRepository.findOne({ where: { id: porb_aow_id, program_id } }),
     ]);
+
+    // Resolve country codes to names for contracted partners
+    const allCountryCodes = [
+      ...new Set(
+        contractedPartners.flatMap((cp) => this.parseCountryCodes(cp.countries)),
+      ),
+    ];
+    const countryEntities = allCountryCodes.length
+      ? await this.clarisaCountryRepository.find({ where: { code: In(allCountryCodes) } })
+      : [];
+    const countryNameMap = new Map<number, string>();
+    countryEntities.forEach((c) => countryNameMap.set(Number(c.code), c.name));
+
+    const contractedPartnersFormatted = contractedPartners.map((cp) => {
+      const codes = this.parseCountryCodes(cp.countries);
+      const countryNames = codes.map((code) => countryNameMap.get(code)).filter(Boolean);
+      return {
+        id: cp.id,
+        porb_partner_id: cp.porb_partner_id,
+        partner_name: cp.porb_partner?.partner_name || '',
+        center_id: cp.center_id,
+        center_name: cp.center?.name || '',
+        countries: countryNames.join(', '),
+        budget: cp.budget,
+        assumption: cp.assumption || '',
+      };
+    });
 
     // Cross-cutting only applies to AOW00
     let cross: any[] = [];
@@ -1198,8 +1496,8 @@ export class PorbService {
 
     const subtotals = {
       hlo: hlos.reduce((sum, row) => sum + (Number(row?.hlo_budget) || 0), 0),
-      partners: (partners as any[]).reduce(
-        (sum, row) => sum + (Number(row?.partner_budget) || 0),
+      partners: contractedPartnersFormatted.reduce(
+        (sum, row) => sum + (Number(row?.budget) || 0),
         0,
       ),
       melia: melia.reduce(
@@ -1216,7 +1514,7 @@ export class PorbService {
       ),
     };
 
-    return { hlos, partners, melia, bilateral, cross, isAow00, subtotals };
+    return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals };
   }
 
   async importTocToPorbTables(programId: number, officialCode: string) {
@@ -1668,7 +1966,7 @@ export class PorbService {
     };
   }
 
-  async bulkImportToc(programIds?: number[]) {
+  async bulkImportToc(programIds?: number[], reqUser?: { id: number }) {
     let initiatives: Initiative[];
     if (programIds?.length) {
       initiatives = await this.initiativeRepository.find({
@@ -1699,6 +1997,13 @@ export class PorbService {
           official_code: initiative.official_code,
           status: 'success',
           detail,
+        });
+
+        await this.logHistory({
+          initiative_id: initiative.id,
+          user_id: reqUser?.id,
+          resource_property: 'System Import (TOC)',
+          new_value: `Imported TOC data for ${initiative.official_code}`,
         });
       } catch (err) {
         results.push({
@@ -1756,15 +2061,15 @@ export class PorbService {
       where: { initiative_id: programId, phase_id: activePhase.id },
       relations: ['country'],
     });
-    // Build lookup: "result_id::center_code" → comma-separated country names
-    const countriesByResultAndCenter = new Map<string, string[]>();
+    // Build lookup: "result_id::center_code" → country codes (numbers)
+    const countryCodesByResultAndCenter = new Map<string, number[]>();
     for (const pc of partnerCountries) {
       const key = `${pc.result_id}::${pc.center_code}`;
-      const list = countriesByResultAndCenter.get(key) || [];
-      if (pc.country?.name) {
-        list.push(pc.country.name);
+      const list = countryCodesByResultAndCenter.get(key) || [];
+      if (pc.country_code) {
+        list.push(Number(pc.country_code));
       }
-      countriesByResultAndCenter.set(key, list);
+      countryCodesByResultAndCenter.set(key, list);
     }
 
     // 4. Migrate HLOs
@@ -1794,47 +2099,82 @@ export class PorbService {
       }
     }
 
-    // 5. Migrate Partners
-    const partnerResults = oldResults.filter(
-      (r) => r.type == null && !r.is_project,
-    );
-    // Group partner results by parent_id → match to PorbPartner.toc_id
-    const partnerResultsByParent = new Map<string, Result[]>();
-    for (const r of partnerResults) {
-      if (!r.parent_id) continue;
-      const existing = partnerResultsByParent.get(r.parent_id) || [];
-      existing.push(r);
-      partnerResultsByParent.set(r.parent_id, existing);
+    // 5. Reset & Migrate Partners
+    // Clear stale contracted partner rows before re-applying
+    if (porbPartners.length) {
+      await this.porbContractedPartnerRepository
+        .createQueryBuilder()
+        .delete()
+        .from(PorbContractedPartner)
+        .where('program_id = :programId', { programId })
+        .execute();
     }
 
+    // Build a map from AOW acrnum → porb_aow_id for matching BA wp_id to AOW
+    const allAowsForMigration = await this.porbAowRepository.find({
+      where: { program_id: programId },
+    });
+    const aowAcrnumToId = new Map<string, number>();
+    for (const aow of allAowsForMigration) {
+      aowAcrnumToId.set(String(aow.aow_acrnum || '').toUpperCase(), aow.id);
+    }
+    // Helper: extract porb_aow_id from BA wp_id (e.g., "SP01-AOW02-project" → AOW02 → id)
+    const getAowIdFromWpId = (wpId: string): number | null => {
+      const upper = String(wpId || '').toUpperCase();
+      if (upper.startsWith('CROSS')) {
+        return aowAcrnumToId.get('AOW00') ?? null;
+      }
+      const aowMatch = upper.match(/(AOW\d+)/);
+      if (aowMatch) {
+        return aowAcrnumToId.get(aowMatch[1]) ?? null;
+      }
+      return null;
+    };
+
+    // Build lookup: "item_id::porb_aow_id" → BudgetAssumptions[] (match by toc_id + AOW)
+    const basByItemAndAow = new Map<string, BudgetAssumptions[]>();
+    for (const ba of budgetAssumptions) {
+      if (!ba.wp_id || !ba.wp_id.endsWith('-partners')) continue;
+      const aowId = getAowIdFromWpId(ba.wp_id);
+      if (!aowId) continue;
+      const key = `${ba.item_id}::${aowId}`;
+      const list = basByItemAndAow.get(key) || [];
+      list.push(ba);
+      basByItemAndAow.set(key, list);
+    }
+
+    // Build lookup: "result_uuid::organization_code" → Result.budget (from submitted version)
+    const partnerResultBudgets = new Map<string, number>();
+    const partnerResults = oldResults.filter((r) => r.type === 'PARTNER');
+    for (const r of partnerResults) {
+      const key = `${r.result_uuid}::${r.organization_code}`;
+      partnerResultBudgets.set(key, parseFloat(r.budget) || 0);
+    }
 
     for (const porbPartner of porbPartners) {
-      // Update partner-level assumption and budget from BudgetAssumptions
-      const ba = baByItemAndCenter.get(`${porbPartner.toc_id}::${programId}`);
-      if (ba) {
-        const partnerBudget = parseFloat(ba.item_budget) || 0;
-        const partnerAssumption = ba.budget_assumptions || '';
-        if (partnerBudget || partnerAssumption) {
-          await this.porbPartnerRepository.update(porbPartner.id, {
-            partner_budget: partnerBudget || porbPartner.partner_budget,
-            partner_assumption: partnerAssumption || porbPartner.partner_assumption,
-          });
-          counts.partners++;
-        }
-      }
+      const matchingBAs = basByItemAndAow.get(`${porbPartner.toc_id}::${porbPartner.porb_aow_id}`) || [];
 
-      // Create/update contracted partner rows with per-center budget and countries
-      const centerResults = partnerResultsByParent.get(porbPartner.toc_id) || [];
-      for (const result of centerResults) {
-        const centerId = Number(result.organization_code);
+      // Create/update contracted partner rows using Result.budget (not BA.item_budget)
+      const allCountryCodes: number[] = [];
+      for (const ba of matchingBAs) {
+        const centerId = Number(ba.organization_code);
         if (!Number.isFinite(centerId)) continue;
-        const budget = parseFloat(result.budget) || 0;
 
-        // Look up countries for this specific result + center
-        const countryKey = `${result.result_uuid}::${result.organization_code}`;
-        const countryNames = countriesByResultAndCenter.get(countryKey) || [];
-        countryNames.sort();
-        const countries = countryNames.join(', ');
+        // Use Result.budget as the budget source (matches old submission display)
+        const budget = partnerResultBudgets.get(`${porbPartner.toc_id}::${centerId}`) ?? 0;
+        if (!budget) continue;
+
+        // Look up country codes from partner_countries using toc_id + center_code
+        const countryKey = `${porbPartner.toc_id}::${centerId}`;
+        const codes = countryCodesByResultAndCenter.get(countryKey) || [];
+        codes.sort((a, b) => a - b);
+        const countries = codes.join(', ');
+        const assumption = ba.budget_assumptions || '';
+
+        // Only import budget if both countries and assumption are present
+        if (!countries || !assumption) continue;
+
+        allCountryCodes.push(...codes);
 
         const existingCP = await this.porbContractedPartnerRepository.findOne({
           where: {
@@ -1845,23 +2185,30 @@ export class PorbService {
         });
 
         if (existingCP) {
-          const updates: Partial<PorbContractedPartner> = {};
-          if (budget) updates.budget = budget;
-          if (countries) updates.countries = countries;
-          if (Object.keys(updates).length) {
-            await this.porbContractedPartnerRepository.update(existingCP.id, updates);
-            counts.contracted_partners++;
-          }
-        } else if (budget || countries) {
+          await this.porbContractedPartnerRepository.update(existingCP.id, {
+            budget,
+            countries,
+            assumption,
+            porb_aow_id: porbPartner.porb_aow_id,
+          });
+          counts.contracted_partners++;
+        } else {
           await this.porbContractedPartnerRepository.save({
             program_id: programId,
             center_id: centerId,
             porb_partner_id: porbPartner.id,
+            porb_aow_id: porbPartner.porb_aow_id,
             countries,
-            budget: budget || 0,
+            budget,
+            assumption,
           });
           counts.contracted_partners++;
         }
+      }
+
+      // Update partner-level geo from all contracted country codes
+      if (allCountryCodes.length) {
+        counts.partners++;
       }
     }
 
@@ -1882,28 +2229,6 @@ export class PorbService {
         .where('program_id = :programId', { programId })
         .execute();
     }
-
-    // Build a map from AOW acrnum → porb_aow_id for matching BA wp_id to AOW
-    const allAowsForMigration = await this.porbAowRepository.find({
-      where: { program_id: programId },
-    });
-    const aowAcrnumToId = new Map<string, number>();
-    for (const aow of allAowsForMigration) {
-      aowAcrnumToId.set(String(aow.aow_acrnum || '').toUpperCase(), aow.id);
-    }
-    // Helper: extract porb_aow_id from BA wp_id (e.g., "SP01-AOW02-project" → AOW02 → id)
-    const getAowIdFromWpId = (wpId: string): number | null => {
-      const upper = String(wpId || '').toUpperCase();
-      // "CROSS-project" → AOW00
-      if (upper.startsWith('CROSS')) {
-        return aowAcrnumToId.get('AOW00') ?? null;
-      }
-      const aowMatch = upper.match(/(AOW\d+)/);
-      if (aowMatch) {
-        return aowAcrnumToId.get(aowMatch[1]) ?? null;
-      }
-      return null;
-    };
 
     // 6. Migrate Bilaterals
     const bilateralBAs = budgetAssumptions.filter(
@@ -2124,7 +2449,10 @@ export class PorbService {
     return { program_id: programId, status: 'success', counts };
   }
 
-  async bulkMigrateSubmissionData(programIds?: number[]) {
+  async bulkMigrateSubmissionData(
+    programIds?: number[],
+    reqUser?: { id: number },
+  ) {
     let initiatives: Initiative[];
     if (programIds?.length) {
       initiatives = await this.initiativeRepository.find({
@@ -2142,6 +2470,26 @@ export class PorbService {
       try {
         const detail = await this.migrateOneProgram(initiative);
         results.push(detail);
+
+        if (detail.status === 'success') {
+          const counts: Record<string, number> = (detail as any).counts || {};
+          const parts: string[] = [];
+          if (counts.hlos) parts.push(`${counts.hlos} HLOs`);
+          if (counts.partners) parts.push(`${counts.partners} Partners`);
+          if (counts.bilaterals) parts.push(`${counts.bilaterals} Bilaterals`);
+          if (counts.melias) parts.push(`${counts.melias} MELIA`);
+          if (counts.cross) parts.push(`${counts.cross} Cross Cutting`);
+          if (counts.anaplan) parts.push(`${counts.anaplan} Anaplan`);
+
+          await this.logHistory({
+            initiative_id: initiative.id,
+            user_id: reqUser?.id,
+            resource_property: 'System Import (Data Migration)',
+            new_value: parts.length
+              ? `Imported ${parts.join(', ')}`
+              : 'Data migration completed',
+          });
+        }
       } catch (err) {
         results.push({
           program_id: initiative.id,
@@ -2160,9 +2508,15 @@ export class PorbService {
     };
   }
 
-  async bulkImportAndMigrate(programIds?: number[]) {
-    const tocResult = await this.bulkImportToc(programIds);
-    const migrateResult = await this.bulkMigrateSubmissionData(programIds);
+  async bulkImportAndMigrate(
+    programIds?: number[],
+    reqUser?: { id: number },
+  ) {
+    const tocResult = await this.bulkImportToc(programIds, reqUser);
+    const migrateResult = await this.bulkMigrateSubmissionData(
+      programIds,
+      reqUser,
+    );
     return {
       toc_import: tocResult,
       data_migration: migrateResult,
@@ -2188,9 +2542,9 @@ export class PorbService {
       },
       partners: {
         total: porbPartners.length,
-        with_assumption: porbPartners.filter((p) => p.partner_assumption?.trim()).length,
         contracted_partners: contractedPartners.length,
         contracted_with_budget: contractedPartners.filter((cp) => cp.budget && cp.budget > 0).length,
+        contracted_with_assumption: contractedPartners.filter((cp) => cp.assumption?.trim()).length,
       },
       bilaterals: {
         total: porbBilaterals.length,

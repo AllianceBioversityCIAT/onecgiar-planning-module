@@ -14,27 +14,6 @@
     </button>
   </div>
 
-  <div class="create-row" *ngIf="showCreateRow">
-    <input
-      class="create-input title"
-      type="text"
-      placeholder="Cross cutting title"
-      [(ngModel)]="newTitle"
-    />
-    <input
-      class="create-input description"
-      type="text"
-      placeholder="Description (optional)"
-      [(ngModel)]="newDescription"
-    />
-    <button type="button" class="save-btn" (click)="createRow()" [disabled]="creating || !newTitle.trim()">
-      Save
-    </button>
-    <button type="button" class="cancel-btn" (click)="cancelCreate()" [disabled]="creating">
-      Cancel
-    </button>
-  </div>
-
   <div class="table-scroll" *ngIf="rows.length">
     <table class="additional-table">
       <thead>

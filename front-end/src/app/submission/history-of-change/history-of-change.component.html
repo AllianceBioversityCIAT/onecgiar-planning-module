@@ -1,98 +1,103 @@
-<div class="container">
+<div class="history-container">
+    <!-- Header -->
     <div class="header">
-        <span class="title">History of change</span>
-        <mat-icon class="close-icon" (click)="closeDialog()">close</mat-icon>
+        <div class="header-title">
+            <mat-icon>history</mat-icon>
+            <span>History of Change</span>
+        </div>
+        <mat-icon class="close-btn" (click)="closeDialog()">close</mat-icon>
     </div>
-    <ng-container *ngIf="histories?.length">
-        <ng-container *ngFor="let history of histories">
-            <div class="content">
-                <div class="head">
-                    <mat-icon class="person-icon">person</mat-icon>
-                    <span class="name">{{history.user.full_name}}</span>
-                </div>
-                <div class="date-section">
-                    <span class="date">{{history.createdAt | date : 'medium' }}</span>
-                </div>
-                <div class="section-name">
-                    <ng-container *ngIf="!history.organization">
-                        <div class="section"  *ngIf="history.item_name != 'Approved' && history.item_name != 'Rejected'">
-                            <span>Summary</span><span *ngIf="history.item_name">/{{history.item_name}}</span>
-                        </div>
-                        <div class="section">
-                            <span>{{history.resource_property}}</span>
-                        </div>
-                        <div class="section-values" [ngStyle]="{
-                                backgroundColor: 
-                                history.new_value && history.old_value ? '#FFF3ED'
-                                : history.new_value ? '#E5F2E5' 
-                                : '#FFE5E6',
-        
-                                'border-left':  history.new_value && history.old_value ? '#FF884C solid 5px'
-                                : history.new_value ? '#008000 solid 5px' 
-                                : '#FF0007 solid 5px'
-                            }">
-                            <div>
-                                <span *ngIf="history.new_value" class="new-value">{{history.new_value}}</span>
+
+    <!-- Search -->
+    <div class="search-bar" *ngIf="histories?.length">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input type="text" placeholder="Search by user, section, or value..."
+               [value]="searchTerm" (input)="onSearch($event)">
+        <mat-icon *ngIf="searchTerm" class="clear-btn" (click)="clearSearch()">close</mat-icon>
+    </div>
+
+    <!-- Timeline content -->
+    <div class="timeline-content" *ngIf="groupedHistories?.length">
+        <div class="date-group" *ngFor="let group of groupedHistories">
+            <div class="date-group-header">
+                <span class="date-label">{{ group.label }}</span>
+                <span class="change-count">{{ group.entries.length }}</span>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item" *ngFor="let history of group.entries; let last = last"
+                     [class.last-item]="last">
+                    <!-- Timeline dot -->
+                    <div class="dot-column">
+                        <div class="dot" [ngClass]="'dot-' + getChangeType(history)"></div>
+                        <div class="line" *ngIf="!last"></div>
+                    </div>
+
+                    <!-- Entry card -->
+                    <div class="entry-card">
+                        <div class="card-header">
+                            <div class="user-info">
+                                <mat-icon class="user-icon" [class.system-icon]="!history.user">
+                                    {{ history.user ? 'person' : 'settings' }}
+                                </mat-icon>
+                                <span class="user-name">{{ history.user?.full_name || 'System' }}</span>
                             </div>
-                            <div>
-                                <span *ngIf="history.old_value" class="old-value">{{history.old_value}}</span>
-                            </div>
+                            <span class="entry-time">{{ history.createdAt | date:'shortTime' }}</span>
                         </div>
 
-                    </ng-container>
-                    <ng-container *ngIf="history.organization">
-                        <div class="section">
-                            <span>{{history.organization?.acronym}}</span><span
-                                *ngIf="history.work_package">/{{history.work_package?.acronym ?? history.work_package?.name}}</span>
-                        </div>
-                        <div class="section" *ngIf="history.item_name">
-                            <span>{{ history.item_name }}</span>
-                        </div>
-                        <div class="section" *ngIf="history.period">
-                            <span>{{'Contracted Partners - Pooled funding'}}</span>
-                        </div>
-                        <div class="section"
-                            *ngIf="history?.resource_property != 'Checked period' && history?.resource_property != 'unchecked period' && history?.resource_property != 'Checked result as no budget assigned' && history?.resource_property != 'unchecked result as no budget assigned'">
-                            <span>{{ history.resource_property }}</span>
-                        </div>
+                        <div class="card-body">
+                            <div class="change-meta">
+                                <span class="category-badge" [ngClass]="getCategoryClass(history)">
+                                    {{ getCategory(history) }}
+                                </span>
+                                <span class="resource-prop">{{ history.resource_property }}</span>
+                            </div>
 
-                        <ng-container
-                            *ngIf="history?.resource_property == 'Checked period' || history?.resource_property == 'unchecked period' || history?.resource_property == 'Checked result as no budget assigned' || history?.resource_property == 'unchecked result as no budget assigned'">
-                            <div class="section-values" [ngStyle]="{
-                                backgroundColor: history.resource_property == 'Checked period' || history.resource_property == 'Checked result as no budget assigned' ? 'rgb(229, 242, 229)' : '#FFE5E6',
-                                'border-left': history.resource_property == 'Checked period' || history.resource_property == 'Checked result as no budget assigned' ? 'rgb(0, 128, 0) solid 5px' : 'rgb(241 0 9) solid 5px',
-                                'padding': '0 8px'
-                                }">
+                            <div class="item-context" *ngIf="getContextText(history)">
+                                {{ getContextText(history) }}
+                            </div>
+
+                            <!-- Value diff for normal entries -->
+                            <div class="value-diff" *ngIf="hasValues(history)">
+                                <div class="diff-old" *ngIf="history.old_value">
+                                    <span class="diff-indicator">&minus;</span>
+                                    <span class="diff-text">{{ history.old_value }}</span>
+                                </div>
+                                <div class="diff-new" *ngIf="history.new_value">
+                                    <span class="diff-indicator">+</span>
+                                    <span class="diff-text">{{ history.new_value }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Special period/result entries -->
+                            <div class="status-indicator" *ngIf="isSpecialEntry(history)"
+                                 [ngClass]="isPositiveSpecial(history) ? 'status-positive' : 'status-negative'">
+                                <mat-icon>{{ isPositiveSpecial(history) ? 'check_circle' : 'cancel' }}</mat-icon>
                                 <span>{{ history.resource_property }}</span>
                             </div>
-
-                        </ng-container>
-
-                        <div class="section-values"
-                            *ngIf="history?.resource_property != 'Checked period' && history?.resource_property != 'unchecked period' && history?.resource_property != 'Checked result as no budget assigned' && history?.resource_property != 'unchecked result as no budget assigned'"
-                            [ngStyle]="{
-                            backgroundColor: 
-                            history.new_value && history.old_value ? '#FFF3ED'
-                            : history.new_value ? '#E5F2E5' 
-                            : '#FFE5E6',
-    
-                            'border-left':  history.new_value && history.old_value ? '#FF884C solid 5px'
-                            : history.new_value ? '#008000 solid 5px' 
-                            : '#FF0007 solid 5px'
-                        }">
-                            <div>
-                                <span *ngIf="history.new_value" class="new-value">{{history.new_value}}</span>
-                            </div>
-                            <div>
-                                <span *ngIf="history.old_value" class="old-value">{{history.old_value}}</span>
-                            </div>
                         </div>
-                    </ng-container>
+                    </div>
                 </div>
             </div>
-        </ng-container>
-    </ng-container>
-    <div *ngIf="emptyRecords && !load.getLoading()">
-        <div class="empty-history">There is no history for this Program.</div>
+        </div>
+    </div>
+
+    <!-- No search results -->
+    <div class="no-results" *ngIf="searchTerm && !groupedHistories?.length && histories?.length">
+        <mat-icon>search_off</mat-icon>
+        <p>No changes matching "{{ searchTerm }}"</p>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="emptyRecords && !loading">
+        <mat-icon>history</mat-icon>
+        <p>No changes recorded yet</p>
+        <span>Changes to budgets, assumptions, and items will appear here.</span>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <span>Loading history...</span>
     </div>
 </div>

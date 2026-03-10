@@ -31,7 +31,7 @@ export class History {
 
 
     @ApiProperty()
-    @Column()
+    @Column({ nullable: true })
     user_id: number;
   
     @ManyToOne(() => User, (user) => user.history)

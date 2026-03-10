@@ -175,10 +175,14 @@ export class PorbController {
     @Body() data: { hlo_budget?: number; hlo_assumption?: string },
     @Request() req,
   ) {
-    return this.porbService.updateHlo(id, {
-      hlo_budget: data.hlo_budget,
-      hlo_assumption: data.hlo_assumption,
-    });
+    return this.porbService.updateHlo(
+      id,
+      {
+        hlo_budget: data.hlo_budget,
+        hlo_assumption: data.hlo_assumption,
+      },
+      req.user,
+    );
   }
 
   @Patch('partner/:id')
@@ -188,21 +192,23 @@ export class PorbController {
     data: {
       partner_is_contracted?: boolean | string;
       center_id?: number | string;
-      partner_geo?: string;
       partner_country_codes?: Array<number | string>;
       partner_budget?: number | null;
       partner_assumption?: string;
     },
     @Request() req,
   ) {
-    return this.porbService.updatePartner(id, {
-      partner_is_contracted: data.partner_is_contracted,
-      center_id: data.center_id,
-      partner_geo: data.partner_geo,
-      partner_country_codes: data.partner_country_codes,
-      partner_budget: data.partner_budget,
-      partner_assumption: data.partner_assumption,
-    });
+    return this.porbService.updatePartner(
+      id,
+      {
+        partner_is_contracted: data.partner_is_contracted,
+        center_id: data.center_id,
+        partner_country_codes: data.partner_country_codes,
+        partner_budget: data.partner_budget,
+        assumption: data.partner_assumption,
+      },
+      req.user,
+    );
   }
 
   @Patch('bilateral/:id')
@@ -211,10 +217,14 @@ export class PorbController {
     @Body() data: { bilateral_budget?: number; bilateral_assumption?: string },
     @Request() req,
   ) {
-    return this.porbService.updateBilateral(id, {
-      bilateral_budget: data.bilateral_budget,
-      bilateral_assumption: data.bilateral_assumption,
-    });
+    return this.porbService.updateBilateral(
+      id,
+      {
+        bilateral_budget: data.bilateral_budget,
+        bilateral_assumption: data.bilateral_assumption,
+      },
+      req.user,
+    );
   }
 
   @Patch('melia/:id')
@@ -223,10 +233,14 @@ export class PorbController {
     @Body() data: { melia_budget?: number; melia_assumption?: string },
     @Request() req,
   ) {
-    return this.porbService.updateMelia(id, {
-      melia_budget: data.melia_budget,
-      melia_assumption: data.melia_assumption,
-    });
+    return this.porbService.updateMelia(
+      id,
+      {
+        melia_budget: data.melia_budget,
+        melia_assumption: data.melia_assumption,
+      },
+      req.user,
+    );
   }
 
   @Patch('anaplan')
@@ -241,16 +255,19 @@ export class PorbController {
     },
     @Request() req,
   ) {
-    return this.porbService.updateAnaplan({
-      program_id: Number(data.program_id),
-      porb_aow_id: Number(data.porb_aow_id),
-      center_id: Number(data.center_id),
-      anaplan_id: Number(data.anaplan_id),
-      budget:
-        data.budget != null && data.budget !== ('' as any)
-          ? Number(data.budget)
-          : null,
-    });
+    return this.porbService.updateAnaplan(
+      {
+        program_id: Number(data.program_id),
+        porb_aow_id: Number(data.porb_aow_id),
+        center_id: Number(data.center_id),
+        anaplan_id: Number(data.anaplan_id),
+        budget:
+          data.budget != null && data.budget !== ('' as any)
+            ? Number(data.budget)
+            : null,
+      },
+      req.user,
+    );
   }
 
   @Patch('cross')
@@ -266,17 +283,20 @@ export class PorbController {
     },
     @Request() req,
   ) {
-    return this.porbService.updateCross({
-      program_id: Number(data.program_id),
-      porb_aow_id: Number(data.porb_aow_id),
-      center_id: Number(data.center_id),
-      cross_cutting_id: String(data.cross_cutting_id),
-      budget:
-        data.budget != null && data.budget !== ('' as any)
-          ? Number(data.budget)
-          : null,
-      assumption: String(data.assumption || ''),
-    });
+    return this.porbService.updateCross(
+      {
+        program_id: Number(data.program_id),
+        porb_aow_id: Number(data.porb_aow_id),
+        center_id: Number(data.center_id),
+        cross_cutting_id: String(data.cross_cutting_id),
+        budget:
+          data.budget != null && data.budget !== ('' as any)
+            ? Number(data.budget)
+            : null,
+        assumption: String(data.assumption || ''),
+      },
+      req.user,
+    );
   }
 
   @Post('cross')
@@ -293,18 +313,21 @@ export class PorbController {
     },
     @Request() req,
   ) {
-    return this.porbService.createCross({
-      program_id: Number(data.program_id),
-      porb_aow_id: Number(data.porb_aow_id),
-      center_id: Number(data.center_id),
-      title: String(data.title || ''),
-      description: String(data.description || ''),
-      budget:
-        data.budget != null && data.budget !== ('' as any)
-          ? Number(data.budget)
-          : null,
-      assumption: String(data.assumption || ''),
-    });
+    return this.porbService.createCross(
+      {
+        program_id: Number(data.program_id),
+        porb_aow_id: Number(data.porb_aow_id),
+        center_id: Number(data.center_id),
+        title: String(data.title || ''),
+        description: String(data.description || ''),
+        budget:
+          data.budget != null && data.budget !== ('' as any)
+            ? Number(data.budget)
+            : null,
+        assumption: String(data.assumption || ''),
+      },
+      req.user,
+    );
   }
 
   @Post('submit/:program_id')
@@ -383,22 +406,28 @@ export class PorbController {
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
   @Post('bulk-import-toc')
-  bulkImportToc(@Body() data: { program_ids?: number[] }) {
-    return this.porbService.bulkImportToc(data?.program_ids);
+  bulkImportToc(@Body() data: { program_ids?: number[] }, @Request() req) {
+    return this.porbService.bulkImportToc(data?.program_ids, req.user);
   }
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
   @Post('migrate-submission-data')
-  bulkMigrateSubmissionData(@Body() data: { program_ids?: number[] }) {
-    return this.porbService.bulkMigrateSubmissionData(data?.program_ids);
+  bulkMigrateSubmissionData(
+    @Body() data: { program_ids?: number[] },
+    @Request() req,
+  ) {
+    return this.porbService.bulkMigrateSubmissionData(
+      data?.program_ids,
+      req.user,
+    );
   }
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
   @Post('import-and-migrate')
-  importAndMigrate(@Body() data: { program_ids?: number[] }) {
-    return this.porbService.bulkImportAndMigrate(data?.program_ids);
+  importAndMigrate(@Body() data: { program_ids?: number[] }, @Request() req) {
+    return this.porbService.bulkImportAndMigrate(data?.program_ids, req.user);
   }
 
   @UseGuards(RolesGuard)

@@ -134,7 +134,7 @@ export class PorbService {
       partner_geo?: string;
       partner_country_codes?: Array<number | string>;
       partner_budget?: number | null;
-      partner_assumption?: string;
+      partner_assumption?: string;  // sent as partner_assumption, stored on contracted partner
     }
   ) {
     return firstValueFrom(

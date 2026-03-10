@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
 import { PorbService } from "src/app/services/porb.service";
+import { CrossAddDialogComponent } from "./cross-add-dialog.component";
 
 @Component({
   selector: "app-cross-section",
@@ -16,12 +18,8 @@ export class CrossSectionComponent implements OnChanges {
 
   search = "";
   savingIds = new Set<string>();
-  creating = false;
-  showCreateRow = false;
-  newTitle = "";
-  newDescription = "";
 
-  constructor(private porbService: PorbService) {}
+  constructor(private porbService: PorbService, private dialog: MatDialog) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["rows"]) {
@@ -49,44 +47,22 @@ export class CrossSectionComponent implements OnChanges {
   }
 
   onAddNewClick() {
-    this.showCreateRow = true;
-  }
+    if (!this.selectedProgramId || !this.selectedPorbAowId || !this.selectedCenterId) return;
 
-  async createRow() {
-    if (!this.selectedProgramId || !this.selectedPorbAowId || !this.selectedCenterId) {
-      return;
-    }
-    const title = String(this.newTitle || "").trim();
-    if (!title) {
-      return;
-    }
-
-    this.creating = true;
-    try {
-      const created = await this.porbService.createCross({
+    const ref = this.dialog.open(CrossAddDialogComponent, {
+      width: "520px",
+      data: {
         program_id: Number(this.selectedProgramId),
         porb_aow_id: Number(this.selectedPorbAowId),
         center_id: Number(this.selectedCenterId),
-        title,
-        description: String(this.newDescription || "").trim(),
-        budget: null,
-        assumption: "",
-      });
-      if (created) {
-        this.newTitle = "";
-        this.newDescription = "";
-        this.showCreateRow = false;
+      },
+    });
+
+    ref.afterClosed().subscribe((result) => {
+      if (result?.created) {
         this.budgetUpdated.emit();
       }
-    } finally {
-      this.creating = false;
-    }
-  }
-
-  cancelCreate() {
-    this.showCreateRow = false;
-    this.newTitle = "";
-    this.newDescription = "";
+    });
   }
 
   async saveRow(row: any) {

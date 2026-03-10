@@ -39,18 +39,6 @@ export class PorbPartner {
   partner_outputs: string;
 
   @ApiProperty()
-  @Column({ type: 'mediumtext', nullable: true })
-  partner_geo: string;
-
-  @ApiProperty()
-  @Column({ type: 'float', nullable: true })
-  partner_budget: number;
-
-  @ApiProperty()
-  @Column({ type: 'mediumtext', nullable: true })
-  partner_assumption: string;
-
-  @ApiProperty()
   @Column({ type: 'boolean', default: false })
   toc_is_deleted: boolean;
 
