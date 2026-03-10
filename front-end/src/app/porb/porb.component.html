@@ -382,7 +382,7 @@
       <!-- Level 2: AOW nav list -->
       <nav class="porb-nav porb-nav--aows" data-tour-anchor="porb-aow-tabs">
         <button
-          *ngFor="let aow of aows"
+          *ngFor="let aow of visibleAows"
           type="button"
           class="porb-nav__item"
           [class.porb-nav__item--active]="isAowSelected(aow)"

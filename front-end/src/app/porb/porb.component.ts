@@ -19,6 +19,7 @@ import { ToastrService } from "ngx-toastr";
   styleUrls: ["./porb.component.scss"],
 })
 export class PorbComponent implements OnInit, OnDestroy {
+  private readonly UNKNOWN_CENTER_CODE = "999999";
   loading = true;
   initiative: any = null;
   initiativeId: number | null = null;
@@ -632,8 +633,15 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.activeView = "center";
     }
 
-    if (!this.selectedAow && this.aows.length) {
-      this.selectedAow = this.aows[0];
+    const visible = this.visibleAows;
+    if (
+      this.selectedAow &&
+      !visible.some((a: any) => a.id === this.selectedAow?.id)
+    ) {
+      this.selectedAow = visible[0] || null;
+    }
+    if (!this.selectedAow && visible.length) {
+      this.selectedAow = visible[0];
     }
 
     if (!this.selectedExtraNavigation && this.extraNavigationItems.length) {
@@ -812,6 +820,20 @@ export class PorbComponent implements OnInit, OnDestroy {
       totalPooledFundingFmt: this.formatCurrency(this.toNumber(t.totalPooledFunding)),
       w3BudgetFmt: this.formatCurrency(this.toNumber(t.w3Budget)),
     };
+  }
+
+  get isUnknownCenter(): boolean {
+    const key = this.getCenterKey(this.selectedCenter);
+    return key === this.UNKNOWN_CENTER_CODE;
+  }
+
+  get visibleAows(): any[] {
+    if (this.isUnknownCenter) {
+      return this.aows.filter(
+        (aow: any) => String(aow?.code || aow?.aow_acrnum || "").toUpperCase() === "AOW00"
+      );
+    }
+    return this.aows;
   }
 
   get isPorbSelectionComplete(): boolean {
@@ -1062,8 +1084,15 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.selectedCenter = center;
     this.activeView = "center";
 
-    if (this.aows.length && !this.selectedAow) {
-      this.selectedAow = this.aows[0];
+    const visible = this.visibleAows;
+    if (
+      this.selectedAow &&
+      !visible.some((a: any) => a.id === this.selectedAow?.id)
+    ) {
+      this.selectedAow = visible[0] || null;
+    }
+    if (visible.length && !this.selectedAow) {
+      this.selectedAow = visible[0];
     }
     if (this.extraNavigationItems.length && !this.selectedExtraNavigation) {
       this.selectedExtraNavigation = this.extraNavigationItems[0];

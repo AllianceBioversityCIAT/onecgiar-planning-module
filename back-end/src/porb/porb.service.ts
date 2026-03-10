@@ -1629,6 +1629,7 @@ export class PorbService {
 
     const outputNodes = results.filter((item: any) => item?.category === 'OUTPUT');
     const hloRows: any[] = [];
+    const hloRowKeySet = new Set<string>();
     for (const item of outputNodes) {
       const parentAow = resolveParentAow(item?.group, item?.parent_id);
       for (const indicator of item?.quantitative_indicators || []) {
@@ -1642,6 +1643,11 @@ export class PorbService {
               skippedCenterIds.add(centerId);
               continue;
             }
+            const hloKey = `${String(indicator?.id || '')}::${centerId}`;
+            if (hloRowKeySet.has(hloKey)) {
+              continue;
+            }
+            hloRowKeySet.add(hloKey);
             hloRows.push(
               this.porbHloRepository.create({
                 program_id: programId,
@@ -1756,6 +1762,7 @@ export class PorbService {
     );
 
     const bilateralNodes = results.filter((item: any) => item?.category === 'Project');
+    const bilateralRowKeySet = new Set<string>();
     const bilateralRows = bilateralNodes.map((item: any) => {
       const parentAow = resolveParentAow(item?.parent_id, item?.group);
       const centerId = Number(item?.center?.code);
@@ -1766,6 +1773,11 @@ export class PorbService {
         skippedCenterIds.add(centerId);
         return null;
       }
+      const bilateralKey = `${String(item?.id || '')}::${centerId}`;
+      if (bilateralRowKeySet.has(bilateralKey)) {
+        return null;
+      }
+      bilateralRowKeySet.add(bilateralKey);
       return this.porbBilateralRepository.create({
         program_id: programId,
         porb_aow_id: parentAow?.id ?? null,
@@ -2118,6 +2130,15 @@ export class PorbService {
     for (const aow of allAowsForMigration) {
       aowAcrnumToId.set(String(aow.aow_acrnum || '').toUpperCase(), aow.id);
     }
+    // Build lookup: work_package.wp_id (numeric) → wp_official_code (e.g., "SP01-AOW02-project")
+    const wpRows = await this.workPackageRepository.find({
+      where: { initiative_id: programId },
+    });
+    const wpIdToOfficialCode = new Map<number, string>();
+    for (const wp of wpRows) {
+      wpIdToOfficialCode.set(wp.wp_id, wp.wp_official_code);
+    }
+
     // Helper: extract porb_aow_id from BA wp_id (e.g., "SP01-AOW02-project" → AOW02 → id)
     const getAowIdFromWpId = (wpId: string): number | null => {
       const upper = String(wpId || '').toUpperCase();
@@ -2231,50 +2252,110 @@ export class PorbService {
     }
 
     // 6. Migrate Bilaterals
+    // Use submitted Results as the primary source for bilateral budgets and AOW assignment.
+    // Results have correct per-AOW budgets. BAs provide assumptions.
+    const bilateralResults = oldResults.filter((r) => r.type === 'PROJECT');
     const bilateralBAs = budgetAssumptions.filter(
       (ba) => ba.wp_id && ba.wp_id.endsWith('-project'),
     );
-    for (const porbBilateral of porbBilaterals) {
+    // Build lookup: "toc_id::center_id" → PORB bilateral row(s)
+    const porbBilateralByKey = new Map<string, typeof porbBilaterals[0]>();
+    for (const pb of porbBilaterals) {
+      porbBilateralByKey.set(`${pb.toc_id}::${pb.center_id}`, pb);
+    }
+    // Track which PORB rows have been used for a specific AOW
+    const usedBilateralIds = new Set<number>();
+    // Process each submitted Result to set budget and correct AOW
+    for (const result of bilateralResults) {
+      const tocId = result.result_uuid;
+      const centerId = Number(result.organization_code);
+      const budget = parseFloat(result.budget) || 0;
+      // Resolve AOW from the Result's wp_id → work_package → wp_official_code
+      const wpOfficialCode = wpIdToOfficialCode.get(Number(result.wp_id));
+      const correctAowId = wpOfficialCode ? getAowIdFromWpId(wpOfficialCode) : null;
+      // Find matching BA for assumption
       const matchingBA = bilateralBAs.find(
         (ba) =>
-          ba.item_id === porbBilateral.toc_id &&
-          Number(ba.organization_code) === porbBilateral.center_id &&
-          getAowIdFromWpId(ba.wp_id) === porbBilateral.porb_aow_id,
+          ba.item_id === tocId &&
+          Number(ba.organization_code) === centerId &&
+          (wpOfficialCode ? getAowIdFromWpId(ba.wp_id) === correctAowId : true),
+      ) || bilateralBAs.find(
+        (ba) => ba.item_id === tocId && Number(ba.organization_code) === centerId,
       );
-      if (!matchingBA) continue;
+      const assumption = matchingBA?.budget_assumptions || '';
 
-      const budget = parseFloat(matchingBA.item_budget) || 0;
-      const assumption = matchingBA.budget_assumptions || '';
+      if (!budget && !assumption) continue;
 
-      if (budget || assumption) {
-        await this.porbBilateralRepository.update(porbBilateral.id, {
-          bilateral_budget: budget || porbBilateral.bilateral_budget,
-          bilateral_assumption: assumption || porbBilateral.bilateral_assumption,
+      const existingPorb = porbBilateralByKey.get(`${tocId}::${centerId}`);
+      if (existingPorb && !usedBilateralIds.has(existingPorb.id)) {
+        // Update existing row (first time for this bilateral+center)
+        usedBilateralIds.add(existingPorb.id);
+        await this.porbBilateralRepository.update(existingPorb.id, {
+          bilateral_budget: budget || existingPorb.bilateral_budget,
+          bilateral_assumption: assumption || existingPorb.bilateral_assumption,
+          ...(correctAowId != null ? { porb_aow_id: correctAowId } : {}),
+        });
+        counts.bilaterals++;
+      } else if (existingPorb) {
+        // Same bilateral+center already updated — create new row for different AOW
+        await this.porbBilateralRepository.save({
+          program_id: programId,
+          porb_aow_id: correctAowId ?? existingPorb.porb_aow_id,
+          toc_id: tocId,
+          center_id: centerId,
+          bilateral_name: existingPorb.bilateral_name,
+          bilateral_outputs: existingPorb.bilateral_outputs,
+          bilateral_budget: budget,
+          bilateral_assumption: assumption,
+          toc_is_deleted: false,
+        });
+        counts.bilaterals++;
+      } else {
+        // Bilateral exists in submitted version but not in PORB (not in TOC) — create it
+        await this.porbBilateralRepository.save({
+          program_id: programId,
+          porb_aow_id: correctAowId,
+          toc_id: tocId,
+          center_id: centerId,
+          bilateral_name: `Bilateral ${tocId}`,
+          bilateral_outputs: '',
+          bilateral_budget: budget,
+          bilateral_assumption: assumption,
+          toc_is_deleted: true,
         });
         counts.bilaterals++;
       }
     }
 
-    // 7. Migrate MELIAs
+    // 7. Migrate MELIAs (same AOW-specific then fallback pattern as bilaterals)
     const meliaBAs = budgetAssumptions.filter(
-      (ba) => ba.wp_id && ba.wp_id.endsWith('-melia'),
+      (ba) => ba.wp_id && (ba.wp_id.endsWith('-melia') || ba.wp_id === 'CROSS-Cross-Cutting'),
     );
     for (const porbMelia of porbMelias) {
-      const matchingBA = meliaBAs.find(
+      let matchingBA = meliaBAs.find(
         (ba) =>
           ba.item_id === porbMelia.toc_id &&
           Number(ba.organization_code) === porbMelia.center_id &&
           getAowIdFromWpId(ba.wp_id) === porbMelia.porb_aow_id,
       );
+      if (!matchingBA) {
+        matchingBA = meliaBAs.find(
+          (ba) =>
+            ba.item_id === porbMelia.toc_id &&
+            Number(ba.organization_code) === porbMelia.center_id,
+        );
+      }
       if (!matchingBA) continue;
 
       const budget = parseFloat(matchingBA.item_budget) || 0;
       const assumption = matchingBA.budget_assumptions || '';
 
       if (budget || assumption) {
+        const correctAowId = getAowIdFromWpId(matchingBA.wp_id);
         await this.porbMeliaRepository.update(porbMelia.id, {
           melia_budget: budget || porbMelia.melia_budget,
           melia_assumption: assumption || porbMelia.melia_assumption,
+          ...(correctAowId != null ? { porb_aow_id: correctAowId } : {}),
         });
         counts.melias++;
       }
