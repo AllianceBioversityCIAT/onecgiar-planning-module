@@ -2164,12 +2164,20 @@ export class PorbService {
       basByItemAndAow.set(key, list);
     }
 
-    // Build lookup: "result_uuid::organization_code" → Result.budget (from submitted version)
+    // Build lookup: "result_uuid::organization_code::porb_aow_id" → Result.budget
+    // Partners can have different budgets per AOW, so we include AOW in the key.
     const partnerResultBudgets = new Map<string, number>();
     const partnerResults = oldResults.filter((r) => r.type === 'PARTNER');
     for (const r of partnerResults) {
-      const key = `${r.result_uuid}::${r.organization_code}`;
+      const wpCode = wpIdToOfficialCode.get(Number(r.wp_id));
+      const aowId = wpCode ? getAowIdFromWpId(wpCode) : null;
+      const key = `${r.result_uuid}::${r.organization_code}::${aowId ?? 'any'}`;
       partnerResultBudgets.set(key, parseFloat(r.budget) || 0);
+      // Also store a fallback key without AOW (for cases where AOW doesn't match)
+      const fallbackKey = `${r.result_uuid}::${r.organization_code}`;
+      if (!partnerResultBudgets.has(fallbackKey)) {
+        partnerResultBudgets.set(fallbackKey, parseFloat(r.budget) || 0);
+      }
     }
 
     for (const porbPartner of porbPartners) {
@@ -2182,7 +2190,10 @@ export class PorbService {
         if (!Number.isFinite(centerId)) continue;
 
         // Use Result.budget as the budget source (matches old submission display)
-        const budget = partnerResultBudgets.get(`${porbPartner.toc_id}::${centerId}`) ?? 0;
+        // Try AOW-specific key first, then fallback to any AOW
+        const budget = partnerResultBudgets.get(`${porbPartner.toc_id}::${centerId}::${porbPartner.porb_aow_id}`)
+          ?? partnerResultBudgets.get(`${porbPartner.toc_id}::${centerId}`)
+          ?? 0;
         if (!budget) continue;
 
         // Look up country codes from partner_countries using toc_id + center_code
