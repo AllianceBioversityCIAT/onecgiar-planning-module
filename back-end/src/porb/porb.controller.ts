@@ -436,4 +436,12 @@ export class PorbController {
   verifyMigration(@Param('program_id', ParseIntPipe) program_id: number) {
     return this.porbService.verifyMigration(program_id);
   }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Get('validate-summary')
+  validateSummary(@Query('program_id') program_id?: string) {
+    const pid = program_id ? Number(program_id) : undefined;
+    return this.porbService.validateAgainstSubmission(pid);
+  }
 }

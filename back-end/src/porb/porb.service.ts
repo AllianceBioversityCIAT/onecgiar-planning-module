@@ -7,7 +7,7 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import * as XLSX from 'xlsx-js-style';
 import { join } from 'path';
 import { createReadStream, unlink } from 'fs';
@@ -2612,6 +2612,139 @@ export class PorbService {
     return {
       toc_import: tocResult,
       data_migration: migrateResult,
+    };
+  }
+
+  async validateAgainstSubmission(programId?: number) {
+    const programs = programId
+      ? [await this.initService.initiativeRepository.findOne({ where: { id: programId } })]
+      : await this.initService.initiativeRepository.find({
+          where: { latest_submission_id: Not(IsNull()) },
+        });
+
+    const results: any[] = [];
+
+    for (const program of programs) {
+      if (!program?.latest_submission_id) continue;
+
+      const submissionId = program.latest_submission_id;
+
+      // Load submitted results grouped by type
+      const submittedResults = await this.resultRepository.find({
+        where: { submission_id: submissionId },
+      });
+
+      // Load work packages for AOW mapping
+      const wpRows = await this.workPackageRepository.find({
+        where: { initiative_id: program.id },
+      });
+      const wpIdToCode = new Map<number, string>();
+      for (const wp of wpRows) wpIdToCode.set(wp.wp_id, wp.wp_official_code);
+
+      // --- Submitted totals ---
+      const submittedHloTotal = submittedResults
+        .filter((r) => r.type === 'INDICATOR')
+        .reduce((sum, r) => sum + (parseFloat(r.budget) || 0), 0);
+
+      const submittedBilateralTotal = submittedResults
+        .filter((r) => r.type === 'PROJECT')
+        .reduce((sum, r) => sum + (parseFloat(r.budget) || 0), 0);
+
+      const submittedPartnerTotal = submittedResults
+        .filter((r) => r.type === 'PARTNER')
+        .reduce((sum, r) => sum + (parseFloat(r.budget) || 0), 0);
+
+      // Per-AOW submitted totals
+      const submittedByAow: Record<string, { hlo: number; bilateral: number; partner: number }> = {};
+      for (const r of submittedResults) {
+        const wpCode = wpIdToCode.get(Number(r.wp_id)) || 'UNKNOWN';
+        const aowMatch = wpCode.toUpperCase().match(/(AOW\d+)/);
+        const aowKey = wpCode.toUpperCase().startsWith('CROSS')
+          ? 'AOW00'
+          : aowMatch?.[1] || 'UNKNOWN';
+        if (!submittedByAow[aowKey]) submittedByAow[aowKey] = { hlo: 0, bilateral: 0, partner: 0 };
+        const budget = parseFloat(r.budget) || 0;
+        if (r.type === 'INDICATOR') submittedByAow[aowKey].hlo += budget;
+        else if (r.type === 'PROJECT') submittedByAow[aowKey].bilateral += budget;
+        else if (r.type === 'PARTNER') submittedByAow[aowKey].partner += budget;
+      }
+
+      // --- PORB totals ---
+      const porbHlos = await this.porbHloRepository.find({ where: { program_id: program.id } });
+      const porbBilaterals = await this.porbBilateralRepository.find({ where: { program_id: program.id } });
+      const contractedPartners = await this.porbContractedPartnerRepository.find({ where: { program_id: program.id } });
+      const porbAows = await this.porbAowRepository.find({ where: { program_id: program.id } });
+
+      const aowIdToAcrnum = new Map<number, string>();
+      for (const aow of porbAows) aowIdToAcrnum.set(aow.id, String(aow.aow_acrnum || '').toUpperCase());
+
+      const porbHloTotal = porbHlos.reduce((sum, h) => sum + (h.hlo_budget || 0), 0);
+      const porbBilateralTotal = porbBilaterals.reduce((sum, b) => sum + (b.bilateral_budget || 0), 0);
+      const porbPartnerTotal = contractedPartners.reduce((sum, cp) => sum + (cp.budget || 0), 0);
+
+      // Per-AOW PORB totals
+      const porbByAow: Record<string, { hlo: number; bilateral: number; partner: number }> = {};
+      for (const h of porbHlos) {
+        const aow = aowIdToAcrnum.get(h.porb_aow_id) || 'UNKNOWN';
+        if (!porbByAow[aow]) porbByAow[aow] = { hlo: 0, bilateral: 0, partner: 0 };
+        porbByAow[aow].hlo += h.hlo_budget || 0;
+      }
+      for (const b of porbBilaterals) {
+        const aow = aowIdToAcrnum.get(b.porb_aow_id) || 'UNKNOWN';
+        if (!porbByAow[aow]) porbByAow[aow] = { hlo: 0, bilateral: 0, partner: 0 };
+        porbByAow[aow].bilateral += b.bilateral_budget || 0;
+      }
+      for (const cp of contractedPartners) {
+        const aow = aowIdToAcrnum.get(cp.porb_aow_id) || 'UNKNOWN';
+        if (!porbByAow[aow]) porbByAow[aow] = { hlo: 0, bilateral: 0, partner: 0 };
+        porbByAow[aow].partner += cp.budget || 0;
+      }
+
+      // --- Compare ---
+      const round2 = (n: number) => Math.round(n * 100) / 100;
+      const hloDiff = round2(porbHloTotal - submittedHloTotal);
+      const bilateralDiff = round2(porbBilateralTotal - submittedBilateralTotal);
+      const partnerDiff = round2(porbPartnerTotal - submittedPartnerTotal);
+
+      const allAowKeys = [...new Set([...Object.keys(submittedByAow), ...Object.keys(porbByAow)])].sort();
+      const aowComparison = allAowKeys.map((aow) => {
+        const sub = submittedByAow[aow] || { hlo: 0, bilateral: 0, partner: 0 };
+        const porb = porbByAow[aow] || { hlo: 0, bilateral: 0, partner: 0 };
+        const diffs = {
+          hlo: round2(porb.hlo - sub.hlo),
+          bilateral: round2(porb.bilateral - sub.bilateral),
+          partner: round2(porb.partner - sub.partner),
+        };
+        const match = Math.abs(diffs.hlo) < 1 && Math.abs(diffs.bilateral) < 1 && Math.abs(diffs.partner) < 1;
+        return {
+          aow,
+          submitted: { hlo: round2(sub.hlo), bilateral: round2(sub.bilateral), partner: round2(sub.partner) },
+          porb: { hlo: round2(porb.hlo), bilateral: round2(porb.bilateral), partner: round2(porb.partner) },
+          diff: diffs,
+          match,
+        };
+      });
+
+      const overallMatch = Math.abs(hloDiff) < 1 && Math.abs(bilateralDiff) < 1 && Math.abs(partnerDiff) < 1;
+
+      results.push({
+        program_id: program.id,
+        official_code: program.official_code,
+        match: overallMatch,
+        totals: {
+          submitted: { hlo: round2(submittedHloTotal), bilateral: round2(submittedBilateralTotal), partner: round2(submittedPartnerTotal) },
+          porb: { hlo: round2(porbHloTotal), bilateral: round2(porbBilateralTotal), partner: round2(porbPartnerTotal) },
+          diff: { hlo: hloDiff, bilateral: bilateralDiff, partner: partnerDiff },
+        },
+        aow_detail: aowComparison.filter((a) => !a.match),
+      });
+    }
+
+    const matchCount = results.filter((r) => r.match).length;
+    return {
+      summary: `${matchCount}/${results.length} programs match`,
+      matched: results.filter((r) => r.match).map((r) => r.official_code),
+      mismatched: results.filter((r) => !r.match),
     };
   }
 
