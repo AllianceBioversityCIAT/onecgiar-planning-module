@@ -46,6 +46,7 @@
         class="porb-nav__item"
         [class.porb-nav__item--active]="activeView === 'center' && isCenterSelected(center)"
         [class.porb-nav__item--completed]="isCenterCompleted(center)"
+        [class.porb-nav__item--no-access]="!canEditCenter(center)"
         (click)="selectCenter(center)"
       >
         {{ center?.acronym || center?.name }}

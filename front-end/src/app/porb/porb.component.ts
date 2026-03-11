@@ -561,7 +561,12 @@ export class PorbComponent implements OnInit, OnDestroy {
     }
 
     if (!this.selectedCenter && this.centers.length) {
-      this.selectedCenter = this.centers[0];
+      // For contributors: default to their first accessible center
+      const accessibleCenter = this.centers.find((c: any) => {
+        const key = this.getCenterKey(c);
+        return key != null && this.canEditMap[key] === true;
+      });
+      this.selectedCenter = accessibleCenter || this.centers[0];
       this.activeView = "center";
     }
 
@@ -825,6 +830,12 @@ export class PorbComponent implements OnInit, OnDestroy {
       return false;
     }
     return this.centerErrorCodes.includes(centerCode);
+  }
+
+  canEditCenter(center: any): boolean {
+    const key = this.getCenterKey(center);
+    if (key == null) return false;
+    return this.canEditMap[key] !== false;
   }
 
   isCenterCompleted(center: any): boolean {
