@@ -7,7 +7,7 @@ import { AppSocket } from "../socket.service";
 import { UserService } from "../services/user.service";
 import { PorbService } from "../services/porb.service";
 import { PorbTourStep } from "./components/porb-tour/porb-tour.component";
-import { ROLES } from "../components/new-team-member/new-team-member.component";
+import { PermissionService } from "../shared/permission.service";
 import { MatDialog } from "@angular/material/dialog";
 import { ConfirmComponent, ConfirmDialogModel } from "../confirm/confirm.component";
 import { HistoryOfChangeComponent } from "../submission/history-of-change/history-of-change.component";
@@ -83,7 +83,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   cancellingSubmission = false;
 
   showTour = false;
-  private readonly porbTourStorageKey = "porb_tour_seen_v1";
+  private readonly porbTourStorageKey = "porb_tour_seen_v2";
   tourSteps: PorbTourStep[] = [
     {
       anchorId: "porb-overview",
@@ -98,10 +98,34 @@ export class PorbComponent implements OnInit, OnDestroy {
         "These user initials show who is currently online and working in this program.",
     },
     {
-      anchorId: "porb-overview-actions",
-      title: "Quick Actions",
+      anchorId: "porb-action-team",
+      title: "Team Members",
       description:
-        "Use these icon buttons to open summary, team versions, export, and submission pages quickly.",
+        "Opens the Team Members page where you can view and manage who has access to this program.",
+    },
+    {
+      anchorId: "porb-action-history",
+      title: "History of Change",
+      description:
+        "View the full change log of edits made to this PORB, including who changed what and when.",
+    },
+    {
+      anchorId: "porb-action-versions",
+      title: "Submitted Versions",
+      description:
+        "Browse previously submitted versions of this PORB to compare or review past submissions.",
+    },
+    {
+      anchorId: "porb-action-export",
+      title: "Export All (ZIP)",
+      description:
+        "Download a ZIP file containing the Summary spreadsheet and individual Excel files for each center.",
+    },
+    {
+      anchorId: "porb-action-submit",
+      title: "Submit PORB",
+      description:
+        "When all sections are complete, click Submit to send this PORB for review. This button only appears when the status is Draft.",
     },
     {
       anchorId: "porb-center-tabs",
@@ -159,7 +183,8 @@ export class PorbComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private porbService: PorbService,
     private dialog: MatDialog,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private permissionService: PermissionService
   ) {}
 
   async ngOnInit() {
@@ -310,28 +335,7 @@ export class PorbComponent implements OnInit, OnDestroy {
 
   /** Whether the current user has a lead-level role to submit */
   get canSubmit(): boolean {
-    if (this.isSubmissionLocked) {
-      return false;
-    }
-    const currentUser = this.userService.getLogedInUser();
-    if (currentUser?.role === "admin") {
-      return true;
-    }
-    const userId = this.currentUserId;
-    const roles: any[] = Array.isArray(this.initiative?.roles)
-      ? this.initiative.roles
-      : [];
-    const userRole = roles.find((r: any) => r?.user_id === userId);
-    if (!userRole) {
-      return false;
-    }
-    const roleName = userRole.role;
-    return (
-      roleName === ROLES.LEAD ||
-      roleName === ROLES.COORDINATOR ||
-      roleName === ROLES.CoLeader ||
-      roleName === ROLES.Financial_Focal_Point
-    );
+    return this.permissionService.canSubmit(this.initiative, this.submissionStatus);
   }
 
   async onSubmitClicked() {
@@ -418,83 +422,11 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   private buildCanEditMap() {
-    const map: Record<string, boolean> = {};
-
-    // When Pending or Approved, nobody can edit
-    if (this.isSubmissionLocked) {
-      this.centers.forEach((center: any) => {
-        const key = this.getCenterKey(center);
-        if (key != null) {
-          map[key] = false;
-        }
-      });
-      this.canEditMap = map;
-      return;
-    }
-
-    const currentUser = this.userService.getLogedInUser();
-    const isAdmin = currentUser?.role === "admin";
-
-    if (isAdmin) {
-      // Admins can edit all centers
-      this.centers.forEach((center: any) => {
-        const key = this.getCenterKey(center);
-        if (key != null) {
-          map[key] = true;
-        }
-      });
-      this.canEditMap = map;
-      return;
-    }
-
-    const userId = this.currentUserId;
-    const roles: any[] = Array.isArray(this.initiative?.roles)
-      ? this.initiative.roles
-      : [];
-
-    const userRole = roles.find((r: any) => r?.user_id === userId);
-
-    if (!userRole) {
-      // No role found — default deny edit
-      this.centers.forEach((center: any) => {
-        const key = this.getCenterKey(center);
-        if (key != null) {
-          map[key] = false;
-        }
-      });
-      this.canEditMap = map;
-      return;
-    }
-
-    const roleName = userRole.role;
-    const isLeadRole =
-      roleName === ROLES.LEAD ||
-      roleName === ROLES.COORDINATOR ||
-      roleName === ROLES.CoLeader ||
-      roleName === ROLES.Financial_Focal_Point;
-
-    if (isLeadRole) {
-      // Lead-level roles can edit all centers
-      this.centers.forEach((center: any) => {
-        const key = this.getCenterKey(center);
-        if (key != null) {
-          map[key] = true;
-        }
-      });
-    } else {
-      // Contributors: can only edit assigned centers
-      const assignedCodes = new Set<string>(
-        (userRole.organizations || []).map((o: any) => String(o?.code))
-      );
-      this.centers.forEach((center: any) => {
-        const key = this.getCenterKey(center);
-        if (key != null) {
-          map[key] = assignedCodes.has(key);
-        }
-      });
-    }
-
-    this.canEditMap = map;
+    this.canEditMap = this.permissionService.buildCanEditMap(
+      this.initiative,
+      this.centers,
+      this.submissionStatus
+    );
   }
 
   get canEditForSelectedCenter(): boolean {

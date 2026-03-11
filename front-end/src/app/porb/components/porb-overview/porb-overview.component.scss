@@ -124,8 +124,32 @@
   cursor: pointer;
 }
 
-.icon-btn.submit {
+.submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 3rem;
+  padding: 0 1.2rem;
+  border-radius: 8px;
   background: #2a7f45;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 1.8rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    line-height: 1.8rem;
+  }
+
+  &:hover {
+    filter: brightness(0.93);
+  }
 }
 
 .icon-btn.cancel-submit {

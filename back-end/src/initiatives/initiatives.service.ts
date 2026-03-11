@@ -31,6 +31,7 @@ import { PhasesService } from 'src/phases/phases.service';
 import { WpBudget } from 'src/entities/wp-budget.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { Archive } from 'src/entities/archive.entity';
+import { INITIATIVE_ROLES, LEAD_ROLES, isLeadRole } from '../shared/roles';
 
 @Injectable()
 export class InitiativesService {
@@ -671,10 +672,10 @@ async findOne(id: number) {
         );
       }
     }
-    if (user.role != 'admin' && initiativeRoles.role == 'Leader')
+    if (user.role != 'admin' && initiativeRoles.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Only Admin Can Add Leader';
 
-    if (user.role != 'admin' && currentRole.role == 'Leader')
+    if (user.role != 'admin' && currentRole.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Admin Only Can edit Leader';
 
     if (!errorMsg) {
@@ -708,7 +709,7 @@ async findOne(id: number) {
     });
 
     let errorMsg = null;
-    if (roles.role == 'Leader' && user.role != 'admin')
+    if (roles.role == INITIATIVE_ROLES.LEAD && user.role != 'admin')
       errorMsg = 'Only admin can delete leader';
 
     if (roles && !errorMsg) return await this.iniRolesRepository.remove(roles);
@@ -741,7 +742,7 @@ async findOne(id: number) {
     };
     //To the user that was added by the Admin or Leader/Coordinator
 
-    if (user.role != 'admin' && role.role == 'Leader')
+    if (user.role != 'admin' && role.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Only Admin Can Add Leader';
 
     if (!errorMsg) {
@@ -755,10 +756,10 @@ async findOne(id: number) {
           });
 
           if (
-            data.role == 'Coordinator' ||
-            data.role == 'Contributor' ||
-            data.role == 'Co-leader'   ||
-            data.role =='Financial Focal Point'
+            data.role == INITIATIVE_ROLES.COORDINATOR ||
+            data.role == INITIATIVE_ROLES.CONTRIBUTOR ||
+            data.role == INITIATIVE_ROLES.CO_LEADER   ||
+            data.role == INITIATIVE_ROLES.FINANCIAL_FOCAL_POINT
           ) {
             this.emailService.sendEmailTobyVarabel(
               user,
@@ -803,7 +804,7 @@ async findOne(id: number) {
           initiative_id,
         },
       });
-      return ['Contributor', 'Leader', 'Contributor'].includes(result?.role);
+      return [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(result?.role as INITIATIVE_ROLES);
     } catch (error) {
       return false;
     }
@@ -818,7 +819,7 @@ async findOne(id: number) {
           initiative_id,
         },
       });
-      return ['Contributor', 'Leader', 'Contributor'].includes(result?.role);
+      return [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(result?.role as INITIATIVE_ROLES);
     } catch (error) {
       return false;
     }
@@ -834,7 +835,7 @@ async findOne(id: number) {
           initiative_id,
         },
       })
-      .then((r) => ['Contributor', 'Leader', 'Contributor'].includes(r.role))
+      .then((r) => [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(r.role as INITIATIVE_ROLES))
       .catch(() => false);
 
     return isMember;
@@ -853,7 +854,7 @@ async findOne(id: number) {
           initiative_id: messageRecord.initiative_id,
         },
       })
-      .then((r) => ['Contributor', 'Leader'].includes(r.role))
+      .then((r) => [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(r.role as INITIATIVE_ROLES))
       .catch(() => false);
 
     const message = await this.chatGroupRepositoryService.getMessagesById(

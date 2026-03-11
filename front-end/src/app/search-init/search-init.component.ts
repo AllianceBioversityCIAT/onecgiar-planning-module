@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { FormBuilder, FormGroup } from "@angular/forms";
-import { ROLES } from "../components/new-team-member/new-team-member.component";
+import { ROLES } from "../shared/roles";
 
 @Component({
   selector: "app-search-init",

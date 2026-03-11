@@ -8,10 +8,9 @@ import {
   ConfirmComponent,
   ConfirmDialogModel,
 } from "src/app/confirm/confirm.component";
-import {
-  NewTeamMemberComponent,
-  ROLES,
-} from "src/app/components/new-team-member/new-team-member.component";
+import { NewTeamMemberComponent } from "src/app/components/new-team-member/new-team-member.component";
+import { isLeadRole } from "src/app/shared/roles";
+import { PermissionService } from "src/app/shared/permission.service";
 import { InitiativesService } from "src/app/services/initiatives.service";
 import { UserService } from "src/app/services/user.service";
 import { HeaderService } from "../header.service";
@@ -35,7 +34,8 @@ export class TeamMembersComponent {
     private userService: UserService,
     private headerService: HeaderService,
     private title: Title,
-    private meta: Meta
+    private meta: Meta,
+    private permissionService: PermissionService
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -86,13 +86,7 @@ export class TeamMembersComponent {
 
   async init() {}
   canEdit() {
-    return (
-      this.user_info.role == "admin" ||
-      this.my_roles?.includes(ROLES.LEAD) ||
-      this.my_roles?.includes(ROLES.COORDINATOR) ||
-       this.my_roles?.includes(ROLES.Financial_Focal_Point) ||
-      this.my_roles?.includes(ROLES.CoLeader)
-    );
+    return this.permissionService.isAdmin() || this.my_roles?.some((r: string) => isLeadRole(r));
   }
   async deleteMember(roleId: number) {
     this.dialog

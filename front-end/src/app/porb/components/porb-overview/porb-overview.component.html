@@ -29,22 +29,11 @@
         </ng-template>
       </div>
 
-      <div class="overview-actions" data-tour-anchor="porb-overview-actions">
-        <a
-          class="icon-btn"
-          title="View Summary"
-          [routerLink]="[
-            '/program',
-            initiative?.id,
-            initiative?.official_code,
-            'porb'
-          ]"
-        >
-          <mat-icon>dashboard</mat-icon>
-        </a>
+      <div class="overview-actions">
         <a
           class="icon-btn"
           title="Team Members"
+          data-tour-anchor="porb-action-team"
           [routerLink]="[
             '/program',
             initiative?.id,
@@ -58,13 +47,15 @@
           type="button"
           class="icon-btn"
           title="History of Change"
+          data-tour-anchor="porb-action-history"
           (click)="historyClicked.emit()"
         >
-          <mat-icon>track_changes</mat-icon>
+          <mat-icon>manage_history</mat-icon>
         </button>
         <a
           class="icon-btn"
           title="Submitted Versions"
+          data-tour-anchor="porb-action-versions"
           [routerLink]="[
             '/program',
             initiative?.id,
@@ -72,13 +63,14 @@
             'submited-versions'
           ]"
         >
-          <mat-icon>history</mat-icon>
+          <mat-icon>checklist</mat-icon>
         </a>
         <button
           *ngIf="submissionStatus === 'Pending' && submissionId"
           type="button"
           class="icon-btn cancel-submit"
           title="Cancel PORB"
+          data-tour-anchor="porb-action-cancel"
           (click)="cancelSubmissionClicked.emit()"
         >
           <mat-icon>cancel</mat-icon>
@@ -87,6 +79,7 @@
           type="button"
           class="icon-btn"
           title="Export All (ZIP)"
+          data-tour-anchor="porb-action-export"
           (click)="exportAllZip.emit()"
         >
           <mat-icon>folder_zip</mat-icon>
@@ -94,11 +87,13 @@
         <button
           *ngIf="canSubmit && submissionStatus === 'Draft'"
           type="button"
-          class="icon-btn submit"
+          class="submit-btn"
           title="Submit PORB"
+          data-tour-anchor="porb-action-submit"
           (click)="submitClicked.emit()"
         >
-          <mat-icon>send</mat-icon>
+          <mat-icon>publish</mat-icon>
+          <span>Submit</span>
         </button>
       </div>
     </div>

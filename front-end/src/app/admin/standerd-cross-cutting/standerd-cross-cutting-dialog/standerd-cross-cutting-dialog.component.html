@@ -1,0 +1,64 @@
+<div class="form-dialog-header">
+  <div class="form-dialog-header__text-box">
+    <p class="form-dialog-header__text-box__text">
+      {{ itemId ? "Edit" : "Add" }} Standard Cross Cutting
+    </p>
+  </div>
+
+  <div class="form-dialog-header__icon-box">
+    <button class="form-dialog-header__icon-box__btn" (click)="onCloseDialog()">
+      <mat-icon class="form-dialog-header__icon-box__icon-size">
+        <img
+          class="form-dialog-header__icon-box__icon-size__icon"
+          src="../../../assets/shared-image/Vector-close.svg"
+          alt="~/Frontend/images/icon _ Vector-close"
+        />
+      </mat-icon>
+    </button>
+  </div>
+</div>
+
+<div class="form-dialog-conten-box-1">
+  <form [formGroup]="itemForm" class="form-dialog-content">
+    <!-- Name field -->
+    <div class="form-dialog-content__field--grid-column">
+      <div class="form-dialog-content__title-box">
+        <mat-label class="form-dialog-content__title-box__title"
+          >Name<span class="star">*</span></mat-label
+        >
+      </div>
+      <mat-form-field
+        class="form-dialog-content__field"
+        floatLabel="always"
+        hideRequiredMarker
+        appearance="outline"
+      >
+        <input matInput formControlName="name" placeholder="Enter name" />
+        <mat-error
+          class="error"
+          *ngIf="itemForm.controls?.['name']?.errors?.['required']"
+          >This field is mandatory</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <div>
+      <div class="form-dialog-conten-button-box">
+        <div class="form-dialog-conten__button-box" align="end">
+          <div class="risk-report-button-box">
+            <button
+              class="risk-report-button-box__btn btn--chestnut"
+              type="submit"
+              mat-raised-button
+              mat-button
+              color="primary"
+              (click)="submit()"
+            >
+              {{ itemId ? "Save" : "Add" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

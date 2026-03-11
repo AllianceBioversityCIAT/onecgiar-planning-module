@@ -36,6 +36,7 @@ import { VersionComponent } from "./archive/version/version.component";
 import { ExportComponent } from "./admin/export/export.component";
 import { OnlineUsersComponent } from "./admin/online-users/online-users.component";
 import { PorbComponent } from "./porb/porb.component";
+import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
 
 const routes: Routes = [
   {
@@ -91,6 +92,7 @@ const routes: Routes = [
       { path: "archive", component: ArchivedComponent },
       { path: "export", component: ExportComponent },
       { path: "online-users", component: OnlineUsersComponent },
+      { path: "standerd-cross-cutting", component: StanderdCrossCuttingComponent },
 
     ],
   },

@@ -28,6 +28,7 @@ import { BudgetAssumptionsModule } from './budget-assumptions/budget-assumptions
 import { AnaplanModule } from './anaplan/anaplan.module';
 import { ClarisaCountryModule } from './clarisa-country/clarisa-country.module';
 import { PorbModule } from './porb/porb.module';
+import { StanderdCrossCuttingModule } from './standerd-cross-cutting/standerd-cross-cutting.module';
 
 @Module({
   controllers:[AppController],
@@ -70,7 +71,7 @@ import { PorbModule } from './porb/porb.module';
     AnaplanModule,
     ClarisaCountryModule,
     PorbModule,
-    
+    StanderdCrossCuttingModule,
   ],
 })
 export class AppModule {}

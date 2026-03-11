@@ -12,7 +12,7 @@ import { ViewDataComponent } from "./view-data/view-data.component";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AuthService } from "../services/auth.service";
 import { ToastrService } from "ngx-toastr";
-import { ROLES } from "../components/new-team-member/new-team-member.component";
+import { ROLES } from "../shared/roles";
 import { IpsrComponent } from "./ipsr/ipsr.component";
 import { PhasesService } from "../services/phases.service";
 import { HeaderService } from "../header.service";

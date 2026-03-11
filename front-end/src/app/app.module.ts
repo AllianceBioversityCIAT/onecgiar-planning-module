@@ -124,6 +124,8 @@ import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sect
 import { CrossSectionComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-section.component";
 import { CrossAddDialogComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-add-dialog.component";
 import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.component";
+import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
+import { StanderdCrossCuttingDialogComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting-dialog/standerd-cross-cutting-dialog.component";
 
 
 @NgModule({
@@ -206,7 +208,9 @@ import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.compone
     BudgetAndAssumptionComponent,
     CrossSectionComponent,
     CrossAddDialogComponent,
-    PorbTourComponent
+    PorbTourComponent,
+    StanderdCrossCuttingComponent,
+    StanderdCrossCuttingDialogComponent
   ],
   imports: [ 
     BrowserModule,

@@ -42,6 +42,7 @@ import { PhasesService } from 'src/phases/phases.service';
 import { HttpService } from '@nestjs/axios';
 import { SubmissionService } from 'src/submission/submission.service';
 import { EmailService } from 'src/email/email.service';
+import { INITIATIVE_ROLES, LEAD_ROLES, isLeadRole } from '../shared/roles';
 
 @Injectable()
 export class PorbService {
@@ -3294,7 +3295,7 @@ export class PorbService {
       const initWithRoles = await this.initiativeRepository.findOne({
         where: {
           id: programId,
-          roles: { role: In(['Leader', 'Coordinator', 'Financial Focal Point']) },
+          roles: { role: In([...LEAD_ROLES]) },
         },
         relations: ['roles', 'roles.user'],
       });
@@ -3471,9 +3472,9 @@ export class PorbService {
 
           const usersRole = [];
           init.roles.filter((d) => {
-            if (d.role == 'Leader' || d.role == 'Coordinator' || d.role == 'Financial Focal Point') {
+            if (isLeadRole(d.role)) {
               usersRole.push(d);
-            } else if (d.role == 'Contributor') {
+            } else if (d.role == INITIATIVE_ROLES.CONTRIBUTOR) {
               d.organizations.filter((x) => {
                 if (x.code == data.organization_code) {
                   usersRole.push(d);
@@ -3541,9 +3542,9 @@ export class PorbService {
 
           const usersRole = [];
           init.roles.filter((d) => {
-            if (d.role == 'Leader' || d.role == 'Coordinator' || d.role == 'Financial Focal Point') {
+            if (isLeadRole(d.role)) {
               usersRole.push(d);
-            } else if (d.role == 'Contributor') {
+            } else if (d.role == INITIATIVE_ROLES.CONTRIBUTOR) {
               d.organizations.filter((x) => {
                 if (x.code == data.organization_code) {
                   usersRole.push(d);
