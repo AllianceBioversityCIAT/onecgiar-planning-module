@@ -1517,12 +1517,11 @@ export class PorbService {
     return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals };
   }
 
-  async importTocToPorbTables(programId: number, officialCode: string) {
+  async importTocToPorbTables(programId: number, officialCode: string, tocDataOverride?: any) {
     const CROSS_AOW_TOC_ID = '00000000-0000-0000-0000-000000000000';
     const activePhase =
       await this.submissionService.PhasesService.findActivePhase();
-    const tocData: any = await this.getTocs(officialCode);
-    const toc = await Promise.resolve(tocData);
+    const toc = tocDataOverride || await this.getTocs(officialCode);
     const results: any[] = Array.isArray(toc?.results) ? toc.results : [];
 
     if (!results.length) {
@@ -2084,45 +2083,7 @@ export class PorbService {
       countryCodesByResultAndCenter.set(key, list);
     }
 
-    // 4. Migrate HLOs
-    const hloResults = oldResults.filter(
-      (r) => r.type === 'INDICATOR' && !r.is_project,
-    );
-    for (const porbHlo of porbHlos) {
-      const matchingResult = hloResults.find(
-        (r) =>
-          r.result_uuid === porbHlo.toc_id &&
-          Number(r.organization_code) === porbHlo.center_id,
-      );
-      if (!matchingResult) continue;
-
-      const budget = parseFloat(matchingResult.budget) || 0;
-      const ba = baByItemAndCenter.get(
-        `${matchingResult.result_uuid}::${matchingResult.organization_code}`,
-      );
-      const assumption = ba?.budget_assumptions || '';
-
-      if (budget || assumption) {
-        await this.porbHloRepository.update(porbHlo.id, {
-          hlo_budget: budget || porbHlo.hlo_budget,
-          hlo_assumption: assumption || porbHlo.hlo_assumption,
-        });
-        counts.hlos++;
-      }
-    }
-
-    // 5. Reset & Migrate Partners
-    // Clear stale contracted partner rows before re-applying
-    if (porbPartners.length) {
-      await this.porbContractedPartnerRepository
-        .createQueryBuilder()
-        .delete()
-        .from(PorbContractedPartner)
-        .where('program_id = :programId', { programId })
-        .execute();
-    }
-
-    // Build a map from AOW acrnum → porb_aow_id for matching BA wp_id to AOW
+    // Shared lookups for AOW mapping (used by HLO, Partner, Bilateral, Melia migrations)
     const allAowsForMigration = await this.porbAowRepository.find({
       where: { program_id: programId },
     });
@@ -2130,7 +2091,6 @@ export class PorbService {
     for (const aow of allAowsForMigration) {
       aowAcrnumToId.set(String(aow.aow_acrnum || '').toUpperCase(), aow.id);
     }
-    // Build lookup: work_package.wp_id (numeric) → wp_official_code (e.g., "SP01-AOW02-project")
     const wpRows = await this.workPackageRepository.find({
       where: { initiative_id: programId },
     });
@@ -2138,8 +2098,6 @@ export class PorbService {
     for (const wp of wpRows) {
       wpIdToOfficialCode.set(wp.wp_id, wp.wp_official_code);
     }
-
-    // Helper: extract porb_aow_id from BA wp_id (e.g., "SP01-AOW02-project" → AOW02 → id)
     const getAowIdFromWpId = (wpId: string): number | null => {
       const upper = String(wpId || '').toUpperCase();
       if (upper.startsWith('CROSS')) {
@@ -2152,96 +2110,164 @@ export class PorbService {
       return null;
     };
 
-    // Build lookup: "item_id::porb_aow_id" → BudgetAssumptions[] (match by toc_id + AOW)
-    const basByItemAndAow = new Map<string, BudgetAssumptions[]>();
-    for (const ba of budgetAssumptions) {
-      if (!ba.wp_id || !ba.wp_id.endsWith('-partners')) continue;
-      const aowId = getAowIdFromWpId(ba.wp_id);
-      if (!aowId) continue;
-      const key = `${ba.item_id}::${aowId}`;
-      const list = basByItemAndAow.get(key) || [];
-      list.push(ba);
-      basByItemAndAow.set(key, list);
+    // 4. Migrate HLOs
+    // Reset HLO budgets before re-applying (prevents stale data from previous runs)
+    if (porbHlos.length) {
+      await this.porbHloRepository
+        .createQueryBuilder()
+        .update()
+        .set({ hlo_budget: 0, hlo_assumption: '' })
+        .where('program_id = :programId', { programId })
+        .execute();
     }
-
-    // Build lookup: "result_uuid::organization_code::porb_aow_id" → Result.budget
-    // Partners can have different budgets per AOW, so we include AOW in the key.
-    const partnerResultBudgets = new Map<string, number>();
-    const partnerResults = oldResults.filter((r) => r.type === 'PARTNER');
-    for (const r of partnerResults) {
-      const wpCode = wpIdToOfficialCode.get(Number(r.wp_id));
-      const aowId = wpCode ? getAowIdFromWpId(wpCode) : null;
-      const key = `${r.result_uuid}::${r.organization_code}::${aowId ?? 'any'}`;
-      partnerResultBudgets.set(key, parseFloat(r.budget) || 0);
-      // Also store a fallback key without AOW (for cases where AOW doesn't match)
-      const fallbackKey = `${r.result_uuid}::${r.organization_code}`;
-      if (!partnerResultBudgets.has(fallbackKey)) {
-        partnerResultBudgets.set(fallbackKey, parseFloat(r.budget) || 0);
-      }
+    const hloResults = oldResults.filter(
+      (r) => r.type === 'INDICATOR' && !r.is_project,
+    );
+    // Build lookup: "toc_id::center_id" → PORB HLO row
+    const porbHloByKey = new Map<string, typeof porbHlos[0]>();
+    for (const ph of porbHlos) {
+      porbHloByKey.set(`${ph.toc_id}::${ph.center_id}`, ph);
     }
+    // Track used PORB HLO rows and deduplicate submitted Results
+    const usedHloIds = new Set<number>();
+    const seenHloResults = new Set<string>();
+    for (const result of hloResults) {
+      const hloDedupKey = `${result.result_uuid}::${result.organization_code}::${result.wp_id}`;
+      if (seenHloResults.has(hloDedupKey)) continue;
+      seenHloResults.add(hloDedupKey);
 
-    for (const porbPartner of porbPartners) {
-      const matchingBAs = basByItemAndAow.get(`${porbPartner.toc_id}::${porbPartner.porb_aow_id}`) || [];
+      const tocId = result.result_uuid;
+      const centerId = Number(result.organization_code);
+      const budget = parseFloat(result.budget) || 0;
+      const ba = baByItemAndCenter.get(`${tocId}::${centerId}`);
+      const assumption = ba?.budget_assumptions || '';
+      if (!budget && !assumption) continue;
 
-      // Create/update contracted partner rows using Result.budget (not BA.item_budget)
-      const allCountryCodes: number[] = [];
-      for (const ba of matchingBAs) {
-        const centerId = Number(ba.organization_code);
-        if (!Number.isFinite(centerId)) continue;
-
-        // Use Result.budget as the budget source (matches old submission display)
-        // Try AOW-specific key first, then fallback to any AOW
-        const budget = partnerResultBudgets.get(`${porbPartner.toc_id}::${centerId}::${porbPartner.porb_aow_id}`)
-          ?? partnerResultBudgets.get(`${porbPartner.toc_id}::${centerId}`)
-          ?? 0;
-        if (!budget) continue;
-
-        // Look up country codes from partner_countries using toc_id + center_code
-        const countryKey = `${porbPartner.toc_id}::${centerId}`;
-        const codes = countryCodesByResultAndCenter.get(countryKey) || [];
-        codes.sort((a, b) => a - b);
-        const countries = codes.join(', ');
-        const assumption = ba.budget_assumptions || '';
-
-        // Only import budget if both countries and assumption are present
-        if (!countries || !assumption) continue;
-
-        allCountryCodes.push(...codes);
-
-        const existingCP = await this.porbContractedPartnerRepository.findOne({
-          where: {
-            porb_partner_id: porbPartner.id,
-            center_id: centerId,
-            program_id: programId,
-          },
+      const existingPorb = porbHloByKey.get(`${tocId}::${centerId}`);
+      if (existingPorb && !usedHloIds.has(existingPorb.id)) {
+        // Update existing row (first match for this indicator+center)
+        usedHloIds.add(existingPorb.id);
+        const wpOfficialCode = wpIdToOfficialCode.get(Number(result.wp_id));
+        const correctAowId = wpOfficialCode ? getAowIdFromWpId(wpOfficialCode) : null;
+        await this.porbHloRepository.update(existingPorb.id, {
+          hlo_budget: budget,
+          hlo_assumption: assumption,
+          ...(correctAowId != null ? { porb_aow_id: correctAowId } : {}),
         });
+        counts.hlos++;
+      } else if (existingPorb) {
+        // Same indicator+center under different AOW — create new row
+        const wpOfficialCode = wpIdToOfficialCode.get(Number(result.wp_id));
+        const correctAowId = wpOfficialCode ? getAowIdFromWpId(wpOfficialCode) : null;
+        await this.porbHloRepository.save({
+          program_id: programId,
+          porb_aow_id: correctAowId ?? existingPorb.porb_aow_id,
+          toc_id: tocId,
+          center_id: centerId,
+          hlo_name: existingPorb.hlo_name,
+          hlo_description: existingPorb.hlo_description,
+          hlo_type: existingPorb.hlo_type,
+          hlo_geo: existingPorb.hlo_geo,
+          hlo_target: existingPorb.hlo_target,
+          hlo_budget: budget,
+          hlo_assumption: assumption,
+          toc_is_deleted: false,
+        });
+        counts.hlos++;
+      }
+      // If no existing PORB row, skip (indicator not in TOC)
+    }
 
-        if (existingCP) {
-          await this.porbContractedPartnerRepository.update(existingCP.id, {
-            budget,
-            countries,
-            assumption,
-            porb_aow_id: porbPartner.porb_aow_id,
-          });
-          counts.contracted_partners++;
-        } else {
-          await this.porbContractedPartnerRepository.save({
-            program_id: programId,
-            center_id: centerId,
-            porb_partner_id: porbPartner.id,
-            porb_aow_id: porbPartner.porb_aow_id,
-            countries,
-            budget,
-            assumption,
-          });
-          counts.contracted_partners++;
-        }
+    // 5. Reset & Migrate Partners
+    // Clear stale contracted partner rows before re-applying
+    await this.porbContractedPartnerRepository
+      .createQueryBuilder()
+      .delete()
+      .from(PorbContractedPartner)
+      .where('program_id = :programId', { programId })
+      .execute();
+
+    // Migrate partners using submitted Results as primary source (like bilateral migration).
+    // One contracted partner row per unique Result (toc_id + center + AOW).
+    const partnerResults = oldResults.filter((r) => r.type === 'PARTNER');
+
+    // Build lookup: toc_id → porb_partner row
+    const porbPartnerByTocId = new Map<string, typeof porbPartners[0]>();
+    for (const pp of porbPartners) {
+      porbPartnerByTocId.set(pp.toc_id, pp);
+    }
+
+    // Deduplicate partner Results by result_uuid::organization_code::wp_id
+    const seenPartnerResults = new Set<string>();
+    const createdCPKeys = new Set<string>();
+
+    for (const result of partnerResults) {
+      const dedupKey = `${result.result_uuid}::${result.organization_code}::${result.wp_id}`;
+      if (seenPartnerResults.has(dedupKey)) continue;
+      seenPartnerResults.add(dedupKey);
+
+      const tocId = result.result_uuid;
+      const centerId = Number(result.organization_code);
+      const budget = parseFloat(result.budget) || 0;
+      if (!budget) continue;
+
+      // Resolve AOW from Result's wp_id
+      const wpOfficialCode = wpIdToOfficialCode.get(Number(result.wp_id));
+      const correctAowId = wpOfficialCode ? getAowIdFromWpId(wpOfficialCode) : null;
+      if (!correctAowId) continue;
+
+      // Find the porb_partner for this toc_id
+      let porbPartner = porbPartnerByTocId.get(tocId);
+
+      // If no porb_partner exists (placeholder like 999999), create one
+      if (!porbPartner) {
+        const newPartner = await this.porbPartnerRepository.save({
+          program_id: programId,
+          porb_aow_id: correctAowId,
+          toc_id: tocId,
+          partner_name: `Partner ${tocId}`,
+          partner_outputs: '',
+          toc_is_deleted: true,
+        });
+        porbPartner = newPartner as any;
+        porbPartnerByTocId.set(tocId, porbPartner);
       }
 
-      // Update partner-level geo from all contracted country codes
-      if (allCountryCodes.length) {
-        counts.partners++;
-      }
+      const cpKey = `${porbPartner.id}::${centerId}::${correctAowId}`;
+      if (createdCPKeys.has(cpKey)) continue;
+
+      // Get country codes
+      const countryKey = `${tocId}::${centerId}`;
+      const codes = countryCodesByResultAndCenter.get(countryKey) || [];
+      codes.sort((a, b) => a - b);
+      const countries = codes.join(', ');
+
+      // Find matching BA for assumption (AOW-specific first, then fallback)
+      const matchingBA = budgetAssumptions.find(
+        (ba) =>
+          ba.item_id === tocId &&
+          Number(ba.organization_code) === centerId &&
+          ba.wp_id?.endsWith('-partners') &&
+          getAowIdFromWpId(ba.wp_id) === correctAowId,
+      ) || budgetAssumptions.find(
+        (ba) =>
+          ba.item_id === tocId &&
+          Number(ba.organization_code) === centerId &&
+          ba.wp_id?.endsWith('-partners'),
+      );
+      const assumption = matchingBA?.budget_assumptions || '';
+
+      await this.porbContractedPartnerRepository.save({
+        program_id: programId,
+        center_id: centerId,
+        porb_partner_id: porbPartner.id,
+        porb_aow_id: correctAowId,
+        countries,
+        budget,
+        assumption,
+      });
+      createdCPKeys.add(cpKey);
+      counts.contracted_partners++;
     }
 
     // Reset bilateral/melia budgets before re-applying (prevents stale data from previous runs)
@@ -2276,8 +2302,14 @@ export class PorbService {
     }
     // Track which PORB rows have been used for a specific AOW
     const usedBilateralIds = new Set<number>();
+    // Deduplicate submitted Results by result_uuid::organization_code::wp_id
+    const seenBilateralResults = new Set<string>();
     // Process each submitted Result to set budget and correct AOW
     for (const result of bilateralResults) {
+      const bilateralDedupKey = `${result.result_uuid}::${result.organization_code}::${result.wp_id}`;
+      if (seenBilateralResults.has(bilateralDedupKey)) continue;
+      seenBilateralResults.add(bilateralDedupKey);
+
       const tocId = result.result_uuid;
       const centerId = Number(result.organization_code);
       const budget = parseFloat(result.budget) || 0;
@@ -2302,8 +2334,8 @@ export class PorbService {
         // Update existing row (first time for this bilateral+center)
         usedBilateralIds.add(existingPorb.id);
         await this.porbBilateralRepository.update(existingPorb.id, {
-          bilateral_budget: budget || existingPorb.bilateral_budget,
-          bilateral_assumption: assumption || existingPorb.bilateral_assumption,
+          bilateral_budget: budget,
+          bilateral_assumption: assumption,
           ...(correctAowId != null ? { porb_aow_id: correctAowId } : {}),
         });
         counts.bilaterals++;
@@ -2364,8 +2396,8 @@ export class PorbService {
       if (budget || assumption) {
         const correctAowId = getAowIdFromWpId(matchingBA.wp_id);
         await this.porbMeliaRepository.update(porbMelia.id, {
-          melia_budget: budget || porbMelia.melia_budget,
-          melia_assumption: assumption || porbMelia.melia_assumption,
+          melia_budget: budget,
+          melia_assumption: assumption,
           ...(correctAowId != null ? { porb_aow_id: correctAowId } : {}),
         });
         counts.melias++;
@@ -2604,7 +2636,80 @@ export class PorbService {
     programIds?: number[],
     reqUser?: { id: number },
   ) {
-    const tocResult = await this.bulkImportToc(programIds, reqUser);
+    // Use submitted toc_data (from submission JSON) for import,
+    // ensuring we have the exact same TOC structure as the submitted version.
+    let initiatives: Initiative[];
+    if (programIds?.length) {
+      initiatives = await this.initiativeRepository.find({
+        where: { id: In(programIds), archived: false },
+      });
+    } else {
+      initiatives = await this.initiativeRepository.find({
+        where: { archived: false },
+      });
+    }
+
+    const tocResults: any[] = [];
+    for (const initiative of initiatives) {
+      try {
+        // Load submitted toc_data
+        let tocData: any = null;
+        if (initiative.latest_submission_id) {
+          const submission = await this.submissionRepository.findOne({
+            where: { id: initiative.latest_submission_id },
+          });
+          if (submission?.toc_data) {
+            tocData = typeof submission.toc_data === 'string'
+              ? JSON.parse(submission.toc_data)
+              : submission.toc_data;
+          }
+        }
+
+        if (!tocData) {
+          tocResults.push({
+            program_id: initiative.id,
+            official_code: initiative.official_code,
+            status: 'skipped',
+            reason: 'no submitted toc_data',
+          });
+          continue;
+        }
+
+        const detail = await this.importTocToPorbTables(
+          initiative.id,
+          initiative.official_code,
+          tocData,
+        );
+        tocResults.push({
+          program_id: initiative.id,
+          official_code: initiative.official_code,
+          status: 'success',
+          detail,
+        });
+
+        await this.logHistory({
+          initiative_id: initiative.id,
+          user_id: reqUser?.id,
+          resource_property: 'System Import (TOC from Submission)',
+          new_value: `Imported TOC data from submitted version for ${initiative.official_code}`,
+        });
+      } catch (err) {
+        tocResults.push({
+          program_id: initiative.id,
+          official_code: initiative.official_code,
+          status: 'error',
+          error: err?.message || String(err),
+        });
+      }
+    }
+
+    const tocResult = {
+      total: initiatives.length,
+      success: tocResults.filter((r) => r.status === 'success').length,
+      failed: tocResults.filter((r) => r.status === 'error').length,
+      results: tocResults,
+    };
+
     const migrateResult = await this.bulkMigrateSubmissionData(
       programIds,
       reqUser,
@@ -2629,9 +2734,17 @@ export class PorbService {
 
       const submissionId = program.latest_submission_id;
 
-      // Load submitted results grouped by type
-      const submittedResults = await this.resultRepository.find({
+      // Load submitted results grouped by type, deduplicated by result_uuid+center+wp_id
+      const allSubmittedResults = await this.resultRepository.find({
         where: { submission_id: submissionId },
+      });
+      // Deduplicate: same result can appear multiple times in submitted version
+      const seenResultKeys = new Set<string>();
+      const submittedResults = allSubmittedResults.filter((r) => {
+        const key = `${r.result_uuid}::${r.organization_code}::${r.wp_id}`;
+        if (seenResultKeys.has(key)) return false;
+        seenResultKeys.add(key);
+        return true;
       });
 
       // Load work packages for AOW mapping
@@ -2643,7 +2756,7 @@ export class PorbService {
 
       // --- Submitted totals ---
       const submittedHloTotal = submittedResults
-        .filter((r) => r.type === 'INDICATOR')
+        .filter((r) => r.type === 'INDICATOR' && !r.is_project)
         .reduce((sum, r) => sum + (parseFloat(r.budget) || 0), 0);
 
       const submittedBilateralTotal = submittedResults
@@ -2664,7 +2777,7 @@ export class PorbService {
           : aowMatch?.[1] || 'UNKNOWN';
         if (!submittedByAow[aowKey]) submittedByAow[aowKey] = { hlo: 0, bilateral: 0, partner: 0 };
         const budget = parseFloat(r.budget) || 0;
-        if (r.type === 'INDICATOR') submittedByAow[aowKey].hlo += budget;
+        if (r.type === 'INDICATOR' && !r.is_project) submittedByAow[aowKey].hlo += budget;
         else if (r.type === 'PROJECT') submittedByAow[aowKey].bilateral += budget;
         else if (r.type === 'PARTNER') submittedByAow[aowKey].partner += budget;
       }
@@ -2702,6 +2815,7 @@ export class PorbService {
 
       // --- Compare ---
       const round2 = (n: number) => Math.round(n * 100) / 100;
+      const tolerance = 10; // Allow up to $10 rounding tolerance
       const hloDiff = round2(porbHloTotal - submittedHloTotal);
       const bilateralDiff = round2(porbBilateralTotal - submittedBilateralTotal);
       const partnerDiff = round2(porbPartnerTotal - submittedPartnerTotal);
@@ -2715,7 +2829,7 @@ export class PorbService {
           bilateral: round2(porb.bilateral - sub.bilateral),
           partner: round2(porb.partner - sub.partner),
         };
-        const match = Math.abs(diffs.hlo) < 1 && Math.abs(diffs.bilateral) < 1 && Math.abs(diffs.partner) < 1;
+        const match = Math.abs(diffs.hlo) < tolerance && Math.abs(diffs.bilateral) < tolerance && Math.abs(diffs.partner) < tolerance;
         return {
           aow,
           submitted: { hlo: round2(sub.hlo), bilateral: round2(sub.bilateral), partner: round2(sub.partner) },
@@ -2725,7 +2839,7 @@ export class PorbService {
         };
       });
 
-      const overallMatch = Math.abs(hloDiff) < 1 && Math.abs(bilateralDiff) < 1 && Math.abs(partnerDiff) < 1;
+      const overallMatch = Math.abs(hloDiff) < tolerance && Math.abs(bilateralDiff) < tolerance && Math.abs(partnerDiff) < tolerance;
 
       results.push({
         program_id: program.id,
