@@ -74,6 +74,11 @@ Key areas:
 ### Environment Variables (Backend `.env`)
 Required: MySQL connection (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`), `JWT_SECRET`, `JWT_EXPIRATION_TIME`, AWS Cognito credentials, `SENDGRID_API_KEY`, `PORT` (default 3000), optional `BASE_URL` for non-root deployment.
 
+## Caveats
+
+### Loading Interceptor PORB Route Check
+`loading.interceptor.ts` uses `this.router.url.includes('/porb')` to skip the global loading spinner on PORB pages. If a new route is added that contains `/porb` as a substring (e.g., `/report-porb-legacy`), it will also bypass the spinner unintentionally. If that happens, switch to a more specific check (e.g., regex or exact segment match).
+
 ## CI/CD
 - GitHub Actions triggers Jenkins on push to `development` branch
 - Jenkins builds Docker images and deploys with health checks

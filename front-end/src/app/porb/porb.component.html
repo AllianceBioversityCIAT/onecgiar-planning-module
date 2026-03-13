@@ -86,8 +86,12 @@
         <div class="porb-consolidation-section">
           <h3>Consolidated</h3>
 
-          <div *ngIf="summaryLoading" class="summary-loading">
-            <mat-spinner diameter="36"></mat-spinner>
+          <div *ngIf="summaryLoading" class="summary-skeleton">
+            <div class="skeleton-block sk-table-head"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
           </div>
 
           <div class="summary-table-wrapper" *ngIf="!summaryLoading">
@@ -166,8 +170,11 @@
         <div class="summary-aow-detail" *ngIf="summarySelectedAow && !summaryLoading">
           <h3 class="summary-aow-title">{{ summarySelectedAow.code }}: {{ summarySelectedAow.title }}</h3>
 
-          <div *ngIf="summaryAowDetailLoading" class="summary-loading">
-            <mat-spinner diameter="36"></mat-spinner>
+          <div *ngIf="summaryAowDetailLoading" class="summary-skeleton">
+            <div class="skeleton-block sk-table-head"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
           </div>
 
           <ng-container *ngIf="!summaryAowDetailLoading && summaryAowDetail">
@@ -395,32 +402,40 @@
       </nav>
 
       <!-- Consolidation -->
-      <div class="porb-consolidation-section" *ngIf="consolidationBudgetSummary" data-tour-anchor="porb-consolidation">
+      <div class="porb-consolidation-section" data-tour-anchor="porb-consolidation" *ngIf="sectionLoading || consolidationBudgetSummary">
         <h4>Consolidated ({{ selectedAow?.code }})</h4>
-        <table class="consolidation-table consolidation-flat">
-          <thead>
-            <tr>
-              <th>Pool HLO</th>
-              <th>Partners</th>
-              <th>MELIA</th>
-              <th>W3/Bilateral</th>
-              <th>Anaplan</th>
-              <th>Pooled Total</th>
-              <th>Consolidated Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{{ consolidationBudgetSummary.poolHlo }}</td>
-              <td>{{ consolidationBudgetSummary.partners }}</td>
-              <td>{{ consolidationBudgetSummary.melia }}</td>
-              <td>{{ consolidationBudgetSummary.w3 }}</td>
-              <td>{{ consolidationBudgetSummary.anaplan }}</td>
-              <td>{{ consolidationBudgetSummary.pooledTotal }}</td>
-              <td>{{ consolidationBudgetSummary.consolidatedTotal }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <ng-container *ngIf="sectionLoading">
+          <div class="section-skeleton-inline">
+            <div class="skeleton-block sk-table-head"></div>
+            <div class="skeleton-block sk-table-row"></div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="!sectionLoading && consolidationBudgetSummary">
+          <table class="consolidation-table consolidation-flat">
+            <thead>
+              <tr>
+                <th>Pool HLO</th>
+                <th>Partners</th>
+                <th>MELIA</th>
+                <th>W3/Bilateral</th>
+                <th>Anaplan</th>
+                <th>Pooled Total</th>
+                <th>Consolidated Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ consolidationBudgetSummary.poolHlo }}</td>
+                <td>{{ consolidationBudgetSummary.partners }}</td>
+                <td>{{ consolidationBudgetSummary.melia }}</td>
+                <td>{{ consolidationBudgetSummary.w3 }}</td>
+                <td>{{ consolidationBudgetSummary.anaplan }}</td>
+                <td>{{ consolidationBudgetSummary.pooledTotal }}</td>
+                <td>{{ consolidationBudgetSummary.consolidatedTotal }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </ng-container>
       </div>
 
       <!-- Level 3: Section nav list -->
@@ -443,7 +458,25 @@
 
       <!-- Section content (single ngSwitch, no destroy/recreate on nav click) -->
       <div class="porb-section-content" *ngIf="isPorbSelectionComplete">
-        <ng-container [ngSwitch]="selectedExtraNavigation">
+
+        <!-- Section loading skeleton -->
+        <ng-container *ngIf="sectionLoading">
+          <div class="section-skeleton-block">
+            <div class="section-sk-toolbar">
+              <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--wide"></div>
+              <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--med"></div>
+              <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--narrow"></div>
+            </div>
+            <div class="skeleton-block sk-table-head"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="!sectionLoading" [ngSwitch]="selectedExtraNavigation">
           <app-pool-section
             *ngSwitchCase="'Pool funding HLO'"
             [rows]="poolFundingRows"

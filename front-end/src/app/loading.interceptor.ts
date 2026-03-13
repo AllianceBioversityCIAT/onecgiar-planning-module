@@ -5,6 +5,7 @@ import {
   HttpEvent,
   HttpInterceptor,
 } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 import { LoaderService } from './services/loader.service';
 
@@ -12,13 +13,13 @@ import { LoaderService } from './services/loader.service';
 export class LoadingInterceptor implements HttpInterceptor {
   private totalRequests = 0;
 
-  constructor(private loaderService: LoaderService) {}
+  constructor(private loaderService: LoaderService, private router: Router) {}
 
   intercept(
     request: HttpRequest<unknown>,
     next: HttpHandler
   ): Observable<HttpEvent<unknown>> {
-    if (request.headers.has('skipLoading')) {
+    if (request.headers.has('skipLoading') || this.router.url.includes('/porb')) {
       const cloned = request.clone({
         headers: request.headers.delete('skipLoading'),
       });

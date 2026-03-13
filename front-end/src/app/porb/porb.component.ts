@@ -81,6 +81,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   submissionId: number | null = null;
   submitting = false;
   cancellingSubmission = false;
+  sectionLoading = false;
 
   showTour = false;
   private readonly porbTourStorageKey = "porb_tour_seen_v2";
@@ -634,44 +635,49 @@ export class PorbComponent implements OnInit, OnDestroy {
     const porbAowId = this.getSelectedPorbAowId();
     const centerId = this.getSelectedCenterId();
     this.clearBudgetRows();
-    await this.refreshSectionValidation();
-    await this.refreshValidationSummary();
-    await this.loadConsolidation(programId, porbAowId, centerId);
+    this.sectionLoading = true;
+    try {
+      await this.refreshSectionValidation();
+      await this.refreshValidationSummary();
+      await this.loadConsolidation(programId, porbAowId, centerId);
 
-    if (this.selectedExtraNavigation === "Pool funding HLO") {
-      const hlos = await this.porbService.getHlos(programId, porbAowId, centerId);
-      this.poolFundingRows = Array.isArray(hlos) ? hlos : [];
-      return;
-    }
+      if (this.selectedExtraNavigation === "Pool funding HLO") {
+        const hlos = await this.porbService.getHlos(programId, porbAowId, centerId);
+        this.poolFundingRows = Array.isArray(hlos) ? hlos : [];
+        return;
+      }
 
-    if (this.selectedExtraNavigation === "Partners") {
-      const partners = await this.porbService.getPartners(programId, porbAowId, centerId);
-      this.partnersRows = Array.isArray(partners) ? partners : [];
-      return;
-    }
+      if (this.selectedExtraNavigation === "Partners") {
+        const partners = await this.porbService.getPartners(programId, porbAowId, centerId);
+        this.partnersRows = Array.isArray(partners) ? partners : [];
+        return;
+      }
 
-    if (this.selectedExtraNavigation === "W3/Bilatral") {
-      const bilaterals = await this.porbService.getBilaterals(programId, porbAowId, centerId);
-      this.w3Rows = Array.isArray(bilaterals) ? bilaterals : [];
-      return;
-    }
+      if (this.selectedExtraNavigation === "W3/Bilatral") {
+        const bilaterals = await this.porbService.getBilaterals(programId, porbAowId, centerId);
+        this.w3Rows = Array.isArray(bilaterals) ? bilaterals : [];
+        return;
+      }
 
-    if (this.selectedExtraNavigation === "MELIA Study") {
-      const melia = await this.porbService.getMelia(programId, porbAowId, centerId);
-      this.meliaRows = Array.isArray(melia) ? melia : [];
-      return;
-    }
+      if (this.selectedExtraNavigation === "MELIA Study") {
+        const melia = await this.porbService.getMelia(programId, porbAowId, centerId);
+        this.meliaRows = Array.isArray(melia) ? melia : [];
+        return;
+      }
 
-    if (this.selectedExtraNavigation === "Anaplan") {
-      const anaplan = await this.porbService.getAnaplan(programId, porbAowId, centerId);
-      this.anaplanRows = Array.isArray(anaplan) ? anaplan : [];
-      return;
-    }
+      if (this.selectedExtraNavigation === "Anaplan") {
+        const anaplan = await this.porbService.getAnaplan(programId, porbAowId, centerId);
+        this.anaplanRows = Array.isArray(anaplan) ? anaplan : [];
+        return;
+      }
 
-    if (this.selectedExtraNavigation === "Cross Cutting") {
-      const cross = await this.porbService.getCross(programId, porbAowId, centerId);
-      this.crossRows = Array.isArray(cross) ? cross : [];
-      return;
+      if (this.selectedExtraNavigation === "Cross Cutting") {
+        const cross = await this.porbService.getCross(programId, porbAowId, centerId);
+        this.crossRows = Array.isArray(cross) ? cross : [];
+        return;
+      }
+    } finally {
+      this.sectionLoading = false;
     }
   }
 

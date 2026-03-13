@@ -403,6 +403,69 @@
   padding: 2rem 0;
 }
 
+// Skeleton for summary tab (replaces mat-spinner)
+.summary-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.8rem 0;
+
+  .sk-table-head {
+    height: 3.4rem;
+  }
+
+  .sk-table-row {
+    height: 3.6rem;
+  }
+}
+
+// Skeleton for consolidation panel while section is loading
+.section-skeleton-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+
+  .sk-table-head {
+    height: 2.8rem;
+  }
+
+  .sk-table-row {
+    height: 3rem;
+  }
+}
+
+// Skeleton for section content area (budget table)
+.section-skeleton-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+}
+
+.section-sk-toolbar {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.sk-toolbar-bar {
+  height: 3.2rem;
+  border-radius: 8px;
+
+  &--wide {
+    width: 18rem;
+  }
+
+  &--med {
+    width: 12rem;
+  }
+
+  &--narrow {
+    width: 9rem;
+  }
+}
+
 .summary-table-wrapper {
   overflow-x: auto;
 }

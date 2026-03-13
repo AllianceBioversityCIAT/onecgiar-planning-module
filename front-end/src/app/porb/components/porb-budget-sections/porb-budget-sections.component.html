@@ -1,7 +1,24 @@
 <section class="additional-section">
   <h2>{{ selectedExtraNavigation }}</h2>
 
-  <ng-container [ngSwitch]="selectedExtraNavigation">
+  <!-- Section loading skeleton -->
+  <ng-container *ngIf="loading">
+    <div class="section-skeleton">
+      <div class="section-sk-toolbar">
+        <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--wide"></div>
+        <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--med"></div>
+        <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--narrow"></div>
+      </div>
+      <div class="skeleton-block sk-table-head"></div>
+      <div class="skeleton-block sk-table-row"></div>
+      <div class="skeleton-block sk-table-row"></div>
+      <div class="skeleton-block sk-table-row"></div>
+      <div class="skeleton-block sk-table-row"></div>
+      <div class="skeleton-block sk-table-row"></div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading" [ngSwitch]="selectedExtraNavigation">
     <app-pool-section
       *ngSwitchCase="'Pool funding HLO'"
       [rows]="poolFundingRows"
