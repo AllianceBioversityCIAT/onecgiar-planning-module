@@ -4,7 +4,7 @@ RUN apt-get update \
     && apt-get install -y wget gnupg gnupg2 \
     && apt-get update
 RUN curl http://nginx.org/keys/nginx_signing.key | apt-key add -
-RUN npm install -g npm@8.19.3 && \
+RUN npm install -g npm@10 && \
     npm install -g @angular/cli && \
     rm -rf ~/.npm
 RUN apt-get update && \
