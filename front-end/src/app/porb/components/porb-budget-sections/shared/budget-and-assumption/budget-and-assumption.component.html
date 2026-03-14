@@ -4,15 +4,19 @@
     type="text"
     [ngModel]="value ?? ''"
     (ngModelChange)="onValueChange($event)"
+    (focus)="onFocus()"
     (blur)="onBlur()"
     (paste)="onPaste($event)"
     [disabled]="disabled"
     [class.is-saving]="isSaving"
+    [class.is-saved]="isSaved"
+    [class.is-error]="isError"
   />
 
   <button
     *ngIf="assumptionEnabled"
     type="button"
+    tabindex="-1"
     class="assumption-icon"
     data-tour-anchor="porb-assumption-icon"
     [ngClass]="{

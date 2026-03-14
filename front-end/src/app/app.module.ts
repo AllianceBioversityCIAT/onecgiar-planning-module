@@ -123,6 +123,7 @@ import { AnaplanSectionComponent } from "./porb/components/porb-budget-sections/
 import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sections/shared/budget-and-assumption/budget-and-assumption.component";
 import { CrossSectionComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-section.component";
 import { CrossAddDialogComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-add-dialog.component";
+import { ClearBudgetConfirmDialogComponent } from "./porb/components/porb-budget-sections/shared/clear-budget-confirm-dialog.component";
 import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.component";
 import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
 import { StanderdCrossCuttingDialogComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting-dialog/standerd-cross-cutting-dialog.component";
@@ -208,6 +209,7 @@ import { StanderdCrossCuttingDialogComponent } from "./admin/standerd-cross-cutt
     BudgetAndAssumptionComponent,
     CrossSectionComponent,
     CrossAddDialogComponent,
+    ClearBudgetConfirmDialogComponent,
     PorbTourComponent,
     StanderdCrossCuttingComponent,
     StanderdCrossCuttingDialogComponent

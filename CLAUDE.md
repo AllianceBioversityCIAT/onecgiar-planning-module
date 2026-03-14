@@ -79,6 +79,15 @@ Required: MySQL connection (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_
 ### Loading Interceptor PORB Route Check
 `loading.interceptor.ts` uses `this.router.url.includes('/porb')` to skip the global loading spinner on PORB pages. If a new route is added that contains `/porb` as a substring (e.g., `/report-porb-legacy`), it will also bypass the spinner unintentionally. If that happens, switch to a more specific check (e.g., regex or exact segment match).
 
+### Budget Input Save Pattern (No Table Reload)
+`onBudgetUpdated()` in `porb.component.ts` does NOT reload table rows. It only refreshes the consolidation sidebar and validation. The backend already returns the updated entity, so local data stays correct without a full reload. This prevents DOM destruction (flicker, focus loss, broken Tab navigation). Only `onRowAdded()` (used by cross-cutting "Add New" dialog) triggers a full `loadBudgetRows()`.
+
+### Budget Clear Confirmation Dialog
+`BudgetAndAssumptionComponent.onBlur()` shows a `ClearBudgetConfirmDialogComponent` when a non-zero budget is cleared to empty/0 and an assumption exists. "Delete Both" clears both and saves; "Cancel" restores the previous value. If no assumption exists, the clear saves silently. Values of `0` are normalized to empty string (no `0` saved to DB). Inputs that were already empty/0 skip the server call entirely on blur.
+
+### Budget Input Tab Navigation
+The assumption icon button in `budget-and-assumption.component.html` has `tabindex="-1"` to keep it out of the Tab order. Without this, pressing Tab in a budget input with a value would focus the assumption button instead of the next budget input (because the button is only `[disabled]` when there's no budget value).
+
 ## CI/CD
 - GitHub Actions triggers Jenkins on push to `development` branch
 - Jenkins builds Docker images and deploys with health checks
