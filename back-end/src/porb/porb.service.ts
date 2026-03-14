@@ -35,6 +35,7 @@ import { Initiative } from 'src/entities/initiative.entity';
 import { Result } from 'src/entities/result.entity';
 import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
+import { StanderdCrossCutting } from 'src/entities/standerd-cross-cutting.entity';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import { AxiosError } from 'axios';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
@@ -91,6 +92,8 @@ export class PorbService {
     private readonly budgetAssumptionsRepository: Repository<BudgetAssumptions>,
     @InjectRepository(PartnerCountry)
     private readonly partnerCountryRepository: Repository<PartnerCountry>,
+    @InjectRepository(StanderdCrossCutting)
+    private readonly standerdCrossCuttingRepository: Repository<StanderdCrossCutting>,
     private readonly initService: InitiativesService,
     private readonly phasesService: PhasesService,
     private readonly httpService: HttpService,
@@ -204,6 +207,7 @@ export class PorbService {
         indicators: [],
         summary: {
           poolHlo: 0,
+          crossCutting: 0,
           partners: 0,
           melia: 0,
           pooledTotal: 0,
@@ -214,7 +218,7 @@ export class PorbService {
       };
     }
 
-    const [hlos, partners, contractedPartners, meliaRows, w3Rows, anaplanRows] = await Promise.all([
+    const [hlos, partners, contractedPartners, meliaRows, w3Rows, anaplanRows, crossRows] = await Promise.all([
       this.porbHloRepository.find({
         where: { program_id, porb_aow_id, center_id },
       }),
@@ -231,6 +235,9 @@ export class PorbService {
         where: { program_id, porb_aow_id, center_id },
       }),
       this.porbAnaplanRepository.find({
+        where: { program_id, porb_aow_id, center_id },
+      }),
+      this.porbCrossRepository.find({
         where: { program_id, porb_aow_id, center_id },
       }),
     ]);
@@ -280,7 +287,8 @@ export class PorbService {
     const melia = meliaRows.reduce((sum, row) => sum + (Number(row?.melia_budget) || 0), 0);
     const w3 = w3Rows.reduce((sum, row) => sum + (Number(row?.bilateral_budget) || 0), 0);
     const anaplan = anaplanRows.reduce((sum, row) => sum + (Number(row?.budget) || 0), 0);
-    const pooledTotal = poolHlo + partnersTotal + melia;
+    const crossCutting = crossRows.reduce((sum, row) => sum + (Number(row?.budget) || 0), 0);
+    const pooledTotal = poolHlo + crossCutting;
     const consolidatedTotal = pooledTotal + w3;
 
     return {
@@ -308,6 +316,7 @@ export class PorbService {
       ],
       summary: {
         poolHlo,
+        crossCutting,
         partners: partnersTotal,
         melia,
         pooledTotal,
@@ -456,7 +465,7 @@ export class PorbService {
       const crossBudget = crossRows.reduce((sum, r) => sum + (Number(r?.budget) || 0), 0);
       const totalPooledFunding =
         ind.innovationBudget + ind.knowledgeBudget + ind.capacityBudget +
-        ind.othersBudget + partnerBudget + meliaBudget + crossBudget;
+        ind.othersBudget + crossBudget;
       const consolidatedTotal = totalPooledFunding + w3Budget;
 
       // Accumulate totals
@@ -757,49 +766,31 @@ export class PorbService {
   }
 
   async getCross(program_id: number, porb_aow_id?: number, center_id?: number) {
-    if (porb_aow_id == null || center_id == null) {
-      return [];
-    }
+    if (porb_aow_id == null || center_id == null) return [];
 
     const selectedAow = await this.porbAowRepository.findOne({
       where: { id: porb_aow_id, program_id },
     });
-    if (!selectedAow || String(selectedAow.aow_acrnum || '').toUpperCase() !== 'AOW00') {
-      return [];
-    }
+    if (!selectedAow || String(selectedAow.aow_acrnum || '').toUpperCase() !== 'AOW00') return [];
 
-    const crossItems = await this.crossCuttingRepository.find({
-      where: {
-        initiative_id: program_id,
-        submission_id: IsNull(),
-      },
-      order: { title: 'ASC' },
-    });
-    if (!crossItems.length) {
-      return [];
-    }
+    const standardItems = await this.standerdCrossCuttingRepository.find({ order: { id: 'ASC' } });
+    if (!standardItems.length) return [];
 
-    const crossIds = crossItems.map((item) => String(item.id));
+    const standardIds = standardItems.map((item) => item.id);
     const savedRows = await this.porbCrossRepository.find({
-      where: {
-        program_id,
-        porb_aow_id,
-        center_id,
-        cross_cutting_id: In(crossIds),
-      },
+      where: { program_id, porb_aow_id, center_id, standerd_cross_cutting_id: In(standardIds) },
     });
-    const savedMap = new Map<string, PorbCross>();
-    savedRows.forEach((row) => savedMap.set(String(row.cross_cutting_id), row));
+    const savedMap = new Map<number, PorbCross>();
+    savedRows.forEach((row) => savedMap.set(row.standerd_cross_cutting_id, row));
 
-    return crossItems.map((item) => {
-      const saved = savedMap.get(String(item.id));
+    return standardItems.map((item) => {
+      const saved = savedMap.get(item.id);
       return {
         program_id,
         porb_aow_id,
         center_id,
-        cross_cutting_id: String(item.id),
-        title: item.title || '',
-        description: item.description || '',
+        standerd_cross_cutting_id: item.id,
+        title: item.name || '',
         budget: saved?.budget ?? null,
         assumption: saved?.assumption || '',
       };
@@ -1206,7 +1197,7 @@ export class PorbService {
       program_id: number;
       porb_aow_id: number;
       center_id: number;
-      cross_cutting_id: string;
+      standerd_cross_cutting_id: number;
       budget?: number | null;
       assumption?: string;
     },
@@ -1217,15 +1208,14 @@ export class PorbService {
         program_id: data.program_id,
         porb_aow_id: data.porb_aow_id,
         center_id: data.center_id,
-        cross_cutting_id: data.cross_cutting_id,
+        standerd_cross_cutting_id: data.standerd_cross_cutting_id,
       },
     });
 
-    // Resolve the cross-cutting title for history logging
-    const crossCutting = await this.crossCuttingRepository.findOne({
-      where: { id: data.cross_cutting_id },
+    const standardItem = await this.standerdCrossCuttingRepository.findOne({
+      where: { id: data.standerd_cross_cutting_id },
     });
-    const itemName = crossCutting?.title || `Cross Cutting #${data.cross_cutting_id}`;
+    const itemName = standardItem?.name || `Cross Cutting #${data.standerd_cross_cutting_id}`;
 
     if (existing) {
       const oldBudget = existing.budget;
@@ -1266,73 +1256,47 @@ export class PorbService {
       program_id: data.program_id,
       porb_aow_id: data.porb_aow_id,
       center_id: data.center_id,
-      cross_cutting_id: data.cross_cutting_id,
+      standerd_cross_cutting_id: data.standerd_cross_cutting_id,
       budget: data.budget ?? null,
       assumption: String(data.assumption || ''),
     });
     return this.porbCrossRepository.save(created);
   }
 
-  async createCross(
-    data: {
-      program_id: number;
-      porb_aow_id: number;
-      center_id: number;
-      title: string;
-      description?: string;
-      budget?: number | null;
-      assumption?: string;
-    },
-    reqUser?: { id: number },
-  ) {
-    const title = String(data.title || '').trim();
-    if (!title) {
-      throw new BadRequestException('Cross cutting title is required.');
+  async migrateExistingCrossToStandard() {
+    const standardItems = await this.standerdCrossCuttingRepository.find();
+    const nameToId = new Map<string, number>();
+    for (const item of standardItems) {
+      nameToId.set((item.name || '').trim().toLowerCase(), item.id);
     }
 
-    const selectedAow = await this.porbAowRepository.findOne({
-      where: { id: data.porb_aow_id, program_id: data.program_id },
+    const unmigrated = await this.porbCrossRepository.find({
+      where: { standerd_cross_cutting_id: IsNull() },
+      relations: ['cross_cutting'],
     });
-    if (!selectedAow || String(selectedAow.aow_acrnum || '').toUpperCase() !== 'AOW00') {
-      throw new BadRequestException('Cross cutting rows are only available for AOW00.');
+
+    let matched = 0;
+    const unmatchedTitles: string[] = [];
+
+    for (const row of unmigrated) {
+      const title = (row.cross_cutting?.title || '').trim().toLowerCase();
+      const standardId = nameToId.get(title);
+      if (standardId != null) {
+        await this.porbCrossRepository.update(row.id, { standerd_cross_cutting_id: standardId });
+        matched++;
+      } else {
+        const rawTitle = row.cross_cutting?.title || `(unknown CC id=${row.cross_cutting_id})`;
+        if (!unmatchedTitles.includes(rawTitle)) {
+          unmatchedTitles.push(rawTitle);
+        }
+      }
     }
-
-    const cross = await this.crossCuttingRepository.save(
-      this.crossCuttingRepository.create({
-        initiative_id: data.program_id,
-        title,
-        description: String(data.description || ''),
-        submission_id: null,
-      }),
-    );
-
-    await this.updateCross({
-      program_id: data.program_id,
-      porb_aow_id: data.porb_aow_id,
-      center_id: data.center_id,
-      cross_cutting_id: String(cross.id),
-      budget: data.budget ?? null,
-      assumption: String(data.assumption || ''),
-    });
-
-    await this.logHistory({
-      initiative_id: data.program_id,
-      user_id: reqUser?.id,
-      item_name: title,
-      resource_property: 'New Cross Cutting Item',
-      new_value: title,
-      organization_id: data.center_id,
-    });
 
     return {
-      program_id: data.program_id,
-      porb_aow_id: data.porb_aow_id,
-      center_id: data.center_id,
-      cross_cutting_id: String(cross.id),
-      title: cross.title || '',
-      description: cross.description || '',
-      budget: data.budget ?? null,
-      assumption: String(data.assumption || ''),
+      total: unmigrated.length,
+      matched,
+      unmatched: unmigrated.length - matched,
+      unmatchedTitles,
     };
   }
 
@@ -1471,26 +1435,24 @@ export class PorbService {
     let cross: any[] = [];
     const isAow00 = String(selectedAow?.aow_acrnum || '').toUpperCase() === 'AOW00';
     if (isAow00) {
-      const crossItems = await this.crossCuttingRepository.find({
-        where: { initiative_id: program_id, submission_id: IsNull() },
-        order: { title: 'ASC' },
-      });
-      if (crossItems.length) {
-        const crossIds = crossItems.map((item) => String(item.id));
+      const standardItems = await this.standerdCrossCuttingRepository.find({ order: { id: 'ASC' } });
+      if (standardItems.length) {
+        const standardIds = standardItems.map((item) => item.id);
         const savedRows = await this.porbCrossRepository.find({
-          where: { program_id, porb_aow_id, cross_cutting_id: In(crossIds) },
+          where: { program_id, porb_aow_id, standerd_cross_cutting_id: In(standardIds) },
         });
-        // Aggregate budgets per cross_cutting_id across all centers
-        const budgetMap = new Map<string, number>();
+        // Aggregate budgets per standerd_cross_cutting_id across all centers
+        const budgetMap = new Map<number, number>();
         for (const row of savedRows) {
-          const key = String(row.cross_cutting_id);
-          budgetMap.set(key, (budgetMap.get(key) || 0) + (Number(row.budget) || 0));
+          if (row.standerd_cross_cutting_id != null) {
+            const key = row.standerd_cross_cutting_id;
+            budgetMap.set(key, (budgetMap.get(key) || 0) + (Number(row.budget) || 0));
+          }
         }
-        cross = crossItems.map((item) => ({
-          cross_cutting_id: String(item.id),
-          title: item.title || '',
-          description: item.description || '',
-          budget: budgetMap.get(String(item.id)) || 0,
+        cross = standardItems.map((item) => ({
+          standerd_cross_cutting_id: item.id,
+          title: item.name || '',
+          budget: budgetMap.get(item.id) || 0,
         }));
       }
     }
@@ -2405,76 +2367,61 @@ export class PorbService {
       }
     }
 
-    // 8. Migrate Cross-Cutting
-    // Live CC items (submission_id IS NULL) are the canonical list used by PorbCross.
-    // Submitted CC items (submission_id = submissionId) are copies with different UUIDs.
-    // Result rows reference submitted CC IDs via result_uuid.
-    // Strategy: map submitted CC → live CC by title, then match results.
-    const liveCrossItems = await this.crossCuttingRepository.find({
-      where: { initiative_id: programId, submission_id: IsNull() },
-    });
+    // 8. Migrate Cross-Cutting (using standard cross-cutting items)
+    const standardCrossItems = await this.standerdCrossCuttingRepository.find();
+    const standardNameToId = new Map<string, number>();
+    for (const item of standardCrossItems) {
+      standardNameToId.set((item.name || '').trim().toLowerCase(), item.id);
+    }
+
     const submittedCrossItems = await this.crossCuttingRepository.find({
       where: { initiative_id: programId, submission_id: submissionId },
     });
     const crossResults = oldResults.filter((r) => r.type === 'Cross-Cutting');
-    const crossBAs = budgetAssumptions.filter(
-      (ba) => ba.wp_id && ba.wp_id.endsWith('-Cross-Cutting'),
-    );
 
-    // Find the AOW00 row for this program
     const crossAow = await this.porbAowRepository.findOne({
       where: { program_id: programId, aow_acrnum: 'AOW00' },
     });
 
-    if (crossAow && liveCrossItems.length) {
-      // Map submitted CC id → live CC id by matching title
-      const submittedToLiveMap = new Map<string, string>();
+    if (crossAow && standardCrossItems.length) {
+      // Map submitted CC id → standard item id by matching title
+      const submittedToStandardMap = new Map<string, number>();
       for (const subCC of submittedCrossItems) {
-        const liveMatch = liveCrossItems.find(
-          (lcc) => (lcc.title || '').trim() === (subCC.title || '').trim(),
-        );
-        if (liveMatch) {
-          submittedToLiveMap.set(String(subCC.id), String(liveMatch.id));
+        const title = (subCC.title || '').trim().toLowerCase();
+        const standardId = standardNameToId.get(title);
+        if (standardId != null) {
+          submittedToStandardMap.set(String(subCC.id), standardId);
         }
       }
 
-      // Build a map of existing PorbCross rows
+      // Build map of existing PorbCross rows by standerd_cross_cutting_id::center_id
       const existingCrossMap = new Map<string, PorbCross>();
       for (const pc of porbCrosses) {
-        existingCrossMap.set(`${pc.cross_cutting_id}::${pc.center_id}`, pc);
+        if (pc.standerd_cross_cutting_id != null) {
+          existingCrossMap.set(`${pc.standerd_cross_cutting_id}::${pc.center_id}`, pc);
+        }
       }
 
-      // Results reference submitted CC via result_uuid
       for (const result of crossResults) {
         const submittedCcId = result.result_uuid;
-        const liveCcId = submittedToLiveMap.get(submittedCcId);
-        if (!liveCcId) continue;
+        const standardId = submittedToStandardMap.get(submittedCcId);
+        if (standardId == null) continue;
 
         const centerId = Number(result.organization_code);
         if (!Number.isFinite(centerId)) continue;
 
         const budget = parseFloat(result.budget) || 0;
-        const matchingBA = crossBAs.find(
-          (ba) =>
-            ba.item_id === submittedCcId &&
-            Number(ba.organization_code) === centerId,
+        const crossBAs = budgetAssumptions.filter(
+          (ba) => ba.wp_id && ba.wp_id.endsWith('-Cross-Cutting'),
         );
-        // Also try matching by live CC id
-        const matchingBALive = !matchingBA
-          ? crossBAs.find(
-              (ba) =>
-                ba.item_id === liveCcId &&
-                Number(ba.organization_code) === centerId,
-            )
-          : null;
-        const assumption =
-          matchingBA?.budget_assumptions ||
-          matchingBALive?.budget_assumptions ||
-          '';
+        const matchingBA = crossBAs.find(
+          (ba) => ba.item_id === submittedCcId && Number(ba.organization_code) === centerId,
+        );
+        const assumption = matchingBA?.budget_assumptions || '';
 
         if (!budget && !assumption) continue;
 
-        const key = `${liveCcId}::${centerId}`;
+        const key = `${standardId}::${centerId}`;
         const existing = existingCrossMap.get(key);
 
         if (existing) {
@@ -2487,7 +2434,7 @@ export class PorbService {
             program_id: programId,
             porb_aow_id: crossAow.id,
             center_id: centerId,
-            cross_cutting_id: liveCcId,
+            standerd_cross_cutting_id: standardId,
             budget: budget || null,
             assumption: assumption || '',
           });
@@ -3763,14 +3710,9 @@ export class PorbService {
     const crossRows = await this.porbCrossRepository.find({
       where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
     });
-    const crossIds = [...new Set(crossRows.map((r) => r.cross_cutting_id))];
-    const crossItems = crossIds.length
-      ? await this.crossCuttingRepository.find({ where: { id: In(crossIds) } })
-      : [];
-    const crossItemMap = new Map<string, { title: string; description: string }>();
-    crossItems.forEach((c) =>
-      crossItemMap.set(String(c.id), { title: c.title || '', description: c.description || '' }),
-    );
+    const standardCrossItems = await this.standerdCrossCuttingRepository.find();
+    const crossItemMap = new Map<number, string>();
+    standardCrossItems.forEach((c) => crossItemMap.set(c.id, c.name || ''));
 
     // Load contracted partners directly for proper multi-center grouping
     const contractedPartners = await this.porbContractedPartnerRepository.find({
@@ -4365,17 +4307,16 @@ export class PorbService {
   private generatePorbCrossSheet(
     crossRows: PorbCross[],
     aowMap: Map<number, { code: string; name: string }>,
-    crossItemMap: Map<string, { title: string; description: string }>,
+    crossItemMap: Map<number, string>,
     sortedAowIds: number[],
   ) {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'Cost elements', 'Total budget (USD)', 'id', 'cross_id']);
+    wsData.push(['AOW', 'Cost elements', 'Total budget (USD)', 'id', 'standerd_cross_cutting_id']);
 
     let currentRow = 1;
 
-    // Group by AOW
     const crossByAow = new Map<number, PorbCross[]>();
     for (const c of crossRows) {
       const list = crossByAow.get(c.porb_aow_id) || [];
@@ -4391,18 +4332,17 @@ export class PorbService {
       const aowStartRow = currentRow;
 
       for (const c of aowCross) {
-        const item = crossItemMap.get(String(c.cross_cutting_id));
+        const itemName = crossItemMap.get(c.standerd_cross_cutting_id) || '';
         wsData.push([
           aowLabel,
-          item?.title || '',
+          itemName,
           Number(c.budget) || 0,
           c.id,
-          c.cross_cutting_id,
+          c.standerd_cross_cutting_id,
         ]);
         currentRow++;
       }
 
-      // AOW vertical merge
       const aowEndRow = currentRow - 1;
       if (aowEndRow >= aowStartRow) {
         merges.push({ s: { r: aowStartRow, c: 0 }, e: { r: aowEndRow, c: 0 } });

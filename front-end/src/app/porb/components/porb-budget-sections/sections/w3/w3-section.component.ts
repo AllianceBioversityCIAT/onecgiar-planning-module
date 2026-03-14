@@ -14,6 +14,8 @@ export class W3SectionComponent implements OnChanges {
   search = "";
   filterOutputs = "";
   savingIds = new Set<number>();
+  errorIds = new Set<number>();
+  savedIds = new Set<number>();
 
   constructor(private porbService: PorbService) {}
 
@@ -89,14 +91,25 @@ export class W3SectionComponent implements OnChanges {
     if (!row?.id) {
       return;
     }
+    this.errorIds.delete(row.id);
+    this.savedIds.delete(row.id);
     this.savingIds.add(row.id);
-    const saved = await this.porbService.updateBilateral(row.id, {
-      bilateral_budget: this.parseBudgetValue(row.bilateral_budget),
-      bilateral_assumption: row.bilateral_assumption ?? "",
-    });
-    this.savingIds.delete(row.id);
-    if (saved) {
-      this.budgetUpdated.emit();
+    try {
+      const saved = await this.porbService.updateBilateral(row.id, {
+        bilateral_budget: this.parseBudgetValue(row.bilateral_budget),
+        bilateral_assumption: row.bilateral_assumption ?? "",
+      });
+      this.savingIds.delete(row.id);
+      if (saved) {
+        this.savedIds.add(row.id);
+        setTimeout(() => this.savedIds.delete(row.id), 1200);
+        this.budgetUpdated.emit();
+      } else {
+        this.errorIds.add(row.id);
+      }
+    } catch {
+      this.savingIds.delete(row.id);
+      this.errorIds.add(row.id);
     }
   }
 

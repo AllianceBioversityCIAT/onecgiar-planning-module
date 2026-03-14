@@ -14,6 +14,8 @@ export class AnaplanSectionComponent implements OnChanges {
   search = "";
   filterAccount = "";
   savingIds = new Set<number>();
+  errorIds = new Set<number>();
+  savedIds = new Set<number>();
 
   constructor(private porbService: PorbService) {}
 
@@ -43,6 +45,8 @@ export class AnaplanSectionComponent implements OnChanges {
     }
 
     const savingKey = Number(row.anaplan_id);
+    this.errorIds.delete(savingKey);
+    this.savedIds.delete(savingKey);
     this.savingIds.add(savingKey);
     try {
       const saved = await this.porbService.updateAnaplan({
@@ -52,11 +56,17 @@ export class AnaplanSectionComponent implements OnChanges {
         anaplan_id: Number(row.anaplan_id),
         budget: this.parseBudgetValue(row.porb_budget),
       });
-      if (saved) {
-        this.budgetUpdated.emit();
-      }
-    } finally {
       this.savingIds.delete(savingKey);
+      if (saved) {
+        this.savedIds.add(savingKey);
+        setTimeout(() => this.savedIds.delete(savingKey), 1200);
+        this.budgetUpdated.emit();
+      } else {
+        this.errorIds.add(savingKey);
+      }
+    } catch {
+      this.savingIds.delete(savingKey);
+      this.errorIds.add(savingKey);
     }
   }
 

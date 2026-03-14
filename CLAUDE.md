@@ -80,7 +80,10 @@ Required: MySQL connection (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_
 `loading.interceptor.ts` uses `this.router.url.includes('/porb')` to skip the global loading spinner on PORB pages. If a new route is added that contains `/porb` as a substring (e.g., `/report-porb-legacy`), it will also bypass the spinner unintentionally. If that happens, switch to a more specific check (e.g., regex or exact segment match).
 
 ### Budget Input Save Pattern (No Table Reload)
-`onBudgetUpdated()` in `porb.component.ts` does NOT reload table rows. It only refreshes the consolidation sidebar and validation. The backend already returns the updated entity, so local data stays correct without a full reload. This prevents DOM destruction (flicker, focus loss, broken Tab navigation). Only `onRowAdded()` (used by cross-cutting "Add New" dialog) triggers a full `loadBudgetRows()`.
+`onBudgetUpdated()` in `porb.component.ts` does NOT reload table rows. It only refreshes the consolidation sidebar and validation. The backend already returns the updated entity, so local data stays correct without a full reload. This prevents DOM destruction (flicker, focus loss, broken Tab navigation).
+
+### Cross-Cutting Uses Standard List
+Cross-cutting items come from the `standerd_cross_cutting` table (7 fixed items), not user-created free-text. The `porb_cross` entity links via `standerd_cross_cutting_id` (the old `cross_cutting_id` is nullable/legacy). There is no "Add New" button — all 7 standard items are always shown. Migration SQL at `back-end/migrate-cross-to-standard.sql`.
 
 ### Budget Clear Confirmation Dialog
 `BudgetAndAssumptionComponent.onBlur()` shows a `ClearBudgetConfirmDialogComponent` when a non-zero budget is cleared to empty/0 and an assumption exists. "Delete Both" clears both and saves; "Cancel" restores the previous value. If no assumption exists, the clear saves silently. Values of `0` are normalized to empty string (no `0` saved to DB). Inputs that were already empty/0 skip the server call entirely on blur.

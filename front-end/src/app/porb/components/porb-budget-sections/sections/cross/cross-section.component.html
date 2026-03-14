@@ -9,31 +9,28 @@
     <button type="button" class="export-btn" (click)="export()" [disabled]="!rows.length">
       Export Excel
     </button>
-    <button type="button" class="add-btn" (click)="onAddNewClick()" *ngIf="canEdit">
-      + Add New
-    </button>
   </div>
 
   <div class="table-scroll" *ngIf="rows.length">
     <table class="additional-table">
       <thead>
         <tr>
-          <th>Cross Cutting Item</th>
-          <th>Description</th>
-          <th>Total budget (USD)</th>
+          <th style="width: 55%">Cross-Cutting</th>
+          <th style="width: 45%">Total budget (USD)</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let row of filteredRows">
           <td class="row-title">{{ row.title }}</td>
-          <td class="row-description">{{ row.description }}</td>
           <td class="budget-cell-with-error num-cell">
             <app-budget-and-assumption
               [attr.data-tour-anchor]="row === filteredRows[0] ? 'porb-budget-input' : null"
               [(value)]="row.budget"
               [(assumption)]="row.assumption"
               [disabled]="!canEdit"
-              [isSaving]="savingIds.has(row.cross_cutting_id)"
+              [isSaving]="savingIds.has(row.standerd_cross_cutting_id)"
+              [isError]="errorIds.has(row.standerd_cross_cutting_id)"
+              [isSaved]="savedIds.has(row.standerd_cross_cutting_id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"
             ></app-budget-and-assumption>
@@ -50,7 +47,7 @@
         </tr>
 
         <tr *ngIf="!filteredRows.length">
-          <td colspan="3">No data found for selected filters.</td>
+          <td colspan="2">No data found for selected filters.</td>
         </tr>
       </tbody>
     </table>
@@ -58,6 +55,6 @@
 
   <div class="empty-state" *ngIf="!rows.length">
     <mat-icon>info_outline</mat-icon>
-    <span>No Cross Cutting records found. Use <strong>+ Add New</strong> above to add your first item.</span>
+    <span>No standard cross-cutting items found. Please contact an administrator.</span>
   </div>
 </div>

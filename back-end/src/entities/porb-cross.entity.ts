@@ -4,6 +4,7 @@ import { Initiative } from './initiative.entity';
 import { Organization } from './organization.entity';
 import { PorbAow } from './porb-aow.entity';
 import { CrossCutting } from './cross-cutting.entity';
+import { StanderdCrossCutting } from './standerd-cross-cutting.entity';
 
 @Entity('porb_cross')
 export class PorbCross {
@@ -36,12 +37,20 @@ export class PorbCross {
   center: Organization;
 
   @ApiProperty()
-  @Column()
+  @Column({ nullable: true })
   cross_cutting_id: string;
 
   @ManyToOne(() => CrossCutting, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'cross_cutting_id' })
   cross_cutting: CrossCutting;
+
+  @ApiProperty()
+  @Column({ nullable: true })
+  standerd_cross_cutting_id: number;
+
+  @ManyToOne(() => StanderdCrossCutting, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'standerd_cross_cutting_id' })
+  standerd_cross_cutting: StanderdCrossCutting;
 
   @ApiProperty()
   @Column({ type: 'float', nullable: true })

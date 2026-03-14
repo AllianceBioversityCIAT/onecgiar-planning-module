@@ -1,7 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
-import { MatDialog } from "@angular/material/dialog";
 import { PorbService } from "src/app/services/porb.service";
-import { CrossAddDialogComponent } from "./cross-add-dialog.component";
 
 @Component({
   selector: "app-cross-section",
@@ -17,9 +15,11 @@ export class CrossSectionComponent implements OnChanges {
   @Output() budgetUpdated = new EventEmitter<void>();
 
   search = "";
-  savingIds = new Set<string>();
+  savingIds = new Set<number>();
+  errorIds = new Set<number>();
+  savedIds = new Set<number>();
 
-  constructor(private porbService: PorbService, private dialog: MatDialog) {}
+  constructor(private porbService: PorbService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["rows"]) {
@@ -30,14 +30,8 @@ export class CrossSectionComponent implements OnChanges {
   get filteredRows() {
     const search = this.search.trim().toLowerCase();
     return this.rows.filter((row) => {
-      const title = String(row.title || "");
-      const description = String(row.description || "");
-      if (!search) {
-        return true;
-      }
-      return (
-        title.toLowerCase().includes(search) || description.toLowerCase().includes(search)
-      );
+      if (!search) return true;
+      return String(row.title || "").toLowerCase().includes(search);
     });
   }
 
@@ -46,54 +40,43 @@ export class CrossSectionComponent implements OnChanges {
     return budget != null && budget > 0 && !String(row?.assumption ?? "").trim();
   }
 
-  onAddNewClick() {
-    if (!this.selectedProgramId || !this.selectedPorbAowId || !this.selectedCenterId) return;
-
-    const ref = this.dialog.open(CrossAddDialogComponent, {
-      width: "520px",
-      data: {
-        program_id: Number(this.selectedProgramId),
-        porb_aow_id: Number(this.selectedPorbAowId),
-        center_id: Number(this.selectedCenterId),
-      },
-    });
-
-    ref.afterClosed().subscribe((result) => {
-      if (result?.created) {
-        this.budgetUpdated.emit();
-      }
-    });
-  }
-
   async saveRow(row: any) {
-    if (!row?.program_id || !row?.porb_aow_id || !row?.center_id || !row?.cross_cutting_id) {
+    if (!row?.program_id || !row?.porb_aow_id || !row?.center_id || !row?.standerd_cross_cutting_id) {
       return;
     }
 
-    const savingKey = String(row.cross_cutting_id);
+    const savingKey = Number(row.standerd_cross_cutting_id);
+    this.errorIds.delete(savingKey);
+    this.savedIds.delete(savingKey);
     this.savingIds.add(savingKey);
     try {
       const saved = await this.porbService.updateCross({
         program_id: Number(row.program_id),
         porb_aow_id: Number(row.porb_aow_id),
         center_id: Number(row.center_id),
-        cross_cutting_id: String(row.cross_cutting_id),
+        standerd_cross_cutting_id: Number(row.standerd_cross_cutting_id),
         budget: this.parseBudgetValue(row.budget),
         assumption: String(row.assumption || ""),
       });
-      if (saved) {
-        this.budgetUpdated.emit();
-      }
-    } finally {
       this.savingIds.delete(savingKey);
+      if (saved) {
+        this.savedIds.add(savingKey);
+        setTimeout(() => this.savedIds.delete(savingKey), 1200);
+        this.budgetUpdated.emit();
+      } else {
+        this.errorIds.add(savingKey);
+      }
+    } catch {
+      this.savingIds.delete(savingKey);
+      this.errorIds.add(savingKey);
     }
   }
 
   export() {
     this.exportAsExcel(
       "cross-cutting-budget.xls",
-      ["Cross Cutting Item", "Description", "Budget"],
-      this.filteredRows.map((row) => [row.title, row.description, row.budget])
+      ["Cross Cutting Item", "Budget"],
+      this.filteredRows.map((row) => [row.title, row.budget])
     );
   }
 
@@ -101,9 +84,7 @@ export class CrossSectionComponent implements OnChanges {
     const normalized = String(value ?? "")
       .replace(/,/g, "")
       .trim();
-    if (!normalized) {
-      return null;
-    }
+    if (!normalized) return null;
     const parsed = Number(normalized);
     return Number.isFinite(parsed) ? parsed : null;
   }
@@ -114,9 +95,7 @@ export class CrossSectionComponent implements OnChanges {
       return;
     }
     this.rows.forEach((row) => {
-      if (row?.budget === 0) {
-        row.budget = "";
-      }
+      if (row?.budget === 0) row.budget = "";
       row.assumption = row.assumption ?? "";
     });
   }

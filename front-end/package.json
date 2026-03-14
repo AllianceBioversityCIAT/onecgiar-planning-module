@@ -7,7 +7,7 @@
     "build": "ng build --configuration production",
     "build-dev": "ng build --configuration development",
     "staging": "ng build --configuration staging",
-    "start:local": "ng serve --configuration local",
+    "start:local": "ng serve --ssl --proxy-config src/proxy.conf.json --configuration local",
     "build:local": "ng build --configuration local",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"

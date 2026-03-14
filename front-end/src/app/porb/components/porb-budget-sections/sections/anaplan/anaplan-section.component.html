@@ -31,6 +31,8 @@
               [assumptionEnabled]="false"
               [disabled]="!canEdit"
               [isSaving]="savingIds.has(row.anaplan_id)"
+              [isError]="errorIds.has(row.anaplan_id)"
+              [isSaved]="savedIds.has(row.anaplan_id)"
               (commit)="saveRow(row)"
             ></app-budget-and-assumption>
           </td>

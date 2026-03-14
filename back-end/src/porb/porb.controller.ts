@@ -277,7 +277,7 @@ export class PorbController {
       program_id: number;
       porb_aow_id: number;
       center_id: number;
-      cross_cutting_id: string;
+      standerd_cross_cutting_id: number;
       budget?: number | null;
       assumption?: string;
     },
@@ -288,7 +288,7 @@ export class PorbController {
         program_id: Number(data.program_id),
         porb_aow_id: Number(data.porb_aow_id),
         center_id: Number(data.center_id),
-        cross_cutting_id: String(data.cross_cutting_id),
+        standerd_cross_cutting_id: Number(data.standerd_cross_cutting_id),
         budget:
           data.budget != null && data.budget !== ('' as any)
             ? Number(data.budget)
@@ -299,35 +299,11 @@ export class PorbController {
     );
   }
 
-  @Post('cross')
-  createCross(
-    @Body()
-    data: {
-      program_id: number;
-      porb_aow_id: number;
-      center_id: number;
-      title: string;
-      description?: string;
-      budget?: number | null;
-      assumption?: string;
-    },
-    @Request() req,
-  ) {
-    return this.porbService.createCross(
-      {
-        program_id: Number(data.program_id),
-        porb_aow_id: Number(data.porb_aow_id),
-        center_id: Number(data.center_id),
-        title: String(data.title || ''),
-        description: String(data.description || ''),
-        budget:
-          data.budget != null && data.budget !== ('' as any)
-            ? Number(data.budget)
-            : null,
-        assumption: String(data.assumption || ''),
-      },
-      req.user,
-    );
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('migrate-cross-to-standard')
+  migrateCrossToStandard() {
+    return this.porbService.migrateExistingCrossToStandard();
   }
 
   @Post('submit/:program_id')

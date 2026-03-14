@@ -17,13 +17,14 @@
     <table class="additional-table">
       <thead>
         <tr>
-          <th>Outputs</th>
-          <th>Bilateral Name</th>
-          <th>Budget (USD)</th>
+          <th>Project title</th>
+          <th>High Level Output title</th>
+          <th>W3/Bilateral Project (USD)</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let row of filteredRows; let i = index" [class.deleted-row]="row.toc_is_deleted" [class.row-error]="rowHasValidationError(row)">
+          <td>{{ row.bilateral_name || "-" }}</td>
           <td
             class="row-title"
             *ngIf="isGroupedCellStart(filteredRows, i, 'bilateral_outputs')"
@@ -31,7 +32,6 @@
           >
             {{ row.bilateral_outputs || "-" }}
           </td>
-          <td>{{ row.bilateral_name || "-" }}</td>
           <td class="budget-cell-with-error num-cell">
             <app-budget-and-assumption
               [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
@@ -39,6 +39,8 @@
               [(assumption)]="row.bilateral_assumption"
               [disabled]="!canEdit"
               [isSaving]="savingIds.has(row.id)"
+              [isError]="errorIds.has(row.id)"
+              [isSaved]="savedIds.has(row.id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"
               (pasteBudget)="pasteFromSpreadsheet($event, i, 'bilateral_budget', 'bilateral_assumption')"

@@ -175,26 +175,12 @@ export class PorbService {
     program_id: number;
     porb_aow_id: number;
     center_id: number;
-    cross_cutting_id: string;
+    standerd_cross_cutting_id: number;
     budget?: number | null;
     assumption?: string;
   }) {
     return firstValueFrom(
       this.http.patch(`${environment.api_url}/porb/cross`, data).pipe(map((d: any) => d))
-    ).catch(() => false);
-  }
-
-  async createCross(data: {
-    program_id: number;
-    porb_aow_id: number;
-    center_id: number;
-    title: string;
-    description?: string;
-    budget?: number | null;
-    assumption?: string;
-  }) {
-    return firstValueFrom(
-      this.http.post(`${environment.api_url}/porb/cross`, data).pipe(map((d: any) => d))
     ).catch(() => false);
   }
 

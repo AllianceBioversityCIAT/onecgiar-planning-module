@@ -21,15 +21,16 @@
     <table class="additional-table">
       <thead>
         <tr>
-          <th>Outputs</th>
-          <th>Partner Name</th>
-          <th>Contracted</th>
-          <th>Geo</th>
-          <th>Budget (USD)</th>
+          <th>Partners title</th>
+          <th>High level outputs</th>
+          <th>Contracted Partners</th>
+          <th>Location of Work</th>
+          <th>Total budget (USD)</th>
         </tr>
       </thead>
       <tbody>
       <tr *ngFor="let row of filteredRows; let i = index" [class.deleted-row]="row.toc_is_deleted" [class.row-error]="rowHasValidationError(row)">
+        <td>{{ row.partner_name || "-" }}</td>
         <td
           class="row-title"
           *ngIf="isGroupedCellStart(filteredRows, i, 'partner_outputs')"
@@ -37,7 +38,6 @@
         >
           {{ row.partner_outputs || "-" }}
         </td>
-        <td>{{ row.partner_name || "-" }}</td>
         <td class="contracted-cell">
           <input
             type="checkbox"
@@ -72,6 +72,8 @@
               [(assumption)]="row.partner_assumption"
               [disabled]="!isContracted(row) || !canEdit"
               [isSaving]="savingIds.has(row.id)"
+              [isError]="errorIds.has(row.id)"
+              [isSaved]="savedIds.has(row.id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"
               (pasteBudget)="pasteFromSpreadsheet($event, i, 'partner_budget', 'partner_geo')"

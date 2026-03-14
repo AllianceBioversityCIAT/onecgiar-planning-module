@@ -22,6 +22,8 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
   filterContracted = "";
   filterCountry = "";
   savingIds = new Set<number>();
+  errorIds = new Set<number>();
+  savedIds = new Set<number>();
   countryOptions: CountryOption[] = [];
 
   constructor(
@@ -182,13 +184,14 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
     const contracted = this.isContracted(row);
     const countryCodes = this.getCountryCodes(row);
     if (contracted && !countryCodes.length) {
-     // alert("Please select at least one country when Contracted is checked.");
       return;
     }
 
     const geoLabel = this.getCountryNamesLabel(row);
     row.partner_geo = geoLabel;
 
+    this.errorIds.delete(row.id);
+    this.savedIds.delete(row.id);
     this.savingIds.add(row.id);
     try {
       const saved = await this.porbService.updatePartner(row.id, {
@@ -199,16 +202,22 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
         partner_budget: contracted ? this.parseBudgetValue(row.partner_budget) : null,
         partner_assumption: row.partner_assumption ?? "",
       });
+      this.savingIds.delete(row.id);
       if (saved && typeof saved === "object") {
         row.partner_geo = saved.partner_geo ?? row.partner_geo;
         row.partner_budget = saved.partner_budget ?? null;
         row.partner_assumption = saved.partner_assumption ?? row.partner_assumption ?? "";
         row.partner_is_contracted = saved.partner_is_contracted ?? row.partner_is_contracted;
         row.partner_country_codes = this.normalizeCountryCodes(saved.partner_country_codes);
+        this.savedIds.add(row.id);
+        setTimeout(() => this.savedIds.delete(row.id), 1200);
         this.budgetUpdated.emit();
+      } else {
+        this.errorIds.add(row.id);
       }
-    } finally {
+    } catch {
       this.savingIds.delete(row.id);
+      this.errorIds.add(row.id);
     }
   }
 

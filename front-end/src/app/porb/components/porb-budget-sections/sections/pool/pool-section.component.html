@@ -3,7 +3,7 @@
     <input
       class="tool-input"
       type="text"
-      placeholder="Search HLO"
+      placeholder="Search High Level Output"
       [(ngModel)]="search"
     />
     <select class="tool-select" [(ngModel)]="filterType">
@@ -17,10 +17,10 @@
     <table class="additional-table">
       <thead>
         <tr>
-          <th>HLO Name</th>
-          <th>Type</th>
+          <th>High Level Output</th>
           <th>Description</th>
-          <th>Geo</th>
+          <th>Type</th>
+          <th>Geographic location</th>
           <th>Target</th>
           <th>Budget (USD)</th>
         </tr>
@@ -34,8 +34,8 @@
           >
             {{ row.hlo_name || "-" }}
           </td>
-          <td>{{ row.hlo_type || "-" }}</td>
           <td>{{ row.hlo_description || "-" }}</td>
+          <td>{{ row.hlo_type || "-" }}</td>
           <td>{{ row.hlo_geo || "-" }}</td>
           <td class="num-cell">{{ row.hlo_target ?? "-" }}</td>
           <td class="budget-cell-with-error num-cell">
@@ -45,6 +45,8 @@
                 [(assumption)]="row.hlo_assumption"
                 [disabled]="!canEdit"
                 [isSaving]="savingIds.has(row.id)"
+              [isError]="errorIds.has(row.id)"
+              [isSaved]="savedIds.has(row.id)"
                 (commit)="saveRow(row)"
                 (assumptionCommit)="saveRow(row)"
                 (pasteBudget)="pasteFromSpreadsheet($event, i, 'hlo_budget', 'hlo_assumption')"
@@ -56,6 +58,8 @@
               [(assumption)]="row.hlo_assumption"
               [disabled]="!canEdit"
               [isSaving]="savingIds.has(row.id)"
+              [isError]="errorIds.has(row.id)"
+              [isSaved]="savedIds.has(row.id)"
               (commit)="saveRow(row)"
               (assumptionCommit)="saveRow(row)"
               (pasteBudget)="pasteFromSpreadsheet($event, i, 'hlo_budget', 'hlo_assumption')"
