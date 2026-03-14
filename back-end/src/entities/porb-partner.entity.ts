@@ -42,4 +42,7 @@ export class PorbPartner {
   @Column({ type: 'boolean', default: false })
   toc_is_deleted: boolean;
 
+  @ApiProperty()
+  @Column({ type: 'boolean', default: false })
+  is_unknown: boolean;
 }

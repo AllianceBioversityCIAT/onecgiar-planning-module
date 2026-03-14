@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -52,6 +53,11 @@ export class PorbController {
     );
   }
 
+  @Get('partner/search-clarisa')
+  searchClarisaPartners(@Query('q') query: string) {
+    return this.porbService.searchClarisaPartners(query || '');
+  }
+
   @Get('partner')
   getPartners(
     @Query('program_id', ParseIntPipe) program_id: number,
@@ -63,6 +69,17 @@ export class PorbController {
       this.parseOptionalNumber(porb_aow_id),
       this.parseOptionalNumber(center_id),
     );
+  }
+
+  @Post('partner')
+  createUnknownPartner(
+    @Body() data: { program_id: number; porb_aow_id: number; center_id: number },
+  ) {
+    return this.porbService.createUnknownPartner({
+      program_id: Number(data.program_id),
+      porb_aow_id: Number(data.porb_aow_id),
+      center_id: Number(data.center_id),
+    });
   }
 
   @Get('bilateral')
@@ -183,6 +200,22 @@ export class PorbController {
       },
       req.user,
     );
+  }
+
+  @Patch('partner/:id/resolve')
+  resolveUnknownPartner(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: { clarisa_partner_code: number },
+  ) {
+    return this.porbService.resolveUnknownPartner(
+      id,
+      Number(data.clarisa_partner_code),
+    );
+  }
+
+  @Delete('partner/:id')
+  deleteUnknownPartner(@Param('id', ParseIntPipe) id: number) {
+    return this.porbService.deleteUnknownPartner(id);
   }
 
   @Patch('partner/:id')

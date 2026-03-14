@@ -126,6 +126,7 @@ import { ClearBudgetConfirmDialogComponent } from "./porb/components/porb-budget
 import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.component";
 import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
 import { StanderdCrossCuttingDialogComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting-dialog/standerd-cross-cutting-dialog.component";
+import { PartnerResolveDialogComponent } from "./porb/components/porb-budget-sections/sections/partners/partner-resolve-dialog.component";
 
 
 @NgModule({
@@ -210,7 +211,8 @@ import { StanderdCrossCuttingDialogComponent } from "./admin/standerd-cross-cutt
     ClearBudgetConfirmDialogComponent,
     PorbTourComponent,
     StanderdCrossCuttingComponent,
-    StanderdCrossCuttingDialogComponent
+    StanderdCrossCuttingDialogComponent,
+    PartnerResolveDialogComponent,
   ],
   imports: [ 
     BrowserModule,

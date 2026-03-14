@@ -15,6 +15,9 @@
       <option *ngFor="let c of countryFilterOptions" [value]="c.code">{{ c.name }}</option>
     </select>
     <button type="button" class="export-btn" (click)="export()">Export Excel</button>
+    <button type="button" class="add-unknown-btn" (click)="addUnknownPartner()" [disabled]="!canEdit || addingUnknown || !programId || !porbAowId">
+      {{ addingUnknown ? 'Adding...' : '+ Add Unknown Partner' }}
+    </button>
   </div>
 
   <div class="table-scroll">
@@ -30,7 +33,17 @@
       </thead>
       <tbody>
       <tr *ngFor="let row of filteredRows; let i = index" [class.deleted-row]="row.toc_is_deleted" [class.row-error]="rowHasValidationError(row)">
-        <td>{{ row.partner_name || "-" }}</td>
+        <td>
+          <div class="partner-name-cell">
+            <span class="partner-name-text">{{ row.partner_name || "-" }}</span>
+            <button *ngIf="row.is_unknown && canEdit" mat-icon-button class="resolve-btn" matTooltip="Resolve to real partner" (click)="openResolveDialog(row)">
+              <mat-icon>link</mat-icon>
+            </button>
+            <button *ngIf="row.is_unknown && canEdit" mat-icon-button class="delete-unknown-btn" matTooltip="Delete unknown partner" (click)="deleteUnknownPartner(row)" [disabled]="deletingIds.has(row.id)">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </td>
         <td
           class="row-title"
           *ngIf="isGroupedCellStart(filteredRows, i, 'partner_outputs')"

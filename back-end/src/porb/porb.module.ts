@@ -26,6 +26,7 @@ import { Result } from 'src/entities/result.entity';
 import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { StanderdCrossCutting } from 'src/entities/standerd-cross-cutting.entity';
+import { Partner } from 'src/entities/partner.entity';
 import { SubmissionModule } from 'src/submission/submission.module';
 import { InitiativesModule } from 'src/initiatives/initiatives.module';
 import { PhasesModule } from 'src/phases/phases.module';
@@ -57,6 +58,7 @@ import { EmailModule } from 'src/email/email.module';
       BudgetAssumptions,
       PartnerCountry,
       StanderdCrossCutting,
+      Partner,
     ]),
     HttpModule,
     SubmissionModule,

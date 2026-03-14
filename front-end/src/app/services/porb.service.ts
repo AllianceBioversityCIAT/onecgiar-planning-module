@@ -142,6 +142,31 @@ export class PorbService {
     ).catch(() => false);
   }
 
+  async createUnknownPartner(data: { program_id: number; porb_aow_id: number; center_id: number }) {
+    return firstValueFrom(
+      this.http.post(`${environment.api_url}/porb/partner`, data).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async searchClarisaPartners(query: string) {
+    const params = new HttpParams().set('q', query);
+    return firstValueFrom(
+      this.http.get(`${environment.api_url}/porb/partner/search-clarisa`, { params }).pipe(map((d: any) => d))
+    ).catch(() => []);
+  }
+
+  async resolvePartner(id: number, clarisa_partner_code: number) {
+    return firstValueFrom(
+      this.http.patch(`${environment.api_url}/porb/partner/${id}/resolve`, { clarisa_partner_code }).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async deleteUnknownPartner(id: number) {
+    return firstValueFrom(
+      this.http.delete(`${environment.api_url}/porb/partner/${id}`).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
   async updateBilateral(
     id: number,
     data: { bilateral_budget?: number | null; bilateral_assumption?: string }

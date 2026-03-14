@@ -90,6 +90,7 @@
   th:nth-child(1),
   td:nth-child(1) {
     width: 26%;
+    overflow: visible;
   }
 
   th:nth-child(2),
@@ -207,4 +208,64 @@
 ::ng-deep .geo-select .ng-value-container {
   min-width: 0;
   overflow: hidden;
+}
+
+.add-unknown-btn {
+  height: 3.2rem;
+  border: 1px dashed #5569dd;
+  border-radius: 6px;
+  background: transparent;
+  color: #5569dd;
+  font-size: 1.3rem;
+  font-weight: 500;
+  padding: 0 1rem;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #5569dd;
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.partner-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.partner-name-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.resolve-btn,
+.delete-unknown-btn {
+  flex-shrink: 0;
+  width: 2.6rem !important;
+  height: 2.6rem !important;
+  line-height: 2.6rem !important;
+  padding: 0 !important;
+
+  .mat-icon {
+    font-size: 1.5rem !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    line-height: 1.5rem !important;
+  }
+}
+
+.resolve-btn .mat-icon {
+  color: #5569dd;
+}
+
+.delete-unknown-btn .mat-icon {
+  color: #dc3545;
 }

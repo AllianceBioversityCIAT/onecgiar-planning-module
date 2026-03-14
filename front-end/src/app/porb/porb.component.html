@@ -526,8 +526,11 @@
             *ngSwitchCase="'Partners'"
             [rows]="partnersRows"
             [selectedCenterId]="selectedCenterIdForSections"
+            [programId]="initiativeId || undefined"
+            [porbAowId]="selectedPorbAowIdForSections"
             [canEdit]="canEditForSelectedCenter"
             (budgetUpdated)="onBudgetUpdated()"
+            (rowAdded)="onRowAdded()"
           ></app-partners-section>
 
           <app-w3-section

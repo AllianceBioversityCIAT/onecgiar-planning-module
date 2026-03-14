@@ -1,6 +1,10 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+import { ToastrService } from "ngx-toastr";
 import { ClarisaCountryService } from "src/app/services/clarisa-country.service";
 import { PorbService } from "src/app/services/porb.service";
+import { ConfirmComponent, ConfirmDialogModel } from "src/app/confirm/confirm.component";
+import { PartnerResolveDialogComponent } from "./partner-resolve-dialog.component";
 
 type CountryOption = {
   code: number;
@@ -16,7 +20,10 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
   @Input() rows: any[] = [];
   @Input() selectedCenterId: number | undefined;
   @Input() canEdit: boolean = true;
+  @Input() programId: number | undefined;
+  @Input() porbAowId: number | undefined;
   @Output() budgetUpdated = new EventEmitter<void>();
+  @Output() rowAdded = new EventEmitter<void>();
 
   search = "";
   filterContracted = "";
@@ -25,10 +32,14 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
   errorIds = new Set<number>();
   savedIds = new Set<number>();
   countryOptions: CountryOption[] = [];
+  addingUnknown = false;
+  deletingIds = new Set<number>();
 
   constructor(
     private porbService: PorbService,
-    private clarisaCountryService: ClarisaCountryService
+    private clarisaCountryService: ClarisaCountryService,
+    private dialog: MatDialog,
+    private toastr: ToastrService
   ) {}
 
   async ngOnInit() {
@@ -161,6 +172,66 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
       span += 1;
     }
     return span;
+  }
+
+  async addUnknownPartner() {
+    if (!this.programId || !this.porbAowId || !this.selectedCenterId) return;
+    this.addingUnknown = true;
+    try {
+      const result = await this.porbService.createUnknownPartner({
+        program_id: this.programId,
+        porb_aow_id: this.porbAowId,
+        center_id: this.selectedCenterId,
+      });
+      if (result) {
+        this.toastr.success(
+          `"${result.partner_name}" added. Set contracted, countries, and budget to complete it.`,
+          "Unknown Partner Added"
+        );
+        this.rowAdded.emit();
+      } else {
+        this.toastr.error("Failed to add unknown partner. Please try again.");
+      }
+    } finally {
+      this.addingUnknown = false;
+    }
+  }
+
+  openResolveDialog(row: any) {
+    const dialogRef = this.dialog.open(PartnerResolveDialogComponent, {
+      width: '500px',
+      data: { partnerId: row.id },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.resolved) {
+        this.rowAdded.emit();
+      }
+    });
+  }
+
+  deleteUnknownPartner(row: any) {
+    if (!row?.id) return;
+    const dialogRef = this.dialog.open(ConfirmComponent, {
+      data: new ConfirmDialogModel(
+        "Delete Unknown Partner",
+        `Are you sure you want to delete "${row.partner_name}"? Any budget data entered for this partner will be lost.`
+      ),
+    });
+    dialogRef.afterClosed().subscribe(async (confirmed: boolean) => {
+      if (!confirmed) return;
+      this.deletingIds.add(row.id);
+      try {
+        const result = await this.porbService.deleteUnknownPartner(row.id);
+        if (result) {
+          this.toastr.success(`"${row.partner_name}" deleted.`);
+          this.rowAdded.emit();
+        } else {
+          this.toastr.error("Failed to delete partner. Please try again.");
+        }
+      } finally {
+        this.deletingIds.delete(row.id);
+      }
+    });
   }
 
   export() {

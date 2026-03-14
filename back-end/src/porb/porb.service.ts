@@ -7,7 +7,7 @@ import {
   StreamableFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, Like, Not, Repository } from 'typeorm';
 import * as XLSX from 'xlsx-js-style';
 import { join } from 'path';
 import { createReadStream, unlink } from 'fs';
@@ -36,6 +36,7 @@ import { Result } from 'src/entities/result.entity';
 import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { StanderdCrossCutting } from 'src/entities/standerd-cross-cutting.entity';
+import { Partner } from 'src/entities/partner.entity';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import { AxiosError } from 'axios';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
@@ -94,6 +95,8 @@ export class PorbService {
     private readonly partnerCountryRepository: Repository<PartnerCountry>,
     @InjectRepository(StanderdCrossCutting)
     private readonly standerdCrossCuttingRepository: Repository<StanderdCrossCutting>,
+    @InjectRepository(Partner)
+    private readonly partnerRepository: Repository<Partner>,
     private readonly initService: InitiativesService,
     private readonly phasesService: PhasesService,
     private readonly httpService: HttpService,
@@ -177,6 +180,79 @@ export class PorbService {
         partner_assumption: contracted?.assumption ?? '',
       };
     });
+  }
+
+  async createUnknownPartner(data: {
+    program_id: number;
+    porb_aow_id: number;
+    center_id: number;
+  }) {
+    const existingCount = await this.porbPartnerRepository.count({
+      where: {
+        program_id: data.program_id,
+        porb_aow_id: data.porb_aow_id,
+        is_unknown: true,
+      },
+    });
+
+    const name = `Unknown Partner ${existingCount + 1}`;
+
+    const { randomUUID } = await import('crypto');
+    const partner = await this.porbPartnerRepository.save({
+      program_id: data.program_id,
+      porb_aow_id: data.porb_aow_id,
+      toc_id: randomUUID(),
+      partner_name: name,
+      partner_outputs: '',
+      toc_is_deleted: false,
+      is_unknown: true,
+    });
+
+    return {
+      ...partner,
+      partner_is_contracted: '0',
+      partner_geo: null,
+      partner_country_codes: [],
+      partner_budget: null,
+      partner_assumption: '',
+    };
+  }
+
+  async searchClarisaPartners(query: string) {
+    return this.partnerRepository.find({
+      where: { name: Like(`%${query}%`) },
+      take: 20,
+      select: ['code', 'name', 'acronym'],
+    });
+  }
+
+  async resolveUnknownPartner(id: number, clarisa_partner_code: number) {
+    const partner = await this.porbPartnerRepository.findOne({ where: { id } });
+    if (!partner) throw new NotFoundException('Partner not found');
+    if (!partner.is_unknown)
+      throw new BadRequestException('Partner is not unknown');
+
+    const clarisaPartner = await this.partnerRepository.findOne({
+      where: { code: clarisa_partner_code },
+    });
+    if (!clarisaPartner)
+      throw new NotFoundException('CLARISA partner not found');
+
+    partner.partner_name = clarisaPartner.name;
+    partner.is_unknown = false;
+    await this.porbPartnerRepository.save(partner);
+
+    return partner;
+  }
+
+  async deleteUnknownPartner(id: number) {
+    const partner = await this.porbPartnerRepository.findOne({ where: { id } });
+    if (!partner) throw new NotFoundException('Partner not found');
+    if (!partner.is_unknown)
+      throw new BadRequestException('Only unknown partners can be deleted');
+
+    await this.porbPartnerRepository.remove(partner);
+    return { deleted: true };
   }
 
   getBilaterals(program_id: number, porb_aow_id?: number, center_id?: number) {
