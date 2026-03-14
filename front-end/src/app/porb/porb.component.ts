@@ -705,10 +705,28 @@ export class PorbComponent implements OnInit, OnDestroy {
     }));
   }
 
+  private static readonly INDICATOR_ORDER = [
+    'Innovation Development',
+    'Knowledge Product',
+    'Capacity Sharing',
+    'Others Outputs',
+  ];
+
+  get orderedConsolidationIndicators() {
+    const zero = { target: '$0', budget: '$0' };
+    const map = new Map(
+      this.consolidationIndicators.map((i) => [i.title, i])
+    );
+    return PorbComponent.INDICATOR_ORDER.map(
+      (title) => map.get(title) || { ...zero, title }
+    );
+  }
+
   get consolidationBudgetSummary() {
     const raw = this.consolidationBudgetSummaryData || {};
     return {
       poolHlo: this.formatCurrency(this.toNumber(raw.poolHlo)),
+      crossCutting: this.formatCurrency(this.toNumber(raw.crossCutting)),
       partners: this.formatCurrency(this.toNumber(raw.partners)),
       melia: this.formatCurrency(this.toNumber(raw.melia)),
       pooledTotal: this.formatCurrency(this.toNumber(raw.pooledTotal)),
@@ -762,6 +780,9 @@ export class PorbComponent implements OnInit, OnDestroy {
       crossBudgetFmt: this.formatCurrency(this.toNumber(t.crossBudget)),
       totalPooledFundingFmt: this.formatCurrency(this.toNumber(t.totalPooledFunding)),
       w3BudgetFmt: this.formatCurrency(this.toNumber(t.w3Budget)),
+      consolidatedTotalFmt: this.formatCurrency(
+        this.toNumber(t.totalPooledFunding) + this.toNumber(t.w3Budget)
+      ),
     };
   }
 
@@ -1080,14 +1101,16 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (!this.initiativeId || !this.selectedCenter || !this.selectedAow) {
       return;
     }
+    // Refresh consolidation sidebar + validation silently — do NOT reload table rows
+    await Promise.all([
+      this.loadConsolidation(this.initiativeId, this.getSelectedPorbAowId(), this.getSelectedCenterId()),
+      this.refreshSectionValidation(),
+      this.refreshValidationSummary(),
+    ]);
+  }
+
+  async onRowAdded() {
     await this.loadBudgetRows();
-    await this.loadConsolidation(
-      this.initiativeId,
-      this.getSelectedPorbAowId(),
-      this.getSelectedCenterId()
-    );
-    await this.refreshSectionValidation();
-    await this.refreshValidationSummary();
   }
 
   async onToggleSelectedCenterCompletion() {

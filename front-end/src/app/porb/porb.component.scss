@@ -383,7 +383,9 @@
   white-space: nowrap;
 }
 
-.consolidation-flat {
+.porb-consolidation-table {
+  min-width: 900px;
+
   th,
   td {
     text-align: center;
@@ -393,6 +395,10 @@
   td {
     font-weight: 600;
     font-size: 1.3rem;
+  }
+
+  .other-budgets-group {
+    border-left: 3px solid #5a6986;
   }
 }
 
@@ -486,11 +492,34 @@
     max-width: 260px;
   }
 
+  .other-budgets-group {
+    border-left: 3px solid #5a6986;
+  }
+
+  td.total-col {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  .cross-cutting-block {
+    background: #f0edf8;
+    color: #5b21b6;
+    font-weight: 600;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+    font-style: italic;
+    border-top: 1px dashed #c4b5fd;
+    border-bottom: 1px dashed #c4b5fd;
+  }
+
   .summary-total-row {
     td {
       background: #f1f5f9;
       font-weight: 700;
       font-size: 1.3rem;
+
+      &.total-col {
+        background: #e2e8f0;
+      }
     }
   }
 }
