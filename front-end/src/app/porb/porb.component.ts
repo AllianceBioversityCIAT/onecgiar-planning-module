@@ -68,6 +68,9 @@ export class PorbComponent implements OnInit, OnDestroy {
   summaryAowDetail: any = null;
   summaryAowDetailLoading = false;
   summarySelectedSection: string | null = null;
+  summaryW3View = false;
+  summaryW3Rows: any[] = [];
+  summaryW3Loading = false;
 
   onlineProgramUsers: Array<{
     userId: number;
@@ -985,7 +988,8 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   async selectSummaryAow(aow: any) {
-    if (this.summarySelectedAow?.id === aow?.id) return;
+    if (this.summarySelectedAow?.id === aow?.id && !this.summaryW3View) return;
+    this.summaryW3View = false;
     this.summarySelectedAow = aow;
     // Auto-select first section whenever the AOW changes
     this.summarySelectedSection = this.summarySectionItems[0] || null;
@@ -998,6 +1002,22 @@ export class PorbComponent implements OnInit, OnDestroy {
       );
     } finally {
       this.summaryAowDetailLoading = false;
+    }
+  }
+
+  async selectSummaryW3View() {
+    if (this.summaryW3View) return;
+    this.summaryW3View = true;
+    this.summarySelectedAow = null;
+    this.summarySelectedSection = null;
+    if (!this.initiativeId) return;
+    this.summaryW3Loading = true;
+    try {
+      this.summaryW3Rows = await this.porbService.getBilaterals(this.initiativeId);
+    } catch {
+      this.summaryW3Rows = [];
+    } finally {
+      this.summaryW3Loading = false;
     }
   }
 

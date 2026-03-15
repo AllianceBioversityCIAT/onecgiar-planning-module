@@ -239,16 +239,42 @@
             *ngFor="let aow of aows"
             type="button"
             class="porb-nav__item"
-            [class.porb-nav__item--active]="summarySelectedAow?.id === aow.id"
+            [class.porb-nav__item--active]="summarySelectedAow?.id === aow.id && !summaryW3View"
             (click)="selectSummaryAow(aow)"
           >
             {{ aow.code }}
           </button>
+          <button
+            type="button"
+            class="porb-nav__item"
+            [class.porb-nav__item--active]="summaryW3View"
+            (click)="selectSummaryW3View()"
+          >
+            W3/Bilateral
+          </button>
         </nav>
+
+        <!-- W3/Bilateral summary detail -->
+        <ng-container *ngIf="summaryW3View">
+          <div class="summary-aow-detail">
+            <h3 class="summary-aow-title">W3/Bilateral Projects</h3>
+            <div *ngIf="summaryW3Loading" class="summary-skeleton">
+              <div class="skeleton-block sk-table-head"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+            </div>
+            <app-w3-section
+              *ngIf="!summaryW3Loading"
+              [rows]="summaryW3Rows"
+              [canEdit]="false"
+            ></app-w3-section>
+          </div>
+        </ng-container>
 
         <!-- Section nav for summary AOW detail -->
         <nav class="porb-nav porb-nav--sections summary-section-nav"
-          *ngIf="!summaryLoading && summarySelectedAow && summarySectionItems.length">
+          *ngIf="!summaryLoading && !summaryW3View && summarySelectedAow && summarySectionItems.length">
           <button
             *ngFor="let section of summarySectionItems"
             type="button"
@@ -258,7 +284,7 @@
           >{{ section }}</button>
         </nav>
 
-        <div class="summary-aow-detail" *ngIf="summarySelectedAow && !summaryLoading">
+        <div class="summary-aow-detail" *ngIf="!summaryW3View && summarySelectedAow && !summaryLoading">
           <h3 class="summary-aow-title">{{ summarySelectedAow.code }}: {{ summarySelectedAow.title }}</h3>
 
           <div *ngIf="summaryAowDetailLoading" class="summary-skeleton">
