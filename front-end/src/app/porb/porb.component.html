@@ -305,6 +305,9 @@
             type="button"
             class="porb-nav__item"
             [class.porb-nav__item--active]="summarySelectedSection === section"
+            [class.porb-nav__item--empty]="isSummarySectionEmpty(section)"
+            [disabled]="isSummarySectionEmpty(section)"
+            [matTooltip]="isSummarySectionEmpty(section) ? 'No budget data for this section' : ''"
             (click)="selectSummarySection(section)"
           >{{ section }}</button>
         </nav>
@@ -671,6 +674,9 @@
             type="button"
             class="porb-nav__item"
             [class.porb-nav__item--active]="selectedExtraNavigation === section"
+            [class.porb-nav__item--empty]="isCenterSectionEmpty(section)"
+            [disabled]="isCenterSectionEmpty(section)"
+            [matTooltip]="isCenterSectionEmpty(section) ? 'No budget data for this section' : ''"
             (click)="selectSection(section)"
           >
             {{ section }}

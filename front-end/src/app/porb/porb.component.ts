@@ -821,6 +821,39 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.baseExtraNavigationItems;
   }
 
+  /** Check if a center-level section has data based on consolidation totals */
+  isCenterSectionEmpty(section: string): boolean {
+    const raw = this.consolidationBudgetSummaryData;
+    if (!raw) return false; // data not loaded yet, don't disable
+    switch (section) {
+      case 'Pool funding HLO': return this.toNumber(raw.poolHlo) === 0;
+      case 'Partners': return this.toNumber(raw.partners) === 0;
+      case 'MELIA Study': return this.toNumber(raw.melia) === 0;
+      case 'Anaplan': return this.toNumber(raw.anaplan) === 0;
+      case 'Cross Cutting': return this.toNumber(raw.crossCutting) === 0;
+      default: return false;
+    }
+  }
+
+  /** Check if a summary-level section has data based on loaded AOW detail */
+  isSummarySectionEmpty(section: string): boolean {
+    const d = this.summaryAowDetail;
+    if (!d) return false; // data not loaded yet
+    switch (section) {
+      case 'Pool funding HLO':
+        return !(d.hlos || []).some((h: any) => this.toNumber(h.hlo_budget) > 0);
+      case 'Partners':
+        return !(d.contractedPartners || []).some((p: any) => this.toNumber(p.budget) > 0);
+      case 'MELIA Study':
+        return !(d.melia || []).some((m: any) => this.toNumber(m.melia_budget) > 0);
+      case 'Anaplan':
+        return !(d.anaplan || []).some((a: any) => this.toNumber(a.anaplan_budget) > 0);
+      case 'Cross Cutting':
+        return !(d.cross || []).some((c: any) => this.toNumber(c.budget) > 0);
+      default: return false;
+    }
+  }
+
   /** Section list for the summary AOW detail nav — mirrors extraNavigationItems but based on the summary AOW. */
   get summarySectionItems(): string[] {
     const aowCode = String(

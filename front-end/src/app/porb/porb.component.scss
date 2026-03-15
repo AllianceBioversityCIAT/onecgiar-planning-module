@@ -133,6 +133,13 @@
   }
 }
 
+// Empty section — disabled look
+.porb-nav__item--empty {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: auto; // allow tooltip on disabled button
+}
+
 // Nav icons (check / error)
 .nav-icon {
   font-size: 1.6rem;
