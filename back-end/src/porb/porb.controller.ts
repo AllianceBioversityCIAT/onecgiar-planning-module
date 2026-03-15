@@ -87,11 +87,13 @@ export class PorbController {
     @Query('program_id', ParseIntPipe) program_id: number,
     @Query('porb_aow_id') porb_aow_id?: string,
     @Query('center_id') center_id?: string,
+    @Query('exclude_zero') exclude_zero?: string,
   ) {
     return this.porbService.getBilaterals(
       program_id,
       this.parseOptionalNumber(porb_aow_id),
       this.parseOptionalNumber(center_id),
+      exclude_zero === 'true',
     );
   }
 

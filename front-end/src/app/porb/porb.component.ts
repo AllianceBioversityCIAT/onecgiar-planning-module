@@ -1013,7 +1013,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (!this.initiativeId) return;
     this.summaryW3Loading = true;
     try {
-      this.summaryW3Rows = await this.porbService.getBilaterals(this.initiativeId);
+      this.summaryW3Rows = await this.porbService.getBilaterals(this.initiativeId, undefined, true);
     } catch {
       this.summaryW3Rows = [];
     } finally {
@@ -1112,12 +1112,6 @@ export class PorbComponent implements OnInit, OnDestroy {
       ...p,
       budget_fmt: this.formatCurrency(this.toNumber(p.budget)),
     }));
-  }
-
-  get filteredSummaryW3Rows(): any[] {
-    return (this.summaryW3Rows || []).filter(
-      (r: any) => (Number(r?.bilateral_budget) || 0) > 0
-    );
   }
 
   /** Pre-formatted cross-cutting rows for the AOW detail table. */

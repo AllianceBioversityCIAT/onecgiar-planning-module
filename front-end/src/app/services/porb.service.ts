@@ -47,9 +47,15 @@ export class PorbService {
 
   async getBilaterals(
     programId: number,
-    centerId?: number
+    centerId?: number,
+    excludeZero = false
   ) {
-    return this.getByFilter("bilateral", programId, undefined, centerId);
+    let params = new HttpParams().set("program_id", String(programId));
+    if (centerId != null) params = params.set("center_id", String(centerId));
+    if (excludeZero) params = params.set("exclude_zero", "true");
+    return firstValueFrom(
+      this.http.get(`${environment.api_url}/porb/bilateral`, { params }).pipe(map((d: any) => d))
+    ).catch(() => []);
   }
 
   async getMelia(

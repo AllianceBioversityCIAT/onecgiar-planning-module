@@ -255,10 +255,11 @@ export class PorbService {
     return { deleted: true };
   }
 
-  getBilaterals(program_id: number, _porb_aow_id?: number, center_id?: number) {
+  getBilaterals(program_id: number, _porb_aow_id?: number, center_id?: number, excludeZero = false) {
     const where: any = { program_id };
     // W3/Bilateral is now center-level — porb_aow_id is ignored
     if (center_id != null) where.center_id = center_id;
+    if (excludeZero) where.bilateral_budget = Not(0);
 
     return this.porbBilateralRepository.find({
       where,
