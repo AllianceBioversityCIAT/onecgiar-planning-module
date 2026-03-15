@@ -30,8 +30,7 @@ export class SummaryAssumptionIconComponent {
     return !!this.assumption?.trim();
   }
 
-  openDialog(event: Event) {
-    event.stopPropagation();
+  openDialog() {
     const entries: AssumptionEntry[] = this.assumptions?.length
       ? this.assumptions.filter(a => !!a.assumption?.trim())
       : [{ assumption: this.assumption }];
