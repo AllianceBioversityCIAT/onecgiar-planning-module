@@ -746,7 +746,13 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   get formattedSummaryRows() {
-    return this.summaryConsolidationRows.map((row) => ({
+    return this.summaryConsolidationRows.filter((row) => {
+      const total = this.toNumber(row.totalPooledFunding)
+        + this.toNumber(row.anaplanBudget)
+        + this.toNumber(row.partnerBudget)
+        + this.toNumber(row.meliaBudget);
+      return total > 0;
+    }).map((row) => ({
       ...row,
       innovationTargetFmt: this.formatCurrency(this.toNumber(row.innovationTarget)),
       innovationBudgetFmt: this.formatCurrency(this.toNumber(row.innovationBudget)),
