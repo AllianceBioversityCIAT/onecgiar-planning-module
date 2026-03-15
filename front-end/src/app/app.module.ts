@@ -126,6 +126,7 @@ import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/st
 import { StanderdCrossCuttingDialogComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting-dialog/standerd-cross-cutting-dialog.component";
 import { PartnerResolveDialogComponent } from "./porb/components/porb-budget-sections/sections/partners/partner-resolve-dialog.component";
 import { SummaryAssumptionIconComponent } from "./porb/components/summary-assumption-icon/summary-assumption-icon.component";
+import { SummaryAssumptionDialogComponent } from "./porb/components/summary-assumption-icon/summary-assumption-dialog.component";
 
 
 @NgModule({ declarations: [
@@ -212,6 +213,7 @@ import { SummaryAssumptionIconComponent } from "./porb/components/summary-assump
         StanderdCrossCuttingDialogComponent,
         PartnerResolveDialogComponent,
         SummaryAssumptionIconComponent,
+        SummaryAssumptionDialogComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,

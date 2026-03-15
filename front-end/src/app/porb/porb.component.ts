@@ -1114,7 +1114,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   /** Pre-formatted HLO rows for the AOW detail table (no decimals, comma-separated). */
-  get formattedGroupedHlos(): Array<{ name: string; rows: any[]; totalBudgetFmt: string }> {
+  get formattedGroupedHlos(): Array<{ name: string; rows: any[]; totalBudgetFmt: string; assumptionEntries: any[] }> {
     return this.groupedHlos.map((group) => ({
       name: group.name,
       rows: group.rows.map((hlo) => ({
@@ -1123,6 +1123,9 @@ export class PorbComponent implements OnInit, OnDestroy {
         hlo_budget_fmt: this.formatCurrency(this.toNumber(hlo.hlo_budget)),
       })),
       totalBudgetFmt: this.formatCurrency(group.totalBudget),
+      assumptionEntries: group.rows
+        .filter((h) => h.hlo_assumption?.trim())
+        .map((h) => ({ center: h.center_name || `Center ${h.center_id}`, assumption: h.hlo_assumption })),
     }));
   }
 

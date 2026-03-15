@@ -368,9 +368,16 @@
                           <td class="num-cell">{{ hlo.hlo_target_fmt }}</td>
                           <td class="num-cell">
                             {{ hlo.hlo_budget_fmt }}
-                            <app-summary-assumption-icon [assumption]="hlo.hlo_assumption"></app-summary-assumption-icon>
+                            <app-summary-assumption-icon [assumption]="hlo.hlo_assumption" [label]="hlo.center_name ? hlo.center_name + ' — Assumption' : 'Assumption'"></app-summary-assumption-icon>
                           </td>
-                          <td *ngIf="i === 0" [attr.rowspan]="group.rows.length" class="num-cell merged-cell">{{ group.totalBudgetFmt }}</td>
+                          <td *ngIf="i === 0" [attr.rowspan]="group.rows.length" class="num-cell merged-cell">
+                            {{ group.totalBudgetFmt }}
+                            <app-summary-assumption-icon
+                              *ngIf="group.rows.length > 1"
+                              [assumptions]="group.assumptionEntries"
+                              [label]="group.name + ' — All Assumptions'"
+                            ></app-summary-assumption-icon>
+                          </td>
                         </tr>
                       </ng-container>
                       <tr class="subtotal-row">

@@ -1454,6 +1454,28 @@ export class PorbService {
       this.porbAowRepository.findOne({ where: { id: porb_aow_id, program_id } }),
     ]);
 
+    // Resolve center names for all rows
+    const allCenterIds = new Set<number>();
+    for (const row of [...hlos, ...melia, ...bilateral]) {
+      if (row.center_id != null) allCenterIds.add(Number(row.center_id));
+    }
+    const centerEntities = allCenterIds.size
+      ? await this.organizationRepo.find({ where: { code: In([...allCenterIds].map(String)) } })
+      : [];
+    const centerNameMap = new Map<number, string>();
+    centerEntities.forEach((c) => centerNameMap.set(Number(c.code), c.name));
+
+    // Enrich rows with center_name
+    for (const row of hlos) {
+      (row as any).center_name = centerNameMap.get(Number(row.center_id)) || '';
+    }
+    for (const row of melia) {
+      (row as any).center_name = centerNameMap.get(Number(row.center_id)) || '';
+    }
+    for (const row of bilateral) {
+      (row as any).center_name = centerNameMap.get(Number(row.center_id)) || '';
+    }
+
     // Resolve country codes to names for contracted partners
     const allCountryCodes = [
       ...new Set(
