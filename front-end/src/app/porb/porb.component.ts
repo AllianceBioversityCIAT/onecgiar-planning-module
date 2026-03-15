@@ -30,7 +30,6 @@ export class PorbComponent implements OnInit, OnDestroy {
   baseExtraNavigationItems: string[] = [
     "Pool funding HLO",
     "Partners",
-    "W3/Bilatral",
     "MELIA Study",
     "Anaplan",
   ];
@@ -38,6 +37,8 @@ export class PorbComponent implements OnInit, OnDestroy {
   selectedCenter: any = null;
   selectedAow: any = null;
   selectedExtraNavigation: string | null = null;
+  isW3View = false;
+  w3CenterRows: any[] = [];
 
   // "summary" when Summary view is active, otherwise the selected center
   activeView: "summary" | "center" = "center";
@@ -58,9 +59,13 @@ export class PorbComponent implements OnInit, OnDestroy {
   summaryConsolidationTotals: any = {};
   summaryLoading = false;
 
+  anaplanConsolidatedData: any = null;
+  w3ConsolidatedData: any = null;
+
   summarySelectedAow: any = null;
   summaryAowDetail: any = null;
   summaryAowDetailLoading = false;
+  summarySelectedSection: string | null = null;
 
   onlineProgramUsers: Array<{
     userId: number;
@@ -214,7 +219,9 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (!centers?.length) {
       centers = await this.submissionService.getOrganizations();
     }
-    this.centers = Array.isArray(centers) ? centers : [];
+    this.centers = Array.isArray(centers)
+      ? centers.sort((a, b) => (a.acronym || a.name || '').localeCompare(b.acronym || b.name || ''))
+      : [];
 
     await this.loadSubmissionStatus(initiativeId);
     this.buildCanEditMap();
@@ -543,7 +550,9 @@ export class PorbComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (aowParam) {
+    if (aowParam === 'w3') {
+      this.isW3View = true;
+    } else if (aowParam) {
       const aow = this.aows.find(
         (item: any) => String(item?.id) === aowParam || String(item?.code) === aowParam
       );
@@ -593,7 +602,9 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
     }
 
-    if (this.selectedCenter && this.selectedAow && this.selectedExtraNavigation) {
+    if (this.isW3View && this.selectedCenter) {
+      await this.loadW3CenterRows();
+    } else if (this.selectedCenter && this.selectedAow && this.selectedExtraNavigation) {
       this.resetSectionValidation();
       await this.loadBudgetRows();
     }
@@ -603,7 +614,7 @@ export class PorbComponent implements OnInit, OnDestroy {
 
   private syncSelectionToUrl() {
     const centerValue = this.getCenterKey(this.selectedCenter);
-    const aowValue = this.getAowUrlValue(this.selectedAow);
+    const aowValue = this.isW3View ? 'w3' : this.getAowUrlValue(this.selectedAow);
     const sectionValue = this.selectedExtraNavigation
       ? this.getSectionSlug(this.selectedExtraNavigation)
       : null;
@@ -650,12 +661,6 @@ export class PorbComponent implements OnInit, OnDestroy {
       if (this.selectedExtraNavigation === "Partners") {
         const partners = await this.porbService.getPartners(programId, porbAowId, centerId);
         this.partnersRows = Array.isArray(partners) ? partners : [];
-        return;
-      }
-
-      if (this.selectedExtraNavigation === "W3/Bilatral") {
-        const bilaterals = await this.porbService.getBilaterals(programId, porbAowId, centerId);
-        this.w3Rows = Array.isArray(bilaterals) ? bilaterals : [];
         return;
       }
 
@@ -730,7 +735,6 @@ export class PorbComponent implements OnInit, OnDestroy {
       partners: this.formatCurrency(this.toNumber(raw.partners)),
       melia: this.formatCurrency(this.toNumber(raw.melia)),
       pooledTotal: this.formatCurrency(this.toNumber(raw.pooledTotal)),
-      w3: this.formatCurrency(this.toNumber(raw.w3)),
       consolidatedTotal: this.formatCurrency(this.toNumber(raw.consolidatedTotal)),
       anaplan: this.formatCurrency(this.toNumber(raw.anaplan)),
     };
@@ -751,15 +755,12 @@ export class PorbComponent implements OnInit, OnDestroy {
       meliaBudgetFmt: this.formatCurrency(this.toNumber(row.meliaBudget)),
       crossBudgetFmt: this.formatCurrency(this.toNumber(row.crossBudget)),
       totalPooledFundingFmt: this.formatCurrency(this.toNumber(row.totalPooledFunding)),
-      w3BudgetFmt: this.formatCurrency(this.toNumber(row.w3Budget)),
+      anaplanBudgetFmt: this.formatCurrency(this.toNumber(row.anaplanBudget)),
       poolHloFmt: this.formatCurrency(
         this.toNumber(row.innovationBudget) +
         this.toNumber(row.knowledgeBudget) +
         this.toNumber(row.capacityBudget) +
         this.toNumber(row.othersBudget)
-      ),
-      consolidatedTotalFmt: this.formatCurrency(
-        this.toNumber(row.totalPooledFunding) + this.toNumber(row.w3Budget)
       ),
     }));
   }
@@ -779,11 +780,12 @@ export class PorbComponent implements OnInit, OnDestroy {
       meliaBudgetFmt: this.formatCurrency(this.toNumber(t.meliaBudget)),
       crossBudgetFmt: this.formatCurrency(this.toNumber(t.crossBudget)),
       totalPooledFundingFmt: this.formatCurrency(this.toNumber(t.totalPooledFunding)),
-      w3BudgetFmt: this.formatCurrency(this.toNumber(t.w3Budget)),
-      consolidatedTotalFmt: this.formatCurrency(
-        this.toNumber(t.totalPooledFunding) + this.toNumber(t.w3Budget)
-      ),
+      anaplanBudgetFmt: this.formatCurrency(this.toNumber(t.anaplanBudget)),
     };
+  }
+
+  formatAnaplanCurrency(value: any): string {
+    return this.formatCurrency(this.toNumber(value));
   }
 
   get isUnknownCenter(): boolean {
@@ -812,6 +814,21 @@ export class PorbComponent implements OnInit, OnDestroy {
       return ["Cross Cutting", ...this.baseExtraNavigationItems.filter(i => i !== "Pool funding HLO")];
     }
     return this.baseExtraNavigationItems;
+  }
+
+  /** Section list for the summary AOW detail nav — mirrors extraNavigationItems but based on the summary AOW. */
+  get summarySectionItems(): string[] {
+    const aowCode = String(
+      this.summarySelectedAow?.code || this.summarySelectedAow?.aow_acrnum || ""
+    ).toUpperCase();
+    if (aowCode === "AOW00") {
+      return ["Cross Cutting", ...this.baseExtraNavigationItems.filter(i => i !== "Pool funding HLO")];
+    }
+    return this.baseExtraNavigationItems;
+  }
+
+  selectSummarySection(section: string) {
+    this.summarySelectedSection = section;
   }
 
   get selectedCenterIdForSections(): number | undefined {
@@ -919,7 +936,11 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (!this.initiativeId) return;
     this.summaryLoading = true;
     try {
-      const data = await this.porbService.getSummaryConsolidation(this.initiativeId);
+      const [data] = await Promise.all([
+        this.porbService.getSummaryConsolidation(this.initiativeId),
+        this.loadAnaplanConsolidated(this.initiativeId),
+        this.loadW3Consolidated(this.initiativeId),
+      ]);
       this.summaryConsolidationRows = Array.isArray(data?.rows) ? data.rows : [];
       this.summaryConsolidationTotals = data?.totals || {};
       // Auto-select first AOW for detail view
@@ -931,9 +952,41 @@ export class PorbComponent implements OnInit, OnDestroy {
     }
   }
 
+  private loadAnaplanConsolidated(programId: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.porbService.getAnaplanConsolidated(programId).subscribe({
+        next: (data) => {
+          this.anaplanConsolidatedData = data;
+          resolve();
+        },
+        error: () => {
+          this.anaplanConsolidatedData = null;
+          resolve();
+        },
+      });
+    });
+  }
+
+  private loadW3Consolidated(programId: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.porbService.getW3Consolidated(programId).subscribe({
+        next: (data) => {
+          this.w3ConsolidatedData = data;
+          resolve();
+        },
+        error: () => {
+          this.w3ConsolidatedData = null;
+          resolve();
+        },
+      });
+    });
+  }
+
   async selectSummaryAow(aow: any) {
     if (this.summarySelectedAow?.id === aow?.id) return;
     this.summarySelectedAow = aow;
+    // Auto-select first section whenever the AOW changes
+    this.summarySelectedSection = this.summarySectionItems[0] || null;
     if (!this.initiativeId || !aow?.id) return;
     this.summaryAowDetailLoading = true;
     try {
@@ -1054,6 +1107,12 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.selectedCenter = center;
     this.activeView = "center";
 
+    if (this.isW3View) {
+      this.syncSelectionToUrl();
+      await this.loadW3CenterRows();
+      return;
+    }
+
     const visible = this.visibleAows;
     if (
       this.selectedAow &&
@@ -1074,9 +1133,10 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   async selectAow(aow: any) {
-    if (this.isAowSelected(aow)) {
+    if (this.isAowSelected(aow) && !this.isW3View) {
       return;
     }
+    this.isW3View = false;
     this.selectedAow = aow;
 
     if (!this.extraNavigationItems.includes(this.selectedExtraNavigation || "")) {
@@ -1097,8 +1157,40 @@ export class PorbComponent implements OnInit, OnDestroy {
     await this.loadBudgetRows();
   }
 
+  async selectW3View() {
+    if (this.isW3View) return;
+    this.isW3View = true;
+    this.selectedAow = null;
+    this.selectedExtraNavigation = null;
+    this.syncSelectionToUrl();
+    await this.loadW3CenterRows();
+  }
+
+  private async loadW3CenterRows() {
+    if (!this.initiativeId || !this.selectedCenter) {
+      this.w3CenterRows = [];
+      return;
+    }
+    this.sectionLoading = true;
+    try {
+      const centerId = this.getSelectedCenterId();
+      const bilaterals = await this.porbService.getBilaterals(this.initiativeId, centerId);
+      this.w3CenterRows = Array.isArray(bilaterals) ? bilaterals : [];
+    } finally {
+      this.sectionLoading = false;
+    }
+  }
+
   async onBudgetUpdated() {
-    if (!this.initiativeId || !this.selectedCenter || !this.selectedAow) {
+    if (!this.initiativeId || !this.selectedCenter) {
+      return;
+    }
+    // In W3 view there is no consolidation sidebar — only refresh validation
+    if (this.isW3View) {
+      await this.refreshValidationSummary();
+      return;
+    }
+    if (!this.selectedAow) {
       return;
     }
     // Refresh consolidation sidebar + validation silently — do NOT reload table rows
@@ -1185,6 +1277,24 @@ export class PorbComponent implements OnInit, OnDestroy {
       return;
     }
     await this.porbService.exportExcelForCenter(this.initiativeId, centerId);
+  }
+
+  async exportAnaplanConsolidatedExcel() {
+    if (!this.initiativeId) {
+      return;
+    }
+    await this.porbService.exportAnaplanExcel(this.initiativeId);
+  }
+
+  async exportCenterAnaplan() {
+    if (!this.initiativeId || !this.selectedCenter) {
+      return;
+    }
+    const centerKey = this.getCenterKey(this.selectedCenter);
+    if (centerKey == null) {
+      return;
+    }
+    await this.porbService.exportAnaplanExcelForCenter(this.initiativeId, centerKey);
   }
 
   private openTourIfFirstVisit() {

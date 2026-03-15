@@ -255,14 +255,14 @@ export class PorbService {
     return { deleted: true };
   }
 
-  getBilaterals(program_id: number, porb_aow_id?: number, center_id?: number) {
+  getBilaterals(program_id: number, _porb_aow_id?: number, center_id?: number) {
     const where: any = { program_id };
-    if (porb_aow_id != null) where.porb_aow_id = porb_aow_id;
+    // W3/Bilateral is now center-level — porb_aow_id is ignored
     if (center_id != null) where.center_id = center_id;
 
     return this.porbBilateralRepository.find({
       where,
-      order: { id: 'ASC' },
+      order: { bilateral_name: 'ASC', id: 'ASC' },
     });
   }
 
@@ -287,14 +287,13 @@ export class PorbService {
           partners: 0,
           melia: 0,
           pooledTotal: 0,
-          w3: 0,
           consolidatedTotal: 0,
           anaplan: 0,
         },
       };
     }
 
-    const [hlos, partners, contractedPartners, meliaRows, w3Rows, anaplanRows, crossRows] = await Promise.all([
+    const [hlos, partners, contractedPartners, meliaRows, anaplanRows, crossRows] = await Promise.all([
       this.porbHloRepository.find({
         where: { program_id, porb_aow_id, center_id },
       }),
@@ -305,9 +304,6 @@ export class PorbService {
         where: { program_id, center_id },
       }),
       this.porbMeliaRepository.find({
-        where: { program_id, porb_aow_id, center_id },
-      }),
-      this.porbBilateralRepository.find({
         where: { program_id, porb_aow_id, center_id },
       }),
       this.porbAnaplanRepository.find({
@@ -361,11 +357,10 @@ export class PorbService {
       0,
     );
     const melia = meliaRows.reduce((sum, row) => sum + (Number(row?.melia_budget) || 0), 0);
-    const w3 = w3Rows.reduce((sum, row) => sum + (Number(row?.bilateral_budget) || 0), 0);
     const anaplan = anaplanRows.reduce((sum, row) => sum + (Number(row?.budget) || 0), 0);
     const crossCutting = crossRows.reduce((sum, row) => sum + (Number(row?.budget) || 0), 0);
     const pooledTotal = poolHlo + crossCutting;
-    const consolidatedTotal = pooledTotal + w3;
+    const consolidatedTotal = pooledTotal;
 
     return {
       indicators: [
@@ -396,7 +391,6 @@ export class PorbService {
         partners: partnersTotal,
         melia,
         pooledTotal,
-        w3,
         consolidatedTotal,
         anaplan,
       },
@@ -421,11 +415,10 @@ export class PorbService {
     const aowIds = aows.map((a) => a.id);
 
     // Bulk-load all data for this program (no center filter = all centers)
-    const [allHlos, allPartners, allMelia, allBilateral, allAnaplan, allCross, allContractedPartners] = await Promise.all([
+    const [allHlos, allPartners, allMelia, allAnaplan, allCross, allContractedPartners] = await Promise.all([
       this.porbHloRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbPartnerRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbMeliaRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
-      this.porbBilateralRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbAnaplanRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbCrossRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
       this.porbContractedPartnerRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
@@ -453,14 +446,6 @@ export class PorbService {
       const list = meliaByAow.get(row.porb_aow_id) || [];
       list.push(row);
       meliaByAow.set(row.porb_aow_id, list);
-    }
-
-    // Group bilateral by porb_aow_id
-    const bilateralByAow = new Map<number, typeof allBilateral>();
-    for (const row of allBilateral) {
-      const list = bilateralByAow.get(row.porb_aow_id) || [];
-      list.push(row);
-      bilateralByAow.set(row.porb_aow_id, list);
     }
 
     // Group anaplan by porb_aow_id
@@ -493,7 +478,7 @@ export class PorbService {
       capacityTarget: 0, capacityBudget: 0,
       othersTarget: 0, othersBudget: 0,
       partnerBudget: 0, meliaBudget: 0, crossBudget: 0,
-      totalPooledFunding: 0, w3Budget: 0,
+      totalPooledFunding: 0,
       anaplanBudget: 0, consolidatedTotal: 0,
     };
 
@@ -501,7 +486,6 @@ export class PorbService {
       const hlos = hlosByAow.get(aow.id) || [];
       const partners = partnersByAow.get(aow.id) || [];
       const meliaRows = meliaByAow.get(aow.id) || [];
-      const bilateralRows = bilateralByAow.get(aow.id) || [];
 
       // Classify HLOs by type
       const ind = {
@@ -534,7 +518,6 @@ export class PorbService {
       const partnerBudget = contractedRows.reduce((sum, cp) => sum + (Number(cp?.budget) || 0), 0);
 
       const meliaBudget = meliaRows.reduce((sum, r) => sum + (Number(r?.melia_budget) || 0), 0);
-      const w3Budget = bilateralRows.reduce((sum, r) => sum + (Number(r?.bilateral_budget) || 0), 0);
       const anaplanRows = anaplanByAow.get(aow.id) || [];
       const anaplanBudget = anaplanRows.reduce((sum, r) => sum + (Number(r?.budget) || 0), 0);
       const crossRows = crossByAow.get(aow.id) || [];
@@ -542,7 +525,7 @@ export class PorbService {
       const totalPooledFunding =
         ind.innovationBudget + ind.knowledgeBudget + ind.capacityBudget +
         ind.othersBudget + crossBudget;
-      const consolidatedTotal = totalPooledFunding + w3Budget;
+      const consolidatedTotal = totalPooledFunding;
 
       // Accumulate totals
       totals.innovationTarget += ind.innovationTarget;
@@ -557,7 +540,6 @@ export class PorbService {
       totals.meliaBudget += meliaBudget;
       totals.crossBudget += crossBudget;
       totals.totalPooledFunding += totalPooledFunding;
-      totals.w3Budget += w3Budget;
       totals.anaplanBudget += anaplanBudget;
       totals.consolidatedTotal += consolidatedTotal;
 
@@ -570,7 +552,6 @@ export class PorbService {
         meliaBudget,
         crossBudget,
         totalPooledFunding,
-        w3Budget,
         anaplanBudget,
         consolidatedTotal,
       };
@@ -580,7 +561,7 @@ export class PorbService {
   }
 
   async getValidation(program_id: number, porb_aow_id?: number, center_id?: number) {
-    const sectionNames = ['Pool funding HLO', 'Partners', 'W3/Bilatral', 'MELIA Study', 'Anaplan', 'Cross Cutting'];
+    const sectionNames = ['Pool funding HLO', 'Partners', 'MELIA Study', 'Anaplan', 'Cross Cutting'];
     const emptyResult: Record<string, { hasError: boolean; message: string }> = {};
     sectionNames.forEach((name) => {
       emptyResult[name] = { hasError: false, message: '' };
@@ -590,7 +571,7 @@ export class PorbService {
       return emptyResult;
     }
 
-    const [hlos, partners, contractedRows, w3Rows, meliaRows, crossRows, selectedAow] = await Promise.all([
+    const [hlos, partners, contractedRows, meliaRows, crossRows, selectedAow] = await Promise.all([
       this.porbHloRepository.find({
         where: { program_id, porb_aow_id, center_id },
       }),
@@ -599,9 +580,6 @@ export class PorbService {
       }),
       this.porbContractedPartnerRepository.find({
         where: { program_id, center_id },
-      }),
-      this.porbBilateralRepository.find({
-        where: { program_id, porb_aow_id, center_id },
       }),
       this.porbMeliaRepository.find({
         where: { program_id, porb_aow_id, center_id },
@@ -660,14 +638,6 @@ export class PorbService {
     emptyResult['Partners'] = {
       hasError: partnerMessages.length > 0,
       message: partnerMessages.join(' '),
-    };
-
-    const w3Missing = w3Rows.filter(
-      (row) => parseBudget(row?.bilateral_budget) > 0 && !hasAssumption(row?.bilateral_assumption),
-    ).length;
-    emptyResult['W3/Bilatral'] = {
-      hasError: w3Missing > 0,
-      message: w3Missing > 0 ? `${w3Missing} row(s) have budget but missing assumption.` : '',
     };
 
     const meliaMissing = meliaRows.filter(
@@ -736,7 +706,10 @@ export class PorbService {
     for (const row of bilaterals) {
       if (row?.toc_is_deleted) continue;
       if (parseBudget(row?.bilateral_budget) > 0 && !hasAssumption(row?.bilateral_assumption)) {
-        pushError(row?.center_id, row?.porb_aow_id);
+        // W3/Bilateral is center-level — only flag the center, not any AOW
+        if (row?.center_id != null) {
+          centerErrorCodes.add(String(row.center_id));
+        }
       }
     }
 
@@ -2567,9 +2540,12 @@ export class PorbService {
       );
     }
 
+    // AOW00 is the cross-cutting AOW — Anaplan values with unmapped WPs fall back here
+    const aow00 = aowByAcrnum.get('AOW00') || null;
+
     counts.anaplan = 0;
     for (const av of liveAnaplanValues) {
-      const aow = wpIdToAow.get(av.wp_id);
+      const aow = wpIdToAow.get(av.wp_id) || aow00;
       if (!aow) continue;
 
       const key = `${aow.id}::${av.organization_code}::${av.anaplan_id}`;
@@ -3677,6 +3653,18 @@ export class PorbService {
   };
 
   /**
+   * Hides ID columns and applies sheet protection to prevent accidental edits.
+   */
+  private protectAndHideIds(ws: any, idColumnIndices: number[]) {
+    if (!ws['!cols']) ws['!cols'] = [];
+    for (const idx of idColumnIndices) {
+      if (!ws['!cols'][idx]) ws['!cols'][idx] = {};
+      ws['!cols'][idx].hidden = true;
+    }
+    ws['!protect'] = { sheet: true, objects: true, scenarios: true };
+  }
+
+  /**
    * Unified sheet styling: applies header, data, subtotal, total, and AOW vertical merge styles.
    */
   private applySheetStyles(
@@ -3862,6 +3850,266 @@ export class PorbService {
     return wb;
   }
 
+  /**
+   * Returns Anaplan data consolidated across all centers for a program,
+   * grouped by account label and AOW.
+   */
+  async getAnaplanConsolidated(program_id: number) {
+    const aows = await this.porbAowRepository
+      .createQueryBuilder('aow')
+      .where('aow.program_id = :program_id', { program_id })
+      .andWhere('(aow.toc_is_deleted = :isDeleted OR aow.toc_is_deleted IS NULL)', {
+        isDeleted: false,
+      })
+      .orderBy('aow.aow_acrnum', 'ASC')
+      .addOrderBy('aow.aow_name', 'ASC')
+      .getMany();
+
+    if (!aows.length) {
+      return { aows: [], accounts: [], grandTotal: 0 };
+    }
+
+    const aowIds = aows.map((a) => a.id);
+    const aowLabels = aows.map((a) => a.aow_acrnum || `AOW${a.id}`);
+
+    const anaplanRows = await this.porbAnaplanRepository.find({
+      where: { program_id, porb_aow_id: In(aowIds) },
+      relations: ['anaplan'],
+    });
+
+    // Build lookup: anaplan_id -> { label, budgetByAow }
+    const accountMap = new Map<number, { label: string; budgetByAow: Map<number, number> }>();
+    for (const row of anaplanRows) {
+      if (!accountMap.has(row.anaplan_id)) {
+        accountMap.set(row.anaplan_id, {
+          label: row.anaplan?.label || `Anaplan #${row.anaplan_id}`,
+          budgetByAow: new Map(),
+        });
+      }
+      const entry = accountMap.get(row.anaplan_id);
+      const current = entry.budgetByAow.get(row.porb_aow_id) || 0;
+      entry.budgetByAow.set(row.porb_aow_id, current + (Number(row.budget) || 0));
+    }
+
+    // If no rows exist, still load the anaplan accounts so we return the full list
+    if (!accountMap.size) {
+      const allAccounts = await this.anaplanRepository.find({ order: { label: 'ASC' } });
+      for (const acct of allAccounts) {
+        accountMap.set(acct.id, { label: acct.label, budgetByAow: new Map() });
+      }
+    }
+
+    const sortedAccountIds = [...accountMap.keys()].sort((a, b) => a - b);
+    let grandTotal = 0;
+    const grandTotalByAow: Record<string, number> = {};
+
+    const accounts = sortedAccountIds.map((anaplanId) => {
+      const entry = accountMap.get(anaplanId);
+      const budgetByAow: Record<string, number> = {};
+      let total = 0;
+
+      for (let i = 0; i < aows.length; i++) {
+        const aowCode = aowLabels[i];
+        const val = entry.budgetByAow.get(aows[i].id) || 0;
+        budgetByAow[aowCode] = val;
+        grandTotalByAow[aowCode] = (grandTotalByAow[aowCode] || 0) + val;
+        total += val;
+      }
+
+      grandTotal += total;
+
+      return {
+        label: entry.label,
+        budgetByAow,
+        total,
+      };
+    });
+
+    return { aows: aowLabels, accounts, grandTotal, grandTotalByAow };
+  }
+
+  /**
+   * Returns W3/Bilateral budget totals grouped by center for a given program.
+   * Shape matches the Anaplan consolidated endpoint for frontend consistency.
+   */
+  async getW3Consolidated(program_id: number) {
+    const bilateralRows = await this.porbBilateralRepository.find({
+      where: { program_id },
+      relations: ['center'],
+    });
+
+    const centerMap = new Map<number, { name: string; code: string; budget: number }>();
+    for (const row of bilateralRows) {
+      const centerId = row.center_id;
+      if (!centerMap.has(centerId)) {
+        centerMap.set(centerId, {
+          name: row.center?.name || `Center ${centerId}`,
+          code: String(row.center?.code || centerId),
+          budget: 0,
+        });
+      }
+      centerMap.get(centerId).budget += Number(row.bilateral_budget) || 0;
+    }
+
+    const centers = [...centerMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+    const grandTotal = centers.reduce((sum, c) => sum + c.budget, 0);
+
+    return { centers, grandTotal };
+  }
+
+  /**
+   * Migration endpoint: merges bilateral rows that share (toc_id, center_id, program_id)
+   * but differ by porb_aow_id. After migration, porb_aow_id is NULL on all bilateral rows.
+   */
+  async migrateBilateralToCenter() {
+    const queryRunner = this.porbBilateralRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Find groups with duplicates (same toc_id + center_id + program_id)
+      const groups: Array<{
+        toc_id: string;
+        center_id: number;
+        program_id: number;
+        cnt: string;
+      }> = await queryRunner.query(`
+        SELECT toc_id, center_id, program_id, COUNT(*) AS cnt
+        FROM porb_bilateral
+        GROUP BY toc_id, center_id, program_id
+        HAVING COUNT(*) > 1
+      `);
+
+      let merged = 0;
+      let deleted = 0;
+
+      for (const group of groups) {
+        // Get all rows in this group, ordered by id ASC (keep the lowest)
+        const rows: PorbBilateral[] = await queryRunner.query(
+          `SELECT * FROM porb_bilateral
+           WHERE toc_id = ? AND center_id = ? AND program_id = ?
+           ORDER BY id ASC`,
+          [group.toc_id, group.center_id, group.program_id],
+        );
+
+        if (rows.length < 2) continue;
+
+        const keepRow = rows[0];
+        const duplicates = rows.slice(1);
+
+        // Sum budgets
+        const totalBudget = rows.reduce(
+          (sum, r) => sum + (Number(r.bilateral_budget) || 0),
+          0,
+        );
+
+        // Concat non-empty assumptions
+        const assumptions = rows
+          .map((r) => (r.bilateral_assumption || '').trim())
+          .filter((a) => a.length > 0);
+        const mergedAssumption = assumptions.length > 0 ? assumptions.join('\n') : null;
+
+        // Update the kept row
+        await queryRunner.query(
+          `UPDATE porb_bilateral
+           SET bilateral_budget = ?, bilateral_assumption = ?, porb_aow_id = NULL
+           WHERE id = ?`,
+          [totalBudget || null, mergedAssumption, keepRow.id],
+        );
+
+        // Delete duplicates
+        const deleteIds = duplicates.map((r) => r.id);
+        if (deleteIds.length > 0) {
+          await queryRunner.query(
+            `DELETE FROM porb_bilateral WHERE id IN (${deleteIds.map(() => '?').join(',')})`,
+            deleteIds,
+          );
+          deleted += deleteIds.length;
+        }
+
+        merged += 1;
+      }
+
+      // Set porb_aow_id = NULL on all remaining rows
+      const nullified = await queryRunner.query(
+        `UPDATE porb_bilateral SET porb_aow_id = NULL WHERE porb_aow_id IS NOT NULL`,
+      );
+
+      await queryRunner.commitTransaction();
+
+      return {
+        success: true,
+        groupsMerged: merged,
+        rowsDeleted: deleted,
+        rowsNullified: nullified?.affectedRows ?? 0,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(
+        `Bilateral migration failed: ${error?.message || error}`,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Generates a standalone Anaplan-only Excel workbook and streams it as a download.
+   */
+  async generateAnaplanExcel(programId: number, centerId: number | undefined, res: Response) {
+    const aows = await this.porbAowRepository
+      .createQueryBuilder('aow')
+      .where('aow.program_id = :programId', { programId })
+      .andWhere('(aow.toc_is_deleted = :isDeleted OR aow.toc_is_deleted IS NULL)', {
+        isDeleted: false,
+      })
+      .orderBy('aow.aow_acrnum', 'ASC')
+      .addOrderBy('aow.aow_name', 'ASC')
+      .getMany();
+
+    const aowMap = new Map<number, { code: string; name: string }>();
+    for (const aow of aows) {
+      aowMap.set(aow.id, { code: aow.aow_acrnum || '', name: aow.aow_name || '' });
+    }
+    const sortedAowIds = aows.map((a) => a.id);
+
+    const anaplanRows = await this.porbAnaplanRepository.find({
+      where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
+      relations: ['anaplan'],
+    });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      this.generatePorbAnaplanSheet(anaplanRows, aowMap, sortedAowIds),
+      'Anaplan',
+    );
+
+    const initiative = await this.initiativeRepository.findOne({ where: { id: programId } });
+    const code = initiative?.official_code || programId;
+    const fileName = centerId
+      ? `PORB_Anaplan_${code}_center${centerId}`
+      : `PORB_Anaplan_${code}`;
+
+    const dirPath = join(process.cwd(), 'generated_files');
+    const { mkdirSync, existsSync } = require('fs');
+    if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
+
+    const filePath = join(dirPath, `${fileName}.xlsx`);
+    XLSX.writeFile(wb, filePath, { cellStyles: true });
+    const file = createReadStream(filePath);
+
+    setTimeout(() => {
+      try { unlink(filePath, () => {}); } catch {}
+    }, 10000);
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}.xlsx"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    return new StreamableFile(file);
+  }
+
   async generatePorbExcel(programId: number, centerId: number | undefined, res: Response) {
     const wb = await this.buildPorbWorkbook(programId, centerId);
 
@@ -3941,7 +4189,6 @@ export class PorbService {
       [
         'Area of Work',
         'Pooled Funding', null, null, null, null, null, null, null, null, null, null,
-        'W3/ Bilateral Project (USD)',
         'aow_id',
       ],
       [
@@ -3954,7 +4201,6 @@ export class PorbService {
         'MELIA Studies budget',
         'Total Pooled Funding budget (USD)',
         null,
-        null,
       ],
       [
         null,
@@ -3962,7 +4208,7 @@ export class PorbService {
         'Target', 'Budget',
         'Target', 'Budget',
         'Target', 'Budget',
-        null, null, null, null, null,
+        null, null, null, null,
       ],
     ];
 
@@ -3974,7 +4220,7 @@ export class PorbService {
         Number(r.capacityTarget) || 0, Number(r.capacityBudget) || 0,
         Number(r.othersTarget) || 0, Number(r.othersBudget) || 0,
         Number(r.partnerBudget) || 0, Number(r.meliaBudget) || 0,
-        Number(r.totalPooledFunding) || 0, Number(r.w3Budget) || 0,
+        Number(r.totalPooledFunding) || 0,
         r.aowId || '',
       ]);
     }
@@ -3987,7 +4233,7 @@ export class PorbService {
       Number(totals.capacityTarget) || 0, Number(totals.capacityBudget) || 0,
       Number(totals.othersTarget) || 0, Number(totals.othersBudget) || 0,
       Number(totals.partnerBudget) || 0, Number(totals.meliaBudget) || 0,
-      Number(totals.totalPooledFunding) || 0, Number(totals.w3Budget) || 0,
+      Number(totals.totalPooledFunding) || 0,
       '',
     ]);
 
@@ -3996,7 +4242,6 @@ export class PorbService {
     ws['!merges'] = [
       { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } },        // Area of Work rowspan=3
       { s: { r: 0, c: 1 }, e: { r: 0, c: 11 } },        // Pooled Funding colspan=11
-      { s: { r: 0, c: 12 }, e: { r: 2, c: 12 } },       // W3/Bilateral rowspan=3
       { s: { r: 1, c: 1 }, e: { r: 1, c: 2 } },         // Innovation Development
       { s: { r: 1, c: 3 }, e: { r: 1, c: 4 } },         // Knowledge product
       { s: { r: 1, c: 5 }, e: { r: 1, c: 6 } },         // Capacity Sharing
@@ -4009,16 +4254,18 @@ export class PorbService {
     ws['!cols'] = [
       { wch: 30 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 },
       { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 },
-      { wch: 25 }, { wch: 25 }, { wch: 35 }, { wch: 30 }, { wch: 10 },
+      { wch: 25 }, { wch: 25 }, { wch: 35 }, { wch: 10 },
     ];
 
-    const numCols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const numCols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 3,
       totalRowIndex: totalRowIdx,
       numberColumns: numCols,
       rowHeights: { header: 15, data: 20, subtotal: 25 },
     });
+
+    this.protectAndHideIds(ws, [13]);
 
     return ws;
   }
@@ -4034,21 +4281,21 @@ export class PorbService {
     // 2-row header matching submission
     wsData.push([
       'AOW', 'High Level Output',
-      'Key Performance Indicators', null, null, null, null,
+      'Key Performance Indicators', null, null, null, null, null,
       'Total Budget (USD)', 'id',
     ]);
     wsData.push([
       null, null,
-      'Description', 'Type', 'Geographic Location', 'Target', 'Budget (USD)',
+      'Description', 'Type', 'Geographic Location', 'Target', 'Budget (USD)', 'Assumption',
       null, null,
     ]);
 
     // Header merges
     merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } });   // AOW
     merges.push({ s: { r: 0, c: 1 }, e: { r: 1, c: 1 } });   // High Level Output
-    merges.push({ s: { r: 0, c: 2 }, e: { r: 0, c: 6 } });   // KPI colspan=5
-    merges.push({ s: { r: 0, c: 7 }, e: { r: 1, c: 7 } });   // Total Budget
-    merges.push({ s: { r: 0, c: 8 }, e: { r: 1, c: 8 } });   // id
+    merges.push({ s: { r: 0, c: 2 }, e: { r: 0, c: 7 } });   // KPI colspan=6
+    merges.push({ s: { r: 0, c: 8 }, e: { r: 1, c: 8 } });   // Total Budget
+    merges.push({ s: { r: 0, c: 9 }, e: { r: 1, c: 9 } });   // id
 
     let currentRow = 2;
 
@@ -4093,6 +4340,7 @@ export class PorbService {
             h.hlo_geo || '',
             Number(h.hlo_target) || 0,
             Number(h.hlo_budget) || 0,
+            h.hlo_assumption || '',
             idx === 0 ? totalBudget : null,
             h.id,
           ]);
@@ -4102,14 +4350,14 @@ export class PorbService {
         // Merge HLO name + Total Budget across indicator rows
         if (group.items.length > 1) {
           merges.push({ s: { r: startRowForHlo, c: 1 }, e: { r: currentRow - 1, c: 1 } });
-          merges.push({ s: { r: startRowForHlo, c: 7 }, e: { r: currentRow - 1, c: 7 } });
+          merges.push({ s: { r: startRowForHlo, c: 8 }, e: { r: currentRow - 1, c: 8 } });
         }
       }
 
       // Subtotal row
       const hloBudgetTotal = aowHlos.reduce((sum, h) => sum + (Number(h.hlo_budget) || 0), 0);
-      wsData.push([null, 'HLO budget subtotal', null, null, null, null, null, hloBudgetTotal, '']);
-      merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 6 } });
+      wsData.push([null, 'HLO budget subtotal', null, null, null, null, null, null, hloBudgetTotal, '']);
+      merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 7 } });
       currentRow++;
 
       // AOW vertical merge
@@ -4124,17 +4372,19 @@ export class PorbService {
 
     ws['!cols'] = [
       { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 },
-      { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 10 },
+      { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 2,
       subtotalDetector: (row) => row?.[1] === 'HLO budget subtotal',
       wpColumnIndex: 0,
-      numberColumns: [5, 6, 7],
+      numberColumns: [5, 6, 8],
       rowHeights: { header: 30, data: 50, subtotal: 25 },
       merges,
     });
+
+    this.protectAndHideIds(ws, [9]);
 
     return ws;
   }
@@ -4150,7 +4400,7 @@ export class PorbService {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'Partner', 'Center', 'Geographic location', 'Total Budget (USD)', 'id']);
+    wsData.push(['AOW', 'Partner', 'Center', 'Geographic location', 'Total Budget (USD)', 'Assumption', 'id']);
 
     let currentRow = 1;
 
@@ -4201,6 +4451,7 @@ export class PorbService {
             centerName,
             countryNames || 'N/A',
             idx === 0 ? totalBudget : null,
+            cp.assumption || '',
             cp.id,
           ]);
           currentRow++;
@@ -4215,7 +4466,7 @@ export class PorbService {
 
       // Subtotal row
       const aowBudgetTotal = aowCps.reduce((sum, cp) => sum + (Number(cp.budget) || 0), 0);
-      wsData.push([null, 'Contracted partners subtotal', null, null, aowBudgetTotal, '']);
+      wsData.push([null, 'Contracted partners subtotal', null, null, aowBudgetTotal, '', '']);
       merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } });
       currentRow++;
 
@@ -4228,7 +4479,7 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 10 },
+      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
@@ -4239,6 +4490,8 @@ export class PorbService {
       rowHeights: { header: 30, data: 50, subtotal: 25 },
       merges,
     });
+
+    this.protectAndHideIds(ws, [6]);
 
     return ws;
   }
@@ -4251,7 +4504,7 @@ export class PorbService {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'Project title', 'High Level Output title', 'W3/Bilateral Project (USD)', 'id']);
+    wsData.push(['AOW', 'Project title', 'High Level Output title', 'W3/Bilateral Project (USD)', 'Assumption', 'id']);
 
     let currentRow = 1;
 
@@ -4276,6 +4529,7 @@ export class PorbService {
           b.bilateral_name || 'N/A',
           b.bilateral_outputs || 'N/A',
           Number(b.bilateral_budget) || 0,
+          b.bilateral_assumption || '',
           b.id,
         ]);
         currentRow++;
@@ -4283,7 +4537,7 @@ export class PorbService {
 
       // Subtotal row
       const aowBudgetTotal = aowBils.reduce((sum, b) => sum + (Number(b.bilateral_budget) || 0), 0);
-      wsData.push([null, 'W3/Bilateral budget subtotal', null, aowBudgetTotal, '']);
+      wsData.push([null, 'W3/Bilateral budget subtotal', null, aowBudgetTotal, '', '']);
       merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 2 } });
       currentRow++;
 
@@ -4296,7 +4550,7 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 10 },
+      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
@@ -4307,6 +4561,8 @@ export class PorbService {
       rowHeights: { header: 30, data: 60, subtotal: 25 },
       merges,
     });
+
+    this.protectAndHideIds(ws, [5]);
 
     return ws;
   }
@@ -4319,7 +4575,7 @@ export class PorbService {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'MELIA study', 'Supported outcomes', 'Geographic location', 'Total Budget (USD)', 'id']);
+    wsData.push(['AOW', 'MELIA study', 'Supported outcomes', 'Geographic location', 'Total Budget (USD)', 'Assumption', 'id']);
 
     let currentRow = 1;
 
@@ -4345,6 +4601,7 @@ export class PorbService {
           m.melia_outputs || 'N/A',
           'N/A',
           Number(m.melia_budget) || 0,
+          m.melia_assumption || '',
           m.id,
         ]);
         currentRow++;
@@ -4352,7 +4609,7 @@ export class PorbService {
 
       // Subtotal row
       const aowBudgetTotal = aowMelias.reduce((sum, m) => sum + (Number(m.melia_budget) || 0), 0);
-      wsData.push([null, 'MELIA budget subtotal', null, null, aowBudgetTotal, '']);
+      wsData.push([null, 'MELIA budget subtotal', null, null, aowBudgetTotal, '', '']);
       merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } });
       currentRow++;
 
@@ -4365,7 +4622,7 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 25 }, { wch: 10 },
+      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 25 }, { wch: 30 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
@@ -4376,6 +4633,8 @@ export class PorbService {
       rowHeights: { header: 30, data: 60, subtotal: 25 },
       merges,
     });
+
+    this.protectAndHideIds(ws, [6]);
 
     return ws;
   }
@@ -4389,7 +4648,7 @@ export class PorbService {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'Cost elements', 'Total budget (USD)', 'id', 'standerd_cross_cutting_id']);
+    wsData.push(['AOW', 'Cost elements', 'Total budget (USD)', 'Assumption', 'id', 'standerd_cross_cutting_id']);
 
     let currentRow = 1;
 
@@ -4413,6 +4672,7 @@ export class PorbService {
           aowLabel,
           itemName,
           Number(c.budget) || 0,
+          c.assumption || '',
           c.id,
           c.standerd_cross_cutting_id,
         ]);
@@ -4429,7 +4689,7 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 10 }, { wch: 40 }, { wch: 25 }, { wch: 10 }, { wch: 10 },
+      { wch: 10 }, { wch: 40 }, { wch: 25 }, { wch: 30 }, { wch: 10 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
@@ -4439,6 +4699,8 @@ export class PorbService {
       rowHeights: { header: 60, data: 45, subtotal: 25 },
       merges,
     });
+
+    this.protectAndHideIds(ws, [4, 5]);
 
     return ws;
   }

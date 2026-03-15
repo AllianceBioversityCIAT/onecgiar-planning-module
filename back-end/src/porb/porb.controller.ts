@@ -160,6 +160,20 @@ export class PorbController {
     );
   }
 
+  @Get('anaplan-consolidated')
+  getAnaplanConsolidated(
+    @Query('program_id', ParseIntPipe) program_id: number,
+  ) {
+    return this.porbService.getAnaplanConsolidated(program_id);
+  }
+
+  @Get('w3-consolidated')
+  getW3Consolidated(
+    @Query('program_id', ParseIntPipe) program_id: number,
+  ) {
+    return this.porbService.getW3Consolidated(program_id);
+  }
+
   @Get('anaplan')
   getAnaplan(
     @Query('program_id', ParseIntPipe) program_id: number,
@@ -339,6 +353,13 @@ export class PorbController {
     return this.porbService.migrateExistingCrossToStandard();
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('migrate-bilateral-to-center')
+  migrateBilateralToCenter() {
+    return this.porbService.migrateBilateralToCenter();
+  }
+
   @Post('submit/:program_id')
   submitPorb(
     @Param('program_id', ParseIntPipe) program_id: number,
@@ -399,6 +420,23 @@ export class PorbController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.porbService.generatePorbExcel(program_id, Number(data.center_id), res);
+  }
+
+  @Get('excel/:program_id/anaplan')
+  async exportAnaplanExcel(
+    @Param('program_id', ParseIntPipe) program_id: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.porbService.generateAnaplanExcel(program_id, undefined, res);
+  }
+
+  @Post('excel/:program_id/center-anaplan')
+  async exportAnaplanExcelForCenter(
+    @Param('program_id', ParseIntPipe) program_id: number,
+    @Body() data: { center_id: number },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.porbService.generateAnaplanExcel(program_id, Number(data.center_id), res);
   }
 
   // Temporary endpoint for TOC -> PORB import (single program)

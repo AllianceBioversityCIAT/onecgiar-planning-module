@@ -94,6 +94,24 @@ The assumption icon button in `budget-and-assumption.component.html` has `tabind
 ### Unknown Partners
 Users can add "Unknown Partner" rows directly in the PORB Partners section (not from TOC). These have `is_unknown: true` on `porb_partner` entity. They can later be resolved to real CLARISA institutions via a search dialog (`PATCH /porb/partner/:id/resolve`), which updates the name and sets `is_unknown = false`. Only unknown partners can be deleted (`DELETE /porb/partner/:id`). The `GET /porb/partner/search-clarisa?q=...` endpoint searches the `Partner` (CLARISA) table. Adding emits `rowAdded` which triggers a full `loadBudgetRows()` reload.
 
+### Summary Section Navigation
+The summary AOW detail view uses section-level navigation (same sections as center-level: HLO, Partners, MELIA, W3/Bilateral, Anaplan, Cross Cutting for AOW00). Only one section is visible at a time via `summarySelectedSection`. Auto-selects first section when AOW changes.
+
+### Summary Assumption Icon
+`SummaryAssumptionIconComponent` shows a read-only `matTooltip` with assumption text beside budget values in summary detail tables (HLO, Partners, MELIA, W3/Bilateral). Skipped for Cross Cutting since assumptions don't aggregate across centers.
+
+### Anaplan Consolidated Endpoint
+`GET /porb/anaplan-consolidated?program_id=X` aggregates all `porb_anaplan` rows across centers, grouped by account × AOW. Returns `{ aows, accounts, grandTotal, grandTotalByAow }`. Displayed in summary page between consolidation table and AOW detail.
+
+### Anaplan Migration & AOW00
+The Anaplan migration in `migrateOneProgram()` falls back to AOW00 for `AnaplanValues` whose `wp_id` doesn't match any WorkPackage. This is needed because AOW00 (Cross-Cutting) has no WorkPackage entity. Without the fallback, AOW00 Anaplan budgets are silently skipped.
+
+### Excel Sheet Protection & Hidden IDs
+All PORB Excel sheets call `protectAndHideIds()` to hide ID columns and apply sheet protection. Assumption columns (text wrap, ~30 char width) are added beside each budget column in all 5 section sheets.
+
+### PORB Section Order
+`baseExtraNavigationItems` order: Pool funding HLO → Partners → MELIA Study → W3/Bilatral → Anaplan. MELIA comes before W3/Bilateral.
+
 ## CI/CD
 - GitHub Actions triggers Jenkins on push to `development` branch
 - Jenkins builds Docker images and deploys with health checks

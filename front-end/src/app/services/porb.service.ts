@@ -47,10 +47,9 @@ export class PorbService {
 
   async getBilaterals(
     programId: number,
-    porbAowId?: number,
     centerId?: number
   ) {
-    return this.getByFilter("bilateral", programId, porbAowId, centerId);
+    return this.getByFilter("bilateral", programId, undefined, centerId);
   }
 
   async getMelia(
@@ -336,6 +335,60 @@ export class PorbService {
     const blob = response.body as Blob;
     const contentDisposition = response.headers.get("Content-Disposition");
     let filename = "PORB.xlsx";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+    saveAs(blob, filename);
+  }
+
+  getAnaplanConsolidated(programId: number) {
+    const params = new HttpParams().set("program_id", String(programId));
+    return this.http.get<any>(`${environment.api_url}/porb/anaplan-consolidated`, { params });
+  }
+
+  getW3Consolidated(programId: number) {
+    const params = new HttpParams().set("program_id", String(programId));
+    return this.http.get<any>(`${environment.api_url}/porb/w3-consolidated`, { params });
+  }
+
+  async exportAnaplanExcel(programId: number) {
+    const response = await firstValueFrom(
+      this.http.get(`${environment.api_url}/porb/excel/${programId}/anaplan`, {
+        responseType: "blob",
+        observe: "response",
+      })
+    );
+
+    const blob = response.body as Blob;
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = "PORB_Anaplan.xlsx";
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+    saveAs(blob, filename);
+  }
+
+  async exportAnaplanExcelForCenter(programId: number, centerId: string) {
+    const response = await firstValueFrom(
+      this.http.post(
+        `${environment.api_url}/porb/excel/${programId}/center-anaplan`,
+        { center_id: centerId },
+        {
+          responseType: "blob",
+          observe: "response",
+        }
+      )
+    );
+
+    const blob = response.body as Blob;
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = "PORB_Anaplan.xlsx";
     if (contentDisposition) {
       const match = contentDisposition.match(/filename="?([^"]+)"?/);
       if (match && match[1]) {

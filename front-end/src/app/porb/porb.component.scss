@@ -524,6 +524,18 @@
   }
 }
 
+// Consolidated tables side-by-side row (Anaplan + W3)
+.consolidated-tables-row {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+
+  > .porb-consolidation-section {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 // Summary AOW detail view
 .summary-aow-nav {
   margin-top: 1.6rem;
