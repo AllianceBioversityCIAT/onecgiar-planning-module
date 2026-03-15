@@ -59,6 +59,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   summaryConsolidationRows: any[] = [];
   summaryConsolidationTotals: any = {};
   summaryLoading = false;
+  summaryViewMode: 'consolidated' | 'detailed' = 'consolidated';
 
   anaplanConsolidatedData: any = null;
   w3ConsolidatedData: any = null;

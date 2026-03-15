@@ -83,6 +83,22 @@
           </div>
         </div>
 
+        <!-- Summary view mode nav -->
+        <nav class="porb-nav porb-nav--summary-mode" *ngIf="!summaryLoading">
+          <button type="button" class="porb-nav__item"
+            [class.porb-nav__item--active]="summaryViewMode === 'consolidated'"
+            (click)="summaryViewMode = 'consolidated'">
+            Consolidated
+          </button>
+          <button type="button" class="porb-nav__item"
+            [class.porb-nav__item--active]="summaryViewMode === 'detailed'"
+            (click)="summaryViewMode = 'detailed'">
+            Detailed
+          </button>
+        </nav>
+
+        <!-- CONSOLIDATED VIEW -->
+        <ng-container *ngIf="summaryViewMode === 'consolidated'">
         <div class="porb-consolidation-section">
           <h3>Consolidated</h3>
 
@@ -213,7 +229,10 @@
           </div>
 
         </div>
+        </ng-container>
 
+        <!-- DETAILED VIEW -->
+        <ng-container *ngIf="summaryViewMode === 'detailed'">
         <!-- AOW Detail View -->
         <nav class="porb-nav porb-nav--aows summary-aow-nav" *ngIf="!summaryLoading && aows.length">
           <button
@@ -433,6 +452,7 @@
 
           </ng-container>
         </div>
+        </ng-container>
       </div>
     </div>
 
