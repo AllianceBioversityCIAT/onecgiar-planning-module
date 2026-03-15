@@ -95,10 +95,10 @@ The assumption icon button in `budget-and-assumption.component.html` has `tabind
 Users can add "Unknown Partner" rows directly in the PORB Partners section (not from TOC). These have `is_unknown: true` on `porb_partner` entity. They can later be resolved to real CLARISA institutions via a search dialog (`PATCH /porb/partner/:id/resolve`), which updates the name and sets `is_unknown = false`. Only unknown partners can be deleted (`DELETE /porb/partner/:id`). The `GET /porb/partner/search-clarisa?q=...` endpoint searches the `Partner` (CLARISA) table. Adding emits `rowAdded` which triggers a full `loadBudgetRows()` reload.
 
 ### Summary Section Navigation
-The summary AOW detail view uses section-level navigation (same sections as center-level: HLO, Partners, MELIA, W3/Bilateral, Anaplan, Cross Cutting for AOW00). Only one section is visible at a time via `summarySelectedSection`. Auto-selects first section when AOW changes.
+The summary AOW detail view uses section-level navigation (same sections as center-level: HLO, Partners, MELIA, Anaplan, Cross Cutting for AOW00). Only one section is visible at a time via `summarySelectedSection`. Auto-selects first section when AOW changes. W3/Bilateral is NOT in summary AOW detail — it has its own consolidated table.
 
 ### Summary Assumption Icon
-`SummaryAssumptionIconComponent` shows a read-only `matTooltip` with assumption text beside budget values in summary detail tables (HLO, Partners, MELIA, W3/Bilateral). Skipped for Cross Cutting since assumptions don't aggregate across centers.
+`SummaryAssumptionIconComponent` shows a read-only `matTooltip` with assumption text beside budget values in summary detail tables (HLO, Partners, MELIA). Skipped for Cross Cutting since assumptions don't aggregate across centers.
 
 ### Anaplan Consolidated Endpoint
 `GET /porb/anaplan-consolidated?program_id=X` aggregates all `porb_anaplan` rows across centers, grouped by account × AOW. Returns `{ aows, accounts, grandTotal, grandTotalByAow }`. Displayed in summary page between consolidation table and AOW detail.
@@ -109,8 +109,11 @@ The Anaplan migration in `migrateOneProgram()` falls back to AOW00 for `AnaplanV
 ### Excel Sheet Protection & Hidden IDs
 All PORB Excel sheets call `protectAndHideIds()` to hide ID columns and apply sheet protection. Assumption columns (text wrap, ~30 char width) are added beside each budget column in all 5 section sheets.
 
+### W3/Bilateral Is Center-Level
+W3/Bilateral is NOT a per-AOW section — it lives at the center level as a pseudo-AOW button in Level 2 nav. `isW3View` flag controls the view state. When active, no consolidation sidebar or Level 3 section nav is shown. `porb_bilateral.porb_aow_id` is NULL for all rows. The summary page shows a W3/Bilateral Consolidated table (per-center totals) beside Anaplan Consolidated. Migration: `POST /porb/migrate-bilateral-to-center` or `back-end/migrate-bilateral-to-center.sql`.
+
 ### PORB Section Order
-`baseExtraNavigationItems` order: Pool funding HLO → Partners → MELIA Study → W3/Bilatral → Anaplan. MELIA comes before W3/Bilateral.
+`baseExtraNavigationItems` order: Pool funding HLO → Partners → MELIA Study → Anaplan. W3/Bilateral is separate (center-level nav, not in this array).
 
 ## CI/CD
 - GitHub Actions triggers Jenkins on push to `development` branch
