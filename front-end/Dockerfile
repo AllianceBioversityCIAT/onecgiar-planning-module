@@ -14,9 +14,8 @@ ADD default /etc/nginx/sites-available
 RUN mkdir /front-end
 COPY package.json *.json /front-end/
 WORKDIR /front-end
-ENV NODE_OPTIONS="--max-semi-space-size=64 --max-old-space-size=4096"
 RUN npm install --legacy-peer-deps
 COPY src /front-end/src
-RUN node --single-threaded node_modules/.bin/ng build --configuration development
+RUN NODE_OPTIONS="--max-semi-space-size=64 --max-old-space-size=4096" node --single-threaded node_modules/.bin/ng build --configuration development
 EXPOSE 443 80
 CMD ["nginx", "-g", "daemon off;"]
