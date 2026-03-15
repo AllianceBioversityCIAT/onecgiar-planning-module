@@ -991,8 +991,11 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (this.summarySelectedAow?.id === aow?.id && !this.summaryW3View) return;
     this.summaryW3View = false;
     this.summarySelectedAow = aow;
-    // Auto-select first section whenever the AOW changes
-    this.summarySelectedSection = this.summarySectionItems[0] || null;
+    // Preserve current section if it exists in the new AOW's list, otherwise pick first
+    const sections = this.summarySectionItems;
+    if (!this.summarySelectedSection || !sections.includes(this.summarySelectedSection)) {
+      this.summarySelectedSection = sections[0] || null;
+    }
     if (!this.initiativeId || !aow?.id) return;
     this.summaryAowDetailLoading = true;
     try {
