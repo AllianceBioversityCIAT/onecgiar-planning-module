@@ -5,8 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Full-stack CGIAR planning management application:
-- **Frontend**: Angular 15 (TypeScript, SCSS) in `front-end/`
+- **Frontend**: Angular 19 (TypeScript 5.7, SCSS) in `front-end/` — esbuild `application` builder
 - **Backend**: NestJS 10 (TypeScript) in `back-end/`
+- **Node**: 20 LTS (in Docker)
 - **Database**: MySQL via TypeORM (synchronize: true — schema auto-syncs from entities)
 - **Auth**: AWS Cognito + JWT
 - **Real-time**: Socket.io WebSocket gateway
