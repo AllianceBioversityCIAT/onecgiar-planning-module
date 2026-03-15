@@ -2,13 +2,13 @@ import { Component, OnInit } from "@angular/core";
 import { MatTableDataSource } from "@angular/material/table";
 import { PageEvent } from "@angular/material/paginator";
 import * as Highcharts from "highcharts";
+import HighchartsMore from "highcharts/highcharts-more";
 import { HeaderService } from "src/app/header.service";
 import { AuthService } from "src/app/services/auth.service";
 import { InitiativesService } from "src/app/services/initiatives.service";
 import { PhasesService } from "src/app/services/phases.service";
 import { Meta, Title } from "@angular/platform-browser";
-declare var require: any;
-require("highcharts/highcharts-more.js")(Highcharts);
+HighchartsMore(Highcharts);
 
 @Component({
     selector: "app-track-porbs",
