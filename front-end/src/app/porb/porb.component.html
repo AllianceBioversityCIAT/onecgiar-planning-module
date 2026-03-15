@@ -264,7 +264,7 @@
               <div class="skeleton-block sk-table-row"></div>
               <div class="skeleton-block sk-table-row"></div>
             </div>
-            <div class="summary-section-block" *ngIf="!summaryW3Loading && summaryW3Rows.length">
+            <div class="summary-section-block" *ngIf="!summaryW3Loading && filteredSummaryW3Rows.length">
               <h4 class="summary-section-title">W3/Bilateral Projects</h4>
               <div class="summary-table-wrapper">
                 <table class="consolidation-table summary-detail-table">
@@ -276,7 +276,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let row of summaryW3Rows">
+                    <tr *ngFor="let row of filteredSummaryW3Rows">
                       <td>{{ row.bilateral_name || '-' }}</td>
                       <td>{{ row.bilateral_outputs || '-' }}</td>
                       <td class="num-cell">
@@ -288,7 +288,7 @@
                 </table>
               </div>
             </div>
-            <div class="summary-empty-sections" *ngIf="!summaryW3Loading && !summaryW3Rows.length">
+            <div class="summary-empty-sections" *ngIf="!summaryW3Loading && !filteredSummaryW3Rows.length">
               <div class="summary-section-empty">
                 <mat-icon>info_outline</mat-icon>
                 <span><strong>W3/Bilateral</strong> — No bilateral project data found.</span>

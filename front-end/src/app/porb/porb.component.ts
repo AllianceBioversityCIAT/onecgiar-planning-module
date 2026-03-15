@@ -1114,6 +1114,12 @@ export class PorbComponent implements OnInit, OnDestroy {
     }));
   }
 
+  get filteredSummaryW3Rows(): any[] {
+    return (this.summaryW3Rows || []).filter(
+      (r: any) => (Number(r?.bilateral_budget) || 0) > 0
+    );
+  }
+
   /** Pre-formatted cross-cutting rows for the AOW detail table. */
   get formattedCross(): any[] {
     return this.filteredCross.map((c) => ({
