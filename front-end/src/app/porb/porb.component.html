@@ -176,58 +176,72 @@
           </div>
         </div>
 
-        <!-- Anaplan + W3 Consolidated Tables (side by side) -->
-        <div class="consolidated-tables-row" *ngIf="!summaryLoading && (anaplanConsolidatedData?.accounts?.length || w3ConsolidatedData?.centers?.length)">
-
-          <!-- Anaplan Consolidated Table -->
-          <div class="porb-consolidation-section" *ngIf="anaplanConsolidatedData?.accounts?.length">
-            <div class="risk-report-box">
-              <h3>Anaplan Consolidated</h3>
-              <button
-                mat-stroked-button
-                class="center-action-btn center-export-btn"
-                title="Export Anaplan Consolidated"
-                (click)="exportAnaplanConsolidatedExcel()"
-              >
-                <mat-icon>download</mat-icon>
-                Export Anaplan
-              </button>
-            </div>
-            <div class="summary-table-wrapper">
-              <table class="consolidation-table porb-summary-table">
-                <thead>
-                  <tr>
-                    <th>Account</th>
-                    <th *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">{{ aow }}</th>
-                    <th class="num-cell total-col">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let account of anaplanConsolidatedData.accounts">
-                    <td>{{ account.label }}</td>
-                    <td *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">
-                      {{ formatAnaplanCurrency(account.budgetByAow[aow]) }}
-                    </td>
-                    <td class="num-cell total-col">{{ formatAnaplanCurrency(account.total) }}</td>
-                  </tr>
-                  <tr class="summary-total-row" *ngIf="anaplanConsolidatedData.grandTotal != null">
-                    <td><strong>Total</strong></td>
-                    <td *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">
-                      <strong>{{ formatAnaplanCurrency(anaplanConsolidatedData.grandTotalByAow?.[aow]) }}</strong>
-                    </td>
-                    <td class="num-cell total-col"><strong>{{ formatAnaplanCurrency(anaplanConsolidatedData.grandTotal) }}</strong></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Anaplan Consolidated Table (full width) -->
+        <div class="porb-consolidation-section" *ngIf="!summaryLoading && anaplanConsolidatedData?.accounts?.length">
+          <div class="risk-report-box">
+            <h3>Anaplan Consolidated</h3>
+            <button
+              mat-stroked-button
+              class="center-action-btn center-export-btn"
+              title="Export Anaplan Consolidated"
+              (click)="exportAnaplanConsolidatedExcel()"
+            >
+              <mat-icon>download</mat-icon>
+              Export Anaplan
+            </button>
           </div>
-
-          <!-- W3/Bilateral Consolidated -->
-          <div class="porb-consolidation-section w3-consolidated-section" *ngIf="w3ConsolidatedData?.grandTotal != null">
-            <h3>W3/Bilateral Total Budget (USD)</h3>
-            <div class="w3-total-value">{{ formatAnaplanCurrency(w3ConsolidatedData.grandTotal) }}</div>
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th>Account</th>
+                  <th *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">{{ aow }}</th>
+                  <th class="num-cell total-col">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let account of anaplanConsolidatedData.accounts">
+                  <td>{{ account.label }}</td>
+                  <td *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">
+                    {{ formatAnaplanCurrency(account.budgetByAow[aow]) }}
+                  </td>
+                  <td class="num-cell total-col">{{ formatAnaplanCurrency(account.total) }}</td>
+                </tr>
+                <tr class="summary-total-row" *ngIf="anaplanConsolidatedData.grandTotal != null">
+                  <td><strong>Total</strong></td>
+                  <td *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">
+                    <strong>{{ formatAnaplanCurrency(anaplanConsolidatedData.grandTotalByAow?.[aow]) }}</strong>
+                  </td>
+                  <td class="num-cell total-col"><strong>{{ formatAnaplanCurrency(anaplanConsolidatedData.grandTotal) }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+        </div>
 
+        <!-- W3/Bilateral Consolidated Table (full width, per center) -->
+        <div class="porb-consolidation-section" *ngIf="!summaryLoading && w3ConsolidatedData?.centers?.length">
+          <h3>W3/Bilateral Consolidated</h3>
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th>Center</th>
+                  <th class="num-cell">Budget (USD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of w3ConsolidatedData.centers">
+                  <td>{{ c.name }}</td>
+                  <td class="num-cell">{{ formatAnaplanCurrency(c.budget) }}</td>
+                </tr>
+                <tr class="summary-total-row">
+                  <td><strong>Total</strong></td>
+                  <td class="num-cell"><strong>{{ formatAnaplanCurrency(w3ConsolidatedData.grandTotal) }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         </ng-container>
 
