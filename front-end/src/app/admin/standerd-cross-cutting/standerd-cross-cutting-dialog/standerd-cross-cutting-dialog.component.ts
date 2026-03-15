@@ -9,9 +9,10 @@ export interface DialogData {
 }
 
 @Component({
-  selector: "app-standerd-cross-cutting-dialog",
-  templateUrl: "./standerd-cross-cutting-dialog.component.html",
-  styleUrls: ["./standerd-cross-cutting-dialog.component.scss"],
+    selector: "app-standerd-cross-cutting-dialog",
+    templateUrl: "./standerd-cross-cutting-dialog.component.html",
+    styleUrls: ["./standerd-cross-cutting-dialog.component.scss"],
+    standalone: false
 })
 export class StanderdCrossCuttingDialogComponent implements OnInit {
   itemId: number = 0;

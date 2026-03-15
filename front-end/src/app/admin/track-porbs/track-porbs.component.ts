@@ -11,9 +11,10 @@ declare var require: any;
 require("highcharts/highcharts-more.js")(Highcharts);
 
 @Component({
-  selector: "app-track-porbs",
-  templateUrl: "./track-porbs.component.html",
-  styleUrls: ["./track-porbs.component.scss"],
+    selector: "app-track-porbs",
+    templateUrl: "./track-porbs.component.html",
+    styleUrls: ["./track-porbs.component.scss"],
+    standalone: false
 })
 export class TrackPORBsComponent {
   // Chartstuff

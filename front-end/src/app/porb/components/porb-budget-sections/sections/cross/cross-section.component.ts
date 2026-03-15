@@ -2,9 +2,10 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { PorbService } from "src/app/services/porb.service";
 
 @Component({
-  selector: "app-cross-section",
-  templateUrl: "./cross-section.component.html",
-  styleUrls: ["./cross-section.component.scss"],
+    selector: "app-cross-section",
+    templateUrl: "./cross-section.component.html",
+    styleUrls: ["./cross-section.component.scss"],
+    standalone: false
 })
 export class CrossSectionComponent implements OnChanges {
   @Input() rows: any[] = [];

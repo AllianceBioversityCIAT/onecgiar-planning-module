@@ -9,9 +9,10 @@ export interface DialogData {
 }
 
 @Component({
-  selector: "app-ipsr-dialog",
-  templateUrl: "./ipsr-dialog.component.html",
-  styleUrls: ["./ipsr-dialog.component.scss"],
+    selector: "app-ipsr-dialog",
+    templateUrl: "./ipsr-dialog.component.html",
+    styleUrls: ["./ipsr-dialog.component.scss"],
+    standalone: false
 })
 export class IpsrDialogComponent implements OnInit {
   ipsrId: number = 0;

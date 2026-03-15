@@ -31,9 +31,10 @@ import html2canvas from 'html2canvas';
  * @title Data table with sorting, pagination, and filtering.
  */
 @Component({
-  selector: "app-submited-versions",
-  templateUrl: "./submited-versions.component.html",
-  styleUrls: ["./submited-versions.component.scss"],
+    selector: "app-submited-versions",
+    templateUrl: "./submited-versions.component.html",
+    styleUrls: ["./submited-versions.component.scss"],
+    standalone: false
 })
 export class SubmitedVersionsComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = [

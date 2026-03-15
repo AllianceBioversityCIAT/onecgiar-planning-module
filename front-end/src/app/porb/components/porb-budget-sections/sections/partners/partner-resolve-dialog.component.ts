@@ -5,9 +5,10 @@ import { Subject } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
 
 @Component({
-  selector: "app-partner-resolve-dialog",
-  templateUrl: "./partner-resolve-dialog.component.html",
-  styleUrls: ["./partner-resolve-dialog.component.scss"],
+    selector: "app-partner-resolve-dialog",
+    templateUrl: "./partner-resolve-dialog.component.html",
+    styleUrls: ["./partner-resolve-dialog.component.scss"],
+    standalone: false
 })
 export class PartnerResolveDialogComponent {
   searchResults: any[] = [];

@@ -2,9 +2,10 @@ import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { AppSocket } from "../../socket.service";
 
 @Component({
-  selector: "app-geographic-location",
-  templateUrl: "./geographic-location.component.html",
-  styleUrls: ["./geographic-location.component.scss"],
+    selector: "app-geographic-location",
+    templateUrl: "./geographic-location.component.html",
+    styleUrls: ["./geographic-location.component.scss"],
+    standalone: false
 })
 export class GeographicLocationComponent implements OnInit {
   constructor(public socket: AppSocket) {}

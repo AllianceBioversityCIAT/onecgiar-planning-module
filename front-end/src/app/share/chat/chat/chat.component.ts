@@ -25,9 +25,10 @@ export type ChatMessage = {
 };
 
 @Component({
-  selector: "app-chat",
-  templateUrl: "./chat.component.html",
-  styleUrls: ["./chat.component.scss"],
+    selector: "app-chat",
+    templateUrl: "./chat.component.html",
+    styleUrls: ["./chat.component.scss"],
+    standalone: false
 })
 export class ChatComponent implements AfterViewInit, OnDestroy {
   @ViewChild(ChatBoxComponent) private chatBoxComponent: ChatBoxComponent;

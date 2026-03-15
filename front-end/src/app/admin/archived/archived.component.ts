@@ -10,9 +10,10 @@ import { HeaderService } from 'src/app/header.service';
 import { InitiativesService } from 'src/app/services/initiatives.service';
 
 @Component({
-  selector: 'app-archived',
-  templateUrl: './archived.component.html',
-  styleUrls: ['./archived.component.scss']
+    selector: 'app-archived',
+    templateUrl: './archived.component.html',
+    styleUrls: ['./archived.component.scss'],
+    standalone: false
 })
 export class ArchivedComponent {
   constructor(

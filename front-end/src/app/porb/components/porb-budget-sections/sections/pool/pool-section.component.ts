@@ -2,9 +2,10 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { PorbService } from "src/app/services/porb.service";
 
 @Component({
-  selector: "app-pool-section",
-  templateUrl: "./pool-section.component.html",
-  styleUrls: ["./pool-section.component.scss"],
+    selector: "app-pool-section",
+    templateUrl: "./pool-section.component.html",
+    styleUrls: ["./pool-section.component.scss"],
+    standalone: false
 })
 export class PoolSectionComponent implements OnChanges {
   @Input() rows: any[] = [];

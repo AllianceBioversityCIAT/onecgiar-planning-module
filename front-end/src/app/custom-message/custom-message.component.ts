@@ -2,9 +2,10 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
-  selector: 'app-custom-message',
-  templateUrl: './custom-message.component.html',
-  styleUrls: ['./custom-message.component.scss']
+    selector: 'app-custom-message',
+    templateUrl: './custom-message.component.html',
+    styleUrls: ['./custom-message.component.scss'],
+    standalone: false
 })
 export class CustomMessageComponent implements OnInit {
   constructor(

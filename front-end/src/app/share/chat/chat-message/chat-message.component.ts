@@ -10,9 +10,10 @@ import {
 import { ChatMessage } from '../chat/chat.component';
 
 @Component({
-  selector: 'app-chat-message',
-  templateUrl: './chat-message.component.html',
-  styleUrls: ['./chat-message.component.scss'],
+    selector: 'app-chat-message',
+    templateUrl: './chat-message.component.html',
+    styleUrls: ['./chat-message.component.scss'],
+    standalone: false
 })
 export class ChatMessageComponent implements OnInit, AfterContentInit {
   viewReplaySection = false;

@@ -14,9 +14,10 @@ import { HistoryOfChangeComponent } from "../submission/history-of-change/histor
 import { ToastrService } from "ngx-toastr";
 
 @Component({
-  selector: "app-porb",
-  templateUrl: "./porb.component.html",
-  styleUrls: ["./porb.component.scss"],
+    selector: "app-porb",
+    templateUrl: "./porb.component.html",
+    styleUrls: ["./porb.component.scss"],
+    standalone: false
 })
 export class PorbComponent implements OnInit, OnDestroy {
   private readonly UNKNOWN_CENTER_CODE = "999999";

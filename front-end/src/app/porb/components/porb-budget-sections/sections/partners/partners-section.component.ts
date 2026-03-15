@@ -12,9 +12,10 @@ type CountryOption = {
 };
 
 @Component({
-  selector: "app-partners-section",
-  templateUrl: "./partners-section.component.html",
-  styleUrls: ["./partners-section.component.scss"],
+    selector: "app-partners-section",
+    templateUrl: "./partners-section.component.html",
+    styleUrls: ["./partners-section.component.scss"],
+    standalone: false
 })
 export class PartnersSectionComponent implements OnInit, OnChanges {
   @Input() rows: any[] = [];

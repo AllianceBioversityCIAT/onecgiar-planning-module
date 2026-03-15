@@ -17,9 +17,10 @@ import { UserService } from "src/app/services/user.service";
 import { ROLES } from "src/app/shared/roles";
 
 @Component({
-  selector: "app-new-team-member",
-  templateUrl: "./new-team-member.component.html",
-  styleUrls: ["./new-team-member.component.scss"],
+    selector: "app-new-team-member",
+    templateUrl: "./new-team-member.component.html",
+    styleUrls: ["./new-team-member.component.scss"],
+    standalone: false
 })
 export class NewTeamMemberComponent implements OnInit {
 

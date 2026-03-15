@@ -10,9 +10,10 @@ import { jsPDF } from 'jspdf';
 import { LoaderService } from 'src/app/services/loader.service';
 
 @Component({
-  selector: 'app-total-init-summary',
-  templateUrl: './total-init-summary.component.html',
-  styleUrls: ['./total-init-summary.component.scss']
+    selector: 'app-total-init-summary',
+    templateUrl: './total-init-summary.component.html',
+    styleUrls: ['./total-init-summary.component.scss'],
+    standalone: false
 })
 export class TotalInitSummaryComponent implements OnInit {
   constructor(

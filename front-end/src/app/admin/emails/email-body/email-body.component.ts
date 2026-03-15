@@ -3,9 +3,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
-  selector: 'app-email-body',
-  templateUrl: './email-body.component.html',
-  styleUrls: ['./email-body.component.scss']
+    selector: 'app-email-body',
+    templateUrl: './email-body.component.html',
+    styleUrls: ['./email-body.component.scss'],
+    standalone: false
 })
 export class EmailBodyComponent {
   dataCoverted: any;

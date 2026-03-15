@@ -2,9 +2,10 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { PorbService } from "src/app/services/porb.service";
 
 @Component({
-  selector: "app-melia-section",
-  templateUrl: "./melia-section.component.html",
-  styleUrls: ["./melia-section.component.scss"],
+    selector: "app-melia-section",
+    templateUrl: "./melia-section.component.html",
+    styleUrls: ["./melia-section.component.scss"],
+    standalone: false
 })
 export class MeliaSectionComponent implements OnChanges {
   @Input() rows: any[] = [];

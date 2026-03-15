@@ -2,9 +2,10 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { PorbService } from "src/app/services/porb.service";
 
 @Component({
-  selector: "app-w3-section",
-  templateUrl: "./w3-section.component.html",
-  styleUrls: ["./w3-section.component.scss"],
+    selector: "app-w3-section",
+    templateUrl: "./w3-section.component.html",
+    styleUrls: ["./w3-section.component.scss"],
+    standalone: false
 })
 export class W3SectionComponent implements OnChanges {
   @Input() rows: any[] = [];

@@ -3,9 +3,10 @@ import { FormBuilder, FormGroup } from "@angular/forms";
 import { ROLES } from "../shared/roles";
 
 @Component({
-  selector: "app-search-init",
-  templateUrl: "./search-init.component.html",
-  styleUrls: ["./search-init.component.scss"],
+    selector: "app-search-init",
+    templateUrl: "./search-init.component.html",
+    styleUrls: ["./search-init.component.scss"],
+    standalone: false
 })
 export class SearchInitComponent {
   constructor(private fb: FormBuilder) {}

@@ -10,9 +10,10 @@ export interface DialogData {
 }
 
 @Component({
-  selector: "app-popover-dialog",
-  templateUrl: "./popover-dialog.component.html",
-  styleUrls: ["./popover-dialog.component.scss"],
+    selector: "app-popover-dialog",
+    templateUrl: "./popover-dialog.component.html",
+    styleUrls: ["./popover-dialog.component.scss"],
+    standalone: false
 })
 export class PopoverDialogComponent implements OnInit {
   id: string;

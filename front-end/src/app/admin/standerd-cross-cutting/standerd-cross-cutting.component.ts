@@ -11,9 +11,10 @@ import { StanderdCrossCuttingService } from "src/app/services/standerd-cross-cut
 import { StanderdCrossCuttingDialogComponent } from "./standerd-cross-cutting-dialog/standerd-cross-cutting-dialog.component";
 
 @Component({
-  selector: "app-standerd-cross-cutting",
-  templateUrl: "./standerd-cross-cutting.component.html",
-  styleUrls: ["./standerd-cross-cutting.component.scss"],
+    selector: "app-standerd-cross-cutting",
+    templateUrl: "./standerd-cross-cutting.component.html",
+    styleUrls: ["./standerd-cross-cutting.component.scss"],
+    standalone: false
 })
 export class StanderdCrossCuttingComponent implements OnInit {
   columnsToDisplay: string[] = ["id", "name", "actions"];

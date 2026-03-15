@@ -15,9 +15,10 @@ import { ToastrService } from "ngx-toastr";
 import { Meta, Title } from "@angular/platform-browser";
 import { FormBuilder, FormGroup } from "@angular/forms";
 @Component({
-  selector: "app-periods",
-  templateUrl: "./periods.component.html",
-  styleUrls: ["./periods.component.scss"],
+    selector: "app-periods",
+    templateUrl: "./periods.component.html",
+    styleUrls: ["./periods.component.scss"],
+    standalone: false
 })
 export class PeriodsComponent implements OnInit {
   columnsToDisplay: string[] = ["id", "phase", "year", "quarter", "actions"];

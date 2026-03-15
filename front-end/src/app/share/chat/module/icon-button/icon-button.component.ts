@@ -21,16 +21,17 @@ export const BUTTON_LOADER = new InjectionToken<ButtonWithLoader>(
 );
 
 @Component({
-  selector: "app-icon-button",
-  templateUrl: "./icon-button.component.html",
-  styleUrls: ["./icon-button.component.scss"],
-  providers: [
-    {
-      provide: BUTTON_LOADER,
-      useExisting: forwardRef(() => IconButtonComponent),
-      multi: true,
-    },
-  ],
+    selector: "app-icon-button",
+    templateUrl: "./icon-button.component.html",
+    styleUrls: ["./icon-button.component.scss"],
+    providers: [
+        {
+            provide: BUTTON_LOADER,
+            useExisting: forwardRef(() => IconButtonComponent),
+            multi: true,
+        },
+    ],
+    standalone: false
 })
 export class IconButtonComponent implements ButtonWithLoader {
   @Input() appRouterLink: any = null;

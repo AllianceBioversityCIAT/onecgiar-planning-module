@@ -2,7 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { ROLES } from '../shared/roles';
 
 @Pipe({
-  name: 'grantedAccessPipe'
+    name: 'grantedAccessPipe',
+    standalone: false
 })
 export class GrantedAccessPipePipe implements PipeTransform {
 

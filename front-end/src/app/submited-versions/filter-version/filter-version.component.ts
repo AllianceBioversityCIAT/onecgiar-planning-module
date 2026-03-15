@@ -3,9 +3,10 @@ import { FormBuilder, FormGroup } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { SubmissionService } from "src/app/services/submission.service";
 @Component({
-  selector: "app-filter-version",
-  templateUrl: "./filter-version.component.html",
-  styleUrls: ["./filter-version.component.scss"],
+    selector: "app-filter-version",
+    templateUrl: "./filter-version.component.html",
+    styleUrls: ["./filter-version.component.scss"],
+    standalone: false
 })
 export class FilterVersionComponent implements OnInit {
   constructor(

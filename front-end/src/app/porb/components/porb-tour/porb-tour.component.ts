@@ -17,9 +17,10 @@ export interface PorbTourStep {
 }
 
 @Component({
-  selector: "app-porb-tour",
-  templateUrl: "./porb-tour.component.html",
-  styleUrls: ["./porb-tour.component.scss"],
+    selector: "app-porb-tour",
+    templateUrl: "./porb-tour.component.html",
+    styleUrls: ["./porb-tour.component.scss"],
+    standalone: false
 })
 export class PorbTourComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() open = false;

@@ -4,9 +4,10 @@ import { firstValueFrom } from "rxjs";
 import { ClearBudgetConfirmDialogComponent } from "../clear-budget-confirm-dialog.component";
 
 @Component({
-  selector: "app-budget-and-assumption",
-  templateUrl: "./budget-and-assumption.component.html",
-  styleUrls: ["./budget-and-assumption.component.scss"],
+    selector: "app-budget-and-assumption",
+    templateUrl: "./budget-and-assumption.component.html",
+    styleUrls: ["./budget-and-assumption.component.scss"],
+    standalone: false
 })
 export class BudgetAndAssumptionComponent {
   @Input() value: string | number | null = "";

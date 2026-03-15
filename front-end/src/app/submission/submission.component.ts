@@ -22,7 +22,6 @@ import { Meta, Title } from "@angular/platform-browser";
 import { ConstantService } from "../services/constant.service";
 import { InitiativesService } from "../services/initiatives.service";
 import { filter, firstValueFrom, from, iif, of, switchMap, tap } from "rxjs";
-import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
 import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
 import { UserService } from "../services/user.service";
@@ -38,10 +37,11 @@ import { DecimalPipe, Location } from "@angular/common";
 import { SubmitMessageComponent } from "./submit-message/submit-message.component";
 
 @Component({
-  selector: "app-submission",
-  templateUrl: "./submission.component.html",
-  styleUrls: ["./submission.component.scss"],
-  providers: [DecimalPipe] 
+    selector: "app-submission",
+    templateUrl: "./submission.component.html",
+    styleUrls: ["./submission.component.scss"],
+    providers: [DecimalPipe],
+    standalone: false
 })
 export class SubmissionComponent implements OnInit, OnDestroy {
   title = "planning";

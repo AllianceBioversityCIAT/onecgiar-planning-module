@@ -2,9 +2,10 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { PorbService } from "src/app/services/porb.service";
 
 @Component({
-  selector: "app-anaplan-section",
-  templateUrl: "./anaplan-section.component.html",
-  styleUrls: ["./anaplan-section.component.scss"],
+    selector: "app-anaplan-section",
+    templateUrl: "./anaplan-section.component.html",
+    styleUrls: ["./anaplan-section.component.scss"],
+    standalone: false
 })
 export class AnaplanSectionComponent implements OnChanges {
   @Input() rows: any[] = [];

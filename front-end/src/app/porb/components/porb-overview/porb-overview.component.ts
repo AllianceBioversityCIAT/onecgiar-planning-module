@@ -1,9 +1,10 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
 @Component({
-  selector: "app-porb-overview",
-  templateUrl: "./porb-overview.component.html",
-  styleUrls: ["./porb-overview.component.scss"],
+    selector: "app-porb-overview",
+    templateUrl: "./porb-overview.component.html",
+    styleUrls: ["./porb-overview.component.scss"],
+    standalone: false
 })
 export class PorbOverviewComponent {
   @Input() initiative: any = null;

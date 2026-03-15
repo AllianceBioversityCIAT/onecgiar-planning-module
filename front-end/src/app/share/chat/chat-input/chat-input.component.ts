@@ -3,9 +3,10 @@ import { FormBuilder, FormGroup } from "@angular/forms";
 import { IconButtonComponent } from "../module/icon-button/icon-button.component";
 
 @Component({
-  selector: "app-chat-input",
-  templateUrl: "./chat-input.component.html",
-  styleUrls: ["./chat-input.component.scss"],
+    selector: "app-chat-input",
+    templateUrl: "./chat-input.component.html",
+    styleUrls: ["./chat-input.component.scss"],
+    standalone: false
 })
 export class ChatInputComponent implements OnInit {
   form!: FormGroup;

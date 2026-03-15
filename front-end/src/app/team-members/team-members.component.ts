@@ -18,9 +18,10 @@ import { DeleteConfirmDialogComponent } from "../delete-confirm-dialog/delete-co
 import { Meta, Title } from "@angular/platform-browser";
 
 @Component({
-  selector: "app-team-members",
-  templateUrl: "./team-members.component.html",
-  styleUrls: ["./team-members.component.scss"],
+    selector: "app-team-members",
+    templateUrl: "./team-members.component.html",
+    styleUrls: ["./team-members.component.scss"],
+    standalone: false
 })
 export class TeamMembersComponent {
   initiativeId: any;

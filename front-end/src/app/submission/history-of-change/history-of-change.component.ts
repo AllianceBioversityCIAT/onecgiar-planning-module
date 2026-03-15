@@ -9,9 +9,10 @@ interface HistoryGroup {
 }
 
 @Component({
-  selector: 'app-history-of-change',
-  templateUrl: './history-of-change.component.html',
-  styleUrls: ['./history-of-change.component.scss'],
+    selector: 'app-history-of-change',
+    templateUrl: './history-of-change.component.html',
+    styleUrls: ['./history-of-change.component.scss'],
+    standalone: false
 })
 export class HistoryOfChangeComponent {
   emptyRecords = false;

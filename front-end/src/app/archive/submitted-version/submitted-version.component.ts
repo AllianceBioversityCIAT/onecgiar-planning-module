@@ -11,9 +11,10 @@ import { LoaderService } from 'src/app/services/loader.service';
 import { SubmissionService } from 'src/app/services/submission.service';
 
 @Component({
-  selector: 'app-submitted-version',
-  templateUrl: './submitted-version.component.html',
-  styleUrls: ['./submitted-version.component.scss']
+    selector: 'app-submitted-version',
+    templateUrl: './submitted-version.component.html',
+    styleUrls: ['./submitted-version.component.scss'],
+    standalone: false
 })
 export class SubmittedVersionComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;

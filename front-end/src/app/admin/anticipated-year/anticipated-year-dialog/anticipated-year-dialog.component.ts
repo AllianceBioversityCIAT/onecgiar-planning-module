@@ -8,9 +8,10 @@ export interface DialogData {
   id: number;
 }
 @Component({
-  selector: 'app-anticipated-year-dialog',
-  templateUrl: './anticipated-year-dialog.component.html',
-  styleUrls: ['./anticipated-year-dialog.component.scss']
+    selector: 'app-anticipated-year-dialog',
+    templateUrl: './anticipated-year-dialog.component.html',
+    styleUrls: ['./anticipated-year-dialog.component.scss'],
+    standalone: false
 })
 export class AnticipatedYearDialogComponent {
   // anticipatedYearId: number = 0;

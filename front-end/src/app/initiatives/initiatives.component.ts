@@ -16,9 +16,10 @@ import { ToastrService } from "ngx-toastr";
  * @title Data table with sorting, pagination, and filtering.
  */
 @Component({
-  selector: "app-initiatives",
-  templateUrl: "./initiatives.component.html",
-  styleUrls: ["./initiatives.component.scss"],
+    selector: "app-initiatives",
+    templateUrl: "./initiatives.component.html",
+    styleUrls: ["./initiatives.component.scss"],
+    standalone: false
 })
 export class InitiativesComponent implements OnInit {
   displayedColumns: string[] = [
