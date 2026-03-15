@@ -207,21 +207,17 @@
           </div>
 
           <!-- W3/Bilateral Consolidated Table -->
-          <div class="porb-consolidation-section" *ngIf="w3ConsolidatedData?.centers?.length">
+          <div class="porb-consolidation-section w3-consolidated-section" *ngIf="w3ConsolidatedData?.grandTotal != null">
             <h3>W3/Bilateral Consolidated</h3>
             <div class="summary-table-wrapper">
               <table class="consolidation-table porb-summary-table">
                 <thead>
                   <tr>
-                    <th>Center</th>
-                    <th class="num-cell">Budget (USD)</th>
+                    <th>W3/Bilateral</th>
+                    <th class="num-cell">Total (USD)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let c of w3ConsolidatedData.centers">
-                    <td>{{ c.name }}</td>
-                    <td class="num-cell">{{ formatAnaplanCurrency(c.budget) }}</td>
-                  </tr>
                   <tr class="summary-total-row">
                     <td><strong>Total</strong></td>
                     <td class="num-cell"><strong>{{ formatAnaplanCurrency(w3ConsolidatedData.grandTotal) }}</strong></td>
