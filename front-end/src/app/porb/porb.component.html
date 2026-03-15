@@ -206,25 +206,10 @@
             </div>
           </div>
 
-          <!-- W3/Bilateral Consolidated Table -->
+          <!-- W3/Bilateral Consolidated -->
           <div class="porb-consolidation-section w3-consolidated-section" *ngIf="w3ConsolidatedData?.grandTotal != null">
-            <h3>W3/Bilateral Consolidated</h3>
-            <div class="summary-table-wrapper">
-              <table class="consolidation-table porb-summary-table">
-                <thead>
-                  <tr>
-                    <th>W3/Bilateral</th>
-                    <th class="num-cell">Total (USD)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="summary-total-row">
-                    <td><strong>Total</strong></td>
-                    <td class="num-cell"><strong>{{ formatAnaplanCurrency(w3ConsolidatedData.grandTotal) }}</strong></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <h3>W3/Bilateral Total Budget (USD)</h3>
+            <div class="w3-total-value">{{ formatAnaplanCurrency(w3ConsolidatedData.grandTotal) }}</div>
           </div>
 
         </div>

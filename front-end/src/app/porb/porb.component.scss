@@ -531,17 +531,25 @@
   align-items: stretch;
 
   > .porb-consolidation-section {
-    flex: 1;
+    flex: 3;
     min-width: 0;
+  }
+
+  > .w3-consolidated-section {
+    flex: 1;
     display: flex;
     flex-direction: column;
 
-    .summary-table-wrapper {
+    .w3-total-value {
       flex: 1;
       display: flex;
-      flex-direction: column;
-
-      table { flex: 1; }
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 1rem;
     }
   }
 }
