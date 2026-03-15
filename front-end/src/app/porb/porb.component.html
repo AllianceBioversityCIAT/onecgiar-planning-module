@@ -264,11 +264,36 @@
               <div class="skeleton-block sk-table-row"></div>
               <div class="skeleton-block sk-table-row"></div>
             </div>
-            <app-w3-section
-              *ngIf="!summaryW3Loading"
-              [rows]="summaryW3Rows"
-              [canEdit]="false"
-            ></app-w3-section>
+            <div class="summary-section-block" *ngIf="!summaryW3Loading && summaryW3Rows.length">
+              <h4 class="summary-section-title">W3/Bilateral Projects</h4>
+              <div class="summary-table-wrapper">
+                <table class="consolidation-table summary-detail-table">
+                  <thead>
+                    <tr>
+                      <th>Project Title</th>
+                      <th>High Level Output</th>
+                      <th class="num-cell">Budget (USD)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of summaryW3Rows">
+                      <td>{{ row.bilateral_name || '-' }}</td>
+                      <td>{{ row.bilateral_outputs || '-' }}</td>
+                      <td class="num-cell">
+                        {{ formatAnaplanCurrency(row.bilateral_budget) }}
+                        <app-summary-assumption-icon [assumption]="row.bilateral_assumption"></app-summary-assumption-icon>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="summary-empty-sections" *ngIf="!summaryW3Loading && !summaryW3Rows.length">
+              <div class="summary-section-empty">
+                <mat-icon>info_outline</mat-icon>
+                <span><strong>W3/Bilateral</strong> — No bilateral project data found.</span>
+              </div>
+            </div>
           </div>
         </ng-container>
 
