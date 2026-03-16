@@ -479,15 +479,6 @@
             </ng-container>
 
             <!-- Anaplan Section -->
-            <ng-container *ngIf="summarySelectedSection === 'Anaplan'">
-              <div class="summary-empty-sections">
-                <div class="summary-section-empty">
-                  <mat-icon>info_outline</mat-icon>
-                  <span><strong>Anaplan</strong> — Anaplan budget data is managed externally and is not shown in this summary view.</span>
-                </div>
-              </div>
-            </ng-container>
-
             <!-- Cross Cutting Section (AOW00 only) -->
             <ng-container *ngIf="summarySelectedSection === 'Cross Cutting'">
               <div class="summary-section-block" *ngIf="summaryAowDetail.isAow00 && cachedFormattedCross.length; else crossEmpty">

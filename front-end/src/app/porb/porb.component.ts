@@ -847,7 +847,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       case 'Partners': return (counts.partners || 0) === 0;
       case 'MELIA Study': return (counts.melia || 0) === 0;
       case 'Anaplan': return false;
-      case 'Cross Cutting': return (counts.cross || 0) === 0;
+      case 'Cross Cutting': return false;
       default: return false;
     }
   }
@@ -857,15 +857,16 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.cachedSummarySectionEmpty[section] ?? false;
   }
 
-  /** Section list for the summary AOW detail nav — mirrors extraNavigationItems but based on the summary AOW. */
+  /** Section list for the summary AOW detail nav — excludes Anaplan (has its own consolidated table). */
   get summarySectionItems(): string[] {
     const aowCode = String(
       this.summarySelectedAow?.code || this.summarySelectedAow?.aow_acrnum || ""
     ).toUpperCase();
+    const filtered = this.baseExtraNavigationItems.filter(i => i !== "Anaplan");
     if (aowCode === "AOW00") {
-      return ["Cross Cutting", ...this.baseExtraNavigationItems.filter(i => i !== "Pool funding HLO")];
+      return ["Cross Cutting", ...filtered.filter(i => i !== "Pool funding HLO")];
     }
-    return this.baseExtraNavigationItems;
+    return filtered;
   }
 
   selectSummarySection(section: string) {
