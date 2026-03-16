@@ -100,7 +100,7 @@
         <!-- CONSOLIDATED VIEW -->
         <ng-container *ngIf="summaryViewMode === 'consolidated'">
         <div class="porb-consolidation-section">
-          <h3>Consolidated</h3>
+          <h3>Budget Overview</h3>
 
           <div *ngIf="summaryLoading" class="summary-skeleton">
             <div class="skeleton-block sk-table-head"></div>
@@ -226,13 +226,13 @@
             <table class="consolidation-table porb-summary-table">
               <thead>
                 <tr>
-                  <th>Center</th>
+                  <th style="text-align: left">Center</th>
                   <th class="num-cell">Budget (USD)</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let c of w3ConsolidatedData.centers">
-                  <td>{{ c.name }}</td>
+                <tr *ngFor="let c of w3ConsolidatedData.centers" [hidden]="!c.budget">
+                  <td style="text-align: left">{{ c.name }}</td>
                   <td class="num-cell">{{ formatAnaplanCurrency(c.budget) }}</td>
                 </tr>
                 <tr class="summary-total-row">
@@ -340,7 +340,7 @@
 
             <!-- HLO Section -->
             <ng-container *ngIf="summarySelectedSection === 'Pool funding HLO'">
-              <div class="summary-section-block" *ngIf="groupedHlos.length; else hloEmpty">
+              <div class="summary-section-block" *ngIf="cachedGroupedHlos.length; else hloEmpty">
                 <h4 class="summary-section-title">High Level Outputs - Pooled Funding</h4>
                 <div class="summary-table-wrapper">
                   <table class="consolidation-table summary-detail-table">
@@ -359,7 +359,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <ng-container *ngFor="let group of formattedGroupedHlos">
+                      <ng-container *ngFor="let group of cachedGroupedHlos">
                         <tr *ngFor="let hlo of group.rows; let i = index">
                           <td *ngIf="i === 0" [attr.rowspan]="group.rows.length" class="merged-cell">{{ group.name }}</td>
                           <td>{{ hlo.hlo_description }}</td>
@@ -382,7 +382,7 @@
                       </ng-container>
                       <tr class="subtotal-row">
                         <td colspan="6" class="subtotal-label">HLO budget subtotal</td>
-                        <td class="num-cell">{{ summaryAowSubtotals.hlo }}</td>
+                        <td class="num-cell">{{ cachedSummarySubtotals.hlo }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -400,7 +400,7 @@
 
             <!-- Partners Section -->
             <ng-container *ngIf="summarySelectedSection === 'Partners'">
-              <div class="summary-section-block" *ngIf="filteredPartners.length; else partnersEmpty">
+              <div class="summary-section-block" *ngIf="cachedFormattedPartners.length; else partnersEmpty">
                 <h4 class="summary-section-title">Partners - Pooled Funding</h4>
                 <div class="summary-table-wrapper">
                   <table class="consolidation-table summary-detail-table">
@@ -413,7 +413,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let partner of formattedPartners">
+                      <tr *ngFor="let partner of cachedFormattedPartners">
                         <td>{{ partner.partner_name }}</td>
                         <td>{{ partner.center_name }}</td>
                         <td>{{ partner.countries || 'Global' }}</td>
@@ -438,7 +438,7 @@
 
             <!-- MELIA Section -->
             <ng-container *ngIf="summarySelectedSection === 'MELIA Study'">
-              <div class="summary-section-block" *ngIf="filteredMelia.length; else meliaEmpty">
+              <div class="summary-section-block" *ngIf="cachedFormattedMelia.length; else meliaEmpty">
                 <h4 class="summary-section-title">MELIA Study - Pooled funding</h4>
                 <div class="summary-table-wrapper">
                   <table class="consolidation-table summary-detail-table">
@@ -451,7 +451,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let m of formattedMelia">
+                      <tr *ngFor="let m of cachedFormattedMelia">
                         <td>{{ m.melia_name }}</td>
                         <td>{{ m.melia_outputs }}</td>
                         <td>Global</td>
@@ -462,7 +462,7 @@
                       </tr>
                       <tr class="subtotal-row">
                         <td colspan="3" class="subtotal-label">MELIA budget subtotal</td>
-                        <td class="num-cell">{{ summaryAowSubtotals.melia }}</td>
+                        <td class="num-cell">{{ cachedSummarySubtotals.melia }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -490,7 +490,7 @@
 
             <!-- Cross Cutting Section (AOW00 only) -->
             <ng-container *ngIf="summarySelectedSection === 'Cross Cutting'">
-              <div class="summary-section-block" *ngIf="summaryAowDetail.isAow00 && filteredCross.length; else crossEmpty">
+              <div class="summary-section-block" *ngIf="summaryAowDetail.isAow00 && cachedFormattedCross.length; else crossEmpty">
                 <h4 class="summary-section-title">Cross Cutting</h4>
                 <div class="summary-table-wrapper">
                   <table class="consolidation-table summary-detail-table">
@@ -502,14 +502,14 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let c of formattedCross">
+                      <tr *ngFor="let c of cachedFormattedCross">
                         <td>{{ c.title }}</td>
                         <td>{{ c.description }}</td>
                         <td class="num-cell">{{ c.budget_fmt }}</td>
                       </tr>
                       <tr class="subtotal-row">
                         <td colspan="2" class="subtotal-label">Cross Cutting budget subtotal</td>
-                        <td class="num-cell">{{ summaryAowSubtotals.cross }}</td>
+                        <td class="num-cell">{{ cachedSummarySubtotals.cross }}</td>
                       </tr>
                     </tbody>
                   </table>

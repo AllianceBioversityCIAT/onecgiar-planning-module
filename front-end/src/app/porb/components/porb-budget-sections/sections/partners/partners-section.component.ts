@@ -106,6 +106,11 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
     );
   }
 
+  get subtotal(): string {
+    const total = this.filteredRows.reduce((sum, r) => sum + (Number(r.partner_budget) || 0), 0);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(total);
+  }
+
   rowHasValidationError(row: any): boolean {
     const budget = this.parseBudgetValue(row?.partner_budget);
     const hasBudget = budget != null && budget > 0;

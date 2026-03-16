@@ -86,6 +86,10 @@
         <tr *ngIf="!filteredRows.length">
           <td colspan="6">No data found for selected filters.</td>
         </tr>
+        <tr class="subtotal-row" *ngIf="filteredRows.length">
+          <td colspan="5" class="subtotal-label">Subtotal</td>
+          <td class="num-cell">{{ subtotal }}</td>
+        </tr>
       </tbody>
     </table>
   </div>

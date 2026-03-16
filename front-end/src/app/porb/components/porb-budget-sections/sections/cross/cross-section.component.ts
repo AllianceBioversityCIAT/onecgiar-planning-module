@@ -41,6 +41,11 @@ export class CrossSectionComponent implements OnChanges {
     return budget != null && budget > 0 && !String(row?.assumption ?? "").trim();
   }
 
+  get subtotal(): string {
+    const total = this.filteredRows.reduce((sum, r) => sum + (Number(r.budget) || 0), 0);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(total);
+  }
+
   async saveRow(row: any) {
     if (!row?.program_id || !row?.porb_aow_id || !row?.center_id || !row?.standerd_cross_cutting_id) {
       return;

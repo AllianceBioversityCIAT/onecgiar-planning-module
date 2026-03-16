@@ -40,6 +40,11 @@ export class AnaplanSectionComponent implements OnChanges {
     });
   }
 
+  get subtotal(): string {
+    const total = this.filteredRows.reduce((sum, r) => sum + (Number(r.porb_budget) || 0), 0);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(total);
+  }
+
   async saveRow(row: any) {
     if (!row?.program_id || !row?.porb_aow_id || !row?.center_id || !row?.anaplan_id) {
       return;

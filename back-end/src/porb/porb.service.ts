@@ -395,6 +395,13 @@ export class PorbService {
         consolidatedTotal,
         anaplan,
       },
+      rowCounts: {
+        hlo: hlos.length,
+        partners: partners.length,
+        melia: meliaRows.length,
+        anaplan: anaplanRows.length,
+        cross: crossRows.length,
+      },
     };
   }
 

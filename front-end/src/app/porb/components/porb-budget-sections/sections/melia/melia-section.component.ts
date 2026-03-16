@@ -46,6 +46,11 @@ export class MeliaSectionComponent implements OnChanges {
     });
   }
 
+  get subtotal(): string {
+    const total = this.filteredRows.reduce((sum, r) => sum + (Number(r.melia_budget) || 0), 0);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(total);
+  }
+
   rowHasValidationError(row: any): boolean {
     const budget = this.parseBudgetValue(row?.melia_budget);
     return budget != null && budget > 0 && !String(row?.melia_assumption ?? "").trim();

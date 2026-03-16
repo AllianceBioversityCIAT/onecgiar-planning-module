@@ -55,6 +55,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   aowErrorIds: number[] = [];
   consolidationIndicatorsData: Array<{ title: string; target: number; budget: number }> = [];
   consolidationBudgetSummaryData: any = null;
+  consolidationRowCounts: any = null;
 
   summaryConsolidationRows: any[] = [];
   summaryConsolidationTotals: any = {};
@@ -71,6 +72,14 @@ export class PorbComponent implements OnInit, OnDestroy {
   summaryW3View = false;
   summaryW3Rows: any[] = [];
   summaryW3Loading = false;
+
+  // Cached computed summary detail data (avoids getter re-creation on every CD cycle)
+  cachedGroupedHlos: any[] = [];
+  cachedFormattedMelia: any[] = [];
+  cachedFormattedPartners: any[] = [];
+  cachedFormattedCross: any[] = [];
+  cachedSummarySubtotals: any = {};
+  cachedSummarySectionEmpty: Record<string, boolean> = {};
 
   onlineProgramUsers: Array<{
     userId: number;
@@ -516,6 +525,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   private clearConsolidation() {
     this.consolidationIndicatorsData = [];
     this.consolidationBudgetSummaryData = null;
+    this.consolidationRowCounts = null;
   }
 
   private getSectionSlug(value: string): string {
@@ -705,6 +715,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       ? consolidated.indicators
       : [];
     this.consolidationBudgetSummaryData = consolidated?.summary || null;
+    this.consolidationRowCounts = consolidated?.rowCounts || null;
   }
 
   get consolidationIndicators() {
@@ -827,37 +838,23 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.baseExtraNavigationItems;
   }
 
-  /** Check if a center-level section has data based on consolidation totals */
+  /** Check if a center-level section has no items at all */
   isCenterSectionEmpty(section: string): boolean {
-    const raw = this.consolidationBudgetSummaryData;
-    if (!raw) return false; // data not loaded yet, don't disable
+    const counts = this.consolidationRowCounts;
+    if (!counts) return false;
     switch (section) {
-      case 'Pool funding HLO': return this.toNumber(raw.poolHlo) === 0;
-      case 'Partners': return this.toNumber(raw.partners) === 0;
-      case 'MELIA Study': return this.toNumber(raw.melia) === 0;
-      case 'Anaplan': return this.toNumber(raw.anaplan) === 0;
-      case 'Cross Cutting': return this.toNumber(raw.crossCutting) === 0;
+      case 'Pool funding HLO': return (counts.hlo || 0) === 0;
+      case 'Partners': return (counts.partners || 0) === 0;
+      case 'MELIA Study': return (counts.melia || 0) === 0;
+      case 'Anaplan': return false;
+      case 'Cross Cutting': return (counts.cross || 0) === 0;
       default: return false;
     }
   }
 
-  /** Check if a summary-level section has data based on loaded AOW detail */
+  /** Check if a summary-level section has data based on cached computation */
   isSummarySectionEmpty(section: string): boolean {
-    const d = this.summaryAowDetail;
-    if (!d) return false; // data not loaded yet
-    switch (section) {
-      case 'Pool funding HLO':
-        return !(d.hlos || []).some((h: any) => this.toNumber(h.hlo_budget) > 0);
-      case 'Partners':
-        return !(d.contractedPartners || []).some((p: any) => this.toNumber(p.budget) > 0);
-      case 'MELIA Study':
-        return !(d.melia || []).some((m: any) => this.toNumber(m.melia_budget) > 0);
-      case 'Anaplan':
-        return !(d.anaplan || []).some((a: any) => this.toNumber(a.anaplan_budget) > 0);
-      case 'Cross Cutting':
-        return !(d.cross || []).some((c: any) => this.toNumber(c.budget) > 0);
-      default: return false;
-    }
+    return this.cachedSummarySectionEmpty[section] ?? false;
   }
 
   /** Section list for the summary AOW detail nav — mirrors extraNavigationItems but based on the summary AOW. */
@@ -1042,9 +1039,84 @@ export class PorbComponent implements OnInit, OnDestroy {
         this.initiativeId,
         aow.id
       );
+      this.computeSummaryDetailCache();
     } finally {
       this.summaryAowDetailLoading = false;
     }
+  }
+
+  private computeSummaryDetailCache() {
+    const d = this.summaryAowDetail;
+    if (!d) {
+      this.cachedGroupedHlos = [];
+      this.cachedFormattedMelia = [];
+      this.cachedFormattedPartners = [];
+      this.cachedFormattedCross = [];
+      this.cachedSummarySubtotals = {};
+      this.cachedSummarySectionEmpty = {};
+      return;
+    }
+
+    // Grouped HLOs
+    const hlos: any[] = d.hlos || [];
+    const withBudget = hlos.filter((h: any) => (Number(h?.hlo_budget) || 0) > 0);
+    const hloMap = new Map<string, any[]>();
+    for (const hlo of withBudget) {
+      const key = hlo.hlo_name || '';
+      const list = hloMap.get(key) || [];
+      list.push(hlo);
+      hloMap.set(key, list);
+    }
+    this.cachedGroupedHlos = [];
+    for (const [name, rows] of hloMap) {
+      const totalBudget = rows.reduce((sum: number, r: any) => sum + (Number(r?.hlo_budget) || 0), 0);
+      this.cachedGroupedHlos.push({
+        name,
+        rows: rows.map((hlo: any) => ({
+          ...hlo,
+          hlo_target_fmt: this.formatCurrency(this.toNumber(hlo.hlo_target)),
+          hlo_budget_fmt: this.formatCurrency(this.toNumber(hlo.hlo_budget)),
+        })),
+        totalBudgetFmt: this.formatCurrency(totalBudget),
+        assumptionEntries: rows
+          .filter((h: any) => h.hlo_assumption?.trim())
+          .map((h: any) => ({ center: h.center_name || `Center ${h.center_id}`, assumption: h.hlo_assumption })),
+      });
+    }
+
+    // Filtered + formatted MELIA
+    this.cachedFormattedMelia = (d.melia || [])
+      .filter((m: any) => (Number(m?.melia_budget) || 0) > 0)
+      .map((m: any) => ({ ...m, melia_budget_fmt: this.formatCurrency(this.toNumber(m.melia_budget)) }));
+
+    // Filtered + formatted Partners
+    this.cachedFormattedPartners = (d.contractedPartners || [])
+      .filter((p: any) => (Number(p?.budget) || 0) > 0)
+      .map((p: any) => ({ ...p, budget_fmt: this.formatCurrency(this.toNumber(p.budget)) }));
+
+    // Filtered + formatted Cross
+    this.cachedFormattedCross = (d.cross || [])
+      .filter((c: any) => (Number(c?.budget) || 0) > 0)
+      .map((c: any) => ({ ...c, budget_fmt: this.formatCurrency(this.toNumber(c.budget)) }));
+
+    // Subtotals
+    const s = d.subtotals || {};
+    this.cachedSummarySubtotals = {
+      hlo: this.formatCurrency(this.toNumber(s.hlo)),
+      partners: this.formatCurrency(this.toNumber(s.partners)),
+      melia: this.formatCurrency(this.toNumber(s.melia)),
+      bilateral: this.formatCurrency(this.toNumber(s.bilateral)),
+      cross: this.formatCurrency(this.toNumber(s.cross)),
+    };
+
+    // Section empty state
+    this.cachedSummarySectionEmpty = {
+      'Pool funding HLO': this.cachedGroupedHlos.length === 0,
+      'Partners': this.cachedFormattedPartners.length === 0,
+      'MELIA Study': this.cachedFormattedMelia.length === 0,
+      'Anaplan': !(d.anaplan || []).some((a: any) => this.toNumber(a.anaplan_budget) > 0),
+      'Cross Cutting': this.cachedFormattedCross.length === 0,
+    };
   }
 
   async selectSummaryW3View() {
@@ -1063,109 +1135,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     }
   }
 
-  get groupedHlos(): Array<{ name: string; rows: any[]; totalBudget: number }> {
-    const hlos: any[] = this.summaryAowDetail?.hlos || [];
-    const withBudget = hlos.filter((h) => (Number(h?.hlo_budget) || 0) > 0);
-    const map = new Map<string, any[]>();
-    for (const hlo of withBudget) {
-      const key = hlo.hlo_name || "";
-      const list = map.get(key) || [];
-      list.push(hlo);
-      map.set(key, list);
-    }
-    const groups: Array<{ name: string; rows: any[]; totalBudget: number }> = [];
-    for (const [name, rows] of map) {
-      const totalBudget = rows.reduce(
-        (sum, r) => sum + (Number(r?.hlo_budget) || 0),
-        0
-      );
-      groups.push({ name, rows, totalBudget });
-    }
-    return groups;
-  }
-
-  get filteredMelia(): any[] {
-    return (this.summaryAowDetail?.melia || []).filter(
-      (m: any) => (Number(m?.melia_budget) || 0) > 0
-    );
-  }
-
-  get filteredBilateral(): any[] {
-    return (this.summaryAowDetail?.bilateral || []).filter(
-      (b: any) => (Number(b?.bilateral_budget) || 0) > 0
-    );
-  }
-
-  get filteredPartners(): any[] {
-    return (this.summaryAowDetail?.contractedPartners || []).filter(
-      (p: any) => (Number(p?.budget) || 0) > 0
-    );
-  }
-
-  get filteredCross(): any[] {
-    return (this.summaryAowDetail?.cross || []).filter(
-      (c: any) => (Number(c?.budget) || 0) > 0
-    );
-  }
-
-  get summaryAowSubtotals() {
-    const s = this.summaryAowDetail?.subtotals || {};
-    return {
-      hlo: this.formatCurrency(this.toNumber(s.hlo)),
-      partners: this.formatCurrency(this.toNumber(s.partners)),
-      melia: this.formatCurrency(this.toNumber(s.melia)),
-      bilateral: this.formatCurrency(this.toNumber(s.bilateral)),
-      cross: this.formatCurrency(this.toNumber(s.cross)),
-    };
-  }
-
-  /** Pre-formatted HLO rows for the AOW detail table (no decimals, comma-separated). */
-  get formattedGroupedHlos(): Array<{ name: string; rows: any[]; totalBudgetFmt: string; assumptionEntries: any[] }> {
-    return this.groupedHlos.map((group) => ({
-      name: group.name,
-      rows: group.rows.map((hlo) => ({
-        ...hlo,
-        hlo_target_fmt: this.formatCurrency(this.toNumber(hlo.hlo_target)),
-        hlo_budget_fmt: this.formatCurrency(this.toNumber(hlo.hlo_budget)),
-      })),
-      totalBudgetFmt: this.formatCurrency(group.totalBudget),
-      assumptionEntries: group.rows
-        .filter((h) => h.hlo_assumption?.trim())
-        .map((h) => ({ center: h.center_name || `Center ${h.center_id}`, assumption: h.hlo_assumption })),
-    }));
-  }
-
-  /** Pre-formatted MELIA rows for the AOW detail table. */
-  get formattedMelia(): any[] {
-    return this.filteredMelia.map((m) => ({
-      ...m,
-      melia_budget_fmt: this.formatCurrency(this.toNumber(m.melia_budget)),
-    }));
-  }
-
-  /** Pre-formatted bilateral rows for the AOW detail table. */
-  get formattedBilateral(): any[] {
-    return this.filteredBilateral.map((b) => ({
-      ...b,
-      bilateral_budget_fmt: this.formatCurrency(this.toNumber(b.bilateral_budget)),
-    }));
-  }
-
-  /** Pre-formatted partners rows for the AOW detail table. */
-  get formattedPartners(): any[] {
-    return this.filteredPartners.map((p) => ({
-      ...p,
-      budget_fmt: this.formatCurrency(this.toNumber(p.budget)),
-    }));
-  }
-
-  /** Pre-formatted cross-cutting rows for the AOW detail table. */
-  get formattedCross(): any[] {
-    return this.filteredCross.map((c) => ({
-      ...c,
-      budget_fmt: this.formatCurrency(this.toNumber(c.budget)),
-    }));
-  }
+  // All summary detail getters removed — use cached* properties instead (computed in computeSummaryDetailCache)
 
   async selectCenter(center: any) {
     if (this.isCenterSelected(center) && this.activeView === "center") {

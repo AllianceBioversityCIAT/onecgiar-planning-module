@@ -3,6 +3,18 @@
 @import "app/sass/abstracts/variables";
 
 @import "@ng-select/ng-select/themes/default.theme.css";
+
+.subtotal-row {
+  td {
+    background: #f0f2f5;
+    font-weight: 700;
+    font-size: 1.3rem;
+    border-top: 2px solid #2a2e45;
+  }
+  .subtotal-label {
+    text-align: center !important;
+  }
+}
 // @import "@angular/material/prebuilt-themes/deeppurple-amber.css";
 :ng-deep .cdk-overlay-pane .x {
   margin: 1rem -1rem !important;
