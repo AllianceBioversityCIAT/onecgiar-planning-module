@@ -17,7 +17,7 @@ RUN npm install --legacy-peer-deps
 COPY src /front-end/src
 ENV GOMAXPROCS=1
 ENV NG_BUILD_MAX_WORKERS=1
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_OPTIONS="--max-old-space-size=8192"
 RUN npx ng build --configuration development
 EXPOSE 443 80
 CMD ["nginx", "-g", "daemon off;"]
