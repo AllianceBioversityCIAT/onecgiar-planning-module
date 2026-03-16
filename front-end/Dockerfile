@@ -15,6 +15,7 @@ COPY package.json *.json /front-end/
 WORKDIR /front-end
 RUN npm install --legacy-peer-deps
 COPY src /front-end/src
+ENV GOMAXPROCS=1
 RUN npx ng build --configuration development
 EXPOSE 443 80
 CMD ["nginx", "-g", "daemon off;"]
