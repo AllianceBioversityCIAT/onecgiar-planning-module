@@ -10,7 +10,14 @@ import { PorbService } from "src/app/services/porb.service";
 export class AnaplanSectionComponent implements OnChanges {
   @Input() rows: any[] = [];
   @Input() canEdit: boolean = true;
+  @Input() sectionValidation: { hasError: boolean; message: string } = { hasError: false, message: '' };
   @Output() budgetUpdated = new EventEmitter<void>();
+
+  get validationMessages(): string[] {
+    const message = this.sectionValidation?.message || '';
+    if (!message) return [];
+    return message.split(/(?<=\.) /).filter(Boolean);
+  }
 
   search = "";
   filterAccount = "";
@@ -87,12 +94,13 @@ export class AnaplanSectionComponent implements OnChanges {
   private parseBudgetValue(value: any): number | null {
     const normalized = String(value ?? "")
       .replace(/,/g, "")
+      .replace(/\./g, "")
       .trim();
     if (!normalized) {
       return null;
     }
     const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : null;
+    return Number.isFinite(parsed) ? Math.round(parsed) : null;
   }
 
   private normalizeRows() {

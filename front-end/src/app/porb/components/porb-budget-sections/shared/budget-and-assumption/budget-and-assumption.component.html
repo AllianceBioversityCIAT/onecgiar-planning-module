@@ -2,7 +2,8 @@
   <input
     class="budget-input"
     type="text"
-    [ngModel]="value ?? ''"
+    inputmode="numeric"
+    [ngModel]="displayValue"
     (ngModelChange)="onValueChange($event)"
     (focus)="onFocus()"
     (blur)="onBlur()"

@@ -26,19 +26,37 @@ export class BudgetAndAssumptionComponent {
 
   showAssumptionModal = false;
   draftAssumption = "";
+  focused = false;
   private previousValue: string | number | null = "";
+
+  private static formatter = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
 
   constructor(private dialog: MatDialog) {}
 
+  get displayValue(): string {
+    const raw = String(this.value ?? "").replace(/,/g, "").trim();
+    if (!raw) return "";
+    if (this.focused) return raw;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return raw;
+    return BudgetAndAssumptionComponent.formatter.format(n);
+  }
+
   onValueChange(next: string) {
-    this.valueChange.emit(next ?? "");
+    const sanitized = (next ?? "").replace(/[.,]/g, "");
+    this.valueChange.emit(sanitized);
   }
 
   onFocus() {
+    this.focused = true;
     this.previousValue = this.value;
   }
 
   async onBlur() {
+    this.focused = false;
     const currentIsEmpty = !this.isNonZeroBudget(this.value);
     const previousWasNonEmpty = this.isNonZeroBudget(this.previousValue);
     const hasAssumption = String(this.assumption || "").trim().length > 0;

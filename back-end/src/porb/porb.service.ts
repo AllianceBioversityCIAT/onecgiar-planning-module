@@ -148,10 +148,32 @@ export class PorbService {
     if (center_id != null) {
       contractedWhere.center_id = center_id;
     }
-    const contractedRows = await this.porbContractedPartnerRepository.find({ where: contractedWhere });
+    const contractedRows = await this.porbContractedPartnerRepository.find({
+      where: contractedWhere,
+      order: { id: 'DESC' },
+    });
+    // Deduplicate: keep the row with highest budget per partner (first wins due to DESC order fallback)
     const contractedMap = new Map<number, PorbContractedPartner>();
+    const duplicateIds: number[] = [];
     for (const row of contractedRows) {
-      contractedMap.set(row.porb_partner_id, row);
+      const existing = contractedMap.get(row.porb_partner_id);
+      if (!existing) {
+        contractedMap.set(row.porb_partner_id, row);
+      } else {
+        // Keep the one with higher budget; delete the other
+        const existingBudget = Number(existing.budget) || 0;
+        const rowBudget = Number(row.budget) || 0;
+        if (rowBudget > existingBudget) {
+          duplicateIds.push(existing.id);
+          contractedMap.set(row.porb_partner_id, row);
+        } else {
+          duplicateIds.push(row.id);
+        }
+      }
+    }
+    // Clean up duplicates in background
+    if (duplicateIds.length) {
+      this.porbContractedPartnerRepository.delete(duplicateIds).catch(() => {});
     }
 
     const countryCodes = [
@@ -316,7 +338,15 @@ export class PorbService {
     ]);
 
     const partnerIds = new Set(partners.map((row) => row.id));
-    const relevantContracted = contractedPartners.filter((row) => partnerIds.has(row.porb_partner_id));
+    // Deduplicate contracted rows: keep one per porb_partner_id
+    const seenPartnerIds = new Set<number>();
+    const relevantContracted = contractedPartners
+      .filter((row) => partnerIds.has(row.porb_partner_id))
+      .filter((row) => {
+        if (seenPartnerIds.has(row.porb_partner_id)) return false;
+        seenPartnerIds.add(row.porb_partner_id);
+        return true;
+      });
 
     const indicatorsSummary = {
       innovationTarget: 0,
@@ -405,7 +435,7 @@ export class PorbService {
     };
   }
 
-  async getSummaryConsolidation(program_id: number) {
+  async getSummaryConsolidation(program_id: number, center_id?: number) {
     const aows = await this.porbAowRepository
       .createQueryBuilder('aow')
       .where('aow.program_id = :program_id', { program_id })
@@ -422,14 +452,30 @@ export class PorbService {
 
     const aowIds = aows.map((a) => a.id);
 
-    // Bulk-load all data for this program (no center filter = all centers)
+    // Bulk-load all data for this program, optionally filtered by center
+    const hloWhere: any = { program_id, porb_aow_id: In(aowIds) };
+    const partnerWhere: any = { program_id, porb_aow_id: In(aowIds) };
+    const meliaWhere: any = { program_id, porb_aow_id: In(aowIds) };
+    const anaplanWhere: any = { program_id, porb_aow_id: In(aowIds) };
+    const crossWhere: any = { program_id, porb_aow_id: In(aowIds) };
+    const contractedWhere: any = { program_id, porb_aow_id: In(aowIds) };
+
+    if (center_id != null) {
+      hloWhere.center_id = center_id;
+      meliaWhere.center_id = center_id;
+      anaplanWhere.center_id = center_id;
+      crossWhere.center_id = center_id;
+      contractedWhere.center_id = center_id;
+      // porb_partner has no center_id — filtering is done via contracted partners
+    }
+
     const [allHlos, allPartners, allMelia, allAnaplan, allCross, allContractedPartners] = await Promise.all([
-      this.porbHloRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
-      this.porbPartnerRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
-      this.porbMeliaRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
-      this.porbAnaplanRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
-      this.porbCrossRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
-      this.porbContractedPartnerRepository.find({ where: { program_id, porb_aow_id: In(aowIds) } }),
+      this.porbHloRepository.find({ where: hloWhere }),
+      this.porbPartnerRepository.find({ where: partnerWhere }),
+      this.porbMeliaRepository.find({ where: meliaWhere }),
+      this.porbAnaplanRepository.find({ where: anaplanWhere }),
+      this.porbCrossRepository.find({ where: crossWhere }),
+      this.porbContractedPartnerRepository.find({ where: contractedWhere }),
     ]);
 
     // Group HLOs by porb_aow_id
@@ -656,11 +702,63 @@ export class PorbService {
       message: meliaMissing > 0 ? `${meliaMissing} row(s) have budget but missing assumption.` : '',
     };
 
-    emptyResult['Anaplan'] = { hasError: false, message: '' };
+    // --- Anaplan validation (Rules 12 & 13) ---
+    const [anaplanRows, anaplanAccounts] = await Promise.all([
+      this.porbAnaplanRepository.find({
+        where: { program_id, porb_aow_id, center_id },
+      }),
+      this.anaplanRepository.find(),
+    ]);
+    const anaplanLabelById = new Map<number, string>();
+    for (const acct of anaplanAccounts) {
+      anaplanLabelById.set(acct.id, acct.label);
+    }
+
+    const anaplanMessages: string[] = [];
+
+    // Rule 12: Partners total vs Anaplan "Collaborators non-CGIAR Centers"
+    const partnerBudgetTotal = relevantContracted.reduce(
+      (sum, row) => sum + parseBudget(row?.budget),
+      0,
+    );
+    const collaboratorsRow = anaplanRows.find(
+      (row) =>
+        (anaplanLabelById.get(row.anaplan_id) || '').trim().toLowerCase() ===
+        'collaborators non-cgiar centers',
+    );
+    const collaboratorsBudget = parseBudget(collaboratorsRow?.budget);
+    if (partnerBudgetTotal !== collaboratorsBudget) {
+      anaplanMessages.push(
+        'Budget does not match the amount included in the Partners section of the PORB.',
+      );
+    }
+
+    // Rule 13: Total Anaplan vs HLO + Cross-Cutting (if AOW00)
     const isCrossAow =
       String(selectedAow?.aow_acrnum || '')
         .trim()
         .toUpperCase() === 'AOW00';
+    const totalAnaplan = anaplanRows.reduce(
+      (sum, row) => sum + parseBudget(row?.budget),
+      0,
+    );
+    const totalHlo = hlos.reduce(
+      (sum, row) => sum + parseBudget(row?.hlo_budget),
+      0,
+    );
+    const totalCross = isCrossAow
+      ? crossRows.reduce((sum, row) => sum + parseBudget(row?.budget), 0)
+      : 0;
+    if (totalAnaplan !== totalHlo + totalCross) {
+      anaplanMessages.push(
+        'Budget does not match the amount included in the AOW section of the PORB.',
+      );
+    }
+
+    emptyResult['Anaplan'] = {
+      hasError: anaplanMessages.length > 0,
+      message: anaplanMessages.join(' '),
+    };
     const crossMissing = crossRows.filter(
       (row) => parseBudget(row?.budget) > 0 && !hasAssumption(row?.assumption),
     ).length;
@@ -679,13 +777,16 @@ export class PorbService {
     const aowErrorIds = new Set<number>();
     const includeAowForCenter = center_id != null;
 
-    const [hlos, bilaterals, melias, partners, contractedRows, crossRows] = await Promise.all([
+    const [hlos, bilaterals, melias, partners, contractedRows, crossRows, anaplanRows, anaplanAccounts, aows] = await Promise.all([
       this.porbHloRepository.find({ where: { program_id } }),
       this.porbBilateralRepository.find({ where: { program_id } }),
       this.porbMeliaRepository.find({ where: { program_id } }),
       this.porbPartnerRepository.find({ where: { program_id } }),
       this.porbContractedPartnerRepository.find({ where: { program_id } }),
       this.porbCrossRepository.find({ where: { program_id } }),
+      this.porbAnaplanRepository.find({ where: { program_id } }),
+      this.anaplanRepository.find(),
+      this.porbAowRepository.find({ where: { program_id } }),
     ]);
 
     const hasAssumption = (value: any) => String(value ?? '').trim().length > 0;
@@ -751,6 +852,86 @@ export class PorbService {
       }
       if (budget <= 0 || !hasContractedAssumption) {
         pushError(contracted?.center_id, partner?.porb_aow_id);
+      }
+    }
+
+    // --- Rules 12 & 13: Anaplan cross-checks ---
+    const anaplanLabelById = new Map<number, string>();
+    for (const acct of anaplanAccounts) {
+      anaplanLabelById.set(acct.id, acct.label);
+    }
+    const aowCodeById = new Map<number, string>();
+    for (const aow of aows) {
+      aowCodeById.set(aow.id, String(aow.aow_acrnum || '').trim().toUpperCase());
+    }
+
+    // Build partner-id → aow-id lookup
+    const partnerAowMap = new Map<number, number>();
+    for (const p of partners) {
+      if (!p?.toc_is_deleted) {
+        partnerAowMap.set(p.id, p.porb_aow_id);
+      }
+    }
+
+    // Collect all unique (center_id, porb_aow_id) combinations
+    const combos = new Set<string>();
+    for (const row of anaplanRows) {
+      if (row?.center_id != null && row?.porb_aow_id != null) {
+        combos.add(`${row.center_id}::${row.porb_aow_id}`);
+      }
+    }
+    for (const row of hlos) {
+      if (row?.center_id != null && row?.porb_aow_id != null) {
+        combos.add(`${row.center_id}::${row.porb_aow_id}`);
+      }
+    }
+    for (const row of crossRows) {
+      if (row?.center_id != null && row?.porb_aow_id != null) {
+        combos.add(`${row.center_id}::${row.porb_aow_id}`);
+      }
+    }
+
+    for (const combo of combos) {
+      const [cIdStr, aowIdStr] = combo.split('::');
+      const cId = Number(cIdStr);
+      const aowId = Number(aowIdStr);
+      const isCrossAow = aowCodeById.get(aowId) === 'AOW00';
+
+      // Rule 12: Partners total vs Anaplan "Collaborators non-CGIAR Centers"
+      const partnerIdsForAow = new Set<number>();
+      for (const p of partners) {
+        if (!p?.toc_is_deleted && p.porb_aow_id === aowId) {
+          partnerIdsForAow.add(p.id);
+        }
+      }
+      const partnerBudgetTotal = contractedRows
+        .filter((row) => row.center_id === cId && partnerIdsForAow.has(row.porb_partner_id))
+        .reduce((sum, row) => sum + parseBudget(row?.budget), 0);
+      const collaboratorsRow = anaplanRows.find(
+        (row) =>
+          row.center_id === cId &&
+          row.porb_aow_id === aowId &&
+          (anaplanLabelById.get(row.anaplan_id) || '').trim().toLowerCase() === 'collaborators non-cgiar centers',
+      );
+      const collaboratorsBudget = parseBudget(collaboratorsRow?.budget);
+      if (partnerBudgetTotal !== collaboratorsBudget) {
+        pushError(cId, aowId);
+      }
+
+      // Rule 13: Total Anaplan vs HLO + Cross-Cutting (if AOW00)
+      const totalAnaplan = anaplanRows
+        .filter((row) => row.center_id === cId && row.porb_aow_id === aowId)
+        .reduce((sum, row) => sum + parseBudget(row?.budget), 0);
+      const totalHlo = hlos
+        .filter((row) => row.center_id === cId && row.porb_aow_id === aowId)
+        .reduce((sum, row) => sum + parseBudget(row?.hlo_budget), 0);
+      const totalCross = isCrossAow
+        ? crossRows
+            .filter((row) => row.center_id === cId && row.porb_aow_id === aowId)
+            .reduce((sum, row) => sum + parseBudget(row?.budget), 0)
+        : 0;
+      if (totalAnaplan !== totalHlo + totalCross) {
+        pushError(cId, aowId);
       }
     }
 
@@ -875,6 +1056,9 @@ export class PorbService {
     data: Partial<PorbHlo>,
     reqUser?: { id: number },
   ) {
+    if (data.hlo_budget != null) {
+      data.hlo_budget = Math.round(Number(data.hlo_budget));
+    }
     const existing = await this.porbHloRepository.findOne({ where: { id } });
     await this.porbHloRepository.update(id, data);
     const updated = await this.porbHloRepository.findOne({ where: { id } });
@@ -925,6 +1109,10 @@ export class PorbService {
     },
     reqUser?: { id: number },
   ) {
+    if (data.partner_budget != null && data.partner_budget !== ('' as any)) {
+      data.partner_budget = Math.round(Number(data.partner_budget));
+    }
+
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) {
       throw new BadRequestException('Partner row not found.');
@@ -965,9 +1153,16 @@ export class PorbService {
           ? Number(data.partner_budget)
           : null;
 
-      const existing = await this.porbContractedPartnerRepository.findOne({
+      // Find all matching rows and deduplicate (keep first, delete rest)
+      const allExisting = await this.porbContractedPartnerRepository.find({
         where: { porb_partner_id: id, center_id: centerId },
+        order: { id: 'ASC' },
       });
+      const existing = allExisting[0] || null;
+      if (allExisting.length > 1) {
+        const dupeIds = allExisting.slice(1).map((r) => r.id);
+        await this.porbContractedPartnerRepository.delete(dupeIds);
+      }
 
       const contractedAssumption = data.assumption ?? '';
 
@@ -1084,6 +1279,9 @@ export class PorbService {
     data: Partial<PorbBilateral>,
     reqUser?: { id: number },
   ) {
+    if (data.bilateral_budget != null) {
+      data.bilateral_budget = Math.round(Number(data.bilateral_budget));
+    }
     const existing = await this.porbBilateralRepository.findOne({
       where: { id },
     });
@@ -1134,6 +1332,9 @@ export class PorbService {
     data: Partial<PorbMelia>,
     reqUser?: { id: number },
   ) {
+    if (data.melia_budget != null) {
+      data.melia_budget = Math.round(Number(data.melia_budget));
+    }
     const existing = await this.porbMeliaRepository.findOne({
       where: { id },
     });
@@ -1189,6 +1390,10 @@ export class PorbService {
     },
     reqUser?: { id: number },
   ) {
+    if (data.budget != null) {
+      data.budget = Math.round(Number(data.budget));
+    }
+
     const existing = await this.porbAnaplanRepository.findOne({
       where: {
         program_id: data.program_id,
@@ -1260,6 +1465,10 @@ export class PorbService {
     },
     reqUser?: { id: number },
   ) {
+    if (data.budget != null) {
+      data.budget = Math.round(Number(data.budget));
+    }
+
     const existing = await this.porbCrossRepository.findOne({
       where: {
         program_id: data.program_id,
@@ -3274,6 +3483,16 @@ export class PorbService {
         throw new BadRequestException('No active phase found');
       }
 
+      const validationResult = await this.getValidationSummary(programId);
+      if (
+        validationResult.center_error_codes.length > 0 ||
+        validationResult.aow_error_ids.length > 0
+      ) {
+        throw new BadRequestException(
+          'Cannot submit: there are validation errors that must be resolved first.',
+        );
+      }
+
       const user = await this.userRepository.findOneBy({ id: reqUser.id });
       if (!user) {
         throw new NotFoundException('User not found');
@@ -3885,7 +4104,7 @@ export class PorbService {
    * Returns Anaplan data consolidated across all centers for a program,
    * grouped by account label and AOW.
    */
-  async getAnaplanConsolidated(program_id: number) {
+  async getAnaplanConsolidated(program_id: number, center_id?: number) {
     const aows = await this.porbAowRepository
       .createQueryBuilder('aow')
       .where('aow.program_id = :program_id', { program_id })
@@ -3903,8 +4122,13 @@ export class PorbService {
     const aowIds = aows.map((a) => a.id);
     const aowLabels = aows.map((a) => a.aow_acrnum || `AOW${a.id}`);
 
+    const anaplanFindWhere: any = { program_id, porb_aow_id: In(aowIds) };
+    if (center_id != null) {
+      anaplanFindWhere.center_id = center_id;
+    }
+
     const anaplanRows = await this.porbAnaplanRepository.find({
-      where: { program_id, porb_aow_id: In(aowIds) },
+      where: anaplanFindWhere,
       relations: ['anaplan'],
     });
 
@@ -4191,6 +4415,83 @@ export class PorbService {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
         `MELIA dedup migration failed: ${error?.message || error}`,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async dedupContractedPartners() {
+    const queryRunner =
+      this.porbContractedPartnerRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Find groups with duplicates
+      const groups: Array<{
+        porb_partner_id: number;
+        center_id: number;
+        cnt: string;
+      }> = await queryRunner.query(`
+        SELECT porb_partner_id, center_id, COUNT(*) AS cnt
+        FROM porb_contracted_partners
+        GROUP BY porb_partner_id, center_id
+        HAVING COUNT(*) > 1
+      `);
+
+      let merged = 0;
+      let deleted = 0;
+
+      for (const group of groups) {
+        const rows: PorbContractedPartner[] = await queryRunner.query(
+          `SELECT * FROM porb_contracted_partners
+           WHERE porb_partner_id = ? AND center_id = ?
+           ORDER BY COALESCE(budget, 0) DESC, id ASC`,
+          [group.porb_partner_id, group.center_id],
+        );
+
+        if (rows.length < 2) continue;
+
+        // Keep the row with highest budget (first due to ORDER BY)
+        const keepRow = rows[0];
+        const duplicates = rows.slice(1);
+
+        // Delete duplicate rows
+        const deleteIds = duplicates.map((r) => r.id);
+        if (deleteIds.length > 0) {
+          await queryRunner.query(
+            `DELETE FROM porb_contracted_partners WHERE id IN (${deleteIds.map(() => '?').join(',')})`,
+            deleteIds,
+          );
+          deleted += deleteIds.length;
+        }
+
+        merged += 1;
+      }
+
+      await queryRunner.commitTransaction();
+
+      // Verification: check no duplicates remain
+      const remaining: Array<{ cnt: string }> = await queryRunner.query(`
+        SELECT COUNT(*) AS cnt FROM (
+          SELECT porb_partner_id, center_id
+          FROM porb_contracted_partners
+          GROUP BY porb_partner_id, center_id
+          HAVING COUNT(*) > 1
+        ) AS dups
+      `);
+
+      return {
+        success: true,
+        groupsMerged: merged,
+        rowsDeleted: deleted,
+        remainingDuplicates: Number(remaining?.[0]?.cnt || 0),
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(
+        `Contracted partners dedup failed: ${error?.message || error}`,
       );
     } finally {
       await queryRunner.release();

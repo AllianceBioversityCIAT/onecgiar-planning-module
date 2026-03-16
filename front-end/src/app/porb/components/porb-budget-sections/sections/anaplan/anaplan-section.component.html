@@ -13,6 +13,13 @@
     <button type="button" class="export-btn" (click)="export()">Export Excel</button>
   </div>
 
+  <div class="validation-warnings" *ngIf="sectionValidation?.hasError">
+    <div class="validation-warning" *ngFor="let msg of validationMessages">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ msg }}</span>
+    </div>
+  </div>
+
   <div *ngIf="rows.length" class="table-scroll">
     <table class="additional-table">
       <thead>

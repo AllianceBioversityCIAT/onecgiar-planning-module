@@ -126,8 +126,12 @@ export class PorbController {
   @Get('summary-consolidation')
   getSummaryConsolidation(
     @Query('program_id', ParseIntPipe) program_id: number,
+    @Query('center_id') center_id?: string,
   ) {
-    return this.porbService.getSummaryConsolidation(program_id);
+    return this.porbService.getSummaryConsolidation(
+      program_id,
+      this.parseOptionalNumber(center_id),
+    );
   }
 
   @Get('summary-aow-detail')
@@ -165,8 +169,12 @@ export class PorbController {
   @Get('anaplan-consolidated')
   getAnaplanConsolidated(
     @Query('program_id', ParseIntPipe) program_id: number,
+    @Query('center_id') center_id?: string,
   ) {
-    return this.porbService.getAnaplanConsolidated(program_id);
+    return this.porbService.getAnaplanConsolidated(
+      program_id,
+      this.parseOptionalNumber(center_id),
+    );
   }
 
   @Get('w3-consolidated')
@@ -367,6 +375,13 @@ export class PorbController {
   @Post('migrate-melia-dedup')
   migrateMeliaDedup() {
     return this.porbService.migrateMeliaDedup();
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('dedup-contracted-partners')
+  dedupContractedPartners() {
+    return this.porbService.dedupContractedPartners();
   }
 
   @Post('submit/:program_id')

@@ -90,8 +90,9 @@ export class PorbService {
     return this.getByFilter("consolidation", programId, porbAowId, centerId);
   }
 
-  async getSummaryConsolidation(programId: number) {
+  async getSummaryConsolidation(programId: number, centerId?: number) {
     let params = new HttpParams().set("program_id", String(programId));
+    if (centerId != null) params = params.set("center_id", String(centerId));
     return firstValueFrom(
       this.http
         .get(`${environment.api_url}/porb/summary-consolidation`, { params })
@@ -350,8 +351,9 @@ export class PorbService {
     saveAs(blob, filename);
   }
 
-  getAnaplanConsolidated(programId: number) {
-    const params = new HttpParams().set("program_id", String(programId));
+  getAnaplanConsolidated(programId: number, centerId?: number) {
+    let params = new HttpParams().set("program_id", String(programId));
+    if (centerId != null) params = params.set("center_id", String(centerId));
     return this.http.get<any>(`${environment.api_url}/porb/anaplan-consolidated`, { params });
   }
 
