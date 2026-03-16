@@ -15,4 +15,9 @@
   &:hover {
     color: #333;
   }
+
+  &--empty {
+    opacity: 0.3;
+    cursor: default;
+  }
 }

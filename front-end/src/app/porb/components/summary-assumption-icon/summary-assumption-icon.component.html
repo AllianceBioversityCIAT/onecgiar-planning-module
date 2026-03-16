@@ -1,4 +1,7 @@
-<button *ngIf="hasAssumption" type="button" class="assumption-view-icon"
-  (click)="openDialog()" matTooltip="View assumption">
+<button type="button" class="assumption-view-icon"
+  [class.assumption-view-icon--empty]="!hasAssumption"
+  [disabled]="!hasAssumption"
+  [matTooltip]="hasAssumption ? 'View assumption' : 'No assumption'"
+  (click)="openDialog()">
   <mat-icon>description</mat-icon>
 </button>
