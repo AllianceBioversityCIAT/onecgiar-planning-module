@@ -77,12 +77,6 @@
           </div>
         </div>
 
-        <div class="form-container-4" *ngIf="initiative">
-          <div class="porb-program-info">
-            <span class="tab-program">{{ initiative?.official_code }} - {{ initiative?.name }}</span>
-          </div>
-        </div>
-
         <!-- Summary view mode nav -->
         <nav class="porb-nav porb-nav--summary-mode" *ngIf="!summaryLoading">
           <button type="button" class="porb-nav__item"
@@ -176,14 +170,14 @@
           </div>
         </div>
 
-        <!-- Anaplan Consolidated Table (full width) -->
+        <!-- Budget for Financial Reporting Table (full width) -->
         <div class="porb-consolidation-section" *ngIf="!summaryLoading && anaplanConsolidatedData?.accounts?.length">
           <div class="risk-report-box">
-            <h3>Anaplan Consolidated</h3>
+            <h3>Budget for Financial Reporting</h3>
             <button
               mat-stroked-button
               class="center-action-btn center-export-btn"
-              title="Export Anaplan Consolidated"
+              title="Export Budget for Financial Reporting"
               (click)="exportAnaplanConsolidatedExcel()"
             >
               <mat-icon>download</mat-icon>
@@ -194,14 +188,14 @@
             <table class="consolidation-table porb-summary-table">
               <thead>
                 <tr>
-                  <th>Account</th>
+                  <th style="text-align: left">Account</th>
                   <th *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">{{ aow }}</th>
                   <th class="num-cell total-col">Total</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let account of anaplanConsolidatedData.accounts">
-                  <td>{{ account.label }}</td>
+                  <td style="text-align: left">{{ account.label }}</td>
                   <td *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">
                     {{ formatAnaplanCurrency(account.budgetByAow[aow]) }}
                   </td>
@@ -540,16 +534,7 @@
             Export Center
           </button>
           <button
-            mat-stroked-button
-            class="center-action-btn center-export-btn"
-            [title]="'Export Anaplan data for ' + (selectedCenter?.acronym || selectedCenter?.name)"
-            (click)="exportCenterAnaplan()"
-          >
-            <mat-icon>download</mat-icon>
-            Export Anaplan
-          </button>
-          <button
-            *ngIf="canEditForSelectedCenter && (isSelectedCenterCompleted || !hasSelectedCenterErrors)"
+            *ngIf="canEditForSelectedCenter"
             mat-raised-button
             class="new-btns mark-complete-btn"
             [class.completed-btn]="isSelectedCenterCompleted"
@@ -561,6 +546,23 @@
           </button>
         </div>
       </div>
+
+      <!-- Center view mode toggle -->
+      <nav class="porb-nav porb-nav--summary-mode">
+        <button type="button" class="porb-nav__item"
+          [class.porb-nav__item--active]="centerViewMode === 'consolidated'"
+          (click)="onCenterViewModeChange('consolidated')">
+          Consolidated
+        </button>
+        <button type="button" class="porb-nav__item"
+          [class.porb-nav__item--active]="centerViewMode === 'budget-entry'"
+          (click)="onCenterViewModeChange('budget-entry')">
+          Budget Entry
+        </button>
+      </nav>
+
+      <!-- Budget Entry view -->
+      <ng-container *ngIf="centerViewMode === 'budget-entry'">
 
       <!-- Level 2: AOW nav list -->
       <nav class="porb-nav porb-nav--aows" data-tour-anchor="porb-aow-tabs">
@@ -750,6 +752,7 @@
               *ngSwitchCase="'Anaplan'"
               [rows]="anaplanRows"
               [canEdit]="canEditForSelectedCenter"
+              [sectionValidation]="sectionValidation['Anaplan']"
               (budgetUpdated)="onBudgetUpdated()"
             ></app-anaplan-section>
 
@@ -765,6 +768,161 @@
           </ng-container>
         </div>
       </ng-container>
+
+      </ng-container>
+      <!-- /Budget Entry view -->
+
+      <!-- Consolidated view -->
+      <ng-container *ngIf="centerViewMode === 'consolidated'">
+        <!-- Loading skeleton -->
+        <div *ngIf="centerConsolidationLoading" class="summary-skeleton">
+          <div class="skeleton-block sk-table-head"></div>
+          <div class="skeleton-block sk-table-row"></div>
+          <div class="skeleton-block sk-table-row"></div>
+          <div class="skeleton-block sk-table-row"></div>
+        </div>
+
+        <ng-container *ngIf="!centerConsolidationLoading && centerConsolidationData">
+          <!-- Budget Overview Table -->
+          <div class="porb-consolidation-section">
+            <h3>Budget Overview</h3>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th rowspan="3" class="aow-col">Area of Work</th>
+                    <th colspan="9">Pooled Funding</th>
+                    <th colspan="3" class="other-budgets-group">Additional Information</th>
+                  </tr>
+                  <tr>
+                    <th colspan="2">Innovation Development</th>
+                    <th colspan="2">Knowledge Product</th>
+                    <th colspan="2">Capacity Sharing</th>
+                    <th colspan="2">Others Outputs</th>
+                    <th rowspan="2" class="total-col">Total Pooled<br>Funding (USD)</th>
+                    <th rowspan="2" class="other-budgets-group">Anaplan<br>budget</th>
+                    <th rowspan="2" class="other-budgets-group">Partner<br>budget</th>
+                    <th rowspan="2" class="other-budgets-group">MELIA Studies<br>budget</th>
+                  </tr>
+                  <tr>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of formattedCenterConsolidationRows" [class.cross-cutting-row]="row.aowCode === 'AOW00'">
+                    <td class="aow-col">{{ row.aowCode }}: {{ row.aowName }}</td>
+                    <ng-container *ngIf="row.aowCode !== 'AOW00'">
+                      <td>{{ row.innovationTargetFmt }}</td>
+                      <td>{{ row.innovationBudgetFmt }}</td>
+                      <td>{{ row.knowledgeTargetFmt }}</td>
+                      <td>{{ row.knowledgeBudgetFmt }}</td>
+                      <td>{{ row.capacityTargetFmt }}</td>
+                      <td>{{ row.capacityBudgetFmt }}</td>
+                      <td>{{ row.othersTargetFmt }}</td>
+                      <td>{{ row.othersBudgetFmt }}</td>
+                    </ng-container>
+                    <td *ngIf="row.aowCode === 'AOW00'" colspan="8" class="cross-cutting-block">
+                      Cross-Cutting
+                    </td>
+                    <td class="total-col">{{ row.totalPooledFundingFmt }}</td>
+                    <td class="other-budgets-group">{{ row.anaplanBudgetFmt }}</td>
+                    <td class="other-budgets-group">{{ row.partnerBudgetFmt }}</td>
+                    <td>{{ row.meliaBudgetFmt }}</td>
+                  </tr>
+                  <tr class="summary-total-row" *ngIf="formattedCenterConsolidationRows.length">
+                    <td class="aow-col"><strong>Total</strong></td>
+                    <td><strong></strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.innovationBudgetFmt }}</strong></td>
+                    <td><strong></strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.knowledgeBudgetFmt }}</strong></td>
+                    <td><strong></strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.capacityBudgetFmt }}</strong></td>
+                    <td><strong></strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.othersBudgetFmt }}</strong></td>
+                    <td class="total-col"><strong>{{ formattedCenterConsolidationTotals.totalPooledFundingFmt }}</strong></td>
+                    <td class="other-budgets-group"><strong>{{ formattedCenterConsolidationTotals.anaplanBudgetFmt }}</strong></td>
+                    <td class="other-budgets-group"><strong>{{ formattedCenterConsolidationTotals.partnerBudgetFmt }}</strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.meliaBudgetFmt }}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Budget for Financial Reporting Table (for this center) -->
+          <div class="porb-consolidation-section" *ngIf="centerAnaplanConsolidatedData?.accounts?.length">
+            <div class="risk-report-box">
+              <h3>Budget for Financial Reporting</h3>
+              <button
+                mat-stroked-button
+                class="center-action-btn center-export-btn"
+                title="Export Anaplan"
+                (click)="exportCenterAnaplan()"
+              >
+                <mat-icon>download</mat-icon>
+                Export Anaplan
+              </button>
+            </div>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Account</th>
+                    <th *ngFor="let aow of centerAnaplanConsolidatedData.aows" class="num-cell">{{ aow }}</th>
+                    <th class="num-cell total-col">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let account of centerAnaplanConsolidatedData.accounts">
+                    <td style="text-align: left">{{ account.label }}</td>
+                    <td *ngFor="let aow of centerAnaplanConsolidatedData.aows" class="num-cell">
+                      {{ formatAnaplanCurrency(account.budgetByAow[aow]) }}
+                    </td>
+                    <td class="num-cell total-col">{{ formatAnaplanCurrency(account.total) }}</td>
+                  </tr>
+                  <tr class="summary-total-row" *ngIf="centerAnaplanConsolidatedData.grandTotal != null">
+                    <td><strong>Total</strong></td>
+                    <td *ngFor="let aow of centerAnaplanConsolidatedData.aows" class="num-cell">
+                      <strong>{{ formatAnaplanCurrency(centerAnaplanConsolidatedData.grandTotalByAow?.[aow]) }}</strong>
+                    </td>
+                    <td class="num-cell total-col"><strong>{{ formatAnaplanCurrency(centerAnaplanConsolidatedData.grandTotal) }}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- W3/Bilateral for this center -->
+          <div class="porb-consolidation-section" *ngIf="centerW3Data?.length">
+            <h3>W3/Bilateral Projects</h3>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Project Title</th>
+                    <th class="num-cell">Budget (USD)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of centerW3Data">
+                    <td style="text-align: left">{{ row.bilateral_name || '-' }}</td>
+                    <td class="num-cell">{{ formatAnaplanCurrency(row.bilateral_budget) }}</td>
+                  </tr>
+                  <tr class="summary-total-row">
+                    <td style="text-align: left"><strong>Total</strong></td>
+                    <td class="num-cell"><strong>{{ centerW3Subtotal }}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+      <!-- /Consolidated view -->
+
     </div>
   </div>
 

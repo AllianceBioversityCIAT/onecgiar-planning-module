@@ -96,16 +96,28 @@ The assumption icon button in `budget-and-assumption.component.html` has `tabind
 Users can add "Unknown Partner" rows directly in the PORB Partners section (not from TOC). These have `is_unknown: true` on `porb_partner` entity. They can later be resolved to real CLARISA institutions via a search dialog (`PATCH /porb/partner/:id/resolve`), which updates the name and sets `is_unknown = false`. Only unknown partners can be deleted (`DELETE /porb/partner/:id`). The `GET /porb/partner/search-clarisa?q=...` endpoint searches the `Partner` (CLARISA) table. Adding emits `rowAdded` which triggers a full `loadBudgetRows()` reload.
 
 ### Summary View Modes
-The summary tab has a top-level Consolidated/Detailed toggle. Consolidated shows Budget Overview + Anaplan + W3 tables (full width, stacked). Detailed shows AOW nav + section nav + per-AOW budget breakdown. W3/Bilateral has its own button in the detailed AOW nav. `summaryViewMode` controls the toggle. Zero-budget AOW rows are hidden from the consolidated table. Summary sections with no budget data are disabled (dimmed, tooltip). Center-level sections are disabled when no rows exist (uses `rowCounts` from consolidation endpoint); Anaplan is always enabled. Selected section is preserved when switching AOWs. Summary detail data is cached in `computeSummaryDetailCache()` to avoid getter re-creation on change detection (prevents DOM thrashing).
+The summary tab has a top-level Consolidated/Detailed toggle. Consolidated shows Budget Overview + Budget for Financial Reporting + W3 tables (full width, stacked). Detailed shows AOW nav + section nav + per-AOW budget breakdown. W3/Bilateral has its own button in the detailed AOW nav. `summaryViewMode` controls the toggle. Zero-budget AOW rows are hidden from the consolidated table. Summary sections with no budget data are disabled (dimmed, tooltip). Center-level sections are disabled when no rows exist (uses `rowCounts` from consolidation endpoint); Anaplan is always enabled. Selected section is preserved when switching AOWs. Summary detail data is cached in `computeSummaryDetailCache()` to avoid getter re-creation on change detection (prevents DOM thrashing).
+
+### Center View Modes
+Center view has a Consolidated/Budget Entry toggle (`centerViewMode`). **Consolidated** shows read-only summary tables filtered to the selected center: Budget Overview (AOW breakdown), Budget for Financial Reporting (Anaplan accounts × AOWs), and W3/Bilateral projects. **Budget Entry** shows the existing AOW nav → section nav → editable budget tables. The view mode persists when switching between centers (consolidated data reloads automatically). Backend endpoints `getSummaryConsolidation` and `getAnaplanConsolidated` accept optional `center_id` query param for center-filtered data.
 
 ### Summary Assumption Icon
 `SummaryAssumptionIconComponent` opens a click-to-view dialog with assumption text. Always visible — dimmed when no assumption, clickable when present. Accepts single `[assumption]` string or `[assumptions]` array of `{center, assumption}` entries for multi-center items. `SummaryAssumptionDialogComponent` renders the dialog. Backend enriches HLO, MELIA, and bilateral rows with `center_name` in `getSummaryAowDetail()`.
 
+### Mark Complete Validation
+"Mark Complete" button is always visible when user has edit access. If validation errors exist, clicking opens `ValidationErrorsDialogComponent` listing which AOWs have errors, with a hint to follow error icons. Cross Cutting and Anaplan sections are always enabled on center level.
+
+### MELIA Dedup
+MELIA import dedup key uses `melia_name::center_id::aow_id` (not `toc_id`) to prevent duplicates when TOC API returns different UUIDs for the same study. Migration endpoint: `POST /porb/migrate-melia-dedup`.
+
 ### Budget Section Subtotals
 All 6 center-level budget sections (Pool HLO, Partners, MELIA, Anaplan, Cross Cutting, W3) show a subtotal row at the bottom of their tables. Computed from `filteredRows` in each section component. Global `.subtotal-row` styles in `styles.scss`.
 
-### Anaplan Consolidated Endpoint
-`GET /porb/anaplan-consolidated?program_id=X` aggregates all `porb_anaplan` rows across centers, grouped by account × AOW. Returns `{ aows, accounts, grandTotal, grandTotalByAow }`. Displayed in summary page between consolidation table and AOW detail.
+### Budget for Financial Reporting Endpoint (formerly Anaplan Consolidated)
+`GET /porb/anaplan-consolidated?program_id=X&center_id=Y` aggregates `porb_anaplan` rows grouped by account × AOW. Returns `{ aows, accounts, grandTotal, grandTotalByAow }`. When `center_id` is provided, filters to that center only. Displayed as "Budget for Financial Reporting" in both summary and center consolidated views. Export Anaplan button lives on this table (not in center header).
+
+### Budget Input Comma Formatting
+`BudgetAndAssumptionComponent` formats budget values with comma separators (e.g., "597,987") when the input is not focused. On focus, shows raw number for editing. Uses `Intl.NumberFormat('en-US')` via a `displayValue` getter. The `focused` boolean tracks focus state.
 
 ### Anaplan Migration & AOW00
 The Anaplan migration in `migrateOneProgram()` falls back to AOW00 for `AnaplanValues` whose `wp_id` doesn't match any WorkPackage. This is needed because AOW00 (Cross-Cutting) has no WorkPackage entity. Without the fallback, AOW00 Anaplan budgets are silently skipped.

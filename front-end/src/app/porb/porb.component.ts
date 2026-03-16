@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
-import { Subscription } from "rxjs";
+import { firstValueFrom, Subscription } from "rxjs";
 import { PhasesService } from "../services/phases.service";
 import { SubmissionService } from "../services/submission.service";
 import { AppSocket } from "../socket.service";
@@ -12,6 +12,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { ConfirmComponent, ConfirmDialogModel } from "../confirm/confirm.component";
 import { HistoryOfChangeComponent } from "../submission/history-of-change/history-of-change.component";
 import { ToastrService } from "ngx-toastr";
+import { ValidationErrorsDialogComponent } from "./components/validation-errors-dialog.component";
 
 @Component({
     selector: "app-porb",
@@ -61,6 +62,12 @@ export class PorbComponent implements OnInit, OnDestroy {
   summaryConsolidationTotals: any = {};
   summaryLoading = false;
   summaryViewMode: 'consolidated' | 'detailed' = 'consolidated';
+
+  centerViewMode: 'consolidated' | 'budget-entry' = 'budget-entry';
+  centerConsolidationData: any = null;
+  centerAnaplanConsolidatedData: any = null;
+  centerW3Data: any[] = [];
+  centerConsolidationLoading = false;
 
   anaplanConsolidatedData: any = null;
   w3ConsolidatedData: any = null;
@@ -361,6 +368,14 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   async onSubmitClicked() {
+    // Block submission if validation errors exist (Rules 12, 13)
+    if (this.centerErrorCodes.length > 0 || this.aowErrorIds.length > 0) {
+      this.toastr.error(
+        'Cannot submit: there are validation errors that must be resolved first.'
+      );
+      return;
+    }
+
     const incompleteCenters = this.centers
       .filter((c: any) => !this.isCenterCompleted(c))
       .map((c: any) => c?.acronym || c?.name || "Unknown");
@@ -810,6 +825,91 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.formatCurrency(this.toNumber(value));
   }
 
+  get formattedCenterConsolidationRows() {
+    const rows: any[] = this.centerConsolidationData?.rows || [];
+    return rows.filter((row) => {
+      const total = this.toNumber(row.totalPooledFunding)
+        + this.toNumber(row.anaplanBudget)
+        + this.toNumber(row.partnerBudget)
+        + this.toNumber(row.meliaBudget);
+      return total > 0;
+    }).map((row) => ({
+      ...row,
+      innovationTargetFmt: this.formatCurrency(this.toNumber(row.innovationTarget)),
+      innovationBudgetFmt: this.formatCurrency(this.toNumber(row.innovationBudget)),
+      knowledgeTargetFmt: this.formatCurrency(this.toNumber(row.knowledgeTarget)),
+      knowledgeBudgetFmt: this.formatCurrency(this.toNumber(row.knowledgeBudget)),
+      capacityTargetFmt: this.formatCurrency(this.toNumber(row.capacityTarget)),
+      capacityBudgetFmt: this.formatCurrency(this.toNumber(row.capacityBudget)),
+      othersTargetFmt: this.formatCurrency(this.toNumber(row.othersTarget)),
+      othersBudgetFmt: this.formatCurrency(this.toNumber(row.othersBudget)),
+      partnerBudgetFmt: this.formatCurrency(this.toNumber(row.partnerBudget)),
+      meliaBudgetFmt: this.formatCurrency(this.toNumber(row.meliaBudget)),
+      crossBudgetFmt: this.formatCurrency(this.toNumber(row.crossBudget)),
+      totalPooledFundingFmt: this.formatCurrency(this.toNumber(row.totalPooledFunding)),
+      anaplanBudgetFmt: this.formatCurrency(this.toNumber(row.anaplanBudget)),
+      poolHloFmt: this.formatCurrency(
+        this.toNumber(row.innovationBudget) +
+        this.toNumber(row.knowledgeBudget) +
+        this.toNumber(row.capacityBudget) +
+        this.toNumber(row.othersBudget)
+      ),
+    }));
+  }
+
+  get formattedCenterConsolidationTotals() {
+    const t = this.centerConsolidationData?.totals || {};
+    return {
+      innovationTarget: this.formatCurrency(this.toNumber(t.innovationTarget)),
+      innovationBudgetFmt: this.formatCurrency(this.toNumber(t.innovationBudget)),
+      knowledgeTarget: this.formatCurrency(this.toNumber(t.knowledgeTarget)),
+      knowledgeBudgetFmt: this.formatCurrency(this.toNumber(t.knowledgeBudget)),
+      capacityTarget: this.formatCurrency(this.toNumber(t.capacityTarget)),
+      capacityBudgetFmt: this.formatCurrency(this.toNumber(t.capacityBudget)),
+      othersTarget: this.formatCurrency(this.toNumber(t.othersTarget)),
+      othersBudgetFmt: this.formatCurrency(this.toNumber(t.othersBudget)),
+      partnerBudgetFmt: this.formatCurrency(this.toNumber(t.partnerBudget)),
+      meliaBudgetFmt: this.formatCurrency(this.toNumber(t.meliaBudget)),
+      crossBudgetFmt: this.formatCurrency(this.toNumber(t.crossBudget)),
+      totalPooledFundingFmt: this.formatCurrency(this.toNumber(t.totalPooledFunding)),
+      anaplanBudgetFmt: this.formatCurrency(this.toNumber(t.anaplanBudget)),
+    };
+  }
+
+  get centerW3Subtotal(): string {
+    const total = (this.centerW3Data || []).reduce(
+      (sum, r) => sum + (Number(r.bilateral_budget) || 0),
+      0
+    );
+    return this.formatCurrency(total);
+  }
+
+  onCenterViewModeChange(mode: 'consolidated' | 'budget-entry') {
+    this.centerViewMode = mode;
+    if (mode === 'consolidated') {
+      this.loadCenterConsolidation();
+    }
+  }
+
+  async loadCenterConsolidation() {
+    if (!this.initiativeId || !this.selectedCenter) return;
+    const centerId = Number(this.selectedCenter.code);
+    this.centerConsolidationLoading = true;
+    try {
+      const [consolidation, anaplan, w3] = await Promise.all([
+        this.porbService.getSummaryConsolidation(this.initiativeId, centerId),
+        firstValueFrom(this.porbService.getAnaplanConsolidated(this.initiativeId, centerId)),
+        this.porbService.getBilaterals(this.initiativeId, centerId, true),
+      ]);
+      this.centerConsolidationData = consolidation;
+      this.centerAnaplanConsolidatedData = anaplan;
+      this.centerW3Data = (w3 as any[]) || [];
+    } catch (e) {
+      console.error('Failed to load center consolidation', e);
+    }
+    this.centerConsolidationLoading = false;
+  }
+
   get isUnknownCenter(): boolean {
     const key = this.getCenterKey(this.selectedCenter);
     return key === this.UNKNOWN_CENTER_CODE;
@@ -1142,8 +1242,14 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (this.isCenterSelected(center) && this.activeView === "center") {
       return;
     }
+    this.centerConsolidationData = null;
     this.selectedCenter = center;
     this.activeView = "center";
+
+    if (this.centerViewMode === 'consolidated') {
+      this.loadCenterConsolidation();
+      return;
+    }
 
     if (this.isW3View) {
       this.syncSelectionToUrl();
@@ -1256,6 +1362,16 @@ export class PorbComponent implements OnInit, OnDestroy {
     try {
       const nextStatus = this.isSelectedCenterCompleted ? true : false;
       if (!this.isSelectedCenterCompleted && this.hasSelectedCenterErrors) {
+        this.dialog.open(ValidationErrorsDialogComponent, {
+          data: {
+            centerName: this.selectedCenter?.acronym || this.selectedCenter?.name,
+            aowErrorIds: this.aowErrorIds,
+            aows: this.aows,
+          },
+          width: '520px',
+          autoFocus: false,
+        });
+        this.centerStatusUpdating = false;
         return;
       }
       const result = await this.porbService.markStatus(
