@@ -113,8 +113,11 @@ The Anaplan migration in `migrateOneProgram()` falls back to AOW00 for `AnaplanV
 ### Excel Sheet Protection & Hidden IDs
 All PORB Excel sheets call `protectAndHideIds()` to hide ID columns and apply sheet protection. Assumption columns (text wrap, ~30 char width) are added beside each budget column in all 5 section sheets.
 
+### Testing Environment Badge
+`header.component.html` includes a `<span class="test-env-badge">Testing Environment</span>` in the header's right section. This is a static orange badge meant for test/staging deployments. Remove or conditionalize it (e.g., via `environment.ts`) before deploying to production.
+
 ### W3/Bilateral Is Center-Level
-W3/Bilateral is NOT a per-AOW section — it lives at the center level as a pseudo-AOW button in Level 2 nav. `isW3View` flag controls the view state. When active, no consolidation sidebar or Level 3 section nav is shown. `porb_bilateral.porb_aow_id` is NULL for all rows. Summary consolidated shows a full-width W3/Bilateral per-center table below Anaplan. Summary detailed has a W3/Bilateral button in AOW nav showing read-only table (exclude_zero filtered). Migration: `POST /porb/migrate-bilateral-to-center` or `back-end/migrate-bilateral-to-center.sql`.
+W3/Bilateral is NOT a per-AOW section — it lives at the center level as a pseudo-AOW button in Level 2 nav. `isW3View` flag controls the view state. When active, no consolidation sidebar or Level 3 section nav is shown. `porb_bilateral.porb_aow_id` is NULL for all rows. Summary consolidated shows a full-width W3/Bilateral per-center table below Anaplan (centers with zero budget are hidden, center names left-aligned). Summary detailed has a W3/Bilateral button in AOW nav showing read-only table (exclude_zero filtered). Migration: `POST /porb/migrate-bilateral-to-center` or `back-end/migrate-bilateral-to-center.sql`.
 
 ### PORB Section Order
 `baseExtraNavigationItems` order: Pool funding HLO → Partners → MELIA Study → Anaplan. W3/Bilateral is separate (center-level nav, not in this array).

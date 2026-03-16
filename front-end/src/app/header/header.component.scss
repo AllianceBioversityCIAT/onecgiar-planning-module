@@ -148,6 +148,18 @@ $user-btn-bg: linear-gradient(to right, #436280, #30455b);
   }
 }
 
+.test-env-badge {
+  padding: 3px 10px;
+  background: #e65100;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 // Keep for compatibility with loading bar
 .loading-holder {
   width: 100%;
