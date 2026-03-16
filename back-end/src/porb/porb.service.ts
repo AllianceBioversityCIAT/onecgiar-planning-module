@@ -1932,7 +1932,8 @@ export class PorbService {
       }
 
       for (const [, targetAow] of targetAows) {
-        const key = `${String(item?.id || '')}::${centerId}::${Number(targetAow?.id || 0)}`;
+        const meliaName = item?.title || item?.name || 'Melia';
+        const key = `${meliaName}::${centerId}::${Number(targetAow?.id || 0)}`;
         if (meliaRowKeySet.has(key)) {
           continue;
         }
@@ -1959,18 +1960,18 @@ export class PorbService {
     const existingMeliaByKey = new Map<string, PorbMelia>();
     existingMeliaRows.forEach((row) =>
       existingMeliaByKey.set(
-        `${String(row.toc_id)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
+        `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
         row,
       ),
     );
     const existingMeliaKeys = new Set(
       existingMeliaRows.map(
-        (row) => `${String(row.toc_id)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
+        (row) => `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
       ),
     );
     const meliaUpdates = validMeliaRows
       .map((row: any) => {
-        const key = `${String(row.toc_id)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
+        const key = `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
         const existing = existingMeliaByKey.get(key);
         if (!existing) {
           return null;
@@ -1993,7 +1994,7 @@ export class PorbService {
     const newMeliaRows = validMeliaRows.filter(
       (row) =>
         !existingMeliaKeys.has(
-          `${String(row.toc_id)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
+          `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
         ),
     );
     const savedMelias = newMeliaRows.length ? await this.porbMeliaRepository.save(newMeliaRows) : [];
@@ -4077,6 +4078,119 @@ export class PorbService {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
         `Bilateral migration failed: ${error?.message || error}`,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Migration endpoint: merges duplicate MELIA rows that share
+   * (program_id, center_id, porb_aow_id, melia_name). Keeps the row with
+   * the lowest id, sums budgets, and concatenates non-empty assumptions.
+   */
+  async migrateMeliaDedup() {
+    const queryRunner =
+      this.porbMeliaRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Find groups with duplicates
+      const groups: Array<{
+        program_id: number;
+        center_id: number;
+        porb_aow_id: number | null;
+        melia_name: string;
+        cnt: string;
+      }> = await queryRunner.query(`
+        SELECT program_id, center_id, porb_aow_id, melia_name, COUNT(*) AS cnt
+        FROM porb_melia
+        GROUP BY program_id, center_id, porb_aow_id, melia_name
+        HAVING COUNT(*) > 1
+      `);
+
+      let merged = 0;
+      let deleted = 0;
+
+      for (const group of groups) {
+        const rows: PorbMelia[] = await queryRunner.query(
+          `SELECT * FROM porb_melia
+           WHERE program_id = ? AND center_id = ?
+             AND ${group.porb_aow_id == null ? 'porb_aow_id IS NULL' : 'porb_aow_id = ?'}
+             AND melia_name = ?
+           ORDER BY id ASC`,
+          group.porb_aow_id == null
+            ? [group.program_id, group.center_id, group.melia_name]
+            : [
+                group.program_id,
+                group.center_id,
+                group.porb_aow_id,
+                group.melia_name,
+              ],
+        );
+
+        if (rows.length < 2) continue;
+
+        const keepRow = rows[0];
+        const duplicates = rows.slice(1);
+
+        // Sum budgets across all rows
+        const totalBudget = rows.reduce(
+          (sum, r) => sum + (Number(r.melia_budget) || 0),
+          0,
+        );
+
+        // Concat non-empty assumptions (newline-separated)
+        const assumptions = rows
+          .map((r) => (r.melia_assumption || '').trim())
+          .filter((a) => a.length > 0);
+        const mergedAssumption =
+          assumptions.length > 0 ? assumptions.join('\n') : null;
+
+        // Update the kept row with merged values
+        await queryRunner.query(
+          `UPDATE porb_melia
+           SET melia_budget = ?, melia_assumption = ?
+           WHERE id = ?`,
+          [totalBudget || null, mergedAssumption, keepRow.id],
+        );
+
+        // Delete duplicate rows
+        const deleteIds = duplicates.map((r) => r.id);
+        if (deleteIds.length > 0) {
+          await queryRunner.query(
+            `DELETE FROM porb_melia WHERE id IN (${deleteIds.map(() => '?').join(',')})`,
+            deleteIds,
+          );
+          deleted += deleteIds.length;
+        }
+
+        merged += 1;
+      }
+
+      await queryRunner.commitTransaction();
+
+      // Verification: check no duplicates remain
+      const remaining: Array<{ cnt: string }> = await queryRunner.query(`
+        SELECT COUNT(*) AS cnt FROM (
+          SELECT program_id, center_id, porb_aow_id, melia_name
+          FROM porb_melia
+          GROUP BY program_id, center_id, porb_aow_id, melia_name
+          HAVING COUNT(*) > 1
+        ) AS dups
+      `);
+
+      return {
+        success: true,
+        groupsMerged: merged,
+        rowsDeleted: deleted,
+        remainingDuplicates: Number(remaining?.[0]?.cnt || 0),
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(
+        `MELIA dedup migration failed: ${error?.message || error}`,
       );
     } finally {
       await queryRunner.release();

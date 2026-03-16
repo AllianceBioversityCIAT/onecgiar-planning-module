@@ -362,6 +362,13 @@ export class PorbController {
     return this.porbService.migrateBilateralToCenter();
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('migrate-melia-dedup')
+  migrateMeliaDedup() {
+    return this.porbService.migrateMeliaDedup();
+  }
+
   @Post('submit/:program_id')
   submitPorb(
     @Param('program_id', ParseIntPipe) program_id: number,
