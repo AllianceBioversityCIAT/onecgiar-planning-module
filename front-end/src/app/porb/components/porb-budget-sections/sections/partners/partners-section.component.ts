@@ -180,13 +180,6 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
     return span;
   }
 
-  isNewRow(row: any): boolean {
-    if (!row?.created_at) return false;
-    const created = new Date(row.created_at);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return created > sevenDaysAgo;
-  }
 
   async deleteRow(row: any) {
     if (!row?.id) return;

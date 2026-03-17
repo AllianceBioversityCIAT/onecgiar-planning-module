@@ -82,13 +82,6 @@ export class W3SectionComponent implements OnChanges {
     return span;
   }
 
-  isNewRow(row: any): boolean {
-    if (!row?.created_at) return false;
-    const created = new Date(row.created_at);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return created > sevenDaysAgo;
-  }
 
   async deleteRow(row: any) {
     if (!confirm('Are you sure you want to delete this item? This cannot be undone.')) return;

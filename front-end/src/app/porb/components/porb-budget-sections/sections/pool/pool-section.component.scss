@@ -149,30 +149,22 @@
   z-index: 3;
 }
 
-// New row highlight (recently added from TOC import)
-tr.new-row td {
-  border-left: 3px solid #22c55e;
-}
-
 // Delete button for TOC-deleted rows
 .row-delete-btn {
-  position: absolute;
-  right: -3.8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.4rem;
-  height: 2.4rem;
-  min-width: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  min-width: 2.2rem;
   border: none;
   border-radius: 50%;
   background: #ef4444;
   color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
-  z-index: 3;
   padding: 0;
+  margin-left: 0.4rem;
+  vertical-align: middle;
   transition: background 0.2s;
 
   mat-icon, .mat-icon {
