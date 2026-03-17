@@ -237,6 +237,34 @@
             </table>
           </div>
         </div>
+
+        <!-- Countries of Implementation Consolidated Table -->
+        <div class="porb-consolidation-section" *ngIf="!summaryLoading && countryConsolidatedData?.countries?.length">
+          <h3>Countries of Implementation</h3>
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left">Country</th>
+                  <th class="num-cell">Percentage (%)</th>
+                  <th class="num-cell">Budget (USD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of countryConsolidatedData.countries" [hidden]="!c.totalBudget">
+                  <td style="text-align: left">{{ c.country_name }}</td>
+                  <td class="num-cell">{{ c.percentage }}%</td>
+                  <td class="num-cell">{{ formatAnaplanCurrency(c.totalBudget) }}</td>
+                </tr>
+                <tr class="summary-total-row">
+                  <td><strong>Total</strong></td>
+                  <td class="num-cell"></td>
+                  <td class="num-cell"><strong>{{ formatAnaplanCurrency(countryConsolidatedData.grandTotal) }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
         </ng-container>
 
         <!-- DETAILED VIEW -->
@@ -273,7 +301,6 @@
               <div class="skeleton-block sk-table-row"></div>
             </div>
             <div class="summary-section-block" *ngIf="!summaryW3Loading && summaryW3Rows.length">
-              <h4 class="summary-section-title">W3/Bilateral Projects</h4>
               <div class="summary-table-wrapper">
                 <table class="consolidation-table summary-detail-table">
                   <thead>
@@ -289,7 +316,7 @@
                       <td>{{ row.bilateral_outputs || '-' }}</td>
                       <td class="num-cell">
                         {{ formatAnaplanCurrency(row.bilateral_budget) }}
-                        <app-summary-assumption-icon [assumption]="row.bilateral_assumption"></app-summary-assumption-icon>
+                        <app-summary-assumption-icon [assumptions]="row._assumptions"></app-summary-assumption-icon>
                       </td>
                     </tr>
                   </tbody>
@@ -347,7 +374,7 @@
                       </tr>
                       <tr>
                         <th>Type</th>
-                        <th>Geographic location</th>
+                        <th>Country(ies) of implementation</th>
                         <th class="num-cell">Target</th>
                         <th class="num-cell">Budget (USD)</th>
                       </tr>
@@ -510,6 +537,39 @@
               </ng-template>
             </ng-container>
 
+            <!-- Countries Percentage Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Countries Percentage'">
+              <div class="summary-section-block" *ngIf="cachedFormattedCountryPercentage.length; else cpEmpty">
+                <h4 class="summary-section-title">Countries of Implementation</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>Country</th>
+                        <th class="num-cell">Percentage (%)</th>
+                        <th class="num-cell">Budget (USD)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let c of cachedFormattedCountryPercentage">
+                        <td>{{ c.country_name }}</td>
+                        <td class="num-cell">{{ c.percentage }}%</td>
+                        <td class="num-cell">{{ c.budget_fmt }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #cpEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Countries Percentage</strong> — No country percentage data found. Country percentages must be entered in the Countries Percentage section at the center level.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
           </ng-container>
         </div>
         </ng-container>
@@ -577,10 +637,12 @@
           <mat-icon class="nav-icon nav-icon--error" *ngIf="hasAowError(aow)">error_outline</mat-icon>
         </button>
         <button
-          *ngIf="!isUnknownCenter"
           type="button"
           class="porb-nav__item"
           [class.porb-nav__item--active]="isW3View"
+          [class.porb-nav__item--empty]="isW3Empty"
+          [disabled]="isW3Empty"
+          [matTooltip]="isW3Empty ? 'No W3/Bilateral data for this center' : ''"
           (click)="selectW3View()"
         >
           W3/Bilateral
@@ -768,6 +830,17 @@
               [canEdit]="canEditForSelectedCenter"
               (budgetUpdated)="onBudgetUpdated()"
             ></app-cross-section>
+
+            <app-country-percentage-section
+              *ngSwitchCase="'Countries Percentage'"
+              [rows]="countryPercentageRows"
+              [pooledTotal]="consolidationBudgetSummaryData?.pooledTotal || 0"
+              [selectedProgramId]="initiativeId || undefined"
+              [selectedPorbAowId]="selectedPorbAowIdForSections"
+              [selectedCenterId]="selectedCenterIdForSections"
+              [canEdit]="canEditForSelectedCenter"
+              (budgetUpdated)="onBudgetUpdated()"
+            ></app-country-percentage-section>
           </ng-container>
         </div>
       </ng-container>
@@ -917,6 +990,34 @@
                   <tr class="summary-total-row">
                     <td style="text-align: left"><strong>Total</strong></td>
                     <td class="num-cell"><strong>{{ centerW3Subtotal }}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Countries of Implementation for this center -->
+          <div class="porb-consolidation-section" *ngIf="centerCountryConsolidatedData?.countries?.length">
+            <h3>Countries of Implementation</h3>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Country</th>
+                    <th class="num-cell">Percentage (%)</th>
+                    <th class="num-cell">Budget (USD)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let c of centerCountryConsolidatedData.countries" [hidden]="!c.totalBudget">
+                    <td style="text-align: left">{{ c.country_name }}</td>
+                    <td class="num-cell">{{ c.percentage }}%</td>
+                    <td class="num-cell">{{ formatAnaplanCurrency(c.totalBudget) }}</td>
+                  </tr>
+                  <tr class="summary-total-row">
+                    <td style="text-align: left"><strong>Total</strong></td>
+                    <td class="num-cell"></td>
+                    <td class="num-cell"><strong>{{ formatAnaplanCurrency(centerCountryConsolidatedData.grandTotal) }}</strong></td>
                   </tr>
                 </tbody>
               </table>

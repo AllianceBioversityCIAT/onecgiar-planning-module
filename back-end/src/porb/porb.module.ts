@@ -16,6 +16,7 @@ import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
 import { CrossCutting } from 'src/entities/cross-cutting.entity';
 import { PorbCross } from 'src/entities/porb-cross.entity';
+import { PorbCountryPercentage } from 'src/entities/porb-country-percentage.entity';
 import { CenterStatus } from 'src/entities/center-status.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { Submission } from 'src/entities/submission.entity';
@@ -48,6 +49,7 @@ import { EmailModule } from 'src/email/email.module';
       WorkPackage,
       CrossCutting,
       PorbCross,
+      PorbCountryPercentage,
       CenterStatus,
       Organization,
       Submission,

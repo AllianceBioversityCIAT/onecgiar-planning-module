@@ -34,6 +34,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     "Partners",
     "MELIA Study",
     "Anaplan",
+    "Countries Percentage",
   ];
 
   selectedCenter: any = null;
@@ -51,6 +52,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   meliaRows: any[] = [];
   anaplanRows: any[] = [];
   crossRows: any[] = [];
+  countryPercentageRows: any[] = [];
   sectionValidation: Record<string, { hasError: boolean; message: string; partnerMismatch?: boolean; pooledMismatch?: boolean }> = {};
   centerErrorCodes: string[] = [];
   aowErrorIds: number[] = [];
@@ -71,6 +73,8 @@ export class PorbComponent implements OnInit, OnDestroy {
 
   anaplanConsolidatedData: any = null;
   w3ConsolidatedData: any = null;
+  countryConsolidatedData: any = null;
+  centerCountryConsolidatedData: any = null;
 
   summarySelectedAow: any = null;
   summaryAowDetail: any = null;
@@ -85,6 +89,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   cachedFormattedMelia: any[] = [];
   cachedFormattedPartners: any[] = [];
   cachedFormattedCross: any[] = [];
+  cachedFormattedCountryPercentage: any[] = [];
   cachedSummarySubtotals: any = {};
   cachedSummarySectionEmpty: Record<string, boolean> = {};
 
@@ -502,6 +507,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.meliaRows = [];
     this.anaplanRows = [];
     this.crossRows = [];
+    this.countryPercentageRows = [];
   }
 
   private resetSectionValidation() {
@@ -647,6 +653,9 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.selectedExtraNavigation = this.extraNavigationItems[0] || null;
     }
 
+    // Always preload W3 rows so we know if the W3/Bilateral button should be enabled
+    this.preloadW3CenterCount();
+
     if (this.isW3View && this.selectedCenter) {
       await this.loadW3CenterRows();
     } else if (this.selectedCenter && this.selectedAow && this.selectedExtraNavigation) {
@@ -724,6 +733,12 @@ export class PorbComponent implements OnInit, OnDestroy {
       if (this.selectedExtraNavigation === "Cross Cutting") {
         const cross = await this.porbService.getCross(programId, porbAowId, centerId);
         this.crossRows = Array.isArray(cross) ? cross : [];
+        return;
+      }
+
+      if (this.selectedExtraNavigation === "Countries Percentage") {
+        const data = await this.porbService.getCountryPercentage(programId, porbAowId, centerId);
+        this.countryPercentageRows = Array.isArray(data) ? data : [];
         return;
       }
     } finally {
@@ -915,6 +930,7 @@ export class PorbComponent implements OnInit, OnDestroy {
         this.porbService.getSummaryConsolidation(this.initiativeId, centerId),
         firstValueFrom(this.porbService.getAnaplanConsolidated(this.initiativeId, centerId)),
         this.porbService.getBilaterals(this.initiativeId, centerId, true),
+        this.loadCountryConsolidated(this.initiativeId, centerId),
       ]);
       this.centerConsolidationData = consolidation;
       this.centerAnaplanConsolidatedData = anaplan;
@@ -931,11 +947,6 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   get visibleAows(): any[] {
-    if (this.isUnknownCenter) {
-      return this.aows.filter(
-        (aow: any) => String(aow?.code || aow?.aow_acrnum || "").toUpperCase() === "AOW00"
-      );
-    }
     return this.aows;
   }
 
@@ -963,6 +974,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       case 'MELIA Study': return (counts.melia || 0) === 0;
       case 'Anaplan': return false;
       case 'Cross Cutting': return false;
+      case 'Countries Percentage': return (counts.countryPercentage || 0) === 0;
       default: return false;
     }
   }
@@ -1097,6 +1109,7 @@ export class PorbComponent implements OnInit, OnDestroy {
         this.porbService.getSummaryConsolidation(this.initiativeId),
         this.loadAnaplanConsolidated(this.initiativeId),
         this.loadW3Consolidated(this.initiativeId),
+        this.loadCountryConsolidated(this.initiativeId),
       ]);
       this.summaryConsolidationRows = Array.isArray(data?.rows) ? data.rows : [];
       this.summaryConsolidationTotals = data?.totals || {};
@@ -1139,6 +1152,29 @@ export class PorbComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadCountryConsolidated(programId: number, centerId?: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.porbService.getCountryPercentageConsolidated(programId, centerId).subscribe({
+        next: (data) => {
+          if (centerId != null) {
+            this.centerCountryConsolidatedData = data;
+          } else {
+            this.countryConsolidatedData = data;
+          }
+          resolve();
+        },
+        error: () => {
+          if (centerId != null) {
+            this.centerCountryConsolidatedData = null;
+          } else {
+            this.countryConsolidatedData = null;
+          }
+          resolve();
+        },
+      });
+    });
+  }
+
   async selectSummaryAow(aow: any) {
     if (this.summarySelectedAow?.id === aow?.id && !this.summaryW3View) return;
     this.summaryW3View = false;
@@ -1168,6 +1204,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.cachedFormattedMelia = [];
       this.cachedFormattedPartners = [];
       this.cachedFormattedCross = [];
+      this.cachedFormattedCountryPercentage = [];
       this.cachedSummarySubtotals = {};
       this.cachedSummarySectionEmpty = {};
       return;
@@ -1215,6 +1252,11 @@ export class PorbComponent implements OnInit, OnDestroy {
       .filter((c: any) => (Number(c?.budget) || 0) > 0)
       .map((c: any) => ({ ...c, budget_fmt: this.formatCurrency(this.toNumber(c.budget)) }));
 
+    // Filtered + formatted Country Percentage
+    this.cachedFormattedCountryPercentage = (d.countryPercentage || [])
+      .filter((c: any) => (Number(c?.percentage) || 0) > 0)
+      .map((c: any) => ({ ...c, budget_fmt: this.formatCurrency(this.toNumber(c.budget)) }));
+
     // Subtotals
     const s = d.subtotals || {};
     this.cachedSummarySubtotals = {
@@ -1232,6 +1274,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       'MELIA Study': this.cachedFormattedMelia.length === 0,
       'Anaplan': !(d.anaplan || []).some((a: any) => this.toNumber(a.anaplan_budget) > 0),
       'Cross Cutting': this.cachedFormattedCross.length === 0,
+      'Countries Percentage': (d.countryPercentageCount || 0) === 0,
     };
   }
 
@@ -1243,7 +1286,27 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (!this.initiativeId) return;
     this.summaryW3Loading = true;
     try {
-      this.summaryW3Rows = await this.porbService.getBilaterals(this.initiativeId, undefined, true);
+      const raw = await this.porbService.getBilaterals(this.initiativeId, undefined, true);
+      // Consolidate duplicate projects by toc_id (or name fallback), summing budgets
+      const map = new Map<string, any>();
+      for (const row of (raw || [])) {
+        const key = row.toc_id || row.bilateral_name || '';
+        if (map.has(key)) {
+          const existing = map.get(key);
+          existing.bilateral_budget = (Number(existing.bilateral_budget) || 0) + (Number(row.bilateral_budget) || 0);
+          if (row.bilateral_assumption) {
+            const center = row.center_name || '';
+            existing._assumptions.push({ center, assumption: row.bilateral_assumption });
+          }
+        } else {
+          const assumptions: any[] = [];
+          if (row.bilateral_assumption) {
+            assumptions.push({ center: row.center_name || '', assumption: row.bilateral_assumption });
+          }
+          map.set(key, { ...row, _assumptions: assumptions });
+        }
+      }
+      this.summaryW3Rows = [...map.values()];
     } catch {
       this.summaryW3Rows = [];
     } finally {
@@ -1323,6 +1386,22 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.selectedExtraNavigation = null;
     this.syncSelectionToUrl();
     await this.loadW3CenterRows();
+  }
+
+  get isW3Empty(): boolean {
+    return this.w3CenterRows.length === 0;
+  }
+
+  private preloadW3CenterCount() {
+    if (!this.initiativeId || !this.selectedCenter) {
+      this.w3CenterRows = [];
+      return;
+    }
+    const centerId = this.getSelectedCenterId();
+    this.porbService.getBilaterals(this.initiativeId, centerId).then(
+      (bilaterals) => { this.w3CenterRows = Array.isArray(bilaterals) ? bilaterals : []; },
+      () => { this.w3CenterRows = []; }
+    );
   }
 
   private async loadW3CenterRows() {

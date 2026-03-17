@@ -26,6 +26,7 @@ import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { WorkPackage } from 'src/entities/workPackage.entity';
 import { CrossCutting } from 'src/entities/cross-cutting.entity';
 import { PorbCross } from 'src/entities/porb-cross.entity';
+import { PorbCountryPercentage } from 'src/entities/porb-country-percentage.entity';
 import { CenterStatus } from 'src/entities/center-status.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { Submission, SubmissionStatus } from 'src/entities/submission.entity';
@@ -75,6 +76,8 @@ export class PorbService {
     private readonly crossCuttingRepository: Repository<CrossCutting>,
     @InjectRepository(PorbCross)
     private readonly porbCrossRepository: Repository<PorbCross>,
+    @InjectRepository(PorbCountryPercentage)
+    private readonly porbCountryPercentageRepository: Repository<PorbCountryPercentage>,
     @InjectRepository(Submission)
     private readonly submissionRepository: Repository<Submission>,
     @InjectRepository(User)
@@ -277,16 +280,59 @@ export class PorbService {
     return { deleted: true };
   }
 
-  getBilaterals(program_id: number, _porb_aow_id?: number, center_id?: number, excludeZero = false) {
+  async getBilaterals(program_id: number, _porb_aow_id?: number, center_id?: number, excludeZero = false) {
     const where: any = { program_id };
     // W3/Bilateral is now center-level — porb_aow_id is ignored
     if (center_id != null) where.center_id = center_id;
-    if (excludeZero) where.bilateral_budget = Not(0);
 
-    return this.porbBilateralRepository.find({
+    const allRows = await this.porbBilateralRepository.find({
       where,
+      relations: ['center'],
       order: { bilateral_name: 'ASC', id: 'ASC' },
     });
+
+    // Dedup by (toc_id, center_id) — keep the row with budget, sum if both have budget
+    const dedupMap = new Map<string, PorbBilateral>();
+    const duplicateIds: number[] = [];
+    for (const row of allRows) {
+      const key = `${row.toc_id}::${row.center_id}`;
+      if (dedupMap.has(key)) {
+        const existing = dedupMap.get(key);
+        existing.bilateral_budget = (Number(existing.bilateral_budget) || 0) + (Number(row.bilateral_budget) || 0);
+        if (!existing.bilateral_assumption && row.bilateral_assumption) {
+          existing.bilateral_assumption = row.bilateral_assumption;
+        }
+        if (!existing.bilateral_outputs && row.bilateral_outputs) {
+          existing.bilateral_outputs = row.bilateral_outputs;
+        }
+        duplicateIds.push(row.id);
+      } else {
+        dedupMap.set(key, row);
+      }
+    }
+
+    // Clean up duplicates in the background
+    if (duplicateIds.length) {
+      const kept = [...dedupMap.values()];
+      Promise.all([
+        ...kept.map(r => this.porbBilateralRepository.update(r.id, {
+          bilateral_budget: r.bilateral_budget,
+          bilateral_assumption: r.bilateral_assumption,
+          bilateral_outputs: r.bilateral_outputs,
+        })),
+        this.porbBilateralRepository.delete(duplicateIds),
+      ]).catch(err => console.error('Bilateral dedup cleanup failed:', err));
+    }
+
+    let rows = [...dedupMap.values()];
+    if (excludeZero) {
+      rows = rows.filter(r => Number(r.bilateral_budget) !== 0);
+    }
+
+    return rows.map(row => ({
+      ...row,
+      center_name: (row as any).center?.name || '',
+    }));
   }
 
   getMelia(program_id: number, porb_aow_id?: number, center_id?: number) {
@@ -431,6 +477,17 @@ export class PorbService {
         melia: meliaRows.length,
         anaplan: anaplanRows.length,
         cross: crossRows.length,
+        countryPercentage: (() => {
+          const countries = new Set<string>();
+          for (const hlo of hlos) {
+            if (!hlo.hlo_geo) continue;
+            for (const c of hlo.hlo_geo.split(', ')) {
+              const trimmed = c.trim();
+              if (trimmed) countries.add(trimmed);
+            }
+          }
+          return countries.size;
+        })(),
       },
     };
   }
@@ -1037,6 +1094,116 @@ export class PorbService {
     });
   }
 
+  async getCountryPercentage(program_id: number, porb_aow_id?: number, center_id?: number) {
+    if (porb_aow_id == null || center_id == null) return [];
+
+    const hlos = await this.porbHloRepository.find({
+      where: { program_id, porb_aow_id, center_id },
+    });
+
+    const uniqueCountries = new Set<string>();
+    for (const hlo of hlos) {
+      if (!hlo.hlo_geo) continue;
+      const countries = hlo.hlo_geo.split(', ');
+      for (const c of countries) {
+        const trimmed = c.trim();
+        if (trimmed) uniqueCountries.add(trimmed);
+      }
+    }
+
+    if (uniqueCountries.size === 0) return [];
+
+    const savedRows = await this.porbCountryPercentageRepository.find({
+      where: { program_id, porb_aow_id, center_id },
+    });
+    const savedMap = new Map<string, PorbCountryPercentage>();
+    savedRows.forEach((row) => savedMap.set(row.country_name, row));
+
+    return Array.from(uniqueCountries)
+      .sort()
+      .map((country_name) => {
+        const saved = savedMap.get(country_name);
+        return {
+          program_id,
+          porb_aow_id,
+          center_id,
+          country_name,
+          percentage: saved?.percentage ?? null,
+        };
+      });
+  }
+
+  async updateCountryPercentage(
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      country_name: string;
+      percentage?: number | null;
+    },
+    reqUser?: { id: number },
+  ) {
+    // Cap individual percentage to 0-100
+    if (data.percentage != null) {
+      data.percentage = Math.min(100, Math.max(0, data.percentage));
+    }
+
+    // Validate total doesn't exceed 100% for this center+AOW
+    const allRows = await this.porbCountryPercentageRepository.find({
+      where: {
+        program_id: data.program_id,
+        porb_aow_id: data.porb_aow_id,
+        center_id: data.center_id,
+      },
+    });
+    const otherTotal = allRows
+      .filter((r) => r.country_name !== data.country_name)
+      .reduce((sum, r) => sum + (Number(r.percentage) || 0), 0);
+    if ((data.percentage || 0) + otherTotal > 100) {
+      throw new BadRequestException('Total percentage cannot exceed 100%.');
+    }
+
+    const existing = await this.porbCountryPercentageRepository.findOne({
+      where: {
+        program_id: data.program_id,
+        porb_aow_id: data.porb_aow_id,
+        center_id: data.center_id,
+        country_name: data.country_name,
+      },
+    });
+
+    if (existing) {
+      const oldPercentage = existing.percentage;
+
+      await this.porbCountryPercentageRepository.update(existing.id, {
+        percentage: data.percentage ?? null,
+      });
+
+      if (String(oldPercentage ?? '') !== String(data.percentage ?? '')) {
+        await this.logHistory({
+          initiative_id: data.program_id,
+          user_id: reqUser?.id,
+          item_name: data.country_name,
+          resource_property: 'Country Percentage',
+          old_value: String(oldPercentage ?? ''),
+          new_value: String(data.percentage ?? ''),
+          organization_id: data.center_id,
+        });
+      }
+
+      return this.porbCountryPercentageRepository.findOne({ where: { id: existing.id } });
+    }
+
+    const created = this.porbCountryPercentageRepository.create({
+      program_id: data.program_id,
+      porb_aow_id: data.porb_aow_id,
+      center_id: data.center_id,
+      country_name: data.country_name,
+      percentage: data.percentage ?? null,
+    });
+    return this.porbCountryPercentageRepository.save(created);
+  }
+
   private async logHistory(opts: {
     initiative_id: number;
     user_id?: number;
@@ -1582,23 +1749,13 @@ export class PorbService {
 
   private parseGeoFromLocation(node: any): string {
     const location = String(node?.location || '').toLowerCase();
-    const regions = Array.isArray(node?.regions) ? node.regions : [];
     const countries = Array.isArray(node?.countries) ? node.countries : [];
 
-    if (location === 'global') {
-      return 'Global';
-    }
-    if (location === 'region' || location === 'regional') {
-      const names = regions
-        .map((r: any) => r?.name || r?.acronym || r?.id)
-        .filter(Boolean);
-      return names.length ? `Region: ${names.join(', ')}` : 'Region';
-    }
-    if (location === 'country') {
+    if (location === 'country' && countries.length) {
       const names = countries
         .map((c: any) => c?.name || c?.isoAlpha2 || c?.code || c?.id)
         .filter(Boolean);
-      return names.length ? `Country: ${names.join(', ')}` : 'Country';
+      return names.length ? names.join(', ') : '';
     }
     return '';
   }
@@ -1615,12 +1772,6 @@ export class PorbService {
       if (geo) return geo;
     }
 
-    if (Array.isArray(item?.pooled_centers) && item.pooled_centers.length) {
-      return item.pooled_centers
-        .map((c: any) => c?.acronym || c?.name || c?.code || '')
-        .filter(Boolean)
-        .join(', ');
-    }
     return '';
   }
 
@@ -1767,7 +1918,46 @@ export class PorbService {
       ),
     };
 
-    return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals };
+    // Country percentage rows for this AOW (with computed budgets)
+    const cpRows = await this.porbCountryPercentageRepository.find({
+      where: { program_id, porb_aow_id },
+    });
+    // Compute pooled total per center for this AOW: HLO + Cross-cutting budgets
+    const pooledByCenter = new Map<number, number>();
+    for (const h of hlos) {
+      pooledByCenter.set(Number(h.center_id), (pooledByCenter.get(Number(h.center_id)) || 0) + (Number(h.hlo_budget) || 0));
+    }
+    if (isAow00) {
+      const allCrossRows = await this.porbCrossRepository.find({ where: { program_id, porb_aow_id } });
+      for (const c of allCrossRows) {
+        pooledByCenter.set(Number(c.center_id), (pooledByCenter.get(Number(c.center_id)) || 0) + (Number(c.budget) || 0));
+      }
+    }
+    // Compute total pooled funding for this AOW (across all centers)
+    let aowPooledTotal = 0;
+    for (const val of pooledByCenter.values()) {
+      aowPooledTotal += val;
+    }
+
+    // Aggregate budgets by country, then recalculate percentage against AOW total pooled
+    const countryBudgetMap = new Map<string, number>();
+    for (const row of cpRows) {
+      const pooled = pooledByCenter.get(Number(row.center_id)) || 0;
+      const budget = Math.round(((Number(row.percentage) || 0) * pooled) / 100);
+      countryBudgetMap.set(row.country_name, (countryBudgetMap.get(row.country_name) || 0) + budget);
+    }
+    const countryPercentage = Array.from(countryBudgetMap.entries())
+      .map(([country_name, budget]) => ({
+        country_name,
+        percentage: aowPooledTotal > 0
+          ? Math.round((budget / aowPooledTotal) * 10000) / 100
+          : 0,
+        budget,
+      }))
+      .sort((a, b) => a.country_name.localeCompare(b.country_name));
+    const countryPercentageCount = cpRows.length;
+
+    return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals, countryPercentageCount, countryPercentage };
   }
 
   async importTocToPorbTables(programId: number, officialCode: string, tocDataOverride?: any) {
@@ -4215,6 +4405,85 @@ export class PorbService {
   }
 
   /**
+   * Returns country-of-implementation budget totals aggregated across all AOWs.
+   * Each country's budget is computed as (percentage / 100) * pooled_total for that AOW+center.
+   * Pooled total = HLO budgets + Cross-cutting budgets per (AOW, center).
+   * Optionally filtered by center_id.
+   */
+  async getCountryPercentageConsolidated(
+    program_id: number,
+    center_id?: number,
+  ): Promise<{
+    countries: Array<{ country_name: string; percentage: number; totalBudget: number }>;
+    grandTotal: number;
+  }> {
+    const cpWhere: Record<string, any> = { program_id };
+    if (center_id != null) cpWhere.center_id = center_id;
+    const cpRows = await this.porbCountryPercentageRepository.find({
+      where: cpWhere,
+    });
+
+    if (!cpRows.length) {
+      return { countries: [], grandTotal: 0 };
+    }
+
+    // Get pooled totals per (aow, center): HLO + Cross-cutting budgets
+    const hloWhere: Record<string, any> = { program_id };
+    if (center_id != null) hloWhere.center_id = center_id;
+    const hlos = await this.porbHloRepository.find({ where: hloWhere });
+
+    const crossWhere: Record<string, any> = { program_id };
+    if (center_id != null) crossWhere.center_id = center_id;
+    const crosses = await this.porbCrossRepository.find({ where: crossWhere });
+
+    const pooledMap = new Map<string, number>();
+
+    for (const h of hlos) {
+      const key = `${h.porb_aow_id}_${h.center_id}`;
+      pooledMap.set(key, (pooledMap.get(key) || 0) + (Number(h.hlo_budget) || 0));
+    }
+    for (const c of crosses) {
+      const key = `${c.porb_aow_id}_${c.center_id}`;
+      pooledMap.set(key, (pooledMap.get(key) || 0) + (Number(c.budget) || 0));
+    }
+
+    // Compute total pooled funding across all AOWs/centers (the denominator for percentage)
+    let totalPooledFunding = 0;
+    for (const val of pooledMap.values()) {
+      totalPooledFunding += val;
+    }
+
+    // Compute budget for each country, aggregate by country name
+    const countryBudgetMap = new Map<string, number>();
+
+    for (const row of cpRows) {
+      const pooledKey = `${row.porb_aow_id}_${row.center_id}`;
+      const pooledTotal = pooledMap.get(pooledKey) || 0;
+      const pct = Number(row.percentage) || 0;
+      const budget = Math.round((pct * pooledTotal) / 100);
+      countryBudgetMap.set(
+        row.country_name,
+        (countryBudgetMap.get(row.country_name) || 0) + budget,
+      );
+    }
+
+    const grandTotal = Array.from(countryBudgetMap.values()).reduce((a, b) => a + b, 0);
+
+    // Recalculate percentage as country budget / total pooled funding
+    const countries = Array.from(countryBudgetMap.entries())
+      .map(([country_name, totalBudget]) => ({
+        country_name,
+        percentage: totalPooledFunding > 0
+          ? Math.round((totalBudget / totalPooledFunding) * 10000) / 100
+          : 0,
+        totalBudget,
+      }))
+      .sort((a, b) => a.country_name.localeCompare(b.country_name));
+
+    return { countries, grandTotal };
+  }
+
+  /**
    * Migration endpoint: merges bilateral rows that share (toc_id, center_id, program_id)
    * but differ by porb_aow_id. After migration, porb_aow_id is NULL on all bilateral rows.
    */
@@ -4500,6 +4769,30 @@ export class PorbService {
     }
   }
 
+  async cleanupHloGeo() {
+    // Clear non-country values: Global, Region:...
+    const cleared = await this.porbHloRepository
+      .createQueryBuilder()
+      .update()
+      .set({ hlo_geo: null })
+      .where(
+        `hlo_geo IS NOT NULL AND hlo_geo != '' AND (hlo_geo = 'Global' OR hlo_geo LIKE 'Region:%')`,
+      )
+      .execute();
+
+    // Strip "Country: " prefix from remaining rows
+    const stripped = await this.porbHloRepository.query(
+      `UPDATE porb_hlo SET hlo_geo = SUBSTRING(hlo_geo, 10)
+       WHERE hlo_geo LIKE 'Country:%'`,
+    );
+
+    return {
+      success: true,
+      rowsCleared: cleared.affected ?? 0,
+      rowsStrippedPrefix: stripped?.affectedRows ?? stripped?.[1] ?? 0,
+    };
+  }
+
   /**
    * Generates a standalone Anaplan-only Excel workbook and streams it as a download.
    */
@@ -4733,7 +5026,7 @@ export class PorbService {
     ]);
     wsData.push([
       null, null,
-      'Description', 'Type', 'Geographic Location', 'Target', 'Budget (USD)', 'Assumption',
+      'Description', 'Type', 'Country(ies) of implementation', 'Target', 'Budget (USD)', 'Assumption',
       null, null,
     ]);
 

@@ -184,6 +184,17 @@ export class PorbController {
     return this.porbService.getW3Consolidated(program_id);
   }
 
+  @Get('country-percentage-consolidated')
+  getCountryPercentageConsolidated(
+    @Query('program_id', ParseIntPipe) program_id: number,
+    @Query('center_id') center_id?: string,
+  ) {
+    return this.porbService.getCountryPercentageConsolidated(
+      program_id,
+      this.parseOptionalNumber(center_id),
+    );
+  }
+
   @Get('anaplan')
   getAnaplan(
     @Query('program_id', ParseIntPipe) program_id: number,
@@ -207,6 +218,46 @@ export class PorbController {
       program_id,
       this.parseOptionalNumber(porb_aow_id),
       this.parseOptionalNumber(center_id),
+    );
+  }
+
+  @Get('country-percentage')
+  getCountryPercentage(
+    @Query('program_id', ParseIntPipe) program_id: number,
+    @Query('porb_aow_id') porb_aow_id?: string,
+    @Query('center_id') center_id?: string,
+  ) {
+    return this.porbService.getCountryPercentage(
+      program_id,
+      this.parseOptionalNumber(porb_aow_id),
+      this.parseOptionalNumber(center_id),
+    );
+  }
+
+  @Patch('country-percentage')
+  updateCountryPercentage(
+    @Body()
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      country_name: string;
+      percentage?: number | null;
+    },
+    @Request() req,
+  ) {
+    return this.porbService.updateCountryPercentage(
+      {
+        program_id: Number(data.program_id),
+        porb_aow_id: Number(data.porb_aow_id),
+        center_id: Number(data.center_id),
+        country_name: String(data.country_name),
+        percentage:
+          data.percentage != null && data.percentage !== ('' as any)
+            ? Number(data.percentage)
+            : null,
+      },
+      req.user,
     );
   }
 
@@ -382,6 +433,13 @@ export class PorbController {
   @Post('dedup-contracted-partners')
   dedupContractedPartners() {
     return this.porbService.dedupContractedPartners();
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('cleanup-hlo-geo')
+  cleanupHloGeo() {
+    return this.porbService.cleanupHloGeo();
   }
 
   @Post('submit/:program_id')

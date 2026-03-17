@@ -362,6 +362,12 @@ export class PorbService {
     return this.http.get<any>(`${environment.api_url}/porb/w3-consolidated`, { params });
   }
 
+  getCountryPercentageConsolidated(programId: number, centerId?: number) {
+    let params = new HttpParams().set("program_id", String(programId));
+    if (centerId != null) params = params.set("center_id", String(centerId));
+    return this.http.get<any>(`${environment.api_url}/porb/country-percentage-consolidated`, { params });
+  }
+
   async exportAnaplanExcel(programId: number) {
     const response = await firstValueFrom(
       this.http.get(`${environment.api_url}/porb/excel/${programId}/anaplan`, {
@@ -406,8 +412,30 @@ export class PorbService {
     saveAs(blob, filename);
   }
 
+  async getCountryPercentage(
+    programId: number,
+    porbAowId?: number,
+    centerId?: number
+  ) {
+    return this.getByFilter("country-percentage", programId, porbAowId, centerId);
+  }
+
+  async updateCountryPercentage(data: {
+    program_id: number;
+    porb_aow_id: number;
+    center_id: number;
+    country_name: string;
+    percentage?: number | null;
+  }) {
+    return firstValueFrom(
+      this.http
+        .patch(`${environment.api_url}/porb/country-percentage`, data)
+        .pipe(map((d: any) => d))
+    ).catch(() => false);
+  }
+
   private async getByFilter(
-    section: "hlo" | "partner" | "bilateral" | "melia" | "anaplan" | "cross" | "consolidation" | "validation" | "validation-summary",
+    section: "hlo" | "partner" | "bilateral" | "melia" | "anaplan" | "cross" | "consolidation" | "validation" | "validation-summary" | "country-percentage",
     programId: number,
     porbAowId?: number,
     centerId?: number

@@ -1,0 +1,73 @@
+<div class="table-box">
+  <div class="table-tools" data-tour-anchor="porb-section-tools">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search Country"
+      [(ngModel)]="search"
+    />
+    <button type="button" class="export-btn" (click)="export()" [disabled]="!rows.length">
+      Export Excel
+    </button>
+  </div>
+
+  <div class="table-scroll" *ngIf="rows.length">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th style="width: 55%">Country</th>
+          <th class="num-cell" style="width: 22%">Percentage (%)</th>
+          <th class="num-cell" style="width: 23%">Budget (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let row of filteredRows"
+          [class.row-error]="isOverLimit"
+        >
+          <td class="row-title">{{ row.country_name }}</td>
+          <td class="num-cell">
+            <input
+              type="number"
+              class="percentage-input"
+              [ngModel]="row.percentage"
+              (ngModelChange)="row.percentage = $event"
+              (blur)="saveRow(row)"
+              [disabled]="!canEdit"
+              min="0"
+              max="100"
+              step="0.01"
+              placeholder="0"
+              [class.saving]="savingIds.has(row.country_name)"
+              [class.save-error]="errorIds.has(row.country_name)"
+              [class.save-success]="savedIds.has(row.country_name)"
+            />
+          </td>
+          <td class="num-cell">{{ getFormattedBudget(row) }}</td>
+        </tr>
+
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="3">No countries found for the current search.</td>
+        </tr>
+
+        <tr class="subtotal-row" *ngIf="filteredRows.length">
+          <td class="subtotal-label">Total</td>
+          <td class="num-cell" [class.over-limit]="isOverLimit">
+            {{ totalPercentage | number:'1.0-2' }}%
+            <span *ngIf="isOverLimit" class="over-limit-badge" matTooltip="Total percentage exceeds 100%">!</span>
+          </td>
+          <td class="num-cell">{{ totalBudget }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="validation-warning" *ngIf="isOverLimit">
+      Total percentage exceeds 100%. Please adjust values.
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="!rows.length">
+    <mat-icon>info_outline</mat-icon>
+    <span>No countries found in HLO data for this center and work package.</span>
+  </div>
+</div>

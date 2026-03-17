@@ -132,10 +132,16 @@ All PORB Excel sheets call `protectAndHideIds()` to hide ID columns and apply sh
 `header.component.html` includes a `<span class="test-env-badge">Testing Environment</span>` in the header's right section. This is a static orange badge meant for test/staging deployments. Remove or conditionalize it (e.g., via `environment.ts`) before deploying to production.
 
 ### W3/Bilateral Is Center-Level
-W3/Bilateral is NOT a per-AOW section — it lives at the center level as a pseudo-AOW button in Level 2 nav. `isW3View` flag controls the view state. When active, no consolidation sidebar or Level 3 section nav is shown. `porb_bilateral.porb_aow_id` is NULL for all rows. Summary consolidated shows a full-width W3/Bilateral per-center table below Anaplan (centers with zero budget are hidden, center names left-aligned). Summary detailed has a W3/Bilateral button in AOW nav showing read-only table (exclude_zero filtered). Migration: `POST /porb/migrate-bilateral-to-center` or `back-end/migrate-bilateral-to-center.sql`.
+W3/Bilateral is NOT a per-AOW section — it lives at the center level as a pseudo-AOW button in Level 2 nav. `isW3View` flag controls the view state. When active, no consolidation sidebar or Level 3 section nav is shown. `porb_bilateral.porb_aow_id` is NULL for all rows. Summary consolidated shows a full-width W3/Bilateral per-center table below Anaplan (centers with zero budget are hidden, center names left-aligned). Summary detailed has a W3/Bilateral button in AOW nav showing consolidated read-only table (duplicates merged by `toc_id`, budgets summed, assumptions grouped by center). The W3/Bilateral button is disabled (dimmed + tooltip) when no W3 data exists for the current center — `preloadW3CenterCount()` fetches the count on center selection. `getBilaterals()` in the backend auto-deduplicates rows by `(toc_id, center_id)` at read time and cleans up DB duplicates in the background. Migration: `POST /porb/migrate-bilateral-to-center` or `back-end/migrate-bilateral-to-center.sql`.
 
 ### PORB Section Order
-`baseExtraNavigationItems` order: Pool funding HLO → Partners → MELIA Study → Anaplan. W3/Bilateral is separate (center-level nav, not in this array).
+`baseExtraNavigationItems` order: Pool funding HLO → Partners → MELIA Study → Anaplan → Countries Percentage. W3/Bilateral is separate (center-level nav, not in this array).
+
+### Countries Percentage Section
+New budget section showing countries extracted from HLO `hlo_geo` field per center+AOW. Users input a percentage per country; budget is computed on the fly as `percentage × pooledTotal / 100` (not stored in DB). Entity `porb_country_percentage` stores: program_id, porb_aow_id, center_id, country_name, percentage. Total percentage per center+AOW is capped at 100% (frontend + backend validation). Consolidated views recalculate percentage as `country_budget / total_pooled_funding × 100`. Summary detailed view aggregates by country across centers. Section disabled when no countries in HLO data.
+
+### HLO Geographic Location (Countries Only)
+`hlo_geo` column stores only country names (comma-separated). Global and regional location types are ignored during TOC import. Column renamed to "Country(ies) of implementation" in all views. Admin endpoint `POST /porb/cleanup-hlo-geo` clears non-country values and strips "Country: " prefix from existing data.
 
 ## CI/CD
 - GitHub Actions triggers Jenkins on push to `development` branch

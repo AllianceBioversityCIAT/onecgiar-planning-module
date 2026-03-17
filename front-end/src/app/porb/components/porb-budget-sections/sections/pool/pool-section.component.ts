@@ -88,7 +88,7 @@ export class PoolSectionComponent implements OnChanges {
         "HLO Name",
         "Description",
         "Type",
-        "Geo",
+        "Country(ies) of implementation",
         "Target",
         "Budget",
       ],

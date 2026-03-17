@@ -120,6 +120,7 @@ import { MeliaSectionComponent } from "./porb/components/porb-budget-sections/se
 import { AnaplanSectionComponent } from "./porb/components/porb-budget-sections/sections/anaplan/anaplan-section.component";
 import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sections/shared/budget-and-assumption/budget-and-assumption.component";
 import { CrossSectionComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-section.component";
+import { CountryPercentageSectionComponent } from "./porb/components/porb-budget-sections/sections/country-percentage/country-percentage-section.component";
 import { ClearBudgetConfirmDialogComponent } from "./porb/components/porb-budget-sections/shared/clear-budget-confirm-dialog.component";
 import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.component";
 import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
@@ -208,6 +209,7 @@ import { ValidationErrorsDialogComponent } from "./porb/components/validation-er
         AnaplanSectionComponent,
         BudgetAndAssumptionComponent,
         CrossSectionComponent,
+        CountryPercentageSectionComponent,
         ClearBudgetConfirmDialogComponent,
         PorbTourComponent,
         StanderdCrossCuttingComponent,
