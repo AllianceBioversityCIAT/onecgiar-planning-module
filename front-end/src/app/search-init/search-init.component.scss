@@ -338,33 +338,62 @@
 // .risk-management-export-icon {
 // }
 
-// My Programs checkbox styling (Angular Material 19)
-:host ::ng-deep .mat-mdc-checkbox {
-  --mdc-checkbox-selected-checkmark-color: #ffffff;
-  --mdc-checkbox-selected-focus-icon-color: #5569dd;
-  --mdc-checkbox-selected-hover-icon-color: #5569dd;
-  --mdc-checkbox-selected-icon-color: #5569dd;
-  --mdc-checkbox-selected-pressed-icon-color: #5569dd;
-  --mdc-checkbox-unselected-focus-icon-color: #b9b9b9;
-  --mdc-checkbox-unselected-hover-icon-color: #888;
-  --mdc-checkbox-unselected-icon-color: #b9b9b9;
-  --mdc-checkbox-unselected-pressed-icon-color: #888;
-  --mdc-checkbox-state-layer-size: 40px;
+// My Programs toggle
+.my-programs-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
 
-  .mdc-checkbox {
-    padding: 0;
-    margin: 0;
-    background-color: transparent;
+.custom-checkbox {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 
-    .mdc-checkbox__background {
-      width: 18px;
-      height: 18px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-width: 2px;
-      border-style: solid;
-      border-radius: 3px;
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #b9b9b9;
+    border-radius: 3px;
+    background-color: #ffffff;
+    transition: all 0.15s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      display: none;
+      left: 6px;
+      top: 2px;
+      width: 5px;
+      height: 10px;
+      border: solid #ffffff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+  }
+
+  &:hover .checkmark {
+    border-color: #888;
+  }
+
+  input:checked ~ .checkmark {
+    background-color: #5569dd;
+    border-color: #5569dd;
+
+    &::after {
+      display: block;
     }
   }
 }
