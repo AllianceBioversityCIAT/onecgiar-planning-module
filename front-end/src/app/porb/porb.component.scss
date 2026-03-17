@@ -143,7 +143,9 @@
 // Nav icons (check / error)
 .nav-icon {
   font-size: 1.6rem;
-  vertical-align: middle;
+  width: 1.6rem;
+  height: 1.6rem;
+  line-height: 1;
   margin-left: 0.2rem;
 }
 
@@ -153,6 +155,14 @@
 
 .nav-icon--error {
   color: #dc3545;
+}
+
+// Validation mismatch highlight on consolidation cells
+.validation-mismatch {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  font-weight: 700;
+  border-bottom: 2px solid #dc2626 !important;
 }
 
 // Summary view

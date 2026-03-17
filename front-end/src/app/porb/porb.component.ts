@@ -51,7 +51,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   meliaRows: any[] = [];
   anaplanRows: any[] = [];
   crossRows: any[] = [];
-  sectionValidation: Record<string, { hasError: boolean; message: string }> = {};
+  sectionValidation: Record<string, { hasError: boolean; message: string; partnerMismatch?: boolean; pooledMismatch?: boolean }> = {};
   centerErrorCodes: string[] = [];
   aowErrorIds: number[] = [];
   consolidationIndicatorsData: Array<{ title: string; target: number; budget: number }> = [];
@@ -158,19 +158,25 @@ export class PorbComponent implements OnInit, OnDestroy {
       anchorId: "porb-center-tabs",
       title: "Center Navigation",
       description:
-        "Select the center you are budgeting for. The Summary tab shows overall consolidation.",
+        "Select the center you are budgeting for. The Summary tab shows overall consolidation. Error and check icons indicate status.",
+    },
+    {
+      anchorId: "porb-center-view-mode",
+      title: "Center View Mode",
+      description:
+        "Toggle between Consolidated (read-only overview of all AOWs for this center) and Budget Entry (edit budgets per AOW and section).",
     },
     {
       anchorId: "porb-aow-tabs",
       title: "AOW Navigation",
       description:
-        "Select an AOW. Errors on AOW items indicate budget/assumption issues that need review.",
+        "Select an AOW to view its budget sections. W3/Bilateral is a separate center-level view. Error icons indicate budget/assumption issues.",
     },
     {
       anchorId: "porb-section-tabs",
       title: "Budget Sections",
       description:
-        "Pick a section (HLO, Partners, W3, MELIA, Anaplan, Cross Cutting) to open the editable budget table.",
+        "Pick a section (HLO, Partners, MELIA, Anaplan, Cross Cutting) to open the editable budget table. Disabled sections have no data.",
     },
     {
       anchorId: "porb-consolidation",
@@ -370,9 +376,18 @@ export class PorbComponent implements OnInit, OnDestroy {
   async onSubmitClicked() {
     // Block submission if validation errors exist (Rules 12, 13)
     if (this.centerErrorCodes.length > 0 || this.aowErrorIds.length > 0) {
-      this.toastr.error(
-        'Cannot submit: there are validation errors that must be resolved first.'
-      );
+      this.dialog.open(ValidationErrorsDialogComponent, {
+        data: {
+          title: 'Cannot Submit',
+          message: 'There are validation errors that must be resolved before submitting.',
+          centerErrorCodes: this.centerErrorCodes,
+          centers: this.centers,
+          aowErrorIds: this.aowErrorIds,
+          aows: this.aows,
+        },
+        width: '600px',
+        autoFocus: false,
+      });
       return;
     }
 
@@ -1364,11 +1379,12 @@ export class PorbComponent implements OnInit, OnDestroy {
       if (!this.isSelectedCenterCompleted && this.hasSelectedCenterErrors) {
         this.dialog.open(ValidationErrorsDialogComponent, {
           data: {
-            centerName: this.selectedCenter?.acronym || this.selectedCenter?.name,
+            title: 'Cannot Mark as Complete',
+            message: `${this.selectedCenter?.acronym || this.selectedCenter?.name} has validation errors that must be resolved first.`,
             aowErrorIds: this.aowErrorIds,
             aows: this.aows,
           },
-          width: '520px',
+          width: '600px',
           autoFocus: false,
         });
         this.centerStatusUpdating = false;

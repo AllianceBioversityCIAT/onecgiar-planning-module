@@ -78,7 +78,7 @@
         </div>
 
         <!-- Summary view mode nav -->
-        <nav class="porb-nav porb-nav--summary-mode" *ngIf="!summaryLoading">
+        <nav class="porb-nav porb-nav--summary-mode" data-tour-anchor="porb-summary-view-mode" *ngIf="!summaryLoading">
           <button type="button" class="porb-nav__item"
             [class.porb-nav__item--active]="summaryViewMode === 'consolidated'"
             (click)="summaryViewMode = 'consolidated'">
@@ -548,7 +548,7 @@
       </div>
 
       <!-- Center view mode toggle -->
-      <nav class="porb-nav porb-nav--summary-mode">
+      <nav class="porb-nav porb-nav--summary-mode" data-tour-anchor="porb-center-view-mode">
         <button type="button" class="porb-nav__item"
           [class.porb-nav__item--active]="centerViewMode === 'consolidated'"
           (click)="onCenterViewModeChange('consolidated')">
@@ -612,9 +612,9 @@
                     <th colspan="2">Others Outputs</th>
                     <th rowspan="2">Cross-<br>Cutting</th>
                     <th rowspan="2">Total Pooled<br>Funding</th>
-                    <th rowspan="2" class="other-budgets-group">Partners</th>
+                    <th rowspan="2" class="other-budgets-group">Anaplan</th>
+                    <th rowspan="2">Partners</th>
                     <th rowspan="2">MELIA</th>
-                    <th rowspan="2">Anaplan</th>
                   </tr>
                   <tr>
                     <th>Target</th><th>Budget</th>
@@ -627,9 +627,9 @@
                   <tr>
                     <th>Cross-<br>Cutting</th>
                     <th>Total Pooled<br>Funding</th>
-                    <th class="other-budgets-group">Partners</th>
+                    <th class="other-budgets-group">Anaplan</th>
+                    <th>Partners</th>
                     <th>MELIA</th>
-                    <th>Anaplan</th>
                   </tr>
                 </ng-container>
               </thead>
@@ -642,10 +642,13 @@
                     </ng-container>
                   </ng-container>
                   <td>{{ consolidationBudgetSummary.crossCutting }}</td>
-                  <td>{{ consolidationBudgetSummary.pooledTotal }}</td>
-                  <td class="other-budgets-group">{{ consolidationBudgetSummary.partners }}</td>
+                  <td [class.validation-mismatch]="sectionValidation['Anaplan']?.pooledMismatch"
+                    [matTooltip]="sectionValidation['Anaplan']?.pooledMismatch ? 'Total Pooled Funding does not match Anaplan budget' : ''">{{ consolidationBudgetSummary.pooledTotal }}</td>
+                  <td class="other-budgets-group" [class.validation-mismatch]="sectionValidation['Anaplan']?.pooledMismatch"
+                    [matTooltip]="sectionValidation['Anaplan']?.pooledMismatch ? 'Anaplan budget does not match Total Pooled Funding' : ''">{{ consolidationBudgetSummary.anaplan }}</td>
+                  <td [class.validation-mismatch]="sectionValidation['Anaplan']?.partnerMismatch"
+                    [matTooltip]="sectionValidation['Anaplan']?.partnerMismatch ? 'Partners budget does not match Anaplan Collaborators non-CGIAR Centers' : ''">{{ consolidationBudgetSummary.partners }}</td>
                   <td>{{ consolidationBudgetSummary.melia }}</td>
-                  <td>{{ consolidationBudgetSummary.anaplan }}</td>
                 </tr>
               </tbody>
             </table>

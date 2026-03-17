@@ -104,8 +104,11 @@ Center view has a Consolidated/Budget Entry toggle (`centerViewMode`). **Consoli
 ### Summary Assumption Icon
 `SummaryAssumptionIconComponent` opens a click-to-view dialog with assumption text. Always visible — dimmed when no assumption, clickable when present. Accepts single `[assumption]` string or `[assumptions]` array of `{center, assumption}` entries for multi-center items. `SummaryAssumptionDialogComponent` renders the dialog. Backend enriches HLO, MELIA, and bilateral rows with `center_name` in `getSummaryAowDetail()`.
 
-### Mark Complete Validation
-"Mark Complete" button is always visible when user has edit access. If validation errors exist, clicking opens `ValidationErrorsDialogComponent` listing which AOWs have errors, with a hint to follow error icons. Cross Cutting and Anaplan sections are always enabled on center level.
+### Validation Error Dialog
+`ValidationErrorsDialogComponent` is used by both "Mark Complete" and "Submit" buttons. Shows centers with errors (submit only) and AOWs with errors, with a hint to follow error icons. Button is always visible; errors shown in modal on click. Cross Cutting and Anaplan sections are always enabled on center level.
+
+### Consolidation Validation Highlights
+Anaplan validation returns `partnerMismatch` and `pooledMismatch` flags. Consolidation sidebar highlights mismatched cells (`.validation-mismatch` class) with tooltips explaining the error. Only the specific cells involved in each mismatch are highlighted.
 
 ### MELIA Dedup
 MELIA import dedup key uses `melia_name::center_id::aow_id` (not `toc_id`) to prevent duplicates when TOC API returns different UUIDs for the same study. Migration endpoint: `POST /porb/migrate-melia-dedup`.

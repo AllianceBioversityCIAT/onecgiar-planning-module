@@ -616,7 +616,7 @@ export class PorbService {
 
   async getValidation(program_id: number, porb_aow_id?: number, center_id?: number) {
     const sectionNames = ['Pool funding HLO', 'Partners', 'MELIA Study', 'Anaplan', 'Cross Cutting'];
-    const emptyResult: Record<string, { hasError: boolean; message: string }> = {};
+    const emptyResult: Record<string, { hasError: boolean; message: string; partnerMismatch?: boolean; pooledMismatch?: boolean }> = {};
     sectionNames.forEach((name) => {
       emptyResult[name] = { hasError: false, message: '' };
     });
@@ -758,6 +758,8 @@ export class PorbService {
     emptyResult['Anaplan'] = {
       hasError: anaplanMessages.length > 0,
       message: anaplanMessages.join(' '),
+      partnerMismatch: partnerBudgetTotal !== collaboratorsBudget,
+      pooledMismatch: totalAnaplan !== totalHlo + totalCross,
     };
     const crossMissing = crossRows.filter(
       (row) => parseBudget(row?.budget) > 0 && !hasAssumption(row?.assumption),

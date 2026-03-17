@@ -7,24 +7,25 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     <div class="dialog-wrapper">
       <div class="dialog-header">
         <mat-icon class="header-icon">warning</mat-icon>
-        <h2>Cannot Mark as Complete</h2>
+        <h2>{{ data.title || 'Cannot Mark as Complete' }}</h2>
       </div>
 
       <div class="dialog-body">
-        <p class="intro">
-          <strong>{{ data.centerName }}</strong> has validation errors that must be resolved first.
-        </p>
+        <p class="intro">{{ data.message }}</p>
 
-        <div class="error-cards" *ngIf="errorAows.length">
-          <div class="error-card" *ngFor="let aow of errorAows">
-            <mat-icon class="card-icon">error</mat-icon>
-            <span>{{ aow.code || aow.aow_acrnum }}: {{ aow.title || aow.aow_name }}</span>
+        <div class="error-section" *ngFor="let group of errorGroups">
+          <div class="error-section-title" *ngIf="group.label">{{ group.label }}</div>
+          <div class="error-cards">
+            <div class="error-card" *ngFor="let item of group.items">
+              <mat-icon class="card-icon">error</mat-icon>
+              <span>{{ item }}</span>
+            </div>
           </div>
         </div>
 
         <div class="hint-box">
           <mat-icon>lightbulb</mat-icon>
-          <span>Look for the <strong>error icons (!)</strong> next to AOWs and budget sections to locate and fix each issue.</span>
+          <span>Look for the <strong>error icons (!)</strong> next to centers, AOWs, and budget sections to locate and fix each issue.</span>
         </div>
       </div>
 
@@ -47,16 +48,16 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
     .dialog-header h2 {
       margin: 0;
-      font-size: 1.25rem;
+      font-size: 1.6rem;
       font-weight: 600;
       color: #1a1a1a;
     }
 
     .header-icon {
       color: #e65100;
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
     }
 
     .dialog-body {
@@ -64,58 +65,69 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
     }
 
     .intro {
-      font-size: 0.95rem;
+      font-size: 1.15rem;
       color: #333;
       line-height: 1.6;
-      margin: 0 0 1.25rem;
+      margin: 0 0 1.5rem;
     }
 
     .error-cards {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
     }
 
     .error-card {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      padding: 0.6rem 0.85rem;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
       background: #fef2f2;
       border-left: 3px solid #dc2626;
       border-radius: 4px;
-      font-size: 0.9rem;
+      font-size: 1.1rem;
       color: #1a1a1a;
     }
 
     .card-icon {
       color: #dc2626;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
       flex-shrink: 0;
     }
 
     .hint-box {
       display: flex;
       align-items: flex-start;
-      gap: 0.6rem;
-      padding: 0.85rem 1rem;
+      gap: 0.75rem;
+      padding: 1rem 1.15rem;
       background: #f0f7ff;
       border-radius: 6px;
-      font-size: 0.88rem;
+      font-size: 1.05rem;
       color: #334155;
-      line-height: 1.55;
+      line-height: 1.6;
     }
 
     .hint-box mat-icon {
       color: #2563eb;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
       flex-shrink: 0;
-      margin-top: 1px;
+      margin-top: 2px;
+    }
+
+    .error-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .error-section-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: #1a1a1a;
+      margin-bottom: 0.5rem;
     }
 
     .dialog-footer {
@@ -126,12 +138,46 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
   standalone: false
 })
 export class ValidationErrorsDialogComponent {
-  errorAows: any[] = [];
+  errorGroups: { label: string; items: string[] }[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<ValidationErrorsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { centerName: string; aowErrorIds: number[]; aows: any[] }
+    @Inject(MAT_DIALOG_DATA) public data: {
+      title?: string;
+      message: string;
+      centerName?: string;
+      aowErrorIds?: number[];
+      aows?: any[];
+      centerErrorCodes?: string[];
+      centers?: any[];
+    }
   ) {
-    this.errorAows = (data.aows || []).filter((aow: any) => data.aowErrorIds.includes(aow.id));
+    // Center errors
+    if (data.centerErrorCodes?.length && data.centers?.length) {
+      const codes = data.centerErrorCodes!;
+      const errorCenters = data.centers.filter((c: any) =>
+        codes.includes(String(c.code))
+      );
+      if (errorCenters.length) {
+        this.errorGroups.push({
+          label: errorCenters.length > 1 ? 'Centers with errors' : '',
+          items: errorCenters.map((c: any) => c.acronym || c.name || `Center ${c.code}`),
+        });
+      }
+    }
+
+    // AOW errors
+    if (data.aowErrorIds?.length && data.aows?.length) {
+      const ids = data.aowErrorIds!;
+      const errorAows = data.aows.filter((aow: any) => ids.includes(aow.id));
+      if (errorAows.length) {
+        this.errorGroups.push({
+          label: this.errorGroups.length ? 'Areas of Work with errors' : '',
+          items: errorAows.map((aow: any) =>
+            `${aow.code || aow.aow_acrnum}: ${aow.title || aow.aow_name}`
+          ),
+        });
+      }
+    }
   }
 }
