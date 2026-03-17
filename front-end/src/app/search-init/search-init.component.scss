@@ -338,7 +338,7 @@
 // .risk-management-export-icon {
 // }
 
-// My Programs checkbox styling (Angular Material 19 CSS custom properties)
+// My Programs checkbox styling (Angular Material 19)
 :host ::ng-deep .mat-mdc-checkbox {
   --mdc-checkbox-selected-checkmark-color: #ffffff;
   --mdc-checkbox-selected-focus-icon-color: #5569dd;
@@ -346,15 +346,27 @@
   --mdc-checkbox-selected-icon-color: #5569dd;
   --mdc-checkbox-selected-pressed-icon-color: #5569dd;
   --mdc-checkbox-unselected-focus-icon-color: #b9b9b9;
-  --mdc-checkbox-unselected-hover-icon-color: #999;
+  --mdc-checkbox-unselected-hover-icon-color: #888;
   --mdc-checkbox-unselected-icon-color: #b9b9b9;
-  --mdc-checkbox-unselected-pressed-icon-color: #999;
-  --mdc-checkbox-selected-focus-state-layer-color: #5569dd;
-  --mdc-checkbox-selected-hover-state-layer-color: #5569dd;
-  --mdc-checkbox-selected-pressed-state-layer-color: #5569dd;
-  --mdc-checkbox-unselected-focus-state-layer-color: #b9b9b9;
-  --mdc-checkbox-unselected-hover-state-layer-color: #b9b9b9;
-  --mdc-checkbox-unselected-pressed-state-layer-color: #b9b9b9;
+  --mdc-checkbox-unselected-pressed-icon-color: #888;
+  --mdc-checkbox-state-layer-size: 40px;
+
+  .mdc-checkbox {
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+
+    .mdc-checkbox__background {
+      width: 18px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-width: 2px;
+      border-style: solid;
+      border-radius: 3px;
+    }
+  }
 }
 
 :host {
