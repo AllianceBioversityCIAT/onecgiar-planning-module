@@ -173,6 +173,24 @@ export class PorbService {
     ).catch(() => null);
   }
 
+  async deleteHlo(id: number) {
+    return firstValueFrom(
+      this.http.delete(`${environment.api_url}/porb/hlo/${id}`).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async deleteMelia(id: number) {
+    return firstValueFrom(
+      this.http.delete(`${environment.api_url}/porb/melia/${id}`).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async deleteBilateral(id: number) {
+    return firstValueFrom(
+      this.http.delete(`${environment.api_url}/porb/bilateral/${id}`).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
   async updateBilateral(
     id: number,
     data: { bilateral_budget?: number | null; bilateral_assumption?: string }

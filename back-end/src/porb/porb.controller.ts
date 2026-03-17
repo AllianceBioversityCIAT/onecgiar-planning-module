@@ -293,6 +293,21 @@ export class PorbController {
     return this.porbService.deleteUnknownPartner(id);
   }
 
+  @Delete('hlo/:id')
+  deleteTocDeletedHlo(@Param('id', ParseIntPipe) id: number) {
+    return this.porbService.deleteTocDeletedHlo(id);
+  }
+
+  @Delete('melia/:id')
+  deleteTocDeletedMelia(@Param('id', ParseIntPipe) id: number) {
+    return this.porbService.deleteTocDeletedMelia(id);
+  }
+
+  @Delete('bilateral/:id')
+  deleteTocDeletedBilateral(@Param('id', ParseIntPipe) id: number) {
+    return this.porbService.deleteTocDeletedBilateral(id);
+  }
+
   @Patch('partner/:id')
   updatePartner(
     @Param('id', ParseIntPipe) id: number,

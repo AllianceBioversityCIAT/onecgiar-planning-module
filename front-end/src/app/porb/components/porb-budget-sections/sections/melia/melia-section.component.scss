@@ -114,13 +114,13 @@
     white-space: normal;
   }
 
-  tr.deleted-row td {
-    background: #fff4e5;
-    color: #9a3412;
-  }
-
   tr.row-error td {
     background: #fff3f3;
+  }
+
+  td.deleted-cell {
+    background: #fff4e5 !important;
+    color: #9a3412 !important;
   }
 }
 
@@ -142,22 +142,46 @@
   z-index: 3;
 }
 
-.row-deleted-icon {
+// New row highlight (recently added from TOC import)
+tr.new-row td {
+  border-left: 3px solid #22c55e;
+}
+
+// Delete button for TOC-deleted rows
+.row-delete-btn {
   position: absolute;
-  right: -4.2rem;
+  right: -3.8rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  min-width: 2.4rem;
+  border: none;
   border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #f59e0b;
-  color: #ffffff;
-  font-size: 1rem;
-  font-weight: 700;
+  cursor: pointer;
   z-index: 3;
+  padding: 0;
+  transition: background 0.2s;
+
+  mat-icon, .mat-icon {
+    font-size: 1.4rem;
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  &:hover {
+    background: #dc2626;
+  }
+
+  &:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
 }
 
 .budget-cell-with-error {

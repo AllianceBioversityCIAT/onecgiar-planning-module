@@ -273,10 +273,40 @@ export class PorbService {
   async deleteUnknownPartner(id: number) {
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) throw new NotFoundException('Partner not found');
-    if (!partner.is_unknown)
-      throw new BadRequestException('Only unknown partners can be deleted');
+    if (!partner.is_unknown && !partner.toc_is_deleted)
+      throw new BadRequestException('Can only delete unknown or TOC-deleted partners');
 
+    if (partner.toc_is_deleted) {
+      await this.porbContractedPartnerRepository.delete({ porb_partner_id: id });
+    }
     await this.porbPartnerRepository.remove(partner);
+    return { deleted: true };
+  }
+
+  async deleteTocDeletedHlo(id: number) {
+    const row = await this.porbHloRepository.findOneBy({ id });
+    if (!row) throw new NotFoundException('HLO not found');
+    if (!row.toc_is_deleted)
+      throw new BadRequestException('Can only delete items removed from TOC');
+    await this.porbHloRepository.remove(row);
+    return { deleted: true };
+  }
+
+  async deleteTocDeletedMelia(id: number) {
+    const row = await this.porbMeliaRepository.findOneBy({ id });
+    if (!row) throw new NotFoundException('MELIA not found');
+    if (!row.toc_is_deleted)
+      throw new BadRequestException('Can only delete items removed from TOC');
+    await this.porbMeliaRepository.remove(row);
+    return { deleted: true };
+  }
+
+  async deleteTocDeletedBilateral(id: number) {
+    const row = await this.porbBilateralRepository.findOneBy({ id });
+    if (!row) throw new NotFoundException('Bilateral not found');
+    if (!row.toc_is_deleted)
+      throw new BadRequestException('Can only delete items removed from TOC');
+    await this.porbBilateralRepository.remove(row);
     return { deleted: true };
   }
 

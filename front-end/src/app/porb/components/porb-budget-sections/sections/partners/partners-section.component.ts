@@ -180,6 +180,39 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
     return span;
   }
 
+  isNewRow(row: any): boolean {
+    if (!row?.created_at) return false;
+    const created = new Date(row.created_at);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return created > sevenDaysAgo;
+  }
+
+  async deleteRow(row: any) {
+    if (!row?.id) return;
+    const dialogRef = this.dialog.open(ConfirmComponent, {
+      data: new ConfirmDialogModel(
+        "Delete TOC-Deleted Item",
+        `Are you sure you want to delete "${row.partner_name}"? This row no longer exists in TOC. Any budget data will be lost.`
+      ),
+    });
+    dialogRef.afterClosed().subscribe(async (confirmed: boolean) => {
+      if (!confirmed) return;
+      this.deletingIds.add(row.id);
+      try {
+        const result = await this.porbService.deleteUnknownPartner(row.id);
+        if (result) {
+          this.rows = this.rows.filter(r => r.id !== row.id);
+          this.budgetUpdated.emit();
+        } else {
+          this.toastr.error("Failed to delete item. Please try again.");
+        }
+      } finally {
+        this.deletingIds.delete(row.id);
+      }
+    });
+  }
+
   async addUnknownPartner() {
     if (!this.programId || !this.porbAowId || !this.selectedCenterId) return;
     this.addingUnknown = true;

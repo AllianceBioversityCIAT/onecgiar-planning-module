@@ -23,8 +23,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of filteredRows; let i = index" [class.deleted-row]="row.toc_is_deleted" [class.row-error]="rowHasValidationError(row)">
-          <td>{{ row.melia_name || "-" }}</td>
+        <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.new-row]="isNewRow(row)">
+          <td [class.deleted-cell]="row.toc_is_deleted">{{ row.melia_name || "-" }}</td>
           <td
             class="row-title"
             *ngIf="isGroupedCellStart(filteredRows, i, 'melia_outputs')"
@@ -32,7 +32,7 @@
           >
             {{ row.melia_outputs || "-" }}
           </td>
-          <td class="budget-cell-with-error num-cell">
+          <td class="budget-cell-with-error num-cell" [class.deleted-cell]="row.toc_is_deleted">
             <app-budget-and-assumption
               [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
               [(value)]="row.melia_budget"
@@ -54,14 +54,16 @@
             >
               !
             </span>
-            <span
-              *ngIf="row.toc_is_deleted"
-              class="row-deleted-icon"
-              matTooltip="This row no longer exists in TOC"
+            <button
+              *ngIf="row.toc_is_deleted && canEdit"
+              class="row-delete-btn"
+              matTooltip="Remove this TOC-deleted item"
               matTooltipPosition="left"
+              [disabled]="deletingIds.has(row.id)"
+              (click)="deleteRow(row)"
             >
-              i
-            </span>
+              <mat-icon>delete_outline</mat-icon>
+            </button>
           </td>
         </tr>
         <tr *ngIf="!filteredRows.length">

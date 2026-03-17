@@ -17,6 +17,7 @@ export class PoolSectionComponent implements OnChanges {
   savingIds = new Set<number>();
   errorIds = new Set<number>();
   savedIds = new Set<number>();
+  deletingIds = new Set<number>();
 
   constructor(private porbService: PorbService) {}
 
@@ -79,6 +80,28 @@ export class PoolSectionComponent implements OnChanges {
       span += 1;
     }
     return span;
+  }
+
+  isNewRow(row: any): boolean {
+    if (!row?.created_at) return false;
+    const created = new Date(row.created_at);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return created > sevenDaysAgo;
+  }
+
+  async deleteRow(row: any) {
+    if (!confirm('Are you sure you want to delete this item? This cannot be undone.')) return;
+    this.deletingIds.add(row.id);
+    try {
+      const result = await this.porbService.deleteHlo(row.id);
+      if (result?.deleted) {
+        this.rows = this.rows.filter(r => r.id !== row.id);
+        this.budgetUpdated.emit();
+      }
+    } finally {
+      this.deletingIds.delete(row.id);
+    }
   }
 
   export() {

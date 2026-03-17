@@ -26,7 +26,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of filteredRows; let i = index" [class.deleted-row]="row.toc_is_deleted" [class.row-error]="rowHasValidationError(row)">
+        <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.new-row]="isNewRow(row)">
           <td
             class="row-title"
             *ngIf="isGroupedCellStart(filteredRows, i, 'hlo_name')"
@@ -34,19 +34,19 @@
           >
             {{ row.hlo_name || "-" }}
           </td>
-          <td>{{ row.hlo_description || "-" }}</td>
-          <td>{{ row.hlo_type || "-" }}</td>
-          <td>{{ row.hlo_geo || "-" }}</td>
-          <td class="num-cell">{{ row.hlo_target ?? "-" }}</td>
-          <td class="budget-cell-with-error num-cell">
+          <td [class.deleted-cell]="row.toc_is_deleted">{{ row.hlo_description || "-" }}</td>
+          <td [class.deleted-cell]="row.toc_is_deleted">{{ row.hlo_type || "-" }}</td>
+          <td [class.deleted-cell]="row.toc_is_deleted">{{ row.hlo_geo || "-" }}</td>
+          <td class="num-cell" [class.deleted-cell]="row.toc_is_deleted">{{ row.hlo_target ?? "-" }}</td>
+          <td class="budget-cell-with-error num-cell" [class.deleted-cell]="row.toc_is_deleted">
             <span *ngIf="i === 0" data-tour-anchor="porb-budget-input">
               <app-budget-and-assumption
                 [(value)]="row.hlo_budget"
                 [(assumption)]="row.hlo_assumption"
                 [disabled]="!canEdit"
                 [isSaving]="savingIds.has(row.id)"
-              [isError]="errorIds.has(row.id)"
-              [isSaved]="savedIds.has(row.id)"
+                [isError]="errorIds.has(row.id)"
+                [isSaved]="savedIds.has(row.id)"
                 (commit)="saveRow(row)"
                 (assumptionCommit)="saveRow(row)"
                 (pasteBudget)="pasteFromSpreadsheet($event, i, 'hlo_budget', 'hlo_assumption')"
@@ -73,14 +73,16 @@
             >
               !
             </span>
-            <span
-              *ngIf="row.toc_is_deleted"
-              class="row-deleted-icon"
-              matTooltip="This row no longer exists in TOC"
+            <button
+              *ngIf="row.toc_is_deleted && canEdit"
+              class="row-delete-btn"
+              matTooltip="Remove this TOC-deleted item"
               matTooltipPosition="left"
+              [disabled]="deletingIds.has(row.id)"
+              (click)="deleteRow(row)"
             >
-              i
-            </span>
+              <mat-icon>delete_outline</mat-icon>
+            </button>
           </td>
         </tr>
         <tr *ngIf="!filteredRows.length">
