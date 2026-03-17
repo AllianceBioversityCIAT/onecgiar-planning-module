@@ -23,7 +23,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)">
+        <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.recently-updated]="isRecentlyUpdated(row)">
           <td [class.deleted-cell]="row.toc_is_deleted">{{ row.melia_name || "-" }}</td>
           <td
             class="row-title"

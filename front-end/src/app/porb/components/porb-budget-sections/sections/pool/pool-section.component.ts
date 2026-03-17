@@ -83,6 +83,11 @@ export class PoolSectionComponent implements OnChanges {
   }
 
 
+  isRecentlyUpdated(row: any): boolean {
+    if (!row?.updated_at) return false;
+    return (Date.now() - new Date(row.updated_at).getTime()) < 20 * 60 * 1000;
+  }
+
   async deleteRow(row: any) {
     if (!confirm('Are you sure you want to delete this item? This cannot be undone.')) return;
     this.deletingIds.add(row.id);

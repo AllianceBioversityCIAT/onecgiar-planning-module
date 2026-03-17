@@ -125,6 +125,11 @@
     background: #fff3f3;
   }
 
+  tr.recently-updated td:not(.row-title) {
+    background: #f0fdf4 !important;
+    border-left: 3px solid #22c55e;
+  }
+
   td.deleted-cell {
     background: #fff4e5 !important;
     color: #9a3412 !important;

@@ -180,6 +180,10 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
     return span;
   }
 
+  isRecentlyUpdated(row: any): boolean {
+    if (!row?.updated_at) return false;
+    return (Date.now() - new Date(row.updated_at).getTime()) < 20 * 60 * 1000;
+  }
 
   async deleteRow(row: any) {
     if (!row?.id) return;
