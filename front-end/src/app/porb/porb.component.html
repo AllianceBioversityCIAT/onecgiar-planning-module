@@ -537,8 +537,8 @@
               </ng-template>
             </ng-container>
 
-            <!-- Countries Percentage Section -->
-            <ng-container *ngIf="summarySelectedSection === 'Countries Percentage'">
+            <!-- Countries of Implementation Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Countries of Implementation'">
               <div class="summary-section-block" *ngIf="cachedFormattedCountryPercentage.length; else cpEmpty">
                 <h4 class="summary-section-title">Countries of Implementation</h4>
                 <div class="summary-table-wrapper">
@@ -564,7 +564,7 @@
                 <div class="summary-empty-sections">
                   <div class="summary-section-empty">
                     <mat-icon>info_outline</mat-icon>
-                    <span><strong>Countries Percentage</strong> — No country percentage data found. Country percentages must be entered in the Countries Percentage section at the center level.</span>
+                    <span><strong>Countries of Implementation</strong> — No country percentage data found. Country percentages must be entered in the Countries of Implementation section at the center level.</span>
                   </div>
                 </div>
               </ng-template>
@@ -832,7 +832,7 @@
             ></app-cross-section>
 
             <app-country-percentage-section
-              *ngSwitchCase="'Countries Percentage'"
+              *ngSwitchCase="'Countries of Implementation'"
               [rows]="countryPercentageRows"
               [pooledTotal]="consolidationBudgetSummaryData?.pooledTotal || 0"
               [selectedProgramId]="initiativeId || undefined"

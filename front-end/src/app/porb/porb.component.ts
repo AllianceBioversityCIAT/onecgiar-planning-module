@@ -34,7 +34,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     "Partners",
     "MELIA Study",
     "Anaplan",
-    "Countries Percentage",
+    "Countries of Implementation",
   ];
 
   selectedCenter: any = null;
@@ -736,7 +736,7 @@ export class PorbComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if (this.selectedExtraNavigation === "Countries Percentage") {
+      if (this.selectedExtraNavigation === "Countries of Implementation") {
         const data = await this.porbService.getCountryPercentage(programId, porbAowId, centerId);
         this.countryPercentageRows = Array.isArray(data) ? data : [];
         return;
@@ -974,7 +974,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       case 'MELIA Study': return (counts.melia || 0) === 0;
       case 'Anaplan': return false;
       case 'Cross Cutting': return false;
-      case 'Countries Percentage': return (counts.countryPercentage || 0) === 0;
+      case 'Countries of Implementation': return (counts.countryPercentage || 0) === 0;
       default: return false;
     }
   }
@@ -1274,7 +1274,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       'MELIA Study': this.cachedFormattedMelia.length === 0,
       'Anaplan': !(d.anaplan || []).some((a: any) => this.toNumber(a.anaplan_budget) > 0),
       'Cross Cutting': this.cachedFormattedCross.length === 0,
-      'Countries Percentage': (d.countryPercentageCount || 0) === 0,
+      'Countries of Implementation': (d.countryPercentageCount || 0) === 0,
     };
   }
 
