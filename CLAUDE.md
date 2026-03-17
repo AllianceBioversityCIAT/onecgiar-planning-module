@@ -143,6 +143,15 @@ New budget section showing countries extracted from HLO `hlo_geo` field per cent
 ### HLO Geographic Location (Countries Only)
 `hlo_geo` column stores only country names (comma-separated). Global and regional location types are ignored during TOC import. Column renamed to "Country(ies) of implementation" in all views. Admin endpoint `POST /porb/cleanup-hlo-geo` clears non-country values and strips "Country: " prefix from existing data.
 
+### TOC-Deleted Row Deletion
+Rows with `toc_is_deleted: true` show a red delete button (inline in the budget cell) across all 4 budget sections (Pool HLO, Partners, MELIA, W3). Backend endpoints: `DELETE /porb/hlo/:id`, `DELETE /porb/melia/:id`, `DELETE /porb/bilateral/:id` — each guards on `toc_is_deleted === true`. Partner delete (`DELETE /porb/partner/:id`) handles both `is_unknown` and `toc_is_deleted` partners (also cleans up `porb_contracted_partners`). Deleted cells get amber highlight (`deleted-cell` class) on non-merged `<td>` elements only — the rowspan/merged column stays clean. Confirmation dialog before permanent deletion.
+
+### Recently Updated Row Highlight
+Rows updated within the last 20 minutes get a light green background (`#f0fdf4`) + green left border on non-merged cells. Uses `updated_at` from TypeORM's `@UpdateDateColumn`. `isRecentlyUpdated()` method in all 4 section components compares `Date.now() - updated_at < 20min`. Auto-updates on budget save or TOC import.
+
+### Timestamps on PORB Entities
+All 9 `porb_*` entities have `@CreateDateColumn() created_at` and `@UpdateDateColumn() updated_at`. TypeORM synchronize auto-added columns. Existing rows got current timestamp on migration; only rows created/updated after deployment have meaningful values.
+
 ## CI/CD
 - GitHub Actions triggers Jenkins on push to `development` branch
 - Jenkins builds Docker images and deploys with health checks
