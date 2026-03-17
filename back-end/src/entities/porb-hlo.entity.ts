@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Initiative } from './initiative.entity';
 import { Organization } from './organization.entity';
 import { PorbAow } from './porb-aow.entity';
@@ -69,4 +69,10 @@ export class PorbHlo {
   @ApiProperty()
   @Column({ type: 'boolean', default: false })
   toc_is_deleted: boolean;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

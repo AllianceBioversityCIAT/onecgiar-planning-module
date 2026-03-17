@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Initiative } from './initiative.entity';
 import { Organization } from './organization.entity';
 import { PorbAow } from './porb-aow.entity';
@@ -54,4 +54,10 @@ export class PorbContractedPartner {
   @ApiProperty()
   @Column({ type: 'mediumtext', nullable: true })
   assumption: string;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Initiative } from './initiative.entity';
 import { Organization } from './organization.entity';
 import { PorbAow } from './porb-aow.entity';
@@ -41,4 +41,10 @@ export class PorbCountryPercentage {
   @ApiProperty()
   @Column({ type: 'float', nullable: true })
   percentage: number;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }
