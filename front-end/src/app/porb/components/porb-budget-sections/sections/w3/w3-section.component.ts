@@ -83,11 +83,6 @@ export class W3SectionComponent implements OnChanges {
   }
 
 
-  isRecentlyUpdated(row: any): boolean {
-    if (!row?.updated_at) return false;
-    return (Date.now() - new Date(row.updated_at).getTime()) < 20 * 60 * 1000;
-  }
-
   isTocUpdated(row: any): boolean {
     if (!row?.toc_updated_at) return false;
     return (Date.now() - new Date(row.toc_updated_at).getTime()) < 24 * 60 * 60 * 1000;

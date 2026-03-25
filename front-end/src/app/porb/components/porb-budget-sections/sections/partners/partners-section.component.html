@@ -32,7 +32,7 @@
         </tr>
       </thead>
       <tbody>
-      <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.recently-updated]="isRecentlyUpdated(row)" [class.toc-updated]="isTocUpdated(row)">
+      <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.toc-updated]="isTocUpdated(row)">
         <td [class.deleted-cell]="row.toc_is_deleted">
           <div class="partner-name-cell">
             <span *ngIf="row.toc_is_deleted" class="deleted-badge" matTooltip="Removed from TOC">Deleted</span>
