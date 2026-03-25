@@ -1,0 +1,275 @@
+.danger-zone-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px;
+  max-width: 1000px;
+}
+
+// Shared card styles
+.danger-card,
+.action-card,
+.status-card {
+  border-radius: 8px;
+  padding: 24px;
+  background: #fff;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+  }
+
+  &__description {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__result {
+    margin-top: 20px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+
+    h4 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0 0 12px;
+      font-size: 13px;
+    }
+
+    pre {
+      margin: 0;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  }
+}
+
+.danger-card {
+  border: 2px solid #dc3545;
+
+  .danger-icon {
+    color: #dc3545;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.action-card {
+  border: 2px solid #0d6efd;
+
+  .action-icon {
+    color: #0d6efd;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.status-card {
+  border: 2px solid #198754;
+
+  .status-icon {
+    color: #198754;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  &__table-wrapper {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+  }
+}
+
+.program-select {
+  min-width: 350px;
+}
+
+.danger-btn {
+  background-color: #dc3545 !important;
+  color: #fff !important;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.action-btn {
+  background-color: #0d6efd !important;
+  color: #fff !important;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+// Status table
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  thead {
+    position: sticky;
+    top: 0;
+    background: #f1f3f5;
+    z-index: 1;
+  }
+
+  th,
+  td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  th {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #555;
+  }
+
+  .center {
+    text-align: center;
+  }
+
+  .mono {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .program-name {
+    display: block;
+    font-size: 12px;
+    color: #777;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  tr.needs-update {
+    background: #fff3cd;
+  }
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 6px 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  th {
+    background: #e9ecef;
+    font-weight: 600;
+  }
+
+  td:last-child {
+    text-align: right;
+    font-family: monospace;
+  }
+}
+
+// Badges
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &--ok {
+    background: #d1e7dd;
+    color: #0f5132;
+  }
+
+  &--warn {
+    background: #fff3cd;
+    color: #664d03;
+  }
+
+  &--info {
+    background: #cfe2ff;
+    color: #084298;
+  }
+
+  &--muted {
+    background: #e9ecef;
+    color: #6c757d;
+  }
+}
+
+.empty-msg {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+}
+
+.program-list {
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 12px;
+
+  &__header {
+    padding-bottom: 8px;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 8px;
+  }
+
+  &__items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+}

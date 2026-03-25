@@ -46,6 +46,8 @@ import { HttpService } from '@nestjs/axios';
 import { SubmissionService } from 'src/submission/submission.service';
 import { EmailService } from 'src/email/email.service';
 import { INITIATIVE_ROLES, LEAD_ROLES, isLeadRole } from '../shared/roles';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class PorbService {
@@ -106,6 +108,111 @@ export class PorbService {
     private readonly submissionService: SubmissionService,
     private readonly emailService: EmailService,
   ) {}
+
+  private readonly cronLogger = new Logger('TocCronJob');
+  private tocCronRunning = false;
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async checkTocUpdates() {
+    if (this.tocCronRunning) return;
+    this.tocCronRunning = true;
+
+    try {
+      const tocUpdates = await firstValueFrom(
+        this.httpService
+          .get(`${process.env.TOC_API}/toc/last-updates`)
+          .pipe(map((res) => res.data)),
+      );
+
+      if (!Array.isArray(tocUpdates)) return;
+
+      const initiatives = await this.initiativeRepository.find({
+        where: { archived: false },
+      });
+
+      // Map official_code (action_area_id) to initiative
+      const initByCode = new Map<string, Initiative>();
+      for (const init of initiatives) {
+        const code = init.action_area_id || init.official_code;
+        if (code) initByCode.set(code, init);
+      }
+
+      for (const tocEntry of tocUpdates) {
+        const tocCounter = Number(tocEntry.last_update) || 0;
+        if (tocCounter === 0) continue;
+
+        // Match by title or id against our initiatives
+        const init = this.matchTocToInitiative(tocEntry, initByCode, initiatives);
+        if (!init) continue;
+
+        const ourCounter = Number(init.toc_last_update) || 0;
+        if (tocCounter <= ourCounter) continue;
+
+        this.cronLogger.log(
+          `TOC update detected for ${init.official_code} (${init.name}): ${ourCounter} → ${tocCounter}. Harvesting...`,
+        );
+
+        try {
+          await this.importTocToPorbTables(init.id, init.official_code);
+          await this.initiativeRepository.update(init.id, {
+            toc_last_update: tocCounter,
+          });
+          this.cronLogger.log(
+            `Harvest complete for ${init.official_code}. Counter updated to ${tocCounter}.`,
+          );
+        } catch (err) {
+          this.cronLogger.error(
+            `Harvest failed for ${init.official_code}: ${err?.message || err}`,
+          );
+        }
+      }
+    } catch (err) {
+      this.cronLogger.error(
+        `TOC last-updates check failed: ${err?.message || err}`,
+      );
+    } finally {
+      this.tocCronRunning = false;
+    }
+  }
+
+  private matchTocToInitiative(
+    tocEntry: { id: string; title: string },
+    initByCode: Map<string, Initiative>,
+    initiatives: Initiative[],
+  ): Initiative | null {
+    // Try matching by action_area_id or official_code against TOC id
+    for (const [, init] of initByCode) {
+      if (init.action_area_id === tocEntry.id) return init;
+    }
+    // Fallback: match by name
+    return initiatives.find(
+      (i) => i.name?.toLowerCase().trim() === tocEntry.title?.toLowerCase().trim(),
+    ) || null;
+  }
+
+  async getTocLastUpdates() {
+    const tocUpdates = await firstValueFrom(
+      this.httpService
+        .get(`${process.env.TOC_API}/toc/last-updates`)
+        .pipe(map((res) => res.data)),
+    );
+
+    const initiatives = await this.initiativeRepository.find({
+      where: { archived: false },
+      select: ['id', 'name', 'official_code', 'action_area_id', 'toc_last_update'],
+    });
+
+    return {
+      tocUpdates,
+      initiatives: initiatives.map((i) => ({
+        id: i.id,
+        name: i.name,
+        official_code: i.official_code,
+        action_area_id: i.action_area_id,
+        our_counter: i.toc_last_update || 0,
+      })),
+    };
+  }
 
   async getAows(program_id: number) {
     return this.porbAowRepository
@@ -4821,6 +4928,71 @@ export class PorbService {
       rowsCleared: cleared.affected ?? 0,
       rowsStrippedPrefix: stripped?.affectedRows ?? stripped?.[1] ?? 0,
     };
+  }
+
+  /**
+   * Danger zone: clear all PORB data. If program_id is provided, only clear that program.
+   */
+  async clearAllPorbData(programId?: number) {
+    const queryRunner =
+      this.porbAowRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const where = programId ? `WHERE program_id = ${programId}` : '';
+      const aowWhere = programId
+        ? `WHERE porb_aow_id IN (SELECT id FROM porb_aow WHERE program_id = ${programId})`
+        : '';
+
+      // Child tables first (FK order)
+      const tables = [
+        { name: 'porb_contracted_partners', condition: aowWhere },
+        { name: 'porb_country_percentage', condition: where },
+        { name: 'porb_hlo', condition: aowWhere },
+        { name: 'porb_melia', condition: aowWhere },
+        { name: 'porb_anaplan', condition: where },
+        { name: 'porb_cross', condition: aowWhere },
+        { name: 'porb_bilateral', condition: where },
+        { name: 'porb_partner', condition: aowWhere },
+        { name: 'porb_aow', condition: where },
+      ];
+
+      const counts: Record<string, number> = {};
+      for (const t of tables) {
+        const result = await queryRunner.query(
+          `DELETE FROM ${t.name} ${t.condition}`,
+        );
+        counts[t.name] = result?.affectedRows ?? 0;
+      }
+
+      // Reset TOC counter so cron will re-harvest
+      if (programId) {
+        await queryRunner.query(
+          `UPDATE initiative SET toc_last_update = 0 WHERE id = ${programId}`,
+        );
+      } else {
+        await queryRunner.query(
+          `UPDATE initiative SET toc_last_update = 0`,
+        );
+      }
+
+      await queryRunner.commitTransaction();
+
+      return {
+        success: true,
+        programId: programId || 'ALL',
+        deletedRows: counts,
+        totalDeleted: Object.values(counts).reduce((a, b) => a + b, 0),
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(
+        `Clear PORB data failed: ${error?.message || error}`,
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**

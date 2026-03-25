@@ -37,6 +37,7 @@ import { ExportComponent } from "./admin/export/export.component";
 import { OnlineUsersComponent } from "./admin/online-users/online-users.component";
 import { PorbComponent } from "./porb/porb.component";
 import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
+import { PorbDangerZoneComponent } from "./admin/porb-danger-zone/porb-danger-zone.component";
 
 const routes: Routes = [
   {
@@ -93,7 +94,7 @@ const routes: Routes = [
       { path: "export", component: ExportComponent },
       { path: "online-users", component: OnlineUsersComponent },
       { path: "standerd-cross-cutting", component: StanderdCrossCuttingComponent },
-
+      { path: "porb-danger-zone", component: PorbDangerZoneComponent },
     ],
   },
 

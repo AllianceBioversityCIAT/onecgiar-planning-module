@@ -129,6 +129,7 @@ import { PartnerResolveDialogComponent } from "./porb/components/porb-budget-sec
 import { SummaryAssumptionIconComponent } from "./porb/components/summary-assumption-icon/summary-assumption-icon.component";
 import { SummaryAssumptionDialogComponent } from "./porb/components/summary-assumption-icon/summary-assumption-dialog.component";
 import { ValidationErrorsDialogComponent } from "./porb/components/validation-errors-dialog.component";
+import { PorbDangerZoneComponent } from "./admin/porb-danger-zone/porb-danger-zone.component";
 
 
 @NgModule({ declarations: [
@@ -218,6 +219,7 @@ import { ValidationErrorsDialogComponent } from "./porb/components/validation-er
         SummaryAssumptionIconComponent,
         SummaryAssumptionDialogComponent,
         ValidationErrorsDialogComponent,
+        PorbDangerZoneComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,

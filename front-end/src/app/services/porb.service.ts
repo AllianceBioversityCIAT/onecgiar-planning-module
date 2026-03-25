@@ -472,4 +472,32 @@ export class PorbService {
         .pipe(map((d: any) => d))
     ).catch(() => []);
   }
+
+  async clearAllPorbData(programId?: number | null): Promise<any> {
+    let params = new HttpParams();
+    if (programId) {
+      params = params.set('program_id', String(programId));
+    }
+    return firstValueFrom(
+      this.http
+        .delete(`${environment.api_url}/porb/clear-all-data`, { params })
+        .pipe(map((d: any) => d))
+    );
+  }
+
+  async getTocLastUpdates(): Promise<any> {
+    return firstValueFrom(
+      this.http
+        .get(`${environment.api_url}/porb/toc-last-updates`)
+        .pipe(map((d: any) => d))
+    );
+  }
+
+  async bulkImportToc(programIds: number[]): Promise<any> {
+    return firstValueFrom(
+      this.http
+        .post(`${environment.api_url}/porb/bulk-import-toc`, { program_ids: programIds })
+        .pipe(map((d: any) => d))
+    );
+  }
 }

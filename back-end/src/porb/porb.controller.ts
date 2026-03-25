@@ -576,6 +576,14 @@ export class PorbController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @Delete('clear-all-data')
+  clearAllPorbData(@Query('program_id') program_id?: string) {
+    const pid = program_id ? Number(program_id) : undefined;
+    return this.porbService.clearAllPorbData(pid);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
   @Get('verify-migration/:program_id')
   verifyMigration(@Param('program_id', ParseIntPipe) program_id: number) {
     return this.porbService.verifyMigration(program_id);
@@ -587,5 +595,12 @@ export class PorbController {
   validateSummary(@Query('program_id') program_id?: string) {
     const pid = program_id ? Number(program_id) : undefined;
     return this.porbService.validateAgainstSubmission(pid);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Get('toc-last-updates')
+  tocLastUpdates() {
+    return this.porbService.getTocLastUpdates();
   }
 }
