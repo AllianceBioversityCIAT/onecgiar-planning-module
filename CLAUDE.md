@@ -152,6 +152,12 @@ Rows updated within the last 20 minutes get a light green background (`#f0fdf4`)
 ### Timestamps on PORB Entities
 All 9 `porb_*` entities have `@CreateDateColumn() created_at` and `@UpdateDateColumn() updated_at`. TypeORM synchronize auto-added columns. Existing rows got current timestamp on migration; only rows created/updated after deployment have meaningful values.
 
+### TOC Auto-Harvest Cron Job
+A `@Cron(EVERY_MINUTE)` job in `porb.service.ts` calls `TOC_API/toc/last-updates` (returns `{id, title, last_update}[]`). Compares each program's `last_update` counter against `initiative.toc_last_update` column. If TOC counter > ours, runs `importTocToPorbTables()` and updates the stored counter. The `tocCronRunning` flag prevents overlapping runs. Matching logic: tries `action_area_id` first, then falls back to name match. `importTocToPorbTables()` must receive `official_code` (not `action_area_id`) because `getTocs()` looks up by `official_code`.
+
+### PORB Danger Zone Admin Page
+Admin page at `/admin/porb-danger-zone` with 3 sections: (1) **TOC Sync Status** — live table comparing our `toc_last_update` vs TOC API counter, polls every 30s, badges for status; (2) **Manual TOC Import** — checkbox program selector to force-import; (3) **Clear PORB Data** — `DELETE /porb/clear-all-data?program_id=X` deletes all 9 PORB tables (child-first FK order) in a transaction and resets `toc_last_update` to 0 so the cron re-harvests. Backend endpoint `GET /porb/toc-last-updates` returns both TOC data and our stored counters.
+
 ## CI/CD
 - GitHub Actions triggers Jenkins on push to `development` branch
 - Jenkins builds Docker images and deploys with health checks
