@@ -32,6 +32,7 @@ import { SubmissionModule } from 'src/submission/submission.module';
 import { InitiativesModule } from 'src/initiatives/initiatives.module';
 import { PhasesModule } from 'src/phases/phases.module';
 import { EmailModule } from 'src/email/email.module';
+import { EventsModule } from 'src/events/events.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { EmailModule } from 'src/email/email.module';
     InitiativesModule,
     PhasesModule,
     EmailModule,
+    EventsModule,
   ],
   controllers: [PorbController],
   providers: [PorbService],

@@ -1,3 +1,14 @@
+<div class="toc-harvest-overlay" *ngIf="tocHarvesting">
+  <div class="toc-harvest-overlay__content">
+    <div class="toc-harvest-overlay__icon">
+      <mat-spinner diameter="48" color="primary"></mat-spinner>
+    </div>
+    <h3>Syncing with TOC</h3>
+    <p>We detected updates in the Theory of Change.<br>Your PORB data is being refreshed automatically.</p>
+    <span class="toc-harvest-overlay__hint">This will only take a moment</span>
+  </div>
+</div>
+
 <section class="porb-page">
   <nav class="porb-breadcrumb">
     <a routerLink="/">Programs</a>

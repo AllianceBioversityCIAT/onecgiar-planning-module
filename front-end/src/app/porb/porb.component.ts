@@ -209,8 +209,11 @@ export class PorbComponent implements OnInit, OnDestroy {
     },
   ];
 
+  tocHarvesting = false;
   private onlineUsersSub?: Subscription;
   private socketConnectSub?: Subscription;
+  private tocHarvestStartSub?: Subscription;
+  private tocHarvestCompleteSub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -269,6 +272,8 @@ export class PorbComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.onlineUsersSub?.unsubscribe();
     this.socketConnectSub?.unsubscribe();
+    this.tocHarvestStartSub?.unsubscribe();
+    this.tocHarvestCompleteSub?.unsubscribe();
   }
 
   private async loadAowsFromDatabase(programId: number) {
@@ -317,11 +322,32 @@ export class PorbComponent implements OnInit, OnDestroy {
     });
 
     this.socketConnectSub = this.socket.fromEvent("connect").subscribe(() => {
+      this.socket.emit("userOnline", {
+        initiative_id: this.initiativeId,
+        sp: this.initiative?.official_code,
+      });
       this.socket.emit("getOnlineUsers");
     });
 
     this.socket.connect();
+    this.socket.emit("userOnline", {
+      initiative_id: this.initiativeId,
+      sp: this.initiative?.official_code,
+    });
     this.socket.emit("getOnlineUsers");
+
+    this.tocHarvestStartSub = this.socket.fromEvent<any>("tocHarvestStarted").subscribe((data) => {
+      if (data?.program_id === this.initiativeId) {
+        this.tocHarvesting = true;
+      }
+    });
+
+    this.tocHarvestCompleteSub = this.socket.fromEvent<any>("tocHarvestCompleted").subscribe(async (data) => {
+      if (data?.program_id === this.initiativeId) {
+        this.tocHarvesting = false;
+        await this.refreshCurrentView();
+      }
+    });
   }
 
   private toNumber(value: string | number): number {
@@ -1440,6 +1466,12 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   async onRowAdded() {
+    await this.loadBudgetRows();
+  }
+
+  private async refreshCurrentView() {
+    if (!this.initiativeId) return;
+    await this.loadAowsFromDatabase(this.initiativeId);
     await this.loadBudgetRows();
   }
 

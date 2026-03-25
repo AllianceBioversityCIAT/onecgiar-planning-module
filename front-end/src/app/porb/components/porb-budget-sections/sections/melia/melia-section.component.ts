@@ -88,6 +88,11 @@ export class MeliaSectionComponent implements OnChanges {
     return (Date.now() - new Date(row.updated_at).getTime()) < 20 * 60 * 1000;
   }
 
+  isTocUpdated(row: any): boolean {
+    if (!row?.toc_updated_at) return false;
+    return (Date.now() - new Date(row.toc_updated_at).getTime()) < 24 * 60 * 60 * 1000;
+  }
+
   async deleteRow(row: any) {
     if (!confirm('Are you sure you want to delete this item? This cannot be undone.')) return;
     this.deletingIds.add(row.id);

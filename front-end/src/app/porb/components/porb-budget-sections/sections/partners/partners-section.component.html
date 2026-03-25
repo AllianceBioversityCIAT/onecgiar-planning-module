@@ -32,9 +32,11 @@
         </tr>
       </thead>
       <tbody>
-      <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.recently-updated]="isRecentlyUpdated(row)">
+      <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.recently-updated]="isRecentlyUpdated(row)" [class.toc-updated]="isTocUpdated(row)">
         <td [class.deleted-cell]="row.toc_is_deleted">
           <div class="partner-name-cell">
+            <span *ngIf="row.toc_is_deleted" class="deleted-badge" matTooltip="Removed from TOC">Deleted</span>
+            <span *ngIf="isTocUpdated(row) && !row.toc_is_deleted" class="toc-badge" matTooltip="Recently Updated from TOC">TOC</span>
             <span class="partner-name-text">{{ row.partner_name || "-" }}</span>
             <button *ngIf="row.is_unknown && canEdit" mat-icon-button class="resolve-btn" matTooltip="Resolve to real partner" (click)="openResolveDialog(row)">
               <mat-icon>link</mat-icon>

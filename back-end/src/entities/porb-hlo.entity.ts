@@ -75,4 +75,7 @@ export class PorbHlo {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @Column({ type: 'datetime', nullable: true, default: null })
+  toc_updated_at: Date;
 }

@@ -48,6 +48,7 @@ import { EmailService } from 'src/email/email.service';
 import { INITIATIVE_ROLES, LEAD_ROLES, isLeadRole } from '../shared/roles';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Logger } from '@nestjs/common';
+import { EventsGateway } from 'src/events/events.gateway';
 
 @Injectable()
 export class PorbService {
@@ -107,12 +108,13 @@ export class PorbService {
     private readonly httpService: HttpService,
     private readonly submissionService: SubmissionService,
     private readonly emailService: EmailService,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   private readonly cronLogger = new Logger('TocCronJob');
   private tocCronRunning = false;
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron('*/10 * * * * *')
   async checkTocUpdates() {
     if (this.tocCronRunning) return;
     this.tocCronRunning = true;
@@ -153,14 +155,27 @@ export class PorbService {
         );
 
         try {
+          this.eventsGateway.server.emit('tocHarvestStarted', {
+            program_id: init.id,
+            official_code: init.official_code,
+          });
           await this.importTocToPorbTables(init.id, init.official_code);
           await this.initiativeRepository.update(init.id, {
             toc_last_update: tocCounter,
+          });
+          this.eventsGateway.server.emit('tocHarvestCompleted', {
+            program_id: init.id,
+            official_code: init.official_code,
           });
           this.cronLogger.log(
             `Harvest complete for ${init.official_code}. Counter updated to ${tocCounter}.`,
           );
         } catch (err) {
+          this.eventsGateway.server.emit('tocHarvestCompleted', {
+            program_id: init.id,
+            official_code: init.official_code,
+            error: true,
+          });
           this.cronLogger.error(
             `Harvest failed for ${init.official_code}: ${err?.message || err}`,
           );
@@ -2171,6 +2186,19 @@ export class PorbService {
       }
       return true;
     });
+    // Update existing AOW metadata if changed
+    for (const row of aowRows) {
+      const existing = existingAowByTocId.get(String(row.toc_id));
+      if (!existing) continue;
+      const changes: any = {};
+      if ((row.aow_name || '') !== (existing.aow_name || '')) changes.aow_name = row.aow_name;
+      if ((row.aow_acrnum || '') !== (existing.aow_acrnum || '')) changes.aow_acrnum = row.aow_acrnum;
+      if (Object.keys(changes).length) {
+        changes.toc_updated_at = new Date();
+        await this.porbAowRepository.update(existing.id, changes);
+      }
+    }
+    newAowRows.forEach(r => (r as any).toc_updated_at = new Date());
     const savedAows = newAowRows.length ? await this.porbAowRepository.save(newAowRows) : [];
     const allAows = [...existingAows, ...savedAows];
 
@@ -2261,28 +2289,29 @@ export class PorbService {
     const newHloRows = hloRows.filter(
       (row) => !existingHloKeys.has(`${String(row.toc_id)}::${Number(row.center_id)}`),
     );
-    const hloUpdates = hloRows
-      .map((row) => {
-        const key = `${String(row.toc_id)}::${Number(row.center_id)}`;
-        const existing = existingHloByKey.get(key);
-        if (!existing) {
-          return null;
-        }
-        const nextAowId = row?.porb_aow_id ?? null;
-        const currentAowId = existing?.porb_aow_id ?? null;
-        if (Number(currentAowId || 0) === Number(nextAowId || 0)) {
-          return null;
-        }
-        return { id: existing.id, porb_aow_id: nextAowId };
-      })
-      .filter(Boolean) as Array<{ id: number; porb_aow_id: number | null }>;
+    const hloUpdates: Array<{ id: number; changes: any }> = [];
+    for (const row of hloRows) {
+      const key = `${String(row.toc_id)}::${Number(row.center_id)}`;
+      const existing = existingHloByKey.get(key);
+      if (!existing) continue;
+      const changes: any = {};
+      if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
+      if ((existing.hlo_name || '') !== (row.hlo_name || '')) changes.hlo_name = row.hlo_name;
+      if ((existing.hlo_description || '') !== (row.hlo_description || '')) changes.hlo_description = row.hlo_description;
+      if ((existing.hlo_type || '') !== (row.hlo_type || '')) changes.hlo_type = row.hlo_type;
+      if ((existing.hlo_geo || '') !== (row.hlo_geo || '')) changes.hlo_geo = row.hlo_geo;
+      if (String(existing.hlo_target || '') !== String(row.hlo_target || '')) changes.hlo_target = row.hlo_target;
+      if (Object.keys(changes).length) {
+        changes.toc_updated_at = new Date();
+        hloUpdates.push({ id: existing.id, changes });
+      }
+    }
     if (hloUpdates.length) {
       await Promise.all(
-        hloUpdates.map((item) =>
-          this.porbHloRepository.update(item.id, { porb_aow_id: item.porb_aow_id }),
-        ),
+        hloUpdates.map((item) => this.porbHloRepository.update(item.id, item.changes)),
       );
     }
+    newHloRows.forEach(r => r.toc_updated_at = new Date());
     const savedHlos = newHloRows.length ? await this.porbHloRepository.save(newHloRows) : [];
     await this.syncTocDeletedFlags(
       this.porbHloRepository,
@@ -2307,30 +2336,28 @@ export class PorbService {
     });
     const existingPartnerByTocId = new Map<string, PorbPartner>();
     existingPartners.forEach((row) => existingPartnerByTocId.set(String(row.toc_id), row));
-    const partnerUpdates = partnerRows
-      .map((row: any) => {
-        const existing = existingPartnerByTocId.get(String(row.toc_id));
-        if (!existing) {
-          return null;
-        }
-        const nextAowId = row?.porb_aow_id ?? null;
-        const currentAowId = existing?.porb_aow_id ?? null;
-        if (Number(currentAowId || 0) === Number(nextAowId || 0)) {
-          return null;
-        }
-        return { id: existing.id, porb_aow_id: nextAowId };
-      })
-      .filter(Boolean) as Array<{ id: number; porb_aow_id: number | null }>;
+    const partnerUpdates: Array<{ id: number; changes: any }> = [];
+    for (const row of partnerRows) {
+      const existing = existingPartnerByTocId.get(String(row.toc_id));
+      if (!existing) continue;
+      const changes: any = {};
+      if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
+      if ((existing.partner_name || '') !== (row.partner_name || '')) changes.partner_name = row.partner_name;
+      if ((existing.partner_outputs || '') !== (row.partner_outputs || '')) changes.partner_outputs = row.partner_outputs;
+      if (Object.keys(changes).length) {
+        changes.toc_updated_at = new Date();
+        partnerUpdates.push({ id: existing.id, changes });
+      }
+    }
     if (partnerUpdates.length) {
       await Promise.all(
-        partnerUpdates.map((item) =>
-          this.porbPartnerRepository.update(item.id, { porb_aow_id: item.porb_aow_id }),
-        ),
+        partnerUpdates.map((item) => this.porbPartnerRepository.update(item.id, item.changes)),
       );
     }
     const newPartnerRows = partnerRows.filter(
       (row) => !existingPartnerByTocId.has(String(row.toc_id)),
     );
+    newPartnerRows.forEach(r => (r as any).toc_updated_at = new Date());
     const savedPartners = newPartnerRows.length
       ? await this.porbPartnerRepository.save(newPartnerRows)
       : [];
@@ -2380,31 +2407,29 @@ export class PorbService {
     const existingBilateralKeys = new Set(
       existingBilaterals.map((row) => `${String(row.toc_id)}::${Number(row.center_id)}`),
     );
-    const bilateralUpdates = validBilateralRows
-      .map((row: any) => {
-        const key = `${String(row.toc_id)}::${Number(row.center_id)}`;
-        const existing = existingBilateralByKey.get(key);
-        if (!existing) {
-          return null;
-        }
-        const nextAowId = row?.porb_aow_id ?? null;
-        const currentAowId = existing?.porb_aow_id ?? null;
-        if (Number(currentAowId || 0) === Number(nextAowId || 0)) {
-          return null;
-        }
-        return { id: existing.id, porb_aow_id: nextAowId };
-      })
-      .filter(Boolean) as Array<{ id: number; porb_aow_id: number | null }>;
+    const bilateralUpdates: Array<{ id: number; changes: any }> = [];
+    for (const row of validBilateralRows) {
+      const key = `${String(row.toc_id)}::${Number(row.center_id)}`;
+      const existing = existingBilateralByKey.get(key);
+      if (!existing) continue;
+      const changes: any = {};
+      if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
+      if ((existing.bilateral_name || '') !== (row.bilateral_name || '')) changes.bilateral_name = row.bilateral_name;
+      if ((existing.bilateral_outputs || '') !== (row.bilateral_outputs || '')) changes.bilateral_outputs = row.bilateral_outputs;
+      if (Object.keys(changes).length) {
+        changes.toc_updated_at = new Date();
+        bilateralUpdates.push({ id: existing.id, changes });
+      }
+    }
     if (bilateralUpdates.length) {
       await Promise.all(
-        bilateralUpdates.map((item) =>
-          this.porbBilateralRepository.update(item.id, { porb_aow_id: item.porb_aow_id }),
-        ),
+        bilateralUpdates.map((item) => this.porbBilateralRepository.update(item.id, item.changes)),
       );
     }
     const newBilateralRows = validBilateralRows.filter(
       (row) => !existingBilateralKeys.has(`${String(row.toc_id)}::${Number(row.center_id)}`),
     );
+    newBilateralRows.forEach(r => (r as any).toc_updated_at = new Date());
     const savedBilaterals = newBilateralRows.length
       ? await this.porbBilateralRepository.save(newBilateralRows)
       : [];
@@ -2507,26 +2532,23 @@ export class PorbService {
         (row) => `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
       ),
     );
-    const meliaUpdates = validMeliaRows
-      .map((row: any) => {
-        const key = `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
-        const existing = existingMeliaByKey.get(key);
-        if (!existing) {
-          return null;
-        }
-        const nextAowId = row?.porb_aow_id ?? null;
-        const currentAowId = existing?.porb_aow_id ?? null;
-        if (Number(currentAowId || 0) === Number(nextAowId || 0)) {
-          return null;
-        }
-        return { id: existing.id, porb_aow_id: nextAowId };
-      })
-      .filter(Boolean) as Array<{ id: number; porb_aow_id: number | null }>;
+    const meliaUpdates: Array<{ id: number; changes: any }> = [];
+    for (const row of validMeliaRows) {
+      const key = `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
+      const existing = existingMeliaByKey.get(key);
+      if (!existing) continue;
+      const changes: any = {};
+      if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
+      if ((existing.melia_outputs || '') !== (row.melia_outputs || '')) changes.melia_outputs = row.melia_outputs;
+      if ((existing.toc_id || '') !== (row.toc_id || '')) changes.toc_id = row.toc_id;
+      if (Object.keys(changes).length) {
+        changes.toc_updated_at = new Date();
+        meliaUpdates.push({ id: existing.id, changes });
+      }
+    }
     if (meliaUpdates.length) {
       await Promise.all(
-        meliaUpdates.map((item) =>
-          this.porbMeliaRepository.update(item.id, { porb_aow_id: item.porb_aow_id }),
-        ),
+        meliaUpdates.map((item) => this.porbMeliaRepository.update(item.id, item.changes)),
       );
     }
     const newMeliaRows = validMeliaRows.filter(
@@ -2535,6 +2557,7 @@ export class PorbService {
           `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
         ),
     );
+    newMeliaRows.forEach(r => (r as any).toc_updated_at = new Date());
     const savedMelias = newMeliaRows.length ? await this.porbMeliaRepository.save(newMeliaRows) : [];
     await this.syncTocDeletedFlags(
       this.porbMeliaRepository,
@@ -2551,6 +2574,12 @@ export class PorbService {
         partners: savedPartners.length,
         bilaterals: savedBilaterals.length,
         melias: savedMelias.length,
+      },
+      updated: {
+        hlos: hloUpdates.length,
+        partners: partnerUpdates.length,
+        bilaterals: bilateralUpdates.length,
+        melias: meliaUpdates.length,
       },
       skipped_center_ids: skippedCenterIds.size
         ? Array.from(skippedCenterIds)
