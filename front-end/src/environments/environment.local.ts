@@ -2,7 +2,7 @@ export const environment = {
     production: false,
     clarityProjectId: null,
     socket_path:"/socket.io",
-    socket_url:"http://localhost:3000",
+    socket_url:"http://localhost:4200",
     api_url:'http://localhost:3000',
     aws_cognito_link:'https://ost-toc.auth.us-east-1.amazoncognito.com',
     aws_cognito_client_id:'7j40ekbpnbq4aegcsgjmm66c90',
