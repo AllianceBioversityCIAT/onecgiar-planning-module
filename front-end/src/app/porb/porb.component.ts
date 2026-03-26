@@ -214,6 +214,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   private socketConnectSub?: Subscription;
   private tocHarvestStartSub?: Subscription;
   private tocHarvestCompleteSub?: Subscription;
+  private porbBudgetChangedSub?: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -274,6 +275,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.socketConnectSub?.unsubscribe();
     this.tocHarvestStartSub?.unsubscribe();
     this.tocHarvestCompleteSub?.unsubscribe();
+    this.porbBudgetChangedSub?.unsubscribe();
   }
 
   private async loadAowsFromDatabase(programId: number) {
@@ -347,6 +349,13 @@ export class PorbComponent implements OnInit, OnDestroy {
         this.tocHarvesting = false;
         await this.refreshCurrentView();
       }
+    });
+
+    this.porbBudgetChangedSub = this.socket.fromEvent<any>('porbBudgetChanged').subscribe(async (data) => {
+      const mySocketId = (this.socket as any).ioSocket?.id;
+      if (mySocketId && data?.emitter_socket_id === mySocketId) return;
+      if (data?.program_id !== this.initiativeId) return;
+      await this.handleRemoteBudgetChange(data);
     });
   }
 
@@ -1598,6 +1607,192 @@ export class PorbComponent implements OnInit, OnDestroy {
       localStorage.setItem(this.porbTourStorageKey, "1");
     } catch {
       // ignore localStorage access issues
+    }
+  }
+
+  /** Maps backend section keys to the frontend navigation label strings. */
+  private sectionKeyFor(backendSection: string): string | null {
+    switch (backendSection) {
+      case 'hlo': return 'Pool funding HLO';
+      case 'partner': return 'Partners';
+      case 'melia': return 'MELIA Study';
+      case 'anaplan': return 'Anaplan';
+      case 'cross': return 'Cross Cutting';
+      case 'country-percentage': return 'Countries of Implementation';
+      case 'bilateral': return null; // W3/Bilateral is handled separately via isW3View
+      default: return null;
+    }
+  }
+
+  /**
+   * Re-fetch the currently visible section's rows without calling clearBudgetRows().
+   * Used for 'update' events to avoid DOM destruction and preserve focus/scroll.
+   */
+  private async softReloadCurrentSection(): Promise<void> {
+    if (!this.initiativeId || !this.selectedCenter || !this.selectedAow || !this.selectedExtraNavigation) {
+      return;
+    }
+    const programId = this.initiativeId;
+    const porbAowId = this.getSelectedPorbAowId();
+    const centerId = this.getSelectedCenterId();
+
+    if (this.selectedExtraNavigation === 'Pool funding HLO') {
+      const hlos = await this.porbService.getHlos(programId, porbAowId, centerId);
+      if (Array.isArray(hlos)) this.poolFundingRows = hlos;
+      return;
+    }
+    if (this.selectedExtraNavigation === 'Partners') {
+      const partners = await this.porbService.getPartners(programId, porbAowId, centerId);
+      if (Array.isArray(partners)) this.partnersRows = partners;
+      return;
+    }
+    if (this.selectedExtraNavigation === 'MELIA Study') {
+      const melia = await this.porbService.getMelia(programId, porbAowId, centerId);
+      if (Array.isArray(melia)) this.meliaRows = melia;
+      return;
+    }
+    if (this.selectedExtraNavigation === 'Anaplan') {
+      const anaplan = await this.porbService.getAnaplan(programId, porbAowId, centerId);
+      if (Array.isArray(anaplan)) this.anaplanRows = anaplan;
+      return;
+    }
+    if (this.selectedExtraNavigation === 'Cross Cutting') {
+      const cross = await this.porbService.getCross(programId, porbAowId, centerId);
+      if (Array.isArray(cross)) this.crossRows = cross;
+      return;
+    }
+    if (this.selectedExtraNavigation === 'Countries of Implementation') {
+      const data = await this.porbService.getCountryPercentage(programId, porbAowId, centerId);
+      if (Array.isArray(data)) this.countryPercentageRows = data;
+      return;
+    }
+  }
+
+  /**
+   * Silently refresh the relevant part of the UI when another user edits a budget.
+   * Called only for events that passed the self-filter and program-filter checks.
+   */
+  private async handleRemoteBudgetChange(data: {
+    program_id: number;
+    center_id?: any;
+    aow_id?: number | null;
+    section: string;
+    type: 'update' | 'delete' | 'add';
+  }): Promise<void> {
+    if (!this.initiativeId) return;
+
+    const eventCenterKey = data.center_id != null ? String(data.center_id) : null;
+    const eventAowId = data.aow_id != null ? Number(data.aow_id) : null;
+    const frontendSection = this.sectionKeyFor(data.section);
+
+    // Always refresh the validation summary (error badges on AOW/center tabs)
+    await this.refreshValidationSummary();
+
+    if (this.activeView === 'summary') {
+      // Reload summary consolidation overview table
+      const summaryData = await this.porbService.getSummaryConsolidation(this.initiativeId);
+      this.summaryConsolidationRows = Array.isArray(summaryData?.rows) ? summaryData.rows : [];
+      this.summaryConsolidationTotals = summaryData?.totals || {};
+
+      // Reload Budget for Financial Reporting (Anaplan consolidated)
+      if (this.anaplanConsolidatedData != null) {
+        await this.loadAnaplanConsolidated(this.initiativeId);
+      }
+
+      // Reload W3 consolidated if a bilateral event arrived
+      if (data.section === 'bilateral') {
+        await this.loadW3Consolidated(this.initiativeId);
+        // If the user is currently on the summary W3 view, reload those rows directly
+        if (this.summaryW3View) {
+          this.summaryW3Loading = true;
+          try {
+            const raw = await this.porbService.getBilaterals(this.initiativeId, undefined, true);
+            const map = new Map<string, any>();
+            for (const row of (raw || [])) {
+              const key = row.toc_id || row.bilateral_name || '';
+              if (map.has(key)) {
+                const existing = map.get(key);
+                existing.bilateral_budget = (Number(existing.bilateral_budget) || 0) + (Number(row.bilateral_budget) || 0);
+                if (row.bilateral_assumption) {
+                  existing._assumptions.push({ center: row.center_name || '', assumption: row.bilateral_assumption });
+                }
+              } else {
+                const assumptions: any[] = [];
+                if (row.bilateral_assumption) {
+                  assumptions.push({ center: row.center_name || '', assumption: row.bilateral_assumption });
+                }
+                map.set(key, { ...row, _assumptions: assumptions });
+              }
+            }
+            this.summaryW3Rows = [...map.values()];
+          } catch {
+            // silent — stale data is acceptable here
+          } finally {
+            this.summaryW3Loading = false;
+          }
+        }
+      }
+
+      // If in detailed view and the changed AOW matches the currently selected one, reload detail
+      if (
+        this.summaryViewMode === 'detailed' &&
+        !this.summaryW3View &&
+        this.summarySelectedAow != null &&
+        eventAowId != null &&
+        this.summarySelectedAow.id === eventAowId
+      ) {
+        this.summaryAowDetail = await this.porbService.getSummaryAowDetail(
+          this.initiativeId,
+          this.summarySelectedAow.id
+        );
+        this.computeSummaryDetailCache();
+      }
+      return;
+    }
+
+    // ── CENTER VIEW ───────────────────────────────────────────────────────────
+    const currentCenterKey = this.getCenterKey(this.selectedCenter);
+    const sameCenter = eventCenterKey != null && currentCenterKey === eventCenterKey;
+
+    if (this.centerViewMode === 'consolidated') {
+      // In consolidated center view: just reload center consolidation data
+      if (sameCenter) {
+        await this.loadCenterConsolidation();
+      }
+      return;
+    }
+
+    // Budget-entry mode
+    if (!sameCenter) return;
+
+    // Always refresh the consolidation sidebar for same-center events
+    await Promise.all([
+      this.loadConsolidation(this.initiativeId, this.getSelectedPorbAowId(), this.getSelectedCenterId()),
+      this.refreshSectionValidation(),
+    ]);
+
+    // W3/Bilateral event while user is in W3 view
+    if (data.section === 'bilateral' && this.isW3View) {
+      await this.loadW3CenterRows();
+      return;
+    }
+
+    // Section-level refresh: only when same AOW and same frontend section
+    if (
+      frontendSection != null &&
+      !this.isW3View &&
+      this.selectedAow != null &&
+      eventAowId != null &&
+      this.selectedAow.id === eventAowId &&
+      this.selectedExtraNavigation === frontendSection
+    ) {
+      if (data.type === 'update') {
+        // Soft reload: update rows in-place without clearing the DOM
+        await this.softReloadCurrentSection();
+      } else {
+        // add / delete: full reload (row count has changed)
+        await this.loadBudgetRows();
+      }
     }
   }
 }

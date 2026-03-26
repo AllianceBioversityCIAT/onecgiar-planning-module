@@ -1,0 +1,150 @@
+<!-- Header bar -->
+<div class="version-header">
+  <div class="version-header__info">
+    <h2>{{ submission?.initiative?.official_code }} - {{ submission?.initiative?.name }}</h2>
+    <div class="version-header__meta">
+      <span>Submitted by {{ submission?.user?.full_name }} on {{ submission?.created_at | date:'mediumDate' }}</span>
+      <span
+        class="status-badge"
+        [ngClass]="'status-' + (submission?.status || '').toLowerCase()"
+      >
+        {{ submission?.status }}
+      </span>
+    </div>
+  </div>
+  <div class="version-header__actions">
+    <button mat-raised-button color="primary" (click)="exportZip()">
+      <mat-icon>download</mat-icon> Export ZIP
+    </button>
+    <button
+      mat-button
+      [routerLink]="['/program', programId, officalCode, 'submited-versions']"
+    >
+      Back to Versions
+    </button>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div *ngIf="loading" class="loading-container">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<!-- Main content -->
+<div *ngIf="!loading && porbData" class="version-body">
+
+  <!-- Level 1: Centers -->
+  <div class="porb-nav porb-nav--centers">
+    <button
+      *ngFor="let center of centers"
+      class="porb-nav__item"
+      [class.porb-nav__item--active]="selectedCenter?.code === center.code"
+      (click)="selectCenter(center)"
+    >
+      {{ center.name }}
+    </button>
+  </div>
+
+  <!-- Level 2: AOWs + W3/Bilateral -->
+  <div class="porb-nav porb-nav--aows" *ngIf="selectedCenter">
+    <button
+      *ngFor="let aow of aows"
+      class="porb-nav__item"
+      [class.porb-nav__item--active]="selectedAow?.id === aow.id && !isW3View"
+      (click)="selectAow(aow)"
+    >
+      {{ aow.aow_acrnum || aow.aow_name }}
+    </button>
+    <button
+      class="porb-nav__item porb-nav__item--w3"
+      [class.porb-nav__item--active]="isW3View"
+      [class.porb-nav__item--no-access]="!hasW3Data"
+      [disabled]="!hasW3Data"
+      (click)="selectW3()"
+      [matTooltip]="!hasW3Data ? 'No W3/Bilateral data for this center' : ''"
+    >
+      W3/Bilateral
+    </button>
+  </div>
+
+  <!-- Level 3: Sections (only when AOW selected, not W3) -->
+  <div class="porb-nav porb-nav--sections" *ngIf="selectedAow && !isW3View">
+    <button
+      *ngFor="let section of extraNavigationItems"
+      class="porb-nav__item"
+      [class.porb-nav__item--active]="selectedSection === section"
+      (click)="selectSection(section)"
+    >
+      {{ section }}
+    </button>
+  </div>
+
+  <!-- Section content -->
+  <div class="section-content" *ngIf="!isW3View && selectedSection">
+    <ng-container [ngSwitch]="selectedSection">
+      <app-pool-section
+        *ngSwitchCase="'Pool funding HLO'"
+        [rows]="currentRows"
+        [canEdit]="false"
+      ></app-pool-section>
+
+      <app-partners-section
+        *ngSwitchCase="'Partners'"
+        [rows]="currentRows"
+        [canEdit]="false"
+      ></app-partners-section>
+
+      <app-melia-section
+        *ngSwitchCase="'MELIA Study'"
+        [rows]="currentRows"
+        [canEdit]="false"
+      ></app-melia-section>
+
+      <app-anaplan-section
+        *ngSwitchCase="'Anaplan'"
+        [rows]="currentRows"
+        [canEdit]="false"
+      ></app-anaplan-section>
+
+      <app-cross-section
+        *ngSwitchCase="'Cross Cutting'"
+        [rows]="currentRows"
+        [canEdit]="false"
+        [selectedProgramId]="programId"
+        [selectedPorbAowId]="selectedAow?.id"
+        [selectedCenterId]="selectedCenter?.code"
+      ></app-cross-section>
+
+      <app-country-percentage-section
+        *ngSwitchCase="'Countries of Implementation'"
+        [rows]="currentRows"
+        [canEdit]="false"
+        [pooledTotal]="pooledTotal"
+        [selectedProgramId]="programId"
+        [selectedPorbAowId]="selectedAow?.id"
+        [selectedCenterId]="selectedCenter?.code"
+      ></app-country-percentage-section>
+    </ng-container>
+  </div>
+
+  <!-- W3/Bilateral content -->
+  <div class="section-content" *ngIf="isW3View">
+    <app-w3-section [rows]="currentRows" [canEdit]="false"></app-w3-section>
+  </div>
+</div>
+
+<!-- No porb_data fallback -->
+<div *ngIf="!loading && !porbData" class="no-data">
+  <mat-icon class="no-data__icon">history</mat-icon>
+  <p class="no-data__title">No PORB data available</p>
+  <p class="no-data__hint">
+    This submission was created before PORB snapshots were introduced and cannot
+    be displayed in this view.
+  </p>
+  <button
+    mat-stroked-button
+    [routerLink]="['/program', programId, officalCode, 'submited-versions']"
+  >
+    Back to Versions
+  </button>
+</div>

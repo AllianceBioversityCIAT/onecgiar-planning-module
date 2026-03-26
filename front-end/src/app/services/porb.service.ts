@@ -500,4 +500,21 @@ export class PorbService {
         .pipe(map((d: any) => d))
     );
   }
+
+  async getSubmissionVersion(submissionId: number): Promise<any> {
+    return firstValueFrom(
+      this.http
+        .get(`${environment.api_url}/porb/version/${submissionId}`)
+        .pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async exportVersionZip(submissionId: number): Promise<any> {
+    return firstValueFrom(
+      this.http.get(`${environment.api_url}/porb/version/${submissionId}/zip`, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+    ).catch(() => null);
+  }
 }

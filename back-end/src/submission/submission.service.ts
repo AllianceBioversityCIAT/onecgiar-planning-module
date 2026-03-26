@@ -353,12 +353,19 @@ export class SubmissionService {
     );
   }
   async findSubmissionsByInitiativeId(id, query: any) {
+    const addHasPorbData = (rows: Submission[]) =>
+      rows.map(({ porb_data, ...rest }) => ({
+        ...rest,
+        has_porb_data: porb_data != null && porb_data !== '',
+      }));
+
     if (query.withFilters == 'false') {
-      return this.submissionRepository.find({
+      const rows = await this.submissionRepository.find({
         where: { initiative: { id } },
         relations: ['user', 'phase'],
         order: { id: 'DESC' },
       });
+      return addHasPorbData(rows);
     } else {
       const take = query.limit || 10;
       const skip = (Number(query.page || 1) - 1) * take;
@@ -380,7 +387,7 @@ export class SubmissionService {
         order: { ...this.sort(query) },
       });
       return {
-        result: result,
+        result: addHasPorbData(result),
         count: total,
       };
     }

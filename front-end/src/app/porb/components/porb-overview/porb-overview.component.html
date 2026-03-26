@@ -18,7 +18,7 @@
           <div
             class="avatar-item"
             *ngFor="let colleague of onlineProgramUsers"
-            [title]="colleague.name + ' - ' + colleague.email"
+            [matTooltip]="colleague.name"
           >
             <span class="colleague-avatar">{{ colleague.initials }}</span>
             <span class="colleague-dot"></span>

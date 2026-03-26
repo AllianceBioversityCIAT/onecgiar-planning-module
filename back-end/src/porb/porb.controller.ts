@@ -35,6 +35,11 @@ export class PorbController {
     return Number.isFinite(parsed) ? parsed : undefined;
   }
 
+  /** Extracts the socket ID forwarded by the frontend SocketIdInterceptor. */
+  private getSocketId(req: any): string | undefined {
+    return req?.headers?.['x-socket-id'] || undefined;
+  }
+
   @Get('aow/:program_id')
   getAows(@Param('program_id', ParseIntPipe) program_id: number) {
     return this.porbService.getAows(program_id);
@@ -74,12 +79,16 @@ export class PorbController {
   @Post('partner')
   createUnknownPartner(
     @Body() data: { program_id: number; porb_aow_id: number; center_id: number },
+    @Request() req,
   ) {
-    return this.porbService.createUnknownPartner({
-      program_id: Number(data.program_id),
-      porb_aow_id: Number(data.porb_aow_id),
-      center_id: Number(data.center_id),
-    });
+    return this.porbService.createUnknownPartner(
+      {
+        program_id: Number(data.program_id),
+        porb_aow_id: Number(data.porb_aow_id),
+        center_id: Number(data.center_id),
+      },
+      this.getSocketId(req),
+    );
   }
 
   @Get('bilateral')
@@ -258,6 +267,7 @@ export class PorbController {
             : null,
       },
       req.user,
+      this.getSocketId(req),
     );
   }
 
@@ -274,6 +284,7 @@ export class PorbController {
         hlo_assumption: data.hlo_assumption,
       },
       req.user,
+      this.getSocketId(req),
     );
   }
 
@@ -281,31 +292,33 @@ export class PorbController {
   resolveUnknownPartner(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: { clarisa_partner_code: number },
+    @Request() req,
   ) {
     return this.porbService.resolveUnknownPartner(
       id,
       Number(data.clarisa_partner_code),
+      this.getSocketId(req),
     );
   }
 
   @Delete('partner/:id')
-  deleteUnknownPartner(@Param('id', ParseIntPipe) id: number) {
-    return this.porbService.deleteUnknownPartner(id);
+  deleteUnknownPartner(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.porbService.deleteUnknownPartner(id, this.getSocketId(req));
   }
 
   @Delete('hlo/:id')
-  deleteTocDeletedHlo(@Param('id', ParseIntPipe) id: number) {
-    return this.porbService.deleteTocDeletedHlo(id);
+  deleteTocDeletedHlo(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.porbService.deleteTocDeletedHlo(id, this.getSocketId(req));
   }
 
   @Delete('melia/:id')
-  deleteTocDeletedMelia(@Param('id', ParseIntPipe) id: number) {
-    return this.porbService.deleteTocDeletedMelia(id);
+  deleteTocDeletedMelia(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.porbService.deleteTocDeletedMelia(id, this.getSocketId(req));
   }
 
   @Delete('bilateral/:id')
-  deleteTocDeletedBilateral(@Param('id', ParseIntPipe) id: number) {
-    return this.porbService.deleteTocDeletedBilateral(id);
+  deleteTocDeletedBilateral(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.porbService.deleteTocDeletedBilateral(id, this.getSocketId(req));
   }
 
   @Patch('partner/:id')
@@ -331,6 +344,7 @@ export class PorbController {
         assumption: data.partner_assumption,
       },
       req.user,
+      this.getSocketId(req),
     );
   }
 
@@ -347,6 +361,7 @@ export class PorbController {
         bilateral_assumption: data.bilateral_assumption,
       },
       req.user,
+      this.getSocketId(req),
     );
   }
 
@@ -363,6 +378,7 @@ export class PorbController {
         melia_assumption: data.melia_assumption,
       },
       req.user,
+      this.getSocketId(req),
     );
   }
 
@@ -390,6 +406,7 @@ export class PorbController {
             : null,
       },
       req.user,
+      this.getSocketId(req),
     );
   }
 
@@ -419,6 +436,7 @@ export class PorbController {
         assumption: String(data.assumption || ''),
       },
       req.user,
+      this.getSocketId(req),
     );
   }
 
@@ -482,6 +500,23 @@ export class PorbController {
     @Request() req,
   ) {
     return this.porbService.cancelSubmission(id, req.user);
+  }
+
+  @Get('version/:submission_id')
+  getVersion(
+    @Param('submission_id', ParseIntPipe) submission_id: number,
+    @Request() req,
+  ) {
+    return this.porbService.getSubmissionVersion(submission_id, req.user);
+  }
+
+  @Get('version/:submission_id/zip')
+  async exportVersionZip(
+    @Param('submission_id', ParseIntPipe) submission_id: number,
+    @Res({ passthrough: true }) res: Response,
+    @Request() req,
+  ) {
+    return this.porbService.generateVersionZip(submission_id, res, req.user);
   }
 
   @Patch('center/status')

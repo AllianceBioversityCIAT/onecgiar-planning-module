@@ -333,7 +333,7 @@ export class PorbService {
     program_id: number;
     porb_aow_id: number;
     center_id: number;
-  }) {
+  }, emitterSocketId?: string) {
     const existingCount = await this.porbPartnerRepository.count({
       where: {
         program_id: data.program_id,
@@ -355,6 +355,15 @@ export class PorbService {
       is_unknown: true,
     });
 
+    this.emitPorbBudgetChanged({
+      program_id: data.program_id,
+      center_id: data.center_id,
+      aow_id: data.porb_aow_id,
+      section: 'partner',
+      type: 'add',
+      emitter_socket_id: emitterSocketId,
+    });
+
     return {
       ...partner,
       partner_is_contracted: '0',
@@ -373,7 +382,7 @@ export class PorbService {
     });
   }
 
-  async resolveUnknownPartner(id: number, clarisa_partner_code: number) {
+  async resolveUnknownPartner(id: number, clarisa_partner_code: number, emitterSocketId?: string) {
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) throw new NotFoundException('Partner not found');
     if (!partner.is_unknown)
@@ -389,46 +398,101 @@ export class PorbService {
     partner.is_unknown = false;
     await this.porbPartnerRepository.save(partner);
 
+    this.emitPorbBudgetChanged({
+      program_id: partner.program_id,
+      aow_id: partner.porb_aow_id,
+      section: 'partner',
+      type: 'update',
+      emitter_socket_id: emitterSocketId,
+    });
+
     return partner;
   }
 
-  async deleteUnknownPartner(id: number) {
+  async deleteUnknownPartner(id: number, emitterSocketId?: string) {
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) throw new NotFoundException('Partner not found');
     if (!partner.is_unknown && !partner.toc_is_deleted)
       throw new BadRequestException('Can only delete unknown or TOC-deleted partners');
 
+    const { program_id, porb_aow_id } = partner;
+
     if (partner.toc_is_deleted) {
       await this.porbContractedPartnerRepository.delete({ porb_partner_id: id });
     }
     await this.porbPartnerRepository.remove(partner);
+
+    this.emitPorbBudgetChanged({
+      program_id,
+      aow_id: porb_aow_id,
+      section: 'partner',
+      type: 'delete',
+      emitter_socket_id: emitterSocketId,
+    });
+
     return { deleted: true };
   }
 
-  async deleteTocDeletedHlo(id: number) {
+  async deleteTocDeletedHlo(id: number, emitterSocketId?: string) {
     const row = await this.porbHloRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('HLO not found');
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
+
+    const { program_id, center_id, porb_aow_id } = row;
     await this.porbHloRepository.remove(row);
+
+    this.emitPorbBudgetChanged({
+      program_id,
+      center_id,
+      aow_id: porb_aow_id,
+      section: 'hlo',
+      type: 'delete',
+      emitter_socket_id: emitterSocketId,
+    });
+
     return { deleted: true };
   }
 
-  async deleteTocDeletedMelia(id: number) {
+  async deleteTocDeletedMelia(id: number, emitterSocketId?: string) {
     const row = await this.porbMeliaRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('MELIA not found');
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
+
+    const { program_id, center_id, porb_aow_id } = row;
     await this.porbMeliaRepository.remove(row);
+
+    this.emitPorbBudgetChanged({
+      program_id,
+      center_id,
+      aow_id: porb_aow_id,
+      section: 'melia',
+      type: 'delete',
+      emitter_socket_id: emitterSocketId,
+    });
+
     return { deleted: true };
   }
 
-  async deleteTocDeletedBilateral(id: number) {
+  async deleteTocDeletedBilateral(id: number, emitterSocketId?: string) {
     const row = await this.porbBilateralRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('Bilateral not found');
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
+
+    const { program_id, center_id } = row;
     await this.porbBilateralRepository.remove(row);
+
+    this.emitPorbBudgetChanged({
+      program_id,
+      center_id,
+      aow_id: null,
+      section: 'bilateral',
+      type: 'delete',
+      emitter_socket_id: emitterSocketId,
+    });
+
     return { deleted: true };
   }
 
@@ -1294,6 +1358,7 @@ export class PorbService {
       percentage?: number | null;
     },
     reqUser?: { id: number },
+    emitterSocketId?: string,
   ) {
     // Cap individual percentage to 0-100
     if (data.percentage != null) {
@@ -1343,7 +1408,16 @@ export class PorbService {
         });
       }
 
-      return this.porbCountryPercentageRepository.findOne({ where: { id: existing.id } });
+      const result = await this.porbCountryPercentageRepository.findOne({ where: { id: existing.id } });
+      this.emitPorbBudgetChanged({
+        program_id: data.program_id,
+        center_id: data.center_id,
+        aow_id: data.porb_aow_id,
+        section: 'country-percentage',
+        type: 'update',
+        emitter_socket_id: emitterSocketId,
+      });
+      return result;
     }
 
     const created = this.porbCountryPercentageRepository.create({
@@ -1353,7 +1427,27 @@ export class PorbService {
       country_name: data.country_name,
       percentage: data.percentage ?? null,
     });
-    return this.porbCountryPercentageRepository.save(created);
+    const saved = await this.porbCountryPercentageRepository.save(created);
+    this.emitPorbBudgetChanged({
+      program_id: data.program_id,
+      center_id: data.center_id,
+      aow_id: data.porb_aow_id,
+      section: 'country-percentage',
+      type: 'update',
+      emitter_socket_id: emitterSocketId,
+    });
+    return saved;
+  }
+
+  private emitPorbBudgetChanged(payload: {
+    program_id: number;
+    center_id?: number | string;
+    aow_id?: number | null;
+    section: 'hlo' | 'partner' | 'bilateral' | 'melia' | 'anaplan' | 'cross' | 'country-percentage';
+    type: 'update' | 'delete' | 'add';
+    emitter_socket_id?: string;
+  }) {
+    this.eventsGateway.server.emit('porbBudgetChanged', payload);
   }
 
   private async logHistory(opts: {
@@ -1376,6 +1470,7 @@ export class PorbService {
     id: number,
     data: Partial<PorbHlo>,
     reqUser?: { id: number },
+    emitterSocketId?: string,
   ) {
     if (data.hlo_budget != null) {
       data.hlo_budget = Math.round(Number(data.hlo_budget));
@@ -1416,6 +1511,17 @@ export class PorbService {
       }
     }
 
+    if (existing) {
+      this.emitPorbBudgetChanged({
+        program_id: existing.program_id,
+        center_id: existing.center_id,
+        aow_id: existing.porb_aow_id,
+        section: 'hlo',
+        type: 'update',
+        emitter_socket_id: emitterSocketId,
+      });
+    }
+
     return updated;
   }
 
@@ -1429,6 +1535,7 @@ export class PorbService {
       assumption?: string;
     },
     reqUser?: { id: number },
+    emitterSocketId?: string,
   ) {
     if (data.partner_budget != null && data.partner_budget !== ('' as any)) {
       data.partner_budget = Math.round(Number(data.partner_budget));
@@ -1551,6 +1658,16 @@ export class PorbService {
     }
 
     const countryNames = selectedCountries.map((c) => c.name).filter(Boolean);
+
+    this.emitPorbBudgetChanged({
+      program_id: partner.program_id,
+      center_id: Number(data.center_id),
+      aow_id: partner.porb_aow_id,
+      section: 'partner',
+      type: 'update',
+      emitter_socket_id: emitterSocketId,
+    });
+
     return {
       ...updated,
       partner_geo: countryNames.length ? countryNames.join(', ') : null,
@@ -1599,6 +1716,7 @@ export class PorbService {
     id: number,
     data: Partial<PorbBilateral>,
     reqUser?: { id: number },
+    emitterSocketId?: string,
   ) {
     if (data.bilateral_budget != null) {
       data.bilateral_budget = Math.round(Number(data.bilateral_budget));
@@ -1645,6 +1763,17 @@ export class PorbService {
       }
     }
 
+    if (existing) {
+      this.emitPorbBudgetChanged({
+        program_id: existing.program_id,
+        center_id: existing.center_id,
+        aow_id: null,
+        section: 'bilateral',
+        type: 'update',
+        emitter_socket_id: emitterSocketId,
+      });
+    }
+
     return updated;
   }
 
@@ -1652,6 +1781,7 @@ export class PorbService {
     id: number,
     data: Partial<PorbMelia>,
     reqUser?: { id: number },
+    emitterSocketId?: string,
   ) {
     if (data.melia_budget != null) {
       data.melia_budget = Math.round(Number(data.melia_budget));
@@ -1698,6 +1828,17 @@ export class PorbService {
       }
     }
 
+    if (existing) {
+      this.emitPorbBudgetChanged({
+        program_id: existing.program_id,
+        center_id: existing.center_id,
+        aow_id: existing.porb_aow_id,
+        section: 'melia',
+        type: 'update',
+        emitter_socket_id: emitterSocketId,
+      });
+    }
+
     return updated;
   }
 
@@ -1710,6 +1851,7 @@ export class PorbService {
       budget?: number | null;
     },
     reqUser?: { id: number },
+    emitterSocketId?: string,
   ) {
     if (data.budget != null) {
       data.budget = Math.round(Number(data.budget));
@@ -1745,7 +1887,16 @@ export class PorbService {
         });
       }
 
-      return this.porbAnaplanRepository.findOne({ where: { id: existing.id } });
+      const result = await this.porbAnaplanRepository.findOne({ where: { id: existing.id } });
+      this.emitPorbBudgetChanged({
+        program_id: data.program_id,
+        center_id: data.center_id,
+        aow_id: data.porb_aow_id,
+        section: 'anaplan',
+        type: 'update',
+        emitter_socket_id: emitterSocketId,
+      });
+      return result;
     }
 
     const created = this.porbAnaplanRepository.create({
@@ -1772,6 +1923,15 @@ export class PorbService {
       });
     }
 
+    this.emitPorbBudgetChanged({
+      program_id: data.program_id,
+      center_id: data.center_id,
+      aow_id: data.porb_aow_id,
+      section: 'anaplan',
+      type: 'update',
+      emitter_socket_id: emitterSocketId,
+    });
+
     return saved;
   }
 
@@ -1785,6 +1945,7 @@ export class PorbService {
       assumption?: string;
     },
     reqUser?: { id: number },
+    emitterSocketId?: string,
   ) {
     if (data.budget != null) {
       data.budget = Math.round(Number(data.budget));
@@ -1836,7 +1997,16 @@ export class PorbService {
         });
       }
 
-      return this.porbCrossRepository.findOne({ where: { id: existing.id } });
+      const result = await this.porbCrossRepository.findOne({ where: { id: existing.id } });
+      this.emitPorbBudgetChanged({
+        program_id: data.program_id,
+        center_id: data.center_id,
+        aow_id: data.porb_aow_id,
+        section: 'cross',
+        type: 'update',
+        emitter_socket_id: emitterSocketId,
+      });
+      return result;
     }
 
     const created = this.porbCrossRepository.create({
@@ -1847,7 +2017,16 @@ export class PorbService {
       budget: data.budget ?? null,
       assumption: String(data.assumption || ''),
     });
-    return this.porbCrossRepository.save(created);
+    const saved = await this.porbCrossRepository.save(created);
+    this.emitPorbBudgetChanged({
+      program_id: data.program_id,
+      center_id: data.center_id,
+      aow_id: data.porb_aow_id,
+      section: 'cross',
+      type: 'update',
+      emitter_socket_id: emitterSocketId,
+    });
+    return saved;
   }
 
   async migrateExistingCrossToStandard() {
@@ -3859,8 +4038,12 @@ export class PorbService {
       // Snapshot the summary consolidation data as the submission payload
       const consolidationSnapshot = await this.getSummaryConsolidation(programId);
 
+      // Build the full PORB snapshot for version history
+      const porbSnapshot = await this.buildPorbSnapshot(programId);
+
       const newSubmission = this.submissionRepository.create();
       newSubmission.toc_data = JSON.stringify(consolidationSnapshot);
+      newSubmission.porb_data = JSON.stringify(porbSnapshot);
       newSubmission.user = user;
       newSubmission.phase = activePhase;
       newSubmission.initiative = initiative;
@@ -5199,10 +5382,10 @@ export class PorbService {
     const totalRowIdx = wsData.length;
     wsData.push([
       'Total',
-      Number(totals.innovationTarget) || 0, Number(totals.innovationBudget) || 0,
-      Number(totals.knowledgeTarget) || 0, Number(totals.knowledgeBudget) || 0,
-      Number(totals.capacityTarget) || 0, Number(totals.capacityBudget) || 0,
-      Number(totals.othersTarget) || 0, Number(totals.othersBudget) || 0,
+      '', Number(totals.innovationBudget) || 0,
+      '', Number(totals.knowledgeBudget) || 0,
+      '', Number(totals.capacityBudget) || 0,
+      '', Number(totals.othersBudget) || 0,
       Number(totals.partnerBudget) || 0, Number(totals.meliaBudget) || 0,
       Number(totals.totalPooledFunding) || 0,
       '',
@@ -5781,5 +5964,181 @@ export class PorbService {
     });
 
     return ws;
+  }
+
+  /**
+   * Build a full JSON snapshot of all PORB data for a program.
+   * Used when submitting to freeze the data at that point in time.
+   */
+  private async buildPorbSnapshot(programId: number) {
+    // Get all AOWs
+    const aows = await this.getAows(programId);
+
+    // Get all centers assigned to this program
+    const activePhase = await this.phasesService.findActivePhase();
+    let centers: Organization[] = [];
+    if (activePhase) {
+      centers = await this.phasesService.fetchAssignedOrganizations(
+        activePhase.id,
+        programId,
+      );
+    }
+    if (!centers?.length) {
+      centers = await this.organizationRepo.find();
+    }
+
+    // Build per-AOW, per-center data
+    const aowSnapshots = [];
+    for (const aow of aows) {
+      const centerSnapshots = [];
+      for (const center of centers) {
+        const centerId = Number(center.code);
+        const centerName =
+          center.acronym || center.name || String(centerId);
+
+        // Fetch all section data for this AOW+center combo
+        const [hlos, partners, melias, anaplan, cross, countryPercentages] =
+          await Promise.all([
+            this.getHlos(programId, aow.id, centerId),
+            this.getPartners(programId, aow.id, centerId),
+            this.getMelia(programId, aow.id, centerId),
+            this.getAnaplan(programId, aow.id, centerId),
+            this.getCross(programId, aow.id, centerId),
+            this.getCountryPercentage(programId, aow.id, centerId),
+          ]);
+
+        centerSnapshots.push({
+          center_code: centerId,
+          center_name: centerName,
+          hlos,
+          partners,
+          melias,
+          anaplan,
+          cross_cutting: cross,
+          country_percentages: countryPercentages,
+        });
+      }
+
+      aowSnapshots.push({
+        id: aow.id,
+        toc_id: aow.toc_id,
+        aow_name: aow.aow_name,
+        aow_acrnum: aow.aow_acrnum,
+        centers: centerSnapshots,
+      });
+    }
+
+    // Bilaterals are center-level (not per-AOW)
+    const bilateralSnapshots = [];
+    for (const center of centers) {
+      const bilaterals = await this.getBilaterals(
+        programId,
+        undefined,
+        Number(center.code),
+      );
+      for (const b of bilaterals) {
+        bilateralSnapshots.push(b);
+      }
+    }
+
+    return {
+      snapshot_version: 1,
+      program_id: programId,
+      submitted_at: new Date().toISOString(),
+      aows: aowSnapshots,
+      bilaterals: bilateralSnapshots,
+    };
+  }
+
+  /**
+   * Get a submitted PORB version with its snapshot data.
+   * Approved versions are viewable by any authenticated user.
+   * Pending/rejected: only program team members and admins.
+   */
+  async getSubmissionVersion(
+    submissionId: number,
+    reqUser: { id: number; role?: string },
+  ) {
+    const submission = await this.submissionRepository.findOne({
+      where: { id: submissionId },
+      relations: ['user', 'phase', 'initiative'],
+    });
+    if (!submission) {
+      throw new NotFoundException('Submission not found');
+    }
+
+    // Approved versions viewable by any authenticated user
+    // Pending/rejected: only program team + admins
+    if (submission.status !== SubmissionStatus.APPROVED) {
+      const user = await this.userRepository.findOneBy({ id: reqUser.id });
+      if (user?.role !== userRole.ADMIN) {
+        const initWithRoles = await this.initiativeRepository.findOne({
+          where: { id: submission.initiative_id },
+          relations: ['roles'],
+        });
+        const isTeamMember = initWithRoles?.roles?.some(
+          (r) => r.user_id === reqUser.id,
+        );
+        if (!isTeamMember) {
+          throw new ForbiddenException('Access denied');
+        }
+      }
+    }
+
+    return {
+      id: submission.id,
+      status: submission.status,
+      status_reason: submission.status_reason,
+      created_at: submission.created_at,
+      user: submission.user
+        ? {
+            id: submission.user.id,
+            full_name: submission.user.full_name || submission.user.email,
+          }
+        : null,
+      phase: submission.phase
+        ? { id: submission.phase.id, name: submission.phase.name }
+        : null,
+      initiative: submission.initiative
+        ? {
+            id: submission.initiative.id,
+            official_code: submission.initiative.official_code,
+            name: submission.initiative.name,
+          }
+        : null,
+      porb_data: submission.porb_data
+        ? JSON.parse(submission.porb_data)
+        : null,
+      toc_data: submission.toc_data
+        ? typeof submission.toc_data === 'string'
+          ? JSON.parse(submission.toc_data)
+          : submission.toc_data
+        : null,
+    };
+  }
+
+  /**
+   * Generate a ZIP export from a submission's snapshot data.
+   * Currently generates from live DB data (TODO: generate from snapshot).
+   */
+  async generateVersionZip(
+    submissionId: number,
+    res: Response,
+    reqUser: { id: number; role?: string },
+  ) {
+    const submission = await this.submissionRepository.findOne({
+      where: { id: submissionId },
+      relations: ['initiative'],
+    });
+    if (!submission) {
+      throw new NotFoundException('Submission not found');
+    }
+    if (!submission.porb_data) {
+      throw new BadRequestException('No PORB data for this submission');
+    }
+
+    // For now, generate from live DB using the program_id
+    // TODO: Generate from snapshot data in a future iteration
+    return this.generatePorbZip(submission.initiative_id, res);
   }
 }

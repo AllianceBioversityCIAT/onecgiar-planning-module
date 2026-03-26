@@ -101,7 +101,7 @@
                   class="team-members-icon-table"
                   matTooltip="View"
                   matTooltipPosition="above"
-                  routerLink="./{{ row['id'] }}"
+                  [routerLink]="row.has_porb_data ? ['/program', initiativeId, officalCode, 'porb', 'version', row.id] : './' + row['id']"
                 >
                   <mat-icon class="user-management-table__icon"
                     ><svg

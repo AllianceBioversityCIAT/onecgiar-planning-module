@@ -62,6 +62,7 @@ import { AssignOrganizationsComponent } from "./assign-organizations/assign-orga
 import { SpinnerComponent } from "./spinner/spinner.component";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { LoadingInterceptor } from "./loading.interceptor";
+import { SocketIdInterceptor } from "./socket-id.interceptor";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatRadioModule } from "@angular/material/radio";
 import { AccessDeniedComponent } from "./access-denied/access-denied.component";
@@ -130,6 +131,7 @@ import { SummaryAssumptionIconComponent } from "./porb/components/summary-assump
 import { SummaryAssumptionDialogComponent } from "./porb/components/summary-assumption-icon/summary-assumption-dialog.component";
 import { ValidationErrorsDialogComponent } from "./porb/components/validation-errors-dialog.component";
 import { PorbDangerZoneComponent } from "./admin/porb-danger-zone/porb-danger-zone.component";
+import { PorbVersionViewComponent } from "./porb/porb-version-view/porb-version-view.component";
 
 
 @NgModule({ declarations: [
@@ -220,6 +222,7 @@ import { PorbDangerZoneComponent } from "./admin/porb-danger-zone/porb-danger-zo
         SummaryAssumptionDialogComponent,
         ValidationErrorsDialogComponent,
         PorbDangerZoneComponent,
+        PorbVersionViewComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,
@@ -269,6 +272,11 @@ import { PorbDangerZoneComponent } from "./admin/porb-danger-zone/porb-danger-zo
         {
             provide: HTTP_INTERCEPTORS,
             useClass: LoadingInterceptor,
+            multi: true,
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: SocketIdInterceptor,
             multi: true,
         },
         // {
