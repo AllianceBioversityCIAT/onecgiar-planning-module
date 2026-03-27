@@ -158,11 +158,11 @@
                 </button> -->
 
                 <button
-                  *ngIf="row.status == 'Approved'"
+                  *ngIf="row.status == 'Approved' || row.has_porb_data"
                   class="team-members-icon-table"
-                  matTooltip="Download"
+                  matTooltip="Export ZIP"
                   matTooltipPosition="above"
-                  (click)="generateExcel(row.id)"
+                  (click)="generateExcel(row)"
                 >
                   <mat-icon
                     class="user-management-table__icon"
