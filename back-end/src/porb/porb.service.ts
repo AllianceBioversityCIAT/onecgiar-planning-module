@@ -4228,11 +4228,7 @@ export class PorbService {
    * Approved/Pending = initiatives whose latest submission matches the status.
    */
   async getExportList(phaseId?: number, status?: string) {
-    const initiatives = await this.initiativeRepository.find({
-      where: { archived: false },
-      relations: ['latest_submission'],
-      order: { official_code: 'ASC' },
-    });
+    const normalizedStatus = (status || 'Approved').trim();
 
     // Check which initiatives have PORB data (at least one AOW)
     const aowCounts = await this.porbAowRepository
@@ -4243,25 +4239,60 @@ export class PorbService {
       .getRawMany();
     const programsWithAows = new Set(aowCounts.map((r) => r.program_id));
 
-    const normalizedStatus = (status || 'Approved').trim();
+    if (normalizedStatus === 'Draft') {
+      // Draft: initiatives with PORB AOWs that have no non-draft submission in this phase
+      const initiatives = await this.initiativeRepository.find({
+        where: { archived: false },
+        order: { official_code: 'ASC' },
+      });
 
-    return initiatives
-      .filter((init) => {
-        if (!programsWithAows.has(init.id)) return false;
+      // Find initiatives that DO have an active (non-draft) submission in this phase
+      const qb = this.submissionRepository
+        .createQueryBuilder('sub')
+        .select('sub.initiative_id', 'initiative_id')
+        .where('sub.status != :draft', { draft: SubmissionStatus.DRAFT });
+      if (phaseId) qb.andWhere('sub.phase_id = :phaseId', { phaseId });
+      const activeSubmissions = await qb.getRawMany();
+      const activeInitIds = new Set(activeSubmissions.map((r: any) => r.initiative_id));
 
-        if (normalizedStatus === 'Draft') {
-          // Draft = no latest submission or latest submission is Draft
-          return !init.latest_submission || init.latest_submission.status === SubmissionStatus.DRAFT;
-        }
-        // Approved or Pending
-        return init.latest_submission?.status === normalizedStatus;
-      })
-      .map((init) => ({
-        id: init.id,
-        official_code: init.official_code,
-        name: init.name,
-        status: init.latest_submission?.status || 'Draft',
-      }));
+      return initiatives
+        .filter((init) => programsWithAows.has(init.id) && !activeInitIds.has(init.id))
+        .map((init) => ({
+          id: init.id,
+          official_code: init.official_code,
+          name: init.name,
+          status: 'Draft',
+        }));
+    }
+
+    // Approved or Pending: find the latest submission per initiative matching phase + status
+    const qb = this.submissionRepository
+      .createQueryBuilder('sub')
+      .innerJoinAndSelect('sub.initiative', 'init')
+      .where('sub.status = :status', { status: normalizedStatus })
+      .andWhere('init.archived = :archived', { archived: false });
+    if (phaseId) qb.andWhere('sub.phase_id = :phaseId', { phaseId });
+    qb.orderBy('sub.id', 'DESC');
+
+    const submissions = await qb.getMany();
+
+    // Deduplicate: keep latest per initiative
+    const seen = new Set<number>();
+    const result: any[] = [];
+    for (const sub of submissions) {
+      if (seen.has(sub.initiative_id)) continue;
+      seen.add(sub.initiative_id);
+      if (!programsWithAows.has(sub.initiative_id)) continue;
+      result.push({
+        id: sub.initiative_id,
+        official_code: sub.initiative?.official_code,
+        name: sub.initiative?.name,
+        status: sub.status,
+      });
+    }
+
+    result.sort((a, b) => (a.official_code || '').localeCompare(b.official_code || ''));
+    return result;
   }
 
   /**
