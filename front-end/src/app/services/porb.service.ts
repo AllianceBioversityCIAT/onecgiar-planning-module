@@ -485,6 +485,14 @@ export class PorbService {
     );
   }
 
+  async resetAllToDraft(): Promise<any> {
+    return firstValueFrom(
+      this.http
+        .post(`${environment.api_url}/porb/reset-all-to-draft`, {})
+        .pipe(map((d: any) => d))
+    );
+  }
+
   async getTocLastUpdates(): Promise<any> {
     return firstValueFrom(
       this.http

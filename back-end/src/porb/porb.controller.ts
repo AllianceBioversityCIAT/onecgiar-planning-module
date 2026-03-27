@@ -616,6 +616,13 @@ export class PorbController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @Post('reset-all-to-draft')
+  resetAllToDraft() {
+    return this.porbService.resetAllToDraft();
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
   @Delete('clear-all-data')
   clearAllPorbData(@Query('program_id') program_id?: string) {
     const pid = program_id ? Number(program_id) : undefined;

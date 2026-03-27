@@ -166,4 +166,35 @@
       </table>
     </div>
   </div>
+
+  <!-- Section 4: Reset All PORB Status to Draft -->
+  <div class="danger-card">
+    <div class="danger-card__header">
+      <mat-icon class="danger-icon">restart_alt</mat-icon>
+      <h3>Reset All PORB Status to Draft</h3>
+    </div>
+    <p class="danger-card__description">
+      Set ALL PORB submission statuses back to Draft. This affects every
+      submission that is currently Pending, Approved, or Rejected.
+    </p>
+
+    <div class="danger-card__controls">
+      <button
+        mat-raised-button
+        class="danger-btn"
+        (click)="resetAllToDraft()"
+        [disabled]="resetDraftLoading"
+      >
+        <mat-icon>restart_alt</mat-icon>
+        <span *ngIf="!resetDraftLoading">Reset All to Draft</span>
+        <span *ngIf="resetDraftLoading">Resetting...</span>
+      </button>
+    </div>
+
+    <div class="danger-card__result" *ngIf="resetDraftResult !== null">
+      <p>
+        <strong>{{ resetDraftResult.updated }}</strong> submission(s) reset to Draft.
+      </p>
+    </div>
+  </div>
 </div>

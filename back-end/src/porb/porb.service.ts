@@ -4223,6 +4223,20 @@ export class PorbService {
   }
 
   /**
+   * Reset ALL PORB submissions to Draft status (admin only).
+   */
+  async resetAllToDraft() {
+    const result = await this.submissionRepository
+      .createQueryBuilder()
+      .update()
+      .set({ status: SubmissionStatus.DRAFT })
+      .where('status != :draft', { draft: SubmissionStatus.DRAFT })
+      .execute();
+
+    return { updated: result.affected || 0 };
+  }
+
+  /**
    * Cancel a pending PORB submission, reverting its status to Draft.
    */
   async cancelSubmission(submissionId: number, reqUser: { id: number }) {

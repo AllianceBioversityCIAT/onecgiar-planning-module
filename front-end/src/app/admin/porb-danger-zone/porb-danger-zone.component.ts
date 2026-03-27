@@ -19,6 +19,10 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
   loading = false;
   lastResult: any = null;
 
+  // Reset to Draft
+  resetDraftLoading = false;
+  resetDraftResult: any = null;
+
   // TOC Import
   importLoading = false;
   importResult: any = null;
@@ -204,6 +208,36 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
           );
         } finally {
           this.importLoading = false;
+        }
+      });
+  }
+
+  resetAllToDraft() {
+    this.dialog
+      .open(DeleteConfirmDialogComponent, {
+        data: {
+          message:
+            'Are you sure you want to reset ALL PORB submissions to Draft? This will affect every Pending, Approved, and Rejected submission.',
+          svg: '../../../assets/shared-image/warning.png',
+        },
+      })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) return;
+        this.resetDraftLoading = true;
+        this.resetDraftResult = null;
+        try {
+          const result = await this.porbService.resetAllToDraft();
+          this.resetDraftResult = result;
+          this.toastr.success(
+            `${result.updated} submission(s) reset to Draft`,
+          );
+        } catch (err: any) {
+          this.toastr.error(
+            err?.error?.message || 'Failed to reset submissions',
+          );
+        } finally {
+          this.resetDraftLoading = false;
         }
       });
   }
