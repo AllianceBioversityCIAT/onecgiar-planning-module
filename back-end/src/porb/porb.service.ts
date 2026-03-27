@@ -4223,17 +4223,30 @@ export class PorbService {
   }
 
   /**
-   * Reset ALL PORB submissions to Draft status (admin only).
+   * Reset all programs' PORB status to Draft (admin only).
+   * Sets the latest_submission status to Draft and clears latest_submission_id
+   * on each initiative so the PORB becomes editable again.
    */
   async resetAllToDraft() {
-    const result = await this.submissionRepository
-      .createQueryBuilder()
-      .update()
-      .set({ status: SubmissionStatus.DRAFT })
-      .where('status != :draft', { draft: SubmissionStatus.DRAFT })
-      .execute();
+    const initiatives = await this.initiativeRepository.find({
+      where: { latest_submission_id: Not(IsNull()) },
+      relations: ['latest_submission'],
+    });
 
-    return { updated: result.affected || 0 };
+    let updated = 0;
+    for (const init of initiatives) {
+      if (init.latest_submission && init.latest_submission.status !== SubmissionStatus.DRAFT) {
+        await this.submissionRepository.update(init.latest_submission.id, {
+          status: SubmissionStatus.DRAFT,
+        });
+        updated++;
+      }
+      await this.initiativeRepository.update(init.id, {
+        latest_submission_id: null as any,
+      });
+    }
+
+    return { updated };
   }
 
   /**
