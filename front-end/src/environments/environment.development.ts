@@ -1,4 +1,5 @@
 export const environment = {
+    buildVersion: 'dev',
     production: false,
     clarityProjectId: null,
     socket_path:"/socket.io",

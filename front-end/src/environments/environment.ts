@@ -1,4 +1,5 @@
 export const environment = {
+    buildVersion: 'dev',
     socket_path:"/socket.io",
     socket_url:"https://api.planning.cgiar.org",
     api_url:'https://api.planning.cgiar.org',

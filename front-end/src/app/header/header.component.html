@@ -80,3 +80,9 @@
     </button>
   </div>
 </header>
+
+<div *ngIf="versionCheck.updateAvailable$ | async" class="version-update-banner">
+  <mat-icon class="version-update-banner__icon">system_update</mat-icon>
+  <span>A new version is available. Please save your work and reload.</span>
+  <button class="version-update-banner__btn" (click)="reloadPage()">Reload Now</button>
+</div>

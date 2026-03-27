@@ -16,6 +16,21 @@ WORKDIR /front-end
 RUN npm install --legacy-peer-deps
 COPY src /front-end/src
 ENV NODE_OPTIONS="--max-old-space-size=8192"
+# Accept build version from Jenkins — only injects into environment files when set
+# Without Jenkins (local docker compose), both frontend and backend stay on 'dev'
+ARG APP_BUILD_VERSION=dev
+RUN if [ "$APP_BUILD_VERSION" != "dev" ]; then \
+      node -e " \
+        const fs = require('fs'); \
+        const v = '$APP_BUILD_VERSION'; \
+        ['environment.ts', 'environment.staging.ts'].forEach(f => { \
+          const p = 'src/environments/' + f; \
+          let c = fs.readFileSync(p, 'utf8'); \
+          c = c.replace(\"buildVersion: 'dev'\", \"buildVersion: '\" + v + \"'\"); \
+          fs.writeFileSync(p, c); \
+        }); \
+      "; \
+    fi
 RUN npx ng build --configuration development
 EXPOSE 443 80
 CMD ["nginx", "-g", "daemon off;"]

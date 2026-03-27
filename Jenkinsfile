@@ -1,5 +1,8 @@
 pipeline {
   agent any
+  environment {
+    APP_BUILD_VERSION = sh(script: 'date +%s', returnStdout: true).trim()
+  }
   stages {
     stage('verify tooling') {
       steps {

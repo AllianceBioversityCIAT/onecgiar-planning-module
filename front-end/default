@@ -22,6 +22,18 @@ server {
         client_max_body_size 100M;
     }
 
+    # Never cache index.html — ensures users always get fresh HTML pointing to new hashed bundles
+    location = /index.html {
+        root /front-end/dist/planning/browser;
+        add_header Cache-Control "no-store" always;
+    }
+
+    # Long cache for content-hashed assets (safe because hash changes on new builds)
+    location ~* \.[a-f0-9]{8,}\.(js|css)$ {
+        root /front-end/dist/planning/browser;
+        add_header Cache-Control "max-age=31536000, immutable" always;
+    }
+
       location /socket.io/ {
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
