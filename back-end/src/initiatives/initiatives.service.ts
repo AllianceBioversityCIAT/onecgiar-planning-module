@@ -967,73 +967,10 @@ async findOne(id: number) {
       });
     }
 
-    // Fall back to old wp_budget query for initiatives without porb_data
-    const porbInitIds = new Set(result.map((r) => r.official_code));
-    const oldData = await this.getInitPartnersBudgetLegacy(query);
-    for (const item of oldData) {
-      if (!porbInitIds.has(item.official_code)) {
-        result.push(item);
-      }
-    }
-
     // Sort by official_code
     result.sort((a, b) => (a.official_code || '').localeCompare(b.official_code || ''));
 
     return result;
-  }
-
-  /**
-   * Legacy budget summary query using wp_budget from old submissions (no porb_data).
-   */
-  private async getInitPartnersBudgetLegacy(query: any) {
-    const initiative = await this.initiativeRepository
-      .createQueryBuilder('init')
-      .leftJoinAndSelect('init.submissions', 'submissions')
-      .where(
-        'submissions.id = (' +
-          this.submissionRepository
-            .createQueryBuilder('submissions')
-            .select('MAX(id)')
-            .where('submissions.initiative_id = init.id')
-            .getQuery() +
-          ')',
-      )
-      .andWhere('submissions.status = :status', {
-        status: SubmissionStatus.APPROVED,
-      })
-      .andWhere('(submissions.porb_data IS NULL OR submissions.porb_data = :empty)', { empty: '' })
-      .select([
-        'init.official_code',
-        'init.name',
-        'submissions.id',
-        'wp_budget.*',
-      ])
-      .addSelect('SUM(wp_budget.budget)', 'wp_budget_total')
-      .leftJoinAndSelect('submissions.wp_budget', 'wp_budget')
-       .leftJoinAndSelect('wp_budget.workPackage', 'wp_budget_wp')
-      .leftJoinAndSelect('wp_budget.phase', 'phase')
-      .andWhere('phase.id = :phase_id', { phase_id: query.phase_id })
-      .leftJoinAndSelect('wp_budget.organization', 'organization')
-      .andWhere(`LOWER(wp_budget_wp.name) NOT LIKE '%project%'`)
-      .andWhere(
-        new Brackets((qb) => {
-          if (query.initiatives) {
-            qb.andWhere('init.id IN (:initiatives)', {
-              initiatives: query.initiatives,
-            });
-          }
-          if (query.partners) {
-            qb.andWhere('organization.code IN (:partners)', {
-              partners: query.partners,
-            });
-          }
-        }),
-      )
-
-      .groupBy('init.id , wp_budget.organization_code')
-      .getMany();
-
-    return initiative;
   }
   async getInitExport(
     phase_id: number,
