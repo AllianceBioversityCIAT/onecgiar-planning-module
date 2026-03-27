@@ -869,6 +869,123 @@ async findOne(id: number) {
   }
 
   async getInitPartnersBudget(query: any) {
+    // Build a map of organization code -> org entity for name/acronym lookup
+    const allOrgs = await this.organizationRepository.find();
+    const orgMap = new Map<string, Organization>();
+    allOrgs.forEach((o) => orgMap.set(String(o.code), o));
+
+    // Find the latest approved submission per initiative that has porb_data
+    const qb = this.submissionRepository
+      .createQueryBuilder('sub')
+      .innerJoinAndSelect('sub.initiative', 'init')
+      .where('sub.status = :status', { status: SubmissionStatus.APPROVED })
+      .andWhere('sub.porb_data IS NOT NULL')
+      .andWhere("sub.porb_data != ''")
+      .orderBy('sub.id', 'DESC');
+
+    if (query.initiatives) {
+      const ids = Array.isArray(query.initiatives)
+        ? query.initiatives
+        : [query.initiatives];
+      qb.andWhere('init.id IN (:...ids)', { ids });
+    }
+
+    const approvedSubs = await qb.getMany();
+
+    // Keep only the latest per initiative
+    const seenInit = new Set<number>();
+    const latestSubs: Submission[] = [];
+    for (const sub of approvedSubs) {
+      if (seenInit.has(sub.initiative_id)) continue;
+      seenInit.add(sub.initiative_id);
+      latestSubs.push(sub);
+    }
+
+    // Parse porb_data and build the same shape the frontend expects
+    const partnerFilter = query.partners
+      ? new Set(
+          (Array.isArray(query.partners) ? query.partners : [query.partners]).map(String),
+        )
+      : null;
+
+    const result: any[] = [];
+
+    for (const sub of latestSubs) {
+      let porbData: any;
+      try {
+        porbData = typeof sub.porb_data === 'string'
+          ? JSON.parse(sub.porb_data)
+          : sub.porb_data;
+      } catch {
+        continue;
+      }
+
+      // Aggregate budget per center from porb_data
+      const centerBudgets = new Map<string, number>();
+
+      for (const aow of porbData.aows || []) {
+        for (const center of aow.centers || []) {
+          const code = String(center.center_code);
+          if (partnerFilter && !partnerFilter.has(code)) continue;
+
+          let budget = 0;
+          for (const h of center.hlos || []) budget += Number(h.hlo_budget) || 0;
+          for (const p of center.partners || []) budget += Number(p.partner_budget) || 0;
+          for (const m of center.melias || []) budget += Number(m.melia_budget) || 0;
+          for (const a of center.anaplan || []) budget += Number(a.porb_budget) || 0;
+          for (const c of center.cross_cutting || []) budget += Number(c.budget) || 0;
+
+          centerBudgets.set(code, (centerBudgets.get(code) || 0) + budget);
+        }
+      }
+
+      // Add bilateral budgets (center-level)
+      for (const b of porbData.bilaterals || []) {
+        const code = String(b.center_id);
+        if (partnerFilter && !partnerFilter.has(code)) continue;
+        centerBudgets.set(code, (centerBudgets.get(code) || 0) + (Number(b.bilateral_budget) || 0));
+      }
+
+      // Build wp_budget-compatible array
+      const wpBudget = Array.from(centerBudgets.entries()).map(
+        ([orgCode, total]) => {
+          const org = orgMap.get(orgCode);
+          return {
+            organization_code: orgCode,
+            total,
+            organization: org
+              ? { code: org.code, acronym: org.acronym, name: org.name }
+              : { code: orgCode, acronym: orgCode, name: orgCode },
+          };
+        },
+      );
+
+      result.push({
+        official_code: sub.initiative?.official_code,
+        name: sub.initiative?.name,
+        submissions: [{ id: sub.id, wp_budget: wpBudget }],
+      });
+    }
+
+    // Fall back to old wp_budget query for initiatives without porb_data
+    const porbInitIds = new Set(result.map((r) => r.official_code));
+    const oldData = await this.getInitPartnersBudgetLegacy(query);
+    for (const item of oldData) {
+      if (!porbInitIds.has(item.official_code)) {
+        result.push(item);
+      }
+    }
+
+    // Sort by official_code
+    result.sort((a, b) => (a.official_code || '').localeCompare(b.official_code || ''));
+
+    return result;
+  }
+
+  /**
+   * Legacy budget summary query using wp_budget from old submissions (no porb_data).
+   */
+  private async getInitPartnersBudgetLegacy(query: any) {
     const initiative = await this.initiativeRepository
       .createQueryBuilder('init')
       .leftJoinAndSelect('init.submissions', 'submissions')
@@ -884,6 +1001,7 @@ async findOne(id: number) {
       .andWhere('submissions.status = :status', {
         status: SubmissionStatus.APPROVED,
       })
+      .andWhere('(submissions.porb_data IS NULL OR submissions.porb_data = :empty)', { empty: '' })
       .select([
         'init.official_code',
         'init.name',
