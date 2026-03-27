@@ -4223,6 +4223,95 @@ export class PorbService {
   }
 
   /**
+   * List initiatives for admin PORB export, filtered by phase and status.
+   * Draft = initiatives with PORB AOWs but no pending/approved submission.
+   * Approved/Pending = initiatives whose latest submission matches the status.
+   */
+  async getExportList(phaseId?: number, status?: string) {
+    const initiatives = await this.initiativeRepository.find({
+      where: { archived: false },
+      relations: ['latest_submission'],
+      order: { official_code: 'ASC' },
+    });
+
+    // Check which initiatives have PORB data (at least one AOW)
+    const aowCounts = await this.porbAowRepository
+      .createQueryBuilder('aow')
+      .select('aow.program_id', 'program_id')
+      .addSelect('COUNT(*)', 'cnt')
+      .groupBy('aow.program_id')
+      .getRawMany();
+    const programsWithAows = new Set(aowCounts.map((r) => r.program_id));
+
+    const normalizedStatus = (status || 'Approved').trim();
+
+    return initiatives
+      .filter((init) => {
+        if (!programsWithAows.has(init.id)) return false;
+
+        if (normalizedStatus === 'Draft') {
+          // Draft = no latest submission or latest submission is Draft
+          return !init.latest_submission || init.latest_submission.status === SubmissionStatus.DRAFT;
+        }
+        // Approved or Pending
+        return init.latest_submission?.status === normalizedStatus;
+      })
+      .map((init) => ({
+        id: init.id,
+        official_code: init.official_code,
+        name: init.name,
+        status: init.latest_submission?.status || 'Draft',
+      }));
+  }
+
+  /**
+   * Export a bulk ZIP of PORB Excel files for multiple programs.
+   */
+  async exportBulkZip(programIds: number[], res: Response) {
+    if (!programIds?.length) {
+      throw new BadRequestException('No programs selected');
+    }
+
+    const zipName = `PORB_Export_${new Date().toISOString().slice(0, 10)}`;
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${zipName}.zip"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    for (const programId of programIds) {
+      const initiative = await this.initiativeRepository.findOne({ where: { id: programId } });
+      if (!initiative) continue;
+      const code = initiative.official_code || String(programId);
+
+      // Summary workbook
+      const summaryWb = await this.buildPorbWorkbook(programId, undefined);
+      const summaryBuf = Buffer.from(
+        XLSX.write(summaryWb, { type: 'buffer', bookType: 'xlsx', cellStyles: true }),
+      );
+      archive.append(summaryBuf, { name: `${code}/Summary.xlsx` });
+
+      // Per-center workbooks
+      const activePhase = await this.phasesService.findActivePhase();
+      let centers = await this.phasesService.fetchAssignedOrganizations(activePhase?.id, programId);
+      if (!centers?.length) {
+        centers = await this.organizationRepo.find();
+      }
+      for (const center of centers) {
+        const centerName = center.acronym || center.name || String(center.code);
+        const wb = await this.buildPorbWorkbook(programId, center.code);
+        const buf = Buffer.from(
+          XLSX.write(wb, { type: 'buffer', bookType: 'xlsx', cellStyles: true }),
+        );
+        archive.append(buf, { name: `${code}/${centerName}.xlsx` });
+      }
+    }
+
+    await archive.finalize();
+  }
+
+  /**
    * Reset all programs' PORB status to Draft (admin only).
    * Sets the latest_submission status to Draft and clears latest_submission_id
    * on each initiative so the PORB becomes editable again.

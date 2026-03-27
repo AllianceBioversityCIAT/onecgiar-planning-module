@@ -616,6 +616,29 @@ export class PorbController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @Get('export-list')
+  getExportList(
+    @Query('phase_id') phase_id?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.porbService.getExportList(
+      phase_id ? Number(phase_id) : undefined,
+      status,
+    );
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('export-bulk')
+  async exportBulk(
+    @Body() data: { program_ids: number[] },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.porbService.exportBulkZip(data.program_ids, res);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
   @Post('reset-all-to-draft')
   resetAllToDraft() {
     return this.porbService.resetAllToDraft();

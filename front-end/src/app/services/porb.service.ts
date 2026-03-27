@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { firstValueFrom, map } from "rxjs";
 import { environment } from "src/environments/environment";
@@ -490,6 +490,27 @@ export class PorbService {
       this.http
         .post(`${environment.api_url}/porb/reset-all-to-draft`, {})
         .pipe(map((d: any) => d))
+    );
+  }
+
+  async getExportList(phaseId?: number, status?: string): Promise<any> {
+    let params = new HttpParams();
+    if (phaseId) params = params.set('phase_id', String(phaseId));
+    if (status) params = params.set('status', status);
+    return firstValueFrom(
+      this.http
+        .get(`${environment.api_url}/porb/export-list`, { params })
+        .pipe(map((d: any) => d))
+    ).catch(() => []);
+  }
+
+  async exportBulkZip(programIds: number[]): Promise<any> {
+    return firstValueFrom(
+      this.http.post(`${environment.api_url}/porb/export-bulk`, { program_ids: programIds }, {
+        observe: 'response',
+        responseType: 'blob',
+        headers: new HttpHeaders({ skipLoading: 'true' }),
+      })
     );
   }
 
