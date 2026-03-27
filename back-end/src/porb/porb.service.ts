@@ -4536,13 +4536,16 @@ export class PorbService {
    * Load all data needed for Excel generation, build workbook, return as sheets.
    */
   private async buildPorbWorkbook(programId: number, centerId?: any) {
-    const [aows, hlos, partners, bilaterals, melias, summaryData] = await Promise.all([
+    const [aows, hlos, partners, bilaterals, melias, summaryData, countryPercentageRows] = await Promise.all([
       this.getAows(programId),
       this.getHlos(programId, undefined, centerId),
       this.getPartners(programId, undefined, centerId),
       this.getBilaterals(programId, undefined, centerId),
       this.getMelia(programId, undefined, centerId),
       this.getSummaryConsolidation(programId),
+      this.porbCountryPercentageRepository.find({
+        where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
+      }),
     ]);
 
     const aowMap = new Map<number, { code: string; name: string }>();
@@ -4636,6 +4639,19 @@ export class PorbService {
       wb,
       this.generatePorbAnaplanSheet(anaplanRows, aowMap, sortedAowIds),
       'Anaplan',
+    );
+
+    // Country Percentage sheet: needs HLO + cross budgets for pooled totals
+    XLSX.utils.book_append_sheet(
+      wb,
+      this.generatePorbCountryPercentageSheet(
+        countryPercentageRows,
+        Array.isArray(hlos) ? hlos : [],
+        crossRows,
+        aowMap,
+        sortedAowIds,
+      ),
+      'Countries of Implementation',
     );
 
     return wb;
@@ -5962,6 +5978,91 @@ export class PorbService {
       numberColumns: numberCols,
       rowHeights: { header: 25, data: 20, subtotal: 20 },
     });
+
+    return ws;
+  }
+
+  private generatePorbCountryPercentageSheet(
+    cpRows: PorbCountryPercentage[],
+    hlos: PorbHlo[],
+    crossRows: PorbCross[],
+    aowMap: Map<number, { code: string; name: string }>,
+    sortedAowIds: number[],
+  ) {
+    const wsData: any[][] = [];
+    const merges: any[] = [];
+
+    wsData.push(['AOW', 'Country', 'Percentage (%)', 'Budget (USD)', 'id']);
+
+    // Build pooled totals per (aow_id, center_id)
+    const pooledMap = new Map<string, number>();
+    for (const h of hlos) {
+      const key = `${h.porb_aow_id}_${h.center_id}`;
+      pooledMap.set(key, (pooledMap.get(key) || 0) + (Number(h.hlo_budget) || 0));
+    }
+    for (const c of crossRows) {
+      const key = `${c.porb_aow_id}_${c.center_id}`;
+      pooledMap.set(key, (pooledMap.get(key) || 0) + (Number(c.budget) || 0));
+    }
+
+    // Group by AOW
+    const cpByAow = new Map<number, PorbCountryPercentage[]>();
+    for (const row of cpRows) {
+      const list = cpByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      cpByAow.set(row.porb_aow_id, list);
+    }
+
+    let currentRow = 1;
+
+    for (const aowId of sortedAowIds) {
+      const aowCp = cpByAow.get(aowId);
+      if (!aowCp?.length) continue;
+
+      const aowLabel = this.getAowLabel(aowId, aowMap);
+      const aowStartRow = currentRow;
+
+      // Sort by country name
+      aowCp.sort((a, b) => a.country_name.localeCompare(b.country_name));
+
+      for (const row of aowCp) {
+        const pct = Number(row.percentage) || 0;
+        const pooledKey = `${row.porb_aow_id}_${row.center_id}`;
+        const pooledTotal = pooledMap.get(pooledKey) || 0;
+        const budget = Math.round((pct * pooledTotal) / 100);
+
+        wsData.push([
+          aowLabel,
+          row.country_name,
+          pct,
+          budget,
+          row.id,
+        ]);
+        currentRow++;
+      }
+
+      const aowEndRow = currentRow - 1;
+      if (aowEndRow >= aowStartRow) {
+        merges.push({ s: { r: aowStartRow, c: 0 }, e: { r: aowEndRow, c: 0 } });
+      }
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!merges'] = merges;
+
+    ws['!cols'] = [
+      { wch: 10 }, { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 10 },
+    ];
+
+    this.applySheetStyles(ws, wsData, {
+      headerRowCount: 1,
+      wpColumnIndex: 0,
+      numberColumns: [2, 3],
+      rowHeights: { header: 60, data: 45, subtotal: 25 },
+      merges,
+    });
+
+    this.protectAndHideIds(ws, [4]);
 
     return ws;
   }
