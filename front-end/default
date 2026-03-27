@@ -28,8 +28,8 @@ server {
         add_header Cache-Control "no-store" always;
     }
 
-    # Long cache for content-hashed assets (safe because hash changes on new builds)
-    location ~* \.[a-f0-9]{8,}\.(js|css)$ {
+    # Long cache for JS/CSS assets (Angular production builds use content hashes in filenames)
+    location ~* \.(js|css)$ {
         root /front-end/dist/planning/browser;
         add_header Cache-Control "max-age=31536000, immutable" always;
     }
