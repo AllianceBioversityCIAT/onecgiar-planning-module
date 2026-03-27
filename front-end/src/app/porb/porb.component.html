@@ -258,19 +258,12 @@
                 <tr>
                   <th style="text-align: left">Country</th>
                   <th class="num-cell">Percentage (%)</th>
-                  <th class="num-cell">Budget (USD)</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let c of countryConsolidatedData.countries" [hidden]="!c.totalBudget">
+                <tr *ngFor="let c of countryConsolidatedData.countries" [hidden]="!c.percentage">
                   <td style="text-align: left">{{ c.country_name }}</td>
                   <td class="num-cell">{{ c.percentage }}%</td>
-                  <td class="num-cell">{{ formatAnaplanCurrency(c.totalBudget) }}</td>
-                </tr>
-                <tr class="summary-total-row">
-                  <td><strong>Total</strong></td>
-                  <td class="num-cell"></td>
-                  <td class="num-cell"><strong>{{ formatAnaplanCurrency(countryConsolidatedData.grandTotal) }}</strong></td>
                 </tr>
               </tbody>
             </table>
@@ -558,14 +551,12 @@
                       <tr>
                         <th>Country</th>
                         <th class="num-cell">Percentage (%)</th>
-                        <th class="num-cell">Budget (USD)</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr *ngFor="let c of cachedFormattedCountryPercentage">
                         <td>{{ c.country_name }}</td>
                         <td class="num-cell">{{ c.percentage }}%</td>
-                        <td class="num-cell">{{ c.budget_fmt }}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1016,19 +1007,12 @@
                   <tr>
                     <th style="text-align: left">Country</th>
                     <th class="num-cell">Percentage (%)</th>
-                    <th class="num-cell">Budget (USD)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let c of centerCountryConsolidatedData.countries" [hidden]="!c.totalBudget">
+                  <tr *ngFor="let c of centerCountryConsolidatedData.countries" [hidden]="!c.percentage">
                     <td style="text-align: left">{{ c.country_name }}</td>
                     <td class="num-cell">{{ c.percentage }}%</td>
-                    <td class="num-cell">{{ formatAnaplanCurrency(c.totalBudget) }}</td>
-                  </tr>
-                  <tr class="summary-total-row">
-                    <td style="text-align: left"><strong>Total</strong></td>
-                    <td class="num-cell"></td>
-                    <td class="num-cell"><strong>{{ formatAnaplanCurrency(centerCountryConsolidatedData.grandTotal) }}</strong></td>
                   </tr>
                 </tbody>
               </table>

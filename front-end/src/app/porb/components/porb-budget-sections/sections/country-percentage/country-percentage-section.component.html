@@ -15,9 +15,8 @@
     <table class="additional-table">
       <thead>
         <tr>
-          <th style="width: 55%">Country</th>
-          <th class="num-cell" style="width: 22%">Percentage (%)</th>
-          <th class="num-cell" style="width: 23%">Budget (USD)</th>
+          <th style="width: 65%">Country</th>
+          <th class="num-cell" style="width: 35%">Percentage (%)</th>
         </tr>
       </thead>
       <tbody>
@@ -43,11 +42,10 @@
               [class.save-success]="savedIds.has(row.country_name)"
             />
           </td>
-          <td class="num-cell">{{ getFormattedBudget(row) }}</td>
         </tr>
 
         <tr *ngIf="!filteredRows.length">
-          <td colspan="3">No countries found for the current search.</td>
+          <td colspan="2">No countries found for the current search.</td>
         </tr>
 
         <tr class="subtotal-row" *ngIf="filteredRows.length">
@@ -56,7 +54,6 @@
             {{ totalPercentage | number:'1.0-2' }}%
             <span *ngIf="isOverLimit" class="over-limit-badge" matTooltip="Total percentage exceeds 100%">!</span>
           </td>
-          <td class="num-cell">{{ totalBudget }}</td>
         </tr>
       </tbody>
     </table>

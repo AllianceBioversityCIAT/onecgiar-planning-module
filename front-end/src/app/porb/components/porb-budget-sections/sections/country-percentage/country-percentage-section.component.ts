@@ -119,12 +119,11 @@ export class CountryPercentageSectionComponent implements OnChanges {
 
   export() {
     this.exportAsExcel(
-      "country-percentage-budget.xls",
-      ["Country", "Percentage (%)", "Budget (USD)"],
+      "country-percentage.xls",
+      ["Country", "Percentage (%)"],
       this.filteredRows.map((row) => [
         row.country_name,
         String(row.percentage ?? ""),
-        String(this.getComputedBudget(row)),
       ])
     );
   }

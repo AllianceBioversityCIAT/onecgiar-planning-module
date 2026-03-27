@@ -4641,16 +4641,9 @@ export class PorbService {
       'Anaplan',
     );
 
-    // Country Percentage sheet: needs HLO + cross budgets for pooled totals
     XLSX.utils.book_append_sheet(
       wb,
-      this.generatePorbCountryPercentageSheet(
-        countryPercentageRows,
-        Array.isArray(hlos) ? hlos : [],
-        crossRows,
-        aowMap,
-        sortedAowIds,
-      ),
+      this.generatePorbCountryPercentageSheet(countryPercentageRows, aowMap, sortedAowIds),
       'Countries of Implementation',
     );
 
@@ -5984,26 +5977,13 @@ export class PorbService {
 
   private generatePorbCountryPercentageSheet(
     cpRows: PorbCountryPercentage[],
-    hlos: PorbHlo[],
-    crossRows: PorbCross[],
     aowMap: Map<number, { code: string; name: string }>,
     sortedAowIds: number[],
   ) {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'Country', 'Percentage (%)', 'Budget (USD)', 'id']);
-
-    // Build pooled totals per (aow_id, center_id)
-    const pooledMap = new Map<string, number>();
-    for (const h of hlos) {
-      const key = `${h.porb_aow_id}_${h.center_id}`;
-      pooledMap.set(key, (pooledMap.get(key) || 0) + (Number(h.hlo_budget) || 0));
-    }
-    for (const c of crossRows) {
-      const key = `${c.porb_aow_id}_${c.center_id}`;
-      pooledMap.set(key, (pooledMap.get(key) || 0) + (Number(c.budget) || 0));
-    }
+    wsData.push(['AOW', 'Country', 'Percentage (%)', 'id']);
 
     // Group by AOW
     const cpByAow = new Map<number, PorbCountryPercentage[]>();
@@ -6027,15 +6007,10 @@ export class PorbService {
 
       for (const row of aowCp) {
         const pct = Number(row.percentage) || 0;
-        const pooledKey = `${row.porb_aow_id}_${row.center_id}`;
-        const pooledTotal = pooledMap.get(pooledKey) || 0;
-        const budget = Math.round((pct * pooledTotal) / 100);
-
         wsData.push([
           aowLabel,
           row.country_name,
           pct,
-          budget,
           row.id,
         ]);
         currentRow++;
@@ -6051,18 +6026,18 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 10 }, { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 10 },
+      { wch: 10 }, { wch: 30 }, { wch: 15 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 1,
       wpColumnIndex: 0,
-      numberColumns: [2, 3],
+      numberColumns: [2],
       rowHeights: { header: 60, data: 45, subtotal: 25 },
       merges,
     });
 
-    this.protectAndHideIds(ws, [4]);
+    this.protectAndHideIds(ws, [3]);
 
     return ws;
   }
