@@ -4343,8 +4343,12 @@ export class PorbService {
   }
 
   async clearEmails() {
-    const result = await this.emailService.repo.clear();
-    return { cleared: 'email', result };
+    const result = await this.emailService.repo
+      .createQueryBuilder()
+      .delete()
+      .from('email')
+      .execute();
+    return { cleared: 'email', deleted: result.affected || 0 };
   }
 
   async clearHistory() {
@@ -4355,8 +4359,12 @@ export class PorbService {
       .set({ latest_history_id: null as any })
       .where('latest_history_id IS NOT NULL')
       .execute();
-    const result = await this.historyRepository.clear();
-    return { cleared: 'history', result };
+    const result = await this.historyRepository
+      .createQueryBuilder()
+      .delete()
+      .from('history')
+      .execute();
+    return { cleared: 'history', deleted: result.affected || 0 };
   }
 
   /**
