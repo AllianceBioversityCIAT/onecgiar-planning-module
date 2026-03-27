@@ -81,6 +81,16 @@
     color: #1565c0;
     text-decoration: underline;
   }
+
+  &--approved {
+    background: #e8f5e9;
+    border-color: #a5d6a7;
+    color: #1b5e20;
+
+    mat-icon {
+      color: #2e7d32;
+    }
+  }
 }
 
 .porb-breadcrumb {

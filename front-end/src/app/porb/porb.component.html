@@ -41,14 +41,13 @@
   </div>
 
   <!-- Submission locked banner -->
-  <div class="submission-locked-banner" *ngIf="isSubmissionLocked">
+  <div class="submission-locked-banner" [class.submission-locked-banner--approved]="submissionStatus === 'Approved'" *ngIf="isSubmissionLocked">
     <mat-icon>lock</mat-icon>
     <span *ngIf="submissionStatus === 'Pending' && !isNonLeadUser">
       This PORB has been submitted and is pending review. You can cancel the submission using the Cancel button above if changes are needed.
     </span>
     <span *ngIf="submissionStatus === 'Pending' && isNonLeadUser">
       This PORB has been submitted and is pending review. Please contact your Program Lead or coordinator if changes are needed.
-      <a href="mailto:projectcoordinationunit@cgiar.org">projectcoordinationunit&#64;cgiar.org</a>
     </span>
     <span *ngIf="submissionStatus === 'Approved'">
       This PORB has been approved. Please contact admin (PCU) at
