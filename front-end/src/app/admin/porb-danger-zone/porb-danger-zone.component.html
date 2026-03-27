@@ -198,4 +198,61 @@
       </p>
     </div>
   </div>
+
+  <!-- Section 5: Clear Emails -->
+  <div class="danger-card">
+    <div class="danger-card__header">
+      <mat-icon class="danger-icon">email</mat-icon>
+      <h3>Clear Emails</h3>
+    </div>
+    <p class="danger-card__description">
+      Permanently delete all records from the email table.
+    </p>
+
+    <div class="danger-card__controls">
+      <button
+        mat-raised-button
+        class="danger-btn"
+        (click)="clearEmails()"
+        [disabled]="clearEmailsLoading"
+      >
+        <mat-icon>email</mat-icon>
+        <span *ngIf="!clearEmailsLoading">Clear Emails</span>
+        <span *ngIf="clearEmailsLoading">Clearing...</span>
+      </button>
+    </div>
+
+    <div class="danger-card__result" *ngIf="clearEmailsResult !== null">
+      <p>Emails table cleared.</p>
+    </div>
+  </div>
+
+  <!-- Section 6: Clear History -->
+  <div class="danger-card">
+    <div class="danger-card__header">
+      <mat-icon class="danger-icon">history</mat-icon>
+      <h3>Clear History of Changes</h3>
+    </div>
+    <p class="danger-card__description">
+      Permanently delete all records from the history table and clear
+      latest_history references on initiatives.
+    </p>
+
+    <div class="danger-card__controls">
+      <button
+        mat-raised-button
+        class="danger-btn"
+        (click)="clearHistory()"
+        [disabled]="clearHistoryLoading"
+      >
+        <mat-icon>history</mat-icon>
+        <span *ngIf="!clearHistoryLoading">Clear History</span>
+        <span *ngIf="clearHistoryLoading">Clearing...</span>
+      </button>
+    </div>
+
+    <div class="danger-card__result" *ngIf="clearHistoryResult !== null">
+      <p>History table cleared.</p>
+    </div>
+  </div>
 </div>

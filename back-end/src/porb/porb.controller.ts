@@ -616,6 +616,22 @@ export class PorbController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Admin)
+  @Delete('clear-emails')
+  async clearEmails() {
+    const result = await this.porbService.clearEmails();
+    return result;
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Delete('clear-history')
+  async clearHistory() {
+    const result = await this.porbService.clearHistory();
+    return result;
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
   @Get('export-list')
   getExportList(
     @Query('phase_id') phase_id?: string,

@@ -4342,6 +4342,23 @@ export class PorbService {
     await archive.finalize();
   }
 
+  async clearEmails() {
+    const result = await this.emailService.repo.clear();
+    return { cleared: 'email', result };
+  }
+
+  async clearHistory() {
+    // Clear latest_history_id references first to avoid FK constraint
+    await this.initiativeRepository
+      .createQueryBuilder()
+      .update()
+      .set({ latest_history_id: null as any })
+      .where('latest_history_id IS NOT NULL')
+      .execute();
+    const result = await this.historyRepository.clear();
+    return { cleared: 'history', result };
+  }
+
   /**
    * Reset all programs' PORB status to Draft (admin only).
    * Sets the latest_submission status to Draft and clears latest_submission_id

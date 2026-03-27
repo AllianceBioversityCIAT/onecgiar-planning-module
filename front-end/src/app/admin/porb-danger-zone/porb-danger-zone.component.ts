@@ -23,6 +23,12 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
   resetDraftLoading = false;
   resetDraftResult: any = null;
 
+  // Clear tables
+  clearEmailsLoading = false;
+  clearEmailsResult: any = null;
+  clearHistoryLoading = false;
+  clearHistoryResult: any = null;
+
   // TOC Import
   importLoading = false;
   importResult: any = null;
@@ -238,6 +244,56 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
           );
         } finally {
           this.resetDraftLoading = false;
+        }
+      });
+  }
+
+  clearEmails() {
+    this.dialog
+      .open(DeleteConfirmDialogComponent, {
+        data: {
+          message: 'Are you sure you want to permanently delete all email records?',
+          svg: '../../../assets/shared-image/warning.png',
+        },
+      })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) return;
+        this.clearEmailsLoading = true;
+        this.clearEmailsResult = null;
+        try {
+          await this.porbService.clearEmails();
+          this.clearEmailsResult = true;
+          this.toastr.success('Emails table cleared');
+        } catch (err: any) {
+          this.toastr.error(err?.error?.message || 'Failed to clear emails');
+        } finally {
+          this.clearEmailsLoading = false;
+        }
+      });
+  }
+
+  clearHistory() {
+    this.dialog
+      .open(DeleteConfirmDialogComponent, {
+        data: {
+          message: 'Are you sure you want to permanently delete all history records? This also clears latest_history references on initiatives.',
+          svg: '../../../assets/shared-image/warning.png',
+        },
+      })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) return;
+        this.clearHistoryLoading = true;
+        this.clearHistoryResult = null;
+        try {
+          await this.porbService.clearHistory();
+          this.clearHistoryResult = true;
+          this.toastr.success('History table cleared');
+        } catch (err: any) {
+          this.toastr.error(err?.error?.message || 'Failed to clear history');
+        } finally {
+          this.clearHistoryLoading = false;
         }
       });
   }

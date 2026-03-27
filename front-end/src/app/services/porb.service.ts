@@ -493,6 +493,22 @@ export class PorbService {
     );
   }
 
+  async clearEmails(): Promise<any> {
+    return firstValueFrom(
+      this.http
+        .delete(`${environment.api_url}/porb/clear-emails`)
+        .pipe(map((d: any) => d))
+    );
+  }
+
+  async clearHistory(): Promise<any> {
+    return firstValueFrom(
+      this.http
+        .delete(`${environment.api_url}/porb/clear-history`)
+        .pipe(map((d: any) => d))
+    );
+  }
+
   async getExportList(phaseId?: number, status?: string): Promise<any> {
     let params = new HttpParams();
     if (phaseId) params = params.set('phase_id', String(phaseId));
