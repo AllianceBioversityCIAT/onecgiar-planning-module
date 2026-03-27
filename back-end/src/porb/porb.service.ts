@@ -4315,13 +4315,15 @@ export class PorbService {
       const initiative = await this.initiativeRepository.findOne({ where: { id: programId } });
       if (!initiative) continue;
       const code = initiative.official_code || String(programId);
+      const { status } = await this.getLatestSubmission(programId);
+      const folder = `${status}_PORB_${code}`;
 
       // Summary workbook
       const summaryWb = await this.buildPorbWorkbook(programId, undefined);
       const summaryBuf = Buffer.from(
         XLSX.write(summaryWb, { type: 'buffer', bookType: 'xlsx', cellStyles: true }),
       );
-      archive.append(summaryBuf, { name: `${code}/Summary.xlsx` });
+      archive.append(summaryBuf, { name: `${folder}/Summary.xlsx` });
 
       // Per-center workbooks
       const activePhase = await this.phasesService.findActivePhase();
@@ -4335,7 +4337,7 @@ export class PorbService {
         const buf = Buffer.from(
           XLSX.write(wb, { type: 'buffer', bookType: 'xlsx', cellStyles: true }),
         );
-        archive.append(buf, { name: `${code}/${centerName}.xlsx` });
+        archive.append(buf, { name: `${folder}/${centerName}.xlsx` });
       }
     }
 
@@ -5456,9 +5458,10 @@ export class PorbService {
 
     const initiative = await this.initiativeRepository.findOne({ where: { id: programId } });
     const code = initiative?.official_code || programId;
+    const { status } = await this.getLatestSubmission(programId);
     const fileName = centerId
-      ? `PORB_Anaplan_${code}_center${centerId}`
-      : `PORB_Anaplan_${code}`;
+      ? `${status}_PORB_Anaplan_${code}_center${centerId}`
+      : `${status}_PORB_Anaplan_${code}`;
 
     const dirPath = join(process.cwd(), 'generated_files');
     const { mkdirSync, existsSync } = require('fs');
@@ -5484,7 +5487,8 @@ export class PorbService {
 
     const initiative = await this.initiativeRepository.findOne({ where: { id: programId } });
     const code = initiative?.official_code || programId;
-    const fileName = centerId ? `PORB_${code}_center${centerId}` : `PORB_${code}`;
+    const { status } = await this.getLatestSubmission(programId);
+    const fileName = centerId ? `${status}_PORB_${code}_center${centerId}` : `${status}_PORB_${code}`;
 
     const dirPath = join(process.cwd(), 'generated_files');
     const { mkdirSync, existsSync } = require('fs');
@@ -5512,6 +5516,7 @@ export class PorbService {
     const initiative = await this.initiativeRepository.findOne({ where: { id: programId } });
     if (!initiative) throw new NotFoundException('Initiative not found');
     const code = initiative.official_code || String(programId);
+    const { status } = await this.getLatestSubmission(programId);
 
     const activePhase = await this.submissionService.PhasesService.findActivePhase();
     let centers = await this.phasesService.fetchAssignedOrganizations(
@@ -5522,7 +5527,7 @@ export class PorbService {
       centers = await this.organizationRepo.find();
     }
 
-    const zipName = `PORB_${code}`;
+    const zipName = `${status}_PORB_${code}`;
 
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${zipName}.zip"`);
@@ -6419,8 +6424,38 @@ export class PorbService {
       throw new BadRequestException('No PORB data for this submission');
     }
 
-    // For now, generate from live DB using the program_id
-    // TODO: Generate from snapshot data in a future iteration
-    return this.generatePorbZip(submission.initiative_id, res);
+    // Override the filename with the submission's own status
+    const code = submission.initiative?.official_code || String(submission.initiative_id);
+    const versionStatus = submission.status || 'Draft';
+    const zipName = `${versionStatus}_PORB_${code}_v${submissionId}`;
+
+    const activePhase = await this.phasesService.findActivePhase();
+    let centers = await this.phasesService.fetchAssignedOrganizations(
+      activePhase?.id,
+      submission.initiative_id,
+    );
+    if (!centers?.length) {
+      centers = await this.organizationRepo.find();
+    }
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${zipName}.zip"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    const summaryWb = await this.buildPorbWorkbook(submission.initiative_id, undefined);
+    const summaryBuf = Buffer.from(XLSX.write(summaryWb, { type: 'buffer', bookType: 'xlsx', cellStyles: true }));
+    archive.append(summaryBuf, { name: `${zipName}/Summary.xlsx` });
+
+    for (const center of centers) {
+      const centerName = center.acronym || center.name || String(center.code);
+      const wb = await this.buildPorbWorkbook(submission.initiative_id, center.code);
+      const buf = Buffer.from(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx', cellStyles: true }));
+      archive.append(buf, { name: `${zipName}/${centerName}.xlsx` });
+    }
+
+    await archive.finalize();
   }
 }
