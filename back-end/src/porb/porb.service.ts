@@ -334,6 +334,7 @@ export class PorbService {
     porb_aow_id: number;
     center_id: number;
   }, emitterSocketId?: string) {
+    await this.assertNotLocked(data.program_id);
     const existingCount = await this.porbPartnerRepository.count({
       where: {
         program_id: data.program_id,
@@ -385,6 +386,7 @@ export class PorbService {
   async resolveUnknownPartner(id: number, clarisa_partner_code: number, emitterSocketId?: string) {
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) throw new NotFoundException('Partner not found');
+    await this.assertNotLocked(partner.program_id);
     if (!partner.is_unknown)
       throw new BadRequestException('Partner is not unknown');
 
@@ -412,6 +414,7 @@ export class PorbService {
   async deleteUnknownPartner(id: number, emitterSocketId?: string) {
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) throw new NotFoundException('Partner not found');
+    await this.assertNotLocked(partner.program_id);
     if (!partner.is_unknown && !partner.toc_is_deleted)
       throw new BadRequestException('Can only delete unknown or TOC-deleted partners');
 
@@ -436,6 +439,7 @@ export class PorbService {
   async deleteTocDeletedHlo(id: number, emitterSocketId?: string) {
     const row = await this.porbHloRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('HLO not found');
+    await this.assertNotLocked(row.program_id);
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
 
@@ -457,6 +461,7 @@ export class PorbService {
   async deleteTocDeletedMelia(id: number, emitterSocketId?: string) {
     const row = await this.porbMeliaRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('MELIA not found');
+    await this.assertNotLocked(row.program_id);
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
 
@@ -478,6 +483,7 @@ export class PorbService {
   async deleteTocDeletedBilateral(id: number, emitterSocketId?: string) {
     const row = await this.porbBilateralRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('Bilateral not found');
+    await this.assertNotLocked(row.program_id);
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
 
@@ -1360,6 +1366,7 @@ export class PorbService {
     reqUser?: { id: number },
     emitterSocketId?: string,
   ) {
+    await this.assertNotLocked(data.program_id);
     // Cap individual percentage to 0-100
     if (data.percentage != null) {
       data.percentage = Math.min(100, Math.max(0, data.percentage));
@@ -1476,6 +1483,7 @@ export class PorbService {
       data.hlo_budget = Math.round(Number(data.hlo_budget));
     }
     const existing = await this.porbHloRepository.findOne({ where: { id } });
+    if (existing) await this.assertNotLocked(existing.program_id);
     await this.porbHloRepository.update(id, data);
     const updated = await this.porbHloRepository.findOne({ where: { id } });
 
@@ -1545,6 +1553,7 @@ export class PorbService {
     if (!partner) {
       throw new BadRequestException('Partner row not found.');
     }
+    await this.assertNotLocked(partner.program_id);
 
     const isContracted =
       data.partner_is_contracted === true ||
@@ -1724,6 +1733,7 @@ export class PorbService {
     const existing = await this.porbBilateralRepository.findOne({
       where: { id },
     });
+    if (existing) await this.assertNotLocked(existing.program_id);
     await this.porbBilateralRepository.update(id, data);
     const updated = await this.porbBilateralRepository.findOne({
       where: { id },
@@ -1789,6 +1799,7 @@ export class PorbService {
     const existing = await this.porbMeliaRepository.findOne({
       where: { id },
     });
+    if (existing) await this.assertNotLocked(existing.program_id);
     await this.porbMeliaRepository.update(id, data);
     const updated = await this.porbMeliaRepository.findOne({
       where: { id },
@@ -1856,6 +1867,7 @@ export class PorbService {
     if (data.budget != null) {
       data.budget = Math.round(Number(data.budget));
     }
+    await this.assertNotLocked(data.program_id);
 
     const existing = await this.porbAnaplanRepository.findOne({
       where: {
@@ -1950,6 +1962,7 @@ export class PorbService {
     if (data.budget != null) {
       data.budget = Math.round(Number(data.budget));
     }
+    await this.assertNotLocked(data.program_id);
 
     const existing = await this.porbCrossRepository.findOne({
       where: {
@@ -4002,6 +4015,25 @@ export class PorbService {
       );
     }
 
+  async getLatestSubmission(programId: number): Promise<{ id: number | null; status: string }> {
+    const initiative = await this.initiativeRepository.findOne({
+      where: { id: programId },
+      relations: ['latest_submission'],
+    });
+    const sub = initiative?.latest_submission;
+    if (sub && (sub.status === SubmissionStatus.PENDING || sub.status === SubmissionStatus.APPROVED)) {
+      return { id: sub.id, status: sub.status };
+    }
+    return { id: null, status: 'Draft' };
+  }
+
+  private async assertNotLocked(programId: number): Promise<void> {
+    const { status } = await this.getLatestSubmission(programId);
+    if (status === SubmissionStatus.PENDING || status === SubmissionStatus.APPROVED) {
+      throw new ForbiddenException(`Cannot modify PORB data while submission is ${status}`);
+    }
+  }
+
   /**
    * Submit PORB data for a program, creating a new Submission record
    * with a snapshot of the summary consolidation data.
@@ -4237,6 +4269,7 @@ export class PorbService {
   }
 
   async updateCenterStatus(data, reqUser) {
+    await this.assertNotLocked(data.initiative_id);
     const { initiative_id, organization_code, phase_id, status, organization } = data;
 
     let center_status: CenterStatus;
@@ -4309,6 +4342,7 @@ export class PorbService {
   }
 
   async updateCenterValidate(data, reqUser) {
+    await this.assertNotLocked(data.initiative_id);
     const { initiative_id, organization_code, phase_id, is_valid, organization } = data;
 
     let center_status: CenterStatus;

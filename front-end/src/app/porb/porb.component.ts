@@ -408,6 +408,14 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.submissionStatus === "Pending" || this.submissionStatus === "Approved";
   }
 
+  /** Whether the current user is a non-lead (not admin, not lead role) */
+  get isNonLeadUser(): boolean {
+    if (this.permissionService.isAdmin()) return false;
+    const userRole = this.permissionService.getUserInitiativeRole(this.initiative);
+    if (!userRole) return true;
+    return !this.permissionService.isLeadRole(userRole.role);
+  }
+
   /** Whether the current user has a lead-level role to submit */
   get canSubmit(): boolean {
     return this.permissionService.canSubmit(this.initiative, this.submissionStatus);
@@ -1485,6 +1493,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   async onToggleSelectedCenterCompletion() {
+    if (this.isSubmissionLocked) return;
     if (!this.selectedCenter || !this.initiativeId || !this.activePhaseId) {
       return;
     }

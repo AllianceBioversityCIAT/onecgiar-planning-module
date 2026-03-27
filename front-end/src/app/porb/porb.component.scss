@@ -59,6 +59,30 @@
   padding: 1.6rem;
 }
 
+.submission-locked-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  margin: 0 0 16px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  color: #5d4037;
+  font-size: 14px;
+  line-height: 1.5;
+
+  mat-icon {
+    color: #f57f17;
+    flex-shrink: 0;
+  }
+
+  a {
+    color: #1565c0;
+    text-decoration: underline;
+  }
+}
+
 .porb-breadcrumb {
   display: flex;
   align-items: center;

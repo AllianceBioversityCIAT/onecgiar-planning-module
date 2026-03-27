@@ -475,6 +475,11 @@ export class PorbController {
     return this.porbService.cleanupHloGeo();
   }
 
+  @Get('submission/:program_id')
+  getSubmission(@Param('program_id', ParseIntPipe) program_id: number) {
+    return this.porbService.getLatestSubmission(program_id);
+  }
+
   @Post('submit/:program_id')
   submitPorb(
     @Param('program_id', ParseIntPipe) program_id: number,
