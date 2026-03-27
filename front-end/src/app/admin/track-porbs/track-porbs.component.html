@@ -17,7 +17,7 @@
 
 <div class="track-porbs__text-box--1">
   <p class="track-porbs__text-box__title">
-    Track PORB submission status across all programs. Filter by phase and status to view progress.
+    PORB submission status for the current phase: <strong>{{ phase?.name }}</strong>
   </p>
 </div>
 
@@ -30,43 +30,17 @@
 </highcharts-chart>
 
 <div class="track-porbs__content--1">
-  <div class="filter-bar">
-    <mat-form-field appearance="outline" class="filter-field">
-      <mat-label>Phase</mat-label>
-      <mat-select
-        [(ngModel)]="selectedPhase"
-        (selectionChange)="onPhaseChange()"
-      >
-        <mat-option *ngFor="let phase of phases" [value]="phase">
-          {{ phase.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="filter-field">
-      <mat-label>Status</mat-label>
-      <mat-select
-        [(ngModel)]="selectedStatus"
-        (selectionChange)="onStatusChange()"
-      >
-        <mat-option *ngFor="let status of statusOptions" [value]="status">
-          {{ status }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <div class="filter-bar__actions">
-      <span class="program-count">{{ length }} program(s)</span>
-      <button
-        mat-raised-button
-        class="action-btn action-btn--export"
-        [disabled]="!allPrograms.length"
-        (click)="exportData()"
-      >
-        <mat-icon>file_download</mat-icon>
-        Export Excel
-      </button>
-    </div>
+  <div class="table-header-bar">
+    <span class="program-count">{{ length }} program(s)</span>
+    <button
+      mat-raised-button
+      class="action-btn action-btn--export"
+      [disabled]="!allPrograms.length"
+      (click)="exportData()"
+    >
+      <mat-icon>file_download</mat-icon>
+      Export Excel
+    </button>
   </div>
 
   <div class="table-box mat-elevation-z8">

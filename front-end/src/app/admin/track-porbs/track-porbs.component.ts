@@ -39,11 +39,7 @@ export class TrackPORBsComponent implements OnInit {
   pageSize = 100;
   pageIndex = 1;
 
-  phases: any[] = [];
-  selectedPhase: any = null;
-  statusOptions = ["Approved", "Pending", "Draft"];
-  selectedStatus = "Approved";
-
+  phase: any = null;
   allPrograms: any[] = [];
   columnsToDisplay = ["official_code", "title", "status"];
   dataSource: MatTableDataSource<any>;
@@ -53,31 +49,22 @@ export class TrackPORBsComponent implements OnInit {
     Approved: "#198754",
     Pending: "#e65100",
     Draft: "#616A9E",
-    Rejected: "#dc3545",
   };
 
   async ngOnInit() {
-    this.phases = await this.phasesService.getPhases();
-    this.selectedPhase = this.phases.find((p: any) => p.active) || this.phases[0];
+    this.phase = await this.phasesService.getActivePhase();
     await this.loadData();
     this.title.setTitle("Track PORBs");
     this.meta.updateTag({ name: "description", content: "Track PORBs" });
   }
 
-  async onPhaseChange() {
-    await this.loadData();
-  }
-
-  async onStatusChange() {
-    await this.loadData();
-  }
-
   async loadData() {
-    // Fetch all statuses for pie chart
+    const phaseId = this.phase?.id;
+
     const [approved, pending, draft] = await Promise.all([
-      this.porbService.getExportList(this.selectedPhase?.id, "Approved"),
-      this.porbService.getExportList(this.selectedPhase?.id, "Pending"),
-      this.porbService.getExportList(this.selectedPhase?.id, "Draft"),
+      this.porbService.getExportList(phaseId, "Approved"),
+      this.porbService.getExportList(phaseId, "Pending"),
+      this.porbService.getExportList(phaseId, "Draft"),
     ]);
 
     this.buildPieChart({
@@ -86,16 +73,15 @@ export class TrackPORBsComponent implements OnInit {
       Draft: draft?.length || 0,
     });
 
-    // Use the selected status data for the table
-    let tableData: any[];
-    if (this.selectedStatus === "Approved") tableData = approved;
-    else if (this.selectedStatus === "Pending") tableData = pending;
-    else tableData = draft;
+    // Combine all into one table
+    this.allPrograms = [
+      ...(approved || []),
+      ...(pending || []),
+      ...(draft || []),
+    ].sort((a, b) => (a.official_code || "").localeCompare(b.official_code || ""));
 
-    this.allPrograms = tableData || [];
     this.dataSource = new MatTableDataSource(this.allPrograms);
     this.length = this.allPrograms.length;
-    this.pageIndex = 1;
   }
 
   buildPieChart(counts: Record<string, number>) {
@@ -115,7 +101,7 @@ export class TrackPORBsComponent implements OnInit {
       },
       credits: { enabled: false },
       title: {
-        text: `PORB Status — ${this.selectedPhase?.name || ""}`,
+        text: `PORB Status — ${this.phase?.name || ""}`,
         align: "center",
         style: { fontSize: "16px", color: "#1e1e1e", fontWeight: "600" },
       },

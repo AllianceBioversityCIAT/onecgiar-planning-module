@@ -51,23 +51,11 @@
   box-shadow: 0 0.4rem 0.4rem 0 #00000040;
 }
 
-.filter-bar {
+.table-header-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 0 8px;
-
-  .filter-field {
-    width: 220px;
-    flex-shrink: 0;
-  }
-
-  &__actions {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  justify-content: space-between;
+  padding: 0 0 12px;
 }
 
 .program-count {
