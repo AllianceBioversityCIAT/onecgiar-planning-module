@@ -2416,7 +2416,7 @@ export class PorbService {
     return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals, countryPercentageCount, countryPercentage };
   }
 
-  async importTocToPorbTables(programId: number, officialCode: string, tocDataOverride?: any) {
+  async importTocToPorbTables(programId: number, officialCode: string, tocDataOverride?: any, setTocTimestamps = true) {
     const CROSS_AOW_TOC_ID = '00000000-0000-0000-0000-000000000000';
     const activePhase =
       await this.submissionService.PhasesService.findActivePhase();
@@ -2498,11 +2498,16 @@ export class PorbService {
       if ((row.aow_name || '') !== (existing.aow_name || '')) changes.aow_name = row.aow_name;
       if ((row.aow_acrnum || '') !== (existing.aow_acrnum || '')) changes.aow_acrnum = row.aow_acrnum;
       if (Object.keys(changes).length) {
-        changes.toc_updated_at = new Date();
+        if (setTocTimestamps) changes.toc_updated_at = new Date();
         await this.porbAowRepository.update(existing.id, changes);
       }
     }
-    newAowRows.forEach(r => (r as any).toc_updated_at = new Date());
+    if (setTocTimestamps) {
+      newAowRows.forEach(r => {
+        (r as any).toc_updated_at = new Date();
+        (r as any).toc_created_at = new Date();
+      });
+    }
     const savedAows = newAowRows.length ? await this.porbAowRepository.save(newAowRows) : [];
     const allAows = [...existingAows, ...savedAows];
 
@@ -2606,7 +2611,7 @@ export class PorbService {
       if ((existing.hlo_geo || '') !== (row.hlo_geo || '')) changes.hlo_geo = row.hlo_geo;
       if (String(existing.hlo_target || '') !== String(row.hlo_target || '')) changes.hlo_target = row.hlo_target;
       if (Object.keys(changes).length) {
-        changes.toc_updated_at = new Date();
+        if (setTocTimestamps) changes.toc_updated_at = new Date();
         hloUpdates.push({ id: existing.id, changes });
       }
     }
@@ -2615,7 +2620,12 @@ export class PorbService {
         hloUpdates.map((item) => this.porbHloRepository.update(item.id, item.changes)),
       );
     }
-    newHloRows.forEach(r => r.toc_updated_at = new Date());
+    if (setTocTimestamps) {
+      newHloRows.forEach(r => {
+        r.toc_updated_at = new Date();
+        r.toc_created_at = new Date();
+      });
+    }
     const savedHlos = newHloRows.length ? await this.porbHloRepository.save(newHloRows) : [];
     await this.syncTocDeletedFlags(
       this.porbHloRepository,
@@ -2649,7 +2659,7 @@ export class PorbService {
       if ((existing.partner_name || '') !== (row.partner_name || '')) changes.partner_name = row.partner_name;
       if ((existing.partner_outputs || '') !== (row.partner_outputs || '')) changes.partner_outputs = row.partner_outputs;
       if (Object.keys(changes).length) {
-        changes.toc_updated_at = new Date();
+        if (setTocTimestamps) changes.toc_updated_at = new Date();
         partnerUpdates.push({ id: existing.id, changes });
       }
     }
@@ -2661,7 +2671,12 @@ export class PorbService {
     const newPartnerRows = partnerRows.filter(
       (row) => !existingPartnerByTocId.has(String(row.toc_id)),
     );
-    newPartnerRows.forEach(r => (r as any).toc_updated_at = new Date());
+    if (setTocTimestamps) {
+      newPartnerRows.forEach(r => {
+        (r as any).toc_updated_at = new Date();
+        (r as any).toc_created_at = new Date();
+      });
+    }
     const savedPartners = newPartnerRows.length
       ? await this.porbPartnerRepository.save(newPartnerRows)
       : [];
@@ -2721,7 +2736,7 @@ export class PorbService {
       if ((existing.bilateral_name || '') !== (row.bilateral_name || '')) changes.bilateral_name = row.bilateral_name;
       if ((existing.bilateral_outputs || '') !== (row.bilateral_outputs || '')) changes.bilateral_outputs = row.bilateral_outputs;
       if (Object.keys(changes).length) {
-        changes.toc_updated_at = new Date();
+        if (setTocTimestamps) changes.toc_updated_at = new Date();
         bilateralUpdates.push({ id: existing.id, changes });
       }
     }
@@ -2733,7 +2748,12 @@ export class PorbService {
     const newBilateralRows = validBilateralRows.filter(
       (row) => !existingBilateralKeys.has(`${String(row.toc_id)}::${Number(row.center_id)}`),
     );
-    newBilateralRows.forEach(r => (r as any).toc_updated_at = new Date());
+    if (setTocTimestamps) {
+      newBilateralRows.forEach(r => {
+        (r as any).toc_updated_at = new Date();
+        (r as any).toc_created_at = new Date();
+      });
+    }
     const savedBilaterals = newBilateralRows.length
       ? await this.porbBilateralRepository.save(newBilateralRows)
       : [];
@@ -2846,7 +2866,7 @@ export class PorbService {
       if ((existing.melia_outputs || '') !== (row.melia_outputs || '')) changes.melia_outputs = row.melia_outputs;
       if ((existing.toc_id || '') !== (row.toc_id || '')) changes.toc_id = row.toc_id;
       if (Object.keys(changes).length) {
-        changes.toc_updated_at = new Date();
+        if (setTocTimestamps) changes.toc_updated_at = new Date();
         meliaUpdates.push({ id: existing.id, changes });
       }
     }
@@ -2861,7 +2881,12 @@ export class PorbService {
           `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
         ),
     );
-    newMeliaRows.forEach(r => (r as any).toc_updated_at = new Date());
+    if (setTocTimestamps) {
+      newMeliaRows.forEach(r => {
+        (r as any).toc_updated_at = new Date();
+        (r as any).toc_created_at = new Date();
+      });
+    }
     const savedMelias = newMeliaRows.length ? await this.porbMeliaRepository.save(newMeliaRows) : [];
     await this.syncTocDeletedFlags(
       this.porbMeliaRepository,
@@ -3581,6 +3606,7 @@ export class PorbService {
           initiative.id,
           initiative.official_code,
           tocData,
+          false,
         );
         tocResults.push({
           program_id: initiative.id,

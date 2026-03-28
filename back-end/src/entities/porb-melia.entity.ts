@@ -66,4 +66,7 @@ export class PorbMelia {
 
   @Column({ type: 'datetime', nullable: true, default: null })
   toc_updated_at: Date;
+
+  @Column({ type: 'datetime', nullable: true, default: null })
+  toc_created_at: Date;
 }

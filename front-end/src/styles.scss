@@ -9,6 +9,7 @@ tr.toc-updated td:not(.row-title) {
 }
 
 .toc-badge,
+.new-badge,
 .deleted-badge {
   display: inline-block;
   padding: 1px 6px;
@@ -23,6 +24,11 @@ tr.toc-updated td:not(.row-title) {
 
 .toc-badge {
   background: #0d6efd;
+  color: #fff;
+}
+
+.new-badge {
+  background: #198754;
   color: #fff;
 }
 

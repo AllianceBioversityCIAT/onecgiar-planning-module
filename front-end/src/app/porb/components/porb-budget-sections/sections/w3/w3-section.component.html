@@ -23,10 +23,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.toc-updated]="isTocUpdated(row)">
+        <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.toc-updated]="isTocUpdated(row) || isTocAdded(row)">
           <td [class.deleted-cell]="row.toc_is_deleted">
             <span *ngIf="row.toc_is_deleted" class="deleted-badge" matTooltip="Removed from TOC">Deleted</span>
             <span *ngIf="isTocUpdated(row) && !row.toc_is_deleted" class="toc-badge" matTooltip="Recently Updated from TOC">TOC</span>
+            <span *ngIf="isTocAdded(row) && !row.toc_is_deleted" class="new-badge" matTooltip="Recently Added from TOC">NEW</span>
             {{ row.bilateral_name || "-" }}
           </td>
           <td

@@ -85,7 +85,13 @@ export class PoolSectionComponent implements OnChanges {
 
   isTocUpdated(row: any): boolean {
     if (!row?.toc_updated_at) return false;
+    if (this.isTocAdded(row)) return false;
     return (Date.now() - new Date(row.toc_updated_at).getTime()) < 24 * 60 * 60 * 1000;
+  }
+
+  isTocAdded(row: any): boolean {
+    if (!row?.toc_created_at) return false;
+    return (Date.now() - new Date(row.toc_created_at).getTime()) < 24 * 60 * 60 * 1000;
   }
 
   async deleteRow(row: any) {
