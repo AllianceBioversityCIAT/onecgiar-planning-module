@@ -113,6 +113,11 @@ export class PorbComponent implements OnInit, OnDestroy {
   submitting = false;
   cancellingSubmission = false;
   sectionLoading = false;
+  exportingZip = false;
+  exportingSummary = false;
+  exportingAnaplan = false;
+  exportingCenter = false;
+  exportingCenterAnaplan = false;
 
   showTour = false;
   private readonly porbTourStorageKey = "porb_tour_seen_v2";
@@ -1563,46 +1568,71 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   async exportOverviewExcel() {
-    if (!this.initiativeId) {
+    if (!this.initiativeId || this.exportingSummary) {
       return;
     }
-    await this.porbService.exportExcel(this.initiativeId);
+    this.exportingSummary = true;
+    try {
+      await this.porbService.exportExcel(this.initiativeId);
+    } finally {
+      this.exportingSummary = false;
+    }
   }
 
   async exportAllZip() {
-    if (!this.initiativeId) {
+    if (!this.initiativeId || this.exportingZip) {
       return;
     }
-    await this.porbService.exportZip(this.initiativeId);
+    this.exportingZip = true;
+    try {
+      await this.porbService.exportZip(this.initiativeId);
+    } finally {
+      this.exportingZip = false;
+    }
   }
 
   async exportCenterExcel() {
-    if (!this.initiativeId || !this.selectedCenter) {
+    if (!this.initiativeId || !this.selectedCenter || this.exportingCenter) {
       return;
     }
     const centerId = this.getSelectedCenterId();
     if (centerId == null) {
       return;
     }
-    await this.porbService.exportExcelForCenter(this.initiativeId, centerId);
+    this.exportingCenter = true;
+    try {
+      await this.porbService.exportExcelForCenter(this.initiativeId, centerId);
+    } finally {
+      this.exportingCenter = false;
+    }
   }
 
   async exportAnaplanConsolidatedExcel() {
-    if (!this.initiativeId) {
+    if (!this.initiativeId || this.exportingAnaplan) {
       return;
     }
-    await this.porbService.exportAnaplanExcel(this.initiativeId);
+    this.exportingAnaplan = true;
+    try {
+      await this.porbService.exportAnaplanExcel(this.initiativeId);
+    } finally {
+      this.exportingAnaplan = false;
+    }
   }
 
   async exportCenterAnaplan() {
-    if (!this.initiativeId || !this.selectedCenter) {
+    if (!this.initiativeId || !this.selectedCenter || this.exportingCenterAnaplan) {
       return;
     }
     const centerKey = this.getCenterKey(this.selectedCenter);
     if (centerKey == null) {
       return;
     }
-    await this.porbService.exportAnaplanExcelForCenter(this.initiativeId, centerKey);
+    this.exportingCenterAnaplan = true;
+    try {
+      await this.porbService.exportAnaplanExcelForCenter(this.initiativeId, centerKey);
+    } finally {
+      this.exportingCenterAnaplan = false;
+    }
   }
 
   private openTourIfFirstVisit() {

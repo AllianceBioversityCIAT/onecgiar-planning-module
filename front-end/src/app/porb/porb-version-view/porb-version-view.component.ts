@@ -17,6 +17,7 @@ export class PorbVersionViewComponent implements OnInit {
   submission: any = null;
   porbData: any = null;
   loading = true;
+  exportingZip = false;
 
   // Navigation state
   centers: any[] = [];
@@ -223,6 +224,8 @@ export class PorbVersionViewComponent implements OnInit {
   }
 
   async exportZip(): Promise<void> {
+    if (this.exportingZip) return;
+    this.exportingZip = true;
     try {
       const response: any = await this.porbService.exportVersionZip(
         this.submissionId
@@ -245,6 +248,8 @@ export class PorbVersionViewComponent implements OnInit {
       window.URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Export failed", e);
+    } finally {
+      this.exportingZip = false;
     }
   }
 }

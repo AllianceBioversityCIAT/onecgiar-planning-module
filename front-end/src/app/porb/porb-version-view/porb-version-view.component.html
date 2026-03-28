@@ -13,8 +13,10 @@
     </div>
   </div>
   <div class="version-header__actions">
-    <button mat-raised-button color="primary" (click)="exportZip()">
-      <mat-icon>download</mat-icon> Export ZIP
+    <button mat-raised-button color="primary" [disabled]="exportingZip" (click)="exportZip()">
+      <mat-spinner *ngIf="exportingZip" diameter="18"></mat-spinner>
+      <mat-icon *ngIf="!exportingZip">download</mat-icon>
+      {{ exportingZip ? 'Exporting...' : 'Export ZIP' }}
     </button>
     <button
       mat-button

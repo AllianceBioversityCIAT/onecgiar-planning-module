@@ -80,9 +80,11 @@
           class="icon-btn"
           title="Export All (ZIP)"
           data-tour-anchor="porb-action-export"
+          [disabled]="exportingZip"
           (click)="exportAllZip.emit()"
         >
-          <mat-icon>folder_zip</mat-icon>
+          <mat-spinner *ngIf="exportingZip" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!exportingZip">folder_zip</mat-icon>
         </button>
         <button
           *ngIf="canSubmit && submissionStatus === 'Draft'"
@@ -90,10 +92,12 @@
           class="submit-btn"
           title="Submit PORB"
           data-tour-anchor="porb-action-submit"
+          [disabled]="submitting"
           (click)="submitClicked.emit()"
         >
-          <mat-icon>publish</mat-icon>
-          <span>Submit</span>
+          <mat-spinner *ngIf="submitting" diameter="18"></mat-spinner>
+          <mat-icon *ngIf="!submitting">publish</mat-icon>
+          <span>{{ submitting ? 'Submitting...' : 'Submit' }}</span>
         </button>
       </div>
     </div>

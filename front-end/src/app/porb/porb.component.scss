@@ -404,9 +404,22 @@
   color: #2a2e45;
   border-color: #c5cadf;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #f1f5f9;
     border-color: #a0a8c0;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  ::ng-deep .mat-mdc-progress-spinner {
+    display: inline-flex;
+
+    circle {
+      stroke: #5569dd;
+    }
   }
 }
 

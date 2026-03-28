@@ -18,6 +18,8 @@ export class PorbOverviewComponent {
   @Input() submissionStatus: string = "Draft";
   @Input() submissionId: number | null = null;
   @Input() canSubmit: boolean = false;
+  @Input() submitting: boolean = false;
+  @Input() exportingZip: boolean = false;
 
   @Output() exportOverview = new EventEmitter<void>();
   @Output() exportAllZip = new EventEmitter<void>();

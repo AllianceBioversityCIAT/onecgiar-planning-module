@@ -32,6 +32,8 @@
       [submissionStatus]="submissionStatus"
       [submissionId]="submissionId"
       [canSubmit]="canSubmit"
+      [submitting]="submitting"
+      [exportingZip]="exportingZip"
       (exportOverview)="exportOverviewExcel()"
       (exportAllZip)="exportAllZip()"
       (submitClicked)="onSubmitClicked()"
@@ -96,10 +98,12 @@
               mat-stroked-button
               class="center-action-btn center-export-btn"
               title="Export Summary"
+              [disabled]="exportingSummary"
               (click)="exportOverviewExcel()"
             >
-              <mat-icon>download</mat-icon>
-              Export Summary
+              <mat-spinner *ngIf="exportingSummary" diameter="18"></mat-spinner>
+              <mat-icon *ngIf="!exportingSummary">download</mat-icon>
+              {{ exportingSummary ? 'Exporting...' : 'Export Summary' }}
             </button>
           </div>
         </div>
@@ -205,10 +209,12 @@
               mat-stroked-button
               class="center-action-btn center-export-btn"
               title="Export Budget for Financial Reporting"
+              [disabled]="exportingAnaplan"
               (click)="exportAnaplanConsolidatedExcel()"
             >
-              <mat-icon>download</mat-icon>
-              Export Anaplan
+              <mat-spinner *ngIf="exportingAnaplan" diameter="18"></mat-spinner>
+              <mat-icon *ngIf="!exportingAnaplan">download</mat-icon>
+              {{ exportingAnaplan ? 'Exporting...' : 'Export Anaplan' }}
             </button>
           </div>
           <div class="summary-table-wrapper">
@@ -606,10 +612,12 @@
             mat-stroked-button
             class="center-action-btn center-export-btn"
             [title]="'Export ' + (selectedCenter?.acronym || selectedCenter?.name) + ' data'"
+            [disabled]="exportingCenter"
             (click)="exportCenterExcel()"
           >
-            <mat-icon>download</mat-icon>
-            Export Center
+            <mat-spinner *ngIf="exportingCenter" diameter="18"></mat-spinner>
+            <mat-icon *ngIf="!exportingCenter">download</mat-icon>
+            {{ exportingCenter ? 'Exporting...' : 'Export Center' }}
           </button>
           <button
             *ngIf="canEditForSelectedCenter"
@@ -956,10 +964,12 @@
                 mat-stroked-button
                 class="center-action-btn center-export-btn"
                 title="Export Anaplan"
+                [disabled]="exportingCenterAnaplan"
                 (click)="exportCenterAnaplan()"
               >
-                <mat-icon>download</mat-icon>
-                Export Anaplan
+                <mat-spinner *ngIf="exportingCenterAnaplan" diameter="18"></mat-spinner>
+                <mat-icon *ngIf="!exportingCenterAnaplan">download</mat-icon>
+                {{ exportingCenterAnaplan ? 'Exporting...' : 'Export Anaplan' }}
               </button>
             </div>
             <div class="summary-table-wrapper">

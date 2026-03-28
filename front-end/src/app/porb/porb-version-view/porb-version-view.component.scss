@@ -33,6 +33,19 @@
     gap: 0.8rem;
     align-items: center;
     flex-shrink: 0;
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    ::ng-deep .mat-mdc-progress-spinner {
+      display: inline-flex;
+
+      circle {
+        stroke: #ffffff;
+      }
+    }
   }
 }
 
