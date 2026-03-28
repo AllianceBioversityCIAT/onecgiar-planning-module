@@ -142,6 +142,48 @@
   font-family: "Poppins", sans-serif;
 }
 
+.add-country-btn {
+  height: 3.2rem;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 500;
+  padding: 0 1rem;
+  cursor: pointer;
+  background: #198754;
+
+  &:hover {
+    background: #157347;
+  }
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: #a71d2a;
+  }
+}
+
+.action-cell {
+  width: 50px;
+  text-align: center;
+  vertical-align: middle;
+}
+
 .empty-state {
   display: flex;
   align-items: center;

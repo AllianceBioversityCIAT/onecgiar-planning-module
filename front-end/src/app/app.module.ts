@@ -127,6 +127,7 @@ import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.compone
 import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
 import { StanderdCrossCuttingDialogComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting-dialog/standerd-cross-cutting-dialog.component";
 import { PartnerResolveDialogComponent } from "./porb/components/porb-budget-sections/sections/partners/partner-resolve-dialog.component";
+import { CountryAddDialogComponent } from "./porb/components/porb-budget-sections/sections/country-percentage/country-add-dialog.component";
 import { SummaryAssumptionIconComponent } from "./porb/components/summary-assumption-icon/summary-assumption-icon.component";
 import { SummaryAssumptionDialogComponent } from "./porb/components/summary-assumption-icon/summary-assumption-dialog.component";
 import { ValidationErrorsDialogComponent } from "./porb/components/validation-errors-dialog.component";
@@ -218,6 +219,7 @@ import { PorbVersionViewComponent } from "./porb/porb-version-view/porb-version-
         StanderdCrossCuttingComponent,
         StanderdCrossCuttingDialogComponent,
         PartnerResolveDialogComponent,
+        CountryAddDialogComponent,
         SummaryAssumptionIconComponent,
         SummaryAssumptionDialogComponent,
         ValidationErrorsDialogComponent,

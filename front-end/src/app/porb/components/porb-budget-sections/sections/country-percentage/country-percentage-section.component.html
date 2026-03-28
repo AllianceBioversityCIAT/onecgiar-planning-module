@@ -9,14 +9,18 @@
     <button type="button" class="export-btn" (click)="export()" [disabled]="!rows.length">
       Export Excel
     </button>
+    <button type="button" class="add-country-btn" (click)="openAddCountryDialog()" *ngIf="isAow00 && canEdit">
+      + Add Country
+    </button>
   </div>
 
   <div class="table-scroll" *ngIf="rows.length">
     <table class="additional-table">
       <thead>
         <tr>
-          <th style="width: 65%">Country</th>
+          <th style="width: 60%">Country</th>
           <th class="num-cell" style="width: 35%">Percentage (%)</th>
+          <th *ngIf="isAow00" style="width: 50px"></th>
         </tr>
       </thead>
       <tbody>
@@ -42,10 +46,20 @@
               [class.save-success]="savedIds.has(row.country_name)"
             />
           </td>
+          <td class="action-cell" *ngIf="isAow00">
+            <button
+              *ngIf="row.is_manual && canEdit"
+              class="delete-btn"
+              (click)="deleteManualCountry(row)"
+              matTooltip="Delete country"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
         </tr>
 
         <tr *ngIf="!filteredRows.length">
-          <td colspan="2">No countries found for the current search.</td>
+          <td [attr.colspan]="isAow00 ? 3 : 2">No countries found for the current search.</td>
         </tr>
 
         <tr class="subtotal-row" *ngIf="filteredRows.length">
@@ -54,6 +68,7 @@
             {{ totalPercentage | number:'1.0-2' }}%
             <span *ngIf="isOverLimit" class="over-limit-badge" matTooltip="Total percentage exceeds 100%">!</span>
           </td>
+          <td *ngIf="isAow00"></td>
         </tr>
       </tbody>
     </table>
@@ -65,6 +80,7 @@
 
   <div class="empty-state" *ngIf="!rows.length">
     <mat-icon>info_outline</mat-icon>
-    <span>No countries found in HLO data for this center and work package.</span>
+    <span *ngIf="isAow00">No countries added yet. Use the "+ Add Country" button to add countries.</span>
+    <span *ngIf="!isAow00">No countries found in HLO data for this center and work package.</span>
   </div>
 </div>

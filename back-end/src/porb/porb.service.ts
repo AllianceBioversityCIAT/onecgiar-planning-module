@@ -661,6 +661,27 @@ export class PorbService {
     const pooledTotal = poolHlo + crossCutting;
     const consolidatedTotal = pooledTotal;
 
+    // Count country percentage rows: HLO-derived + manual (non-overlapping)
+    const hloCountrySet = new Set<string>();
+    for (const hlo of hlos) {
+      if (!hlo.hlo_geo) continue;
+      for (const c of hlo.hlo_geo.split(', ')) {
+        const trimmed = c.trim();
+        if (trimmed) hloCountrySet.add(trimmed);
+      }
+    }
+    const manualCountryCount = await this.porbCountryPercentageRepository
+      .createQueryBuilder('cp')
+      .where('cp.program_id = :program_id', { program_id })
+      .andWhere('cp.porb_aow_id = :porb_aow_id', { porb_aow_id })
+      .andWhere('cp.center_id = :center_id', { center_id })
+      .andWhere('cp.is_manual = :isManual', { isManual: true })
+      .andWhere('cp.country_name NOT IN (:...hloCountries)', {
+        hloCountries: hloCountrySet.size > 0 ? Array.from(hloCountrySet) : [''],
+      })
+      .getCount();
+    const countryPercentageCount = hloCountrySet.size + manualCountryCount;
+
     return {
       indicators: [
         {
@@ -699,17 +720,7 @@ export class PorbService {
         melia: meliaRows.length,
         anaplan: anaplanRows.length,
         cross: crossRows.length,
-        countryPercentage: (() => {
-          const countries = new Set<string>();
-          for (const hlo of hlos) {
-            if (!hlo.hlo_geo) continue;
-            for (const c of hlo.hlo_geo.split(', ')) {
-              const trimmed = c.trim();
-              if (trimmed) countries.add(trimmed);
-            }
-          }
-          return countries.size;
-        })(),
+        countryPercentage: countryPercentageCount,
       },
     };
   }
@@ -1319,40 +1330,71 @@ export class PorbService {
   async getCountryPercentage(program_id: number, porb_aow_id?: number, center_id?: number) {
     if (porb_aow_id == null || center_id == null) return [];
 
-    const hlos = await this.porbHloRepository.find({
-      where: { program_id, porb_aow_id, center_id },
-    });
+    const [hlos, savedRows] = await Promise.all([
+      this.porbHloRepository.find({
+        where: { program_id, porb_aow_id, center_id },
+      }),
+      this.porbCountryPercentageRepository.find({
+        where: { program_id, porb_aow_id, center_id },
+      }),
+    ]);
 
-    const uniqueCountries = new Set<string>();
+    const hloCountries = new Set<string>();
     for (const hlo of hlos) {
       if (!hlo.hlo_geo) continue;
       const countries = hlo.hlo_geo.split(', ');
       for (const c of countries) {
         const trimmed = c.trim();
-        if (trimmed) uniqueCountries.add(trimmed);
+        if (trimmed) hloCountries.add(trimmed);
       }
     }
 
-    if (uniqueCountries.size === 0) return [];
-
-    const savedRows = await this.porbCountryPercentageRepository.find({
-      where: { program_id, porb_aow_id, center_id },
-    });
     const savedMap = new Map<string, PorbCountryPercentage>();
     savedRows.forEach((row) => savedMap.set(row.country_name, row));
 
-    return Array.from(uniqueCountries)
-      .sort()
-      .map((country_name) => {
-        const saved = savedMap.get(country_name);
-        return {
+    const result: Array<{
+      id?: number;
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      country_name: string;
+      percentage: number | null;
+      is_manual: boolean;
+    }> = [];
+    const includedCountries = new Set<string>();
+
+    // HLO-derived countries
+    for (const country_name of Array.from(hloCountries).sort()) {
+      const saved = savedMap.get(country_name);
+      includedCountries.add(country_name);
+      result.push({
+        id: saved?.id,
+        program_id,
+        porb_aow_id,
+        center_id,
+        country_name,
+        percentage: saved?.percentage ?? null,
+        is_manual: false,
+      });
+    }
+
+    // Manual rows that don't overlap with HLO countries
+    for (const row of savedRows) {
+      if (row.is_manual && !includedCountries.has(row.country_name)) {
+        includedCountries.add(row.country_name);
+        result.push({
+          id: row.id,
           program_id,
           porb_aow_id,
           center_id,
-          country_name,
-          percentage: saved?.percentage ?? null,
-        };
-      });
+          country_name: row.country_name,
+          percentage: row.percentage ?? null,
+          is_manual: true,
+        });
+      }
+    }
+
+    return result;
   }
 
   async updateCountryPercentage(
@@ -1444,6 +1486,76 @@ export class PorbService {
       emitter_socket_id: emitterSocketId,
     });
     return saved;
+  }
+
+  async addManualCountry(
+    data: { program_id: number; porb_aow_id: number; center_id: number; country_name: string },
+    reqUser?: { id: number },
+    emitterSocketId?: string,
+  ) {
+    await this.assertNotLocked(data.program_id);
+
+    const existing = await this.porbCountryPercentageRepository.findOne({
+      where: {
+        program_id: data.program_id,
+        porb_aow_id: data.porb_aow_id,
+        center_id: data.center_id,
+        country_name: data.country_name,
+      },
+    });
+    if (existing) {
+      throw new BadRequestException('Country already exists for this AOW and center.');
+    }
+
+    const created = this.porbCountryPercentageRepository.create({
+      program_id: data.program_id,
+      porb_aow_id: data.porb_aow_id,
+      center_id: data.center_id,
+      country_name: data.country_name,
+      is_manual: true,
+      percentage: null,
+    });
+    const saved = await this.porbCountryPercentageRepository.save(created);
+
+    this.emitPorbBudgetChanged({
+      program_id: data.program_id,
+      center_id: data.center_id,
+      aow_id: data.porb_aow_id,
+      section: 'country-percentage',
+      type: 'add',
+      emitter_socket_id: emitterSocketId,
+    });
+
+    return saved;
+  }
+
+  async deleteManualCountry(id: number, reqUser?: { id: number }, emitterSocketId?: string) {
+    const row = await this.porbCountryPercentageRepository.findOne({ where: { id } });
+    if (!row) throw new NotFoundException('Country percentage row not found.');
+    if (!row.is_manual) throw new ForbiddenException('Only manually added countries can be deleted.');
+    await this.assertNotLocked(row.program_id);
+
+    await this.porbCountryPercentageRepository.delete(id);
+
+    this.emitPorbBudgetChanged({
+      program_id: row.program_id,
+      center_id: row.center_id,
+      aow_id: row.porb_aow_id,
+      section: 'country-percentage',
+      type: 'delete',
+      emitter_socket_id: emitterSocketId,
+    });
+  }
+
+  async searchClarisaCountries(query: string) {
+    if (!query || query.length < 2) return [];
+    return this.clarisaCountryRepository
+      .createQueryBuilder('c')
+      .where('c.name LIKE :q', { q: `%${query}%` })
+      .orderBy('c.name', 'ASC')
+      .limit(20)
+      .getMany()
+      .then(rows => rows.map(r => ({ code: r.code, name: r.name, isoAlpha2: r.isoAlpha2 })));
   }
 
   private emitPorbBudgetChanged(payload: {
@@ -4660,7 +4772,6 @@ export class PorbService {
       if (!ws['!cols'][idx]) ws['!cols'][idx] = {};
       ws['!cols'][idx].hidden = true;
     }
-    ws['!protect'] = { sheet: true, objects: true, scenarios: true };
   }
 
   /**
@@ -4750,7 +4861,7 @@ export class PorbService {
       this.getPartners(programId, undefined, centerId),
       this.getBilaterals(programId, undefined, centerId),
       this.getMelia(programId, undefined, centerId),
-      this.getSummaryConsolidation(programId),
+      this.getSummaryConsolidation(programId, centerId != null ? centerId : undefined),
       this.porbCountryPercentageRepository.find({
         where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
       }),
@@ -4805,9 +4916,16 @@ export class PorbService {
     const countryNameMap = new Map<number, string>();
     countryRows.forEach((c) => countryNameMap.set(Number(c.code), c.name));
 
-    // Resolve center names
+    // Resolve center names from ALL entities
     const centerIds = [
-      ...new Set(contractedPartners.map((cp) => cp.center_id).filter(Boolean)),
+      ...new Set([
+        ...contractedPartners.map((cp) => cp.center_id),
+        ...(Array.isArray(hlos) ? hlos : []).map((h: any) => h.center_id),
+        ...(Array.isArray(bilaterals) ? bilaterals : []).map((b: any) => b.center_id),
+        ...(Array.isArray(melias) ? melias : []).map((m: any) => m.center_id),
+        ...crossRows.map((c) => c.center_id),
+        ...countryPercentageRows.map((cp) => cp.center_id),
+      ].filter(Boolean)),
     ];
     const centerRows = centerIds.length
       ? await this.organizationRepo.find({ where: { code: In(centerIds.map(String)) } })
@@ -4820,7 +4938,7 @@ export class PorbService {
     XLSX.utils.book_append_sheet(wb, this.generatePorbSummarySheet(summaryData), 'Summary');
     XLSX.utils.book_append_sheet(
       wb,
-      this.generatePorbHloSheet(Array.isArray(hlos) ? hlos : [], aowMap, sortedAowIds),
+      this.generatePorbHloSheet(Array.isArray(hlos) ? hlos : [], aowMap, sortedAowIds, centerNameMap),
       'HLO',
     );
     XLSX.utils.book_append_sheet(
@@ -4830,17 +4948,17 @@ export class PorbService {
     );
     XLSX.utils.book_append_sheet(
       wb,
-      this.generatePorbBilateralSheet(Array.isArray(bilaterals) ? bilaterals : [], aowMap, sortedAowIds),
+      this.generatePorbBilateralSheet(Array.isArray(bilaterals) ? bilaterals : [], centerNameMap),
       'W3-Bilateral',
     );
     XLSX.utils.book_append_sheet(
       wb,
-      this.generatePorbMeliaSheet(Array.isArray(melias) ? melias : [], aowMap, sortedAowIds),
+      this.generatePorbMeliaSheet(Array.isArray(melias) ? melias : [], aowMap, sortedAowIds, centerNameMap),
       'MELIA',
     );
     XLSX.utils.book_append_sheet(
       wb,
-      this.generatePorbCrossSheet(crossRows, aowMap, crossItemMap, sortedAowIds),
+      this.generatePorbCrossSheet(crossRows, aowMap, crossItemMap, sortedAowIds, centerNameMap),
       'Cross Cutting',
     );
     XLSX.utils.book_append_sheet(
@@ -4851,7 +4969,7 @@ export class PorbService {
 
     XLSX.utils.book_append_sheet(
       wb,
-      this.generatePorbCountryPercentageSheet(countryPercentageRows, aowMap, sortedAowIds),
+      this.generatePorbCountryPercentageSheet(countryPercentageRows, aowMap, sortedAowIds, centerNameMap),
       'Countries of Implementation',
     );
 
@@ -5559,10 +5677,12 @@ export class PorbService {
     const rows = Array.isArray(summaryData?.rows) ? summaryData.rows : [];
     const totals = summaryData?.totals || {};
 
+    // Column layout matches UI: AOW | Indicators(8) | Total Pooled | Anaplan | Partner | MELIA | aow_id(hidden)
     const wsData: any[][] = [
       [
         'Area of Work',
-        'Pooled Funding', null, null, null, null, null, null, null, null, null, null,
+        'Pooled Funding', null, null, null, null, null, null, null, null,
+        'Additional Information', null, null,
         'aow_id',
       ],
       [
@@ -5571,9 +5691,10 @@ export class PorbService {
         'Knowledge product', null,
         'Capacity Sharing', null,
         'Others outputs', null,
+        'Total Pooled Funding budget (USD)',
+        'Anaplan budget',
         'Partner budget',
         'MELIA Studies budget',
-        'Total Pooled Funding budget (USD)',
         null,
       ],
       [
@@ -5582,7 +5703,7 @@ export class PorbService {
         'Target', 'Budget',
         'Target', 'Budget',
         'Target', 'Budget',
-        null, null, null, null,
+        null, null, null, null, null,
       ],
     ];
 
@@ -5593,8 +5714,9 @@ export class PorbService {
         Number(r.knowledgeTarget) || 0, Number(r.knowledgeBudget) || 0,
         Number(r.capacityTarget) || 0, Number(r.capacityBudget) || 0,
         Number(r.othersTarget) || 0, Number(r.othersBudget) || 0,
-        Number(r.partnerBudget) || 0, Number(r.meliaBudget) || 0,
         Number(r.totalPooledFunding) || 0,
+        Number(r.anaplanBudget) || 0,
+        Number(r.partnerBudget) || 0, Number(r.meliaBudget) || 0,
         r.aowId || '',
       ]);
     }
@@ -5606,8 +5728,9 @@ export class PorbService {
       '', Number(totals.knowledgeBudget) || 0,
       '', Number(totals.capacityBudget) || 0,
       '', Number(totals.othersBudget) || 0,
-      Number(totals.partnerBudget) || 0, Number(totals.meliaBudget) || 0,
       Number(totals.totalPooledFunding) || 0,
+      Number(totals.anaplanBudget) || 0,
+      Number(totals.partnerBudget) || 0, Number(totals.meliaBudget) || 0,
       '',
     ]);
 
@@ -5615,23 +5738,25 @@ export class PorbService {
 
     ws['!merges'] = [
       { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } },        // Area of Work rowspan=3
-      { s: { r: 0, c: 1 }, e: { r: 0, c: 11 } },        // Pooled Funding colspan=11
+      { s: { r: 0, c: 1 }, e: { r: 0, c: 9 } },         // Pooled Funding colspan=9
+      { s: { r: 0, c: 10 }, e: { r: 0, c: 12 } },       // Additional Information colspan=3
       { s: { r: 1, c: 1 }, e: { r: 1, c: 2 } },         // Innovation Development
       { s: { r: 1, c: 3 }, e: { r: 1, c: 4 } },         // Knowledge product
       { s: { r: 1, c: 5 }, e: { r: 1, c: 6 } },         // Capacity Sharing
       { s: { r: 1, c: 7 }, e: { r: 1, c: 8 } },         // Others outputs
-      { s: { r: 1, c: 9 }, e: { r: 2, c: 9 } },         // Partner budget
-      { s: { r: 1, c: 10 }, e: { r: 2, c: 10 } },       // MELIA Studies budget
-      { s: { r: 1, c: 11 }, e: { r: 2, c: 11 } },       // Total Pooled Funding
+      { s: { r: 1, c: 9 }, e: { r: 2, c: 9 } },         // Total Pooled Funding
+      { s: { r: 1, c: 10 }, e: { r: 2, c: 10 } },       // Anaplan budget
+      { s: { r: 1, c: 11 }, e: { r: 2, c: 11 } },       // Partner budget
+      { s: { r: 1, c: 12 }, e: { r: 2, c: 12 } },       // MELIA Studies budget
     ];
 
     ws['!cols'] = [
       { wch: 30 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 },
       { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 },
-      { wch: 25 }, { wch: 25 }, { wch: 35 }, { wch: 10 },
+      { wch: 35 }, { wch: 20 }, { wch: 25 }, { wch: 25 }, { wch: 10 },
     ];
 
-    const numCols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    const numCols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 3,
       totalRowIndex: totalRowIdx,
@@ -5648,28 +5773,30 @@ export class PorbService {
     hlos: any[],
     aowMap: Map<number, { code: string; name: string }>,
     sortedAowIds: number[],
+    centerNameMap: Map<number, string>,
   ) {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    // 2-row header matching submission
+    // 2-row header with Center column
     wsData.push([
-      'AOW', 'High Level Output',
+      'AOW', 'Center', 'High Level Output',
       'Key Performance Indicators', null, null, null, null, null,
       'Total Budget (USD)', 'id',
     ]);
     wsData.push([
-      null, null,
+      null, null, null,
       'Description', 'Type', 'Country(ies) of implementation', 'Target', 'Budget (USD)', 'Assumption',
       null, null,
     ]);
 
     // Header merges
     merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } });   // AOW
-    merges.push({ s: { r: 0, c: 1 }, e: { r: 1, c: 1 } });   // High Level Output
-    merges.push({ s: { r: 0, c: 2 }, e: { r: 0, c: 7 } });   // KPI colspan=6
-    merges.push({ s: { r: 0, c: 8 }, e: { r: 1, c: 8 } });   // Total Budget
-    merges.push({ s: { r: 0, c: 9 }, e: { r: 1, c: 9 } });   // id
+    merges.push({ s: { r: 0, c: 1 }, e: { r: 1, c: 1 } });   // Center
+    merges.push({ s: { r: 0, c: 2 }, e: { r: 1, c: 2 } });   // High Level Output
+    merges.push({ s: { r: 0, c: 3 }, e: { r: 0, c: 8 } });   // KPI colspan=6
+    merges.push({ s: { r: 0, c: 9 }, e: { r: 1, c: 9 } });   // Total Budget
+    merges.push({ s: { r: 0, c: 10 }, e: { r: 1, c: 10 } });  // id
 
     let currentRow = 2;
 
@@ -5708,6 +5835,7 @@ export class PorbService {
         group.items.forEach((h, idx) => {
           wsData.push([
             idx === 0 ? aowLabel : null,
+            centerNameMap.get(h.center_id) || String(h.center_id || ''),
             idx === 0 ? group.name : null,
             h.hlo_description || '',
             h.hlo_type || '',
@@ -5723,15 +5851,15 @@ export class PorbService {
 
         // Merge HLO name + Total Budget across indicator rows
         if (group.items.length > 1) {
-          merges.push({ s: { r: startRowForHlo, c: 1 }, e: { r: currentRow - 1, c: 1 } });
-          merges.push({ s: { r: startRowForHlo, c: 8 }, e: { r: currentRow - 1, c: 8 } });
+          merges.push({ s: { r: startRowForHlo, c: 2 }, e: { r: currentRow - 1, c: 2 } });
+          merges.push({ s: { r: startRowForHlo, c: 9 }, e: { r: currentRow - 1, c: 9 } });
         }
       }
 
       // Subtotal row
       const hloBudgetTotal = aowHlos.reduce((sum, h) => sum + (Number(h.hlo_budget) || 0), 0);
-      wsData.push([null, 'HLO budget subtotal', null, null, null, null, null, null, hloBudgetTotal, '']);
-      merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 7 } });
+      wsData.push([null, null, 'HLO budget subtotal', null, null, null, null, null, null, hloBudgetTotal, '']);
+      merges.push({ s: { r: currentRow, c: 2 }, e: { r: currentRow, c: 8 } });
       currentRow++;
 
       // AOW vertical merge
@@ -5745,20 +5873,20 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 },
+      { wch: 8 }, { wch: 15 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 },
       { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 2,
-      subtotalDetector: (row) => row?.[1] === 'HLO budget subtotal',
+      subtotalDetector: (row) => row?.[2] === 'HLO budget subtotal',
       wpColumnIndex: 0,
-      numberColumns: [5, 6, 8],
+      numberColumns: [6, 7, 9],
       rowHeights: { header: 30, data: 50, subtotal: 25 },
       merges,
     });
 
-    this.protectAndHideIds(ws, [9]);
+    this.protectAndHideIds(ws, [10]);
 
     return ws;
   }
@@ -5872,34 +6000,36 @@ export class PorbService {
 
   private generatePorbBilateralSheet(
     bilaterals: any[],
-    aowMap: Map<number, { code: string; name: string }>,
-    sortedAowIds: number[],
+    centerNameMap: Map<number, string>,
   ) {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'Project title', 'High Level Output title', 'W3/Bilateral Project (USD)', 'Assumption', 'id']);
+    wsData.push(['Center', 'Project title', 'High Level Output title', 'W3/Bilateral Project (USD)', 'Assumption', 'id']);
 
     let currentRow = 1;
 
-    // Group by AOW
-    const bilByAow = new Map<number, any[]>();
+    // Group by center (W3/Bilateral is center-level, porb_aow_id is NULL)
+    const bilByCenter = new Map<number, any[]>();
     for (const b of bilaterals) {
-      const list = bilByAow.get(b.porb_aow_id) || [];
+      const cId = b.center_id ?? 0;
+      const list = bilByCenter.get(cId) || [];
       list.push(b);
-      bilByAow.set(b.porb_aow_id, list);
+      bilByCenter.set(cId, list);
     }
 
-    for (const aowId of sortedAowIds) {
-      const aowBils = bilByAow.get(aowId);
-      if (!aowBils?.length) continue;
+    const sortedCenterIds = [...bilByCenter.keys()].sort((a, b) => a - b);
 
-      const aowLabel = this.getAowLabel(aowId, aowMap);
-      const aowStartRow = currentRow;
+    for (const cId of sortedCenterIds) {
+      const centerBils = bilByCenter.get(cId);
+      if (!centerBils?.length) continue;
 
-      for (const b of aowBils) {
+      const centerLabel = centerNameMap.get(cId) || String(cId);
+      const centerStartRow = currentRow;
+
+      for (const b of centerBils) {
         wsData.push([
-          aowLabel,
+          centerLabel,
           b.bilateral_name || 'N/A',
           b.bilateral_outputs || 'N/A',
           Number(b.bilateral_budget) || 0,
@@ -5910,21 +6040,23 @@ export class PorbService {
       }
 
       // Subtotal row
-      const aowBudgetTotal = aowBils.reduce((sum, b) => sum + (Number(b.bilateral_budget) || 0), 0);
-      wsData.push([null, 'W3/Bilateral budget subtotal', null, aowBudgetTotal, '', '']);
+      const centerBudgetTotal = centerBils.reduce((sum, b) => sum + (Number(b.bilateral_budget) || 0), 0);
+      wsData.push([null, 'W3/Bilateral budget subtotal', null, centerBudgetTotal, '', '']);
       merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 2 } });
       currentRow++;
 
-      // AOW vertical merge
-      const aowEndRow = currentRow - 1;
-      merges.push({ s: { r: aowStartRow, c: 0 }, e: { r: aowEndRow, c: 0 } });
+      // Center vertical merge
+      const centerEndRow = currentRow - 1;
+      if (centerEndRow > centerStartRow) {
+        merges.push({ s: { r: centerStartRow, c: 0 }, e: { r: centerEndRow, c: 0 } });
+      }
     }
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 10 },
+      { wch: 15 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
@@ -5945,11 +6077,12 @@ export class PorbService {
     melias: any[],
     aowMap: Map<number, { code: string; name: string }>,
     sortedAowIds: number[],
+    centerNameMap: Map<number, string>,
   ) {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'MELIA study', 'Supported outcomes', 'Geographic location', 'Total Budget (USD)', 'Assumption', 'id']);
+    wsData.push(['AOW', 'Center', 'MELIA study', 'Supported outcomes', 'Geographic location', 'Total Budget (USD)', 'Assumption', 'id']);
 
     let currentRow = 1;
 
@@ -5971,6 +6104,7 @@ export class PorbService {
       for (const m of aowMelias) {
         wsData.push([
           aowLabel,
+          centerNameMap.get(m.center_id) || String(m.center_id || ''),
           m.melia_name || 'N/A',
           m.melia_outputs || 'N/A',
           'N/A',
@@ -5983,8 +6117,8 @@ export class PorbService {
 
       // Subtotal row
       const aowBudgetTotal = aowMelias.reduce((sum, m) => sum + (Number(m.melia_budget) || 0), 0);
-      wsData.push([null, 'MELIA budget subtotal', null, null, aowBudgetTotal, '', '']);
-      merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow, c: 3 } });
+      wsData.push([null, null, 'MELIA budget subtotal', null, null, aowBudgetTotal, '', '']);
+      merges.push({ s: { r: currentRow, c: 2 }, e: { r: currentRow, c: 4 } });
       currentRow++;
 
       // AOW vertical merge
@@ -5996,19 +6130,19 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 8 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 25 }, { wch: 30 }, { wch: 10 },
+      { wch: 8 }, { wch: 15 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 25 }, { wch: 30 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 1,
-      subtotalDetector: (row) => row?.[1] === 'MELIA budget subtotal',
+      subtotalDetector: (row) => row?.[2] === 'MELIA budget subtotal',
       wpColumnIndex: 0,
-      numberColumns: [4],
+      numberColumns: [5],
       rowHeights: { header: 30, data: 60, subtotal: 25 },
       merges,
     });
 
-    this.protectAndHideIds(ws, [6]);
+    this.protectAndHideIds(ws, [7]);
 
     return ws;
   }
@@ -6018,11 +6152,12 @@ export class PorbService {
     aowMap: Map<number, { code: string; name: string }>,
     crossItemMap: Map<number, string>,
     sortedAowIds: number[],
+    centerNameMap: Map<number, string>,
   ) {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'Cost elements', 'Total budget (USD)', 'Assumption', 'id', 'standerd_cross_cutting_id']);
+    wsData.push(['AOW', 'Center', 'Cost elements', 'Total budget (USD)', 'Assumption', 'id', 'standerd_cross_cutting_id']);
 
     let currentRow = 1;
 
@@ -6044,6 +6179,7 @@ export class PorbService {
         const itemName = crossItemMap.get(c.standerd_cross_cutting_id) || '';
         wsData.push([
           aowLabel,
+          centerNameMap.get(c.center_id) || String(c.center_id || ''),
           itemName,
           Number(c.budget) || 0,
           c.assumption || '',
@@ -6053,6 +6189,12 @@ export class PorbService {
         currentRow++;
       }
 
+      // Subtotal row
+      const aowBudgetTotal = aowCross.reduce((sum, c) => sum + (Number(c.budget) || 0), 0);
+      wsData.push([null, null, 'Cross-cutting budget subtotal', aowBudgetTotal, '', '', '']);
+      currentRow++;
+
+      // AOW vertical merge (includes subtotal row)
       const aowEndRow = currentRow - 1;
       if (aowEndRow >= aowStartRow) {
         merges.push({ s: { r: aowStartRow, c: 0 }, e: { r: aowEndRow, c: 0 } });
@@ -6063,18 +6205,19 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 10 }, { wch: 40 }, { wch: 25 }, { wch: 30 }, { wch: 10 }, { wch: 10 },
+      { wch: 10 }, { wch: 15 }, { wch: 40 }, { wch: 25 }, { wch: 30 }, { wch: 10 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 1,
+      subtotalDetector: (row) => row?.[2] === 'Cross-cutting budget subtotal',
       wpColumnIndex: 0,
-      numberColumns: [2],
+      numberColumns: [3],
       rowHeights: { header: 60, data: 45, subtotal: 25 },
       merges,
     });
 
-    this.protectAndHideIds(ws, [4, 5]);
+    this.protectAndHideIds(ws, [5, 6]);
 
     return ws;
   }
@@ -6190,11 +6333,12 @@ export class PorbService {
     cpRows: PorbCountryPercentage[],
     aowMap: Map<number, { code: string; name: string }>,
     sortedAowIds: number[],
+    centerNameMap: Map<number, string>,
   ) {
     const wsData: any[][] = [];
     const merges: any[] = [];
 
-    wsData.push(['AOW', 'Country', 'Percentage (%)', 'id']);
+    wsData.push(['AOW', 'Center', 'Country', 'Percentage (%)', 'id']);
 
     // Group by AOW
     const cpByAow = new Map<number, PorbCountryPercentage[]>();
@@ -6220,6 +6364,7 @@ export class PorbService {
         const pct = Number(row.percentage) || 0;
         wsData.push([
           aowLabel,
+          centerNameMap.get(row.center_id) || String(row.center_id || ''),
           row.country_name,
           pct,
           row.id,
@@ -6237,18 +6382,18 @@ export class PorbService {
     ws['!merges'] = merges;
 
     ws['!cols'] = [
-      { wch: 10 }, { wch: 30 }, { wch: 15 }, { wch: 10 },
+      { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 15 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 1,
       wpColumnIndex: 0,
-      numberColumns: [2],
+      numberColumns: [3],
       rowHeights: { header: 60, data: 45, subtotal: 25 },
       merges,
     });
 
-    this.protectAndHideIds(ws, [3]);
+    this.protectAndHideIds(ws, [4]);
 
     return ws;
   }

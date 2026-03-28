@@ -857,7 +857,9 @@
               [selectedPorbAowId]="selectedPorbAowIdForSections"
               [selectedCenterId]="selectedCenterIdForSections"
               [canEdit]="canEditForSelectedCenter"
+              [isAow00]="isSelectedAowCrossCutting"
               (budgetUpdated)="onBudgetUpdated()"
+              (rowAdded)="onRowAdded()"
             ></app-country-percentage-section>
           </ng-container>
         </div>

@@ -173,6 +173,25 @@ export class PorbService {
     ).catch(() => null);
   }
 
+  async searchClarisaCountries(query: string) {
+    const params = new HttpParams().set('q', query);
+    return firstValueFrom(
+      this.http.get<any[]>(`${environment.api_url}/porb/country-percentage/search-clarisa`, { params }).pipe(map((d: any) => d))
+    ).catch(() => []);
+  }
+
+  async addManualCountry(data: { program_id: number; porb_aow_id: number; center_id: number; country_name: string }) {
+    return firstValueFrom(
+      this.http.post<any>(`${environment.api_url}/porb/country-percentage`, data).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async deleteManualCountry(id: number) {
+    return firstValueFrom(
+      this.http.delete(`${environment.api_url}/porb/country-percentage/${id}`).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
   async deleteHlo(id: number) {
     return firstValueFrom(
       this.http.delete(`${environment.api_url}/porb/hlo/${id}`).pipe(map((d: any) => d))

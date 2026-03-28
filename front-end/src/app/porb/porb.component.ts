@@ -997,6 +997,11 @@ export class PorbComponent implements OnInit, OnDestroy {
     return !!(this.selectedCenter && this.selectedAow && this.selectedExtraNavigation);
   }
 
+  get isSelectedAowCrossCutting(): boolean {
+    const code = String(this.selectedAow?.code || this.selectedAow?.aow_acrnum || '').toUpperCase();
+    return code === 'AOW00';
+  }
+
   get extraNavigationItems(): string[] {
     const selectedAowCode = String(
       this.selectedAow?.code || this.selectedAow?.aow_acrnum || ""
@@ -1017,7 +1022,11 @@ export class PorbComponent implements OnInit, OnDestroy {
       case 'MELIA Study': return (counts.melia || 0) === 0;
       case 'Anaplan': return false;
       case 'Cross Cutting': return false;
-      case 'Countries of Implementation': return (counts.countryPercentage || 0) === 0;
+      case 'Countries of Implementation': {
+        const selectedAowCode = String(this.selectedAow?.code || this.selectedAow?.aow_acrnum || '').toUpperCase();
+        if (selectedAowCode === 'AOW00') return false;
+        return (counts.countryPercentage || 0) === 0;
+      }
       default: return false;
     }
   }

@@ -230,6 +230,11 @@ export class PorbController {
     );
   }
 
+  @Get('country-percentage/search-clarisa')
+  searchClarisaCountries(@Query('q') query: string) {
+    return this.porbService.searchClarisaCountries(query || '');
+  }
+
   @Get('country-percentage')
   getCountryPercentage(
     @Query('program_id', ParseIntPipe) program_id: number,
@@ -269,6 +274,28 @@ export class PorbController {
       req.user,
       this.getSocketId(req),
     );
+  }
+
+  @Post('country-percentage')
+  addManualCountry(
+    @Body() body: { program_id: number; porb_aow_id: number; center_id: number; country_name: string },
+    @Request() req,
+  ) {
+    return this.porbService.addManualCountry(
+      {
+        program_id: Number(body.program_id),
+        porb_aow_id: Number(body.porb_aow_id),
+        center_id: Number(body.center_id),
+        country_name: String(body.country_name),
+      },
+      req.user,
+      this.getSocketId(req),
+    );
+  }
+
+  @Delete('country-percentage/:id')
+  deleteManualCountry(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.porbService.deleteManualCountry(id, req.user, this.getSocketId(req));
   }
 
   @Patch('hlo/:id')

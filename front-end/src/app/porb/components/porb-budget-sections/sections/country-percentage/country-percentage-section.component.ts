@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
 import { PorbService } from "src/app/services/porb.service";
+import { CountryAddDialogComponent } from "./country-add-dialog.component";
 
 @Component({
   selector: "app-country-percentage-section",
@@ -14,14 +16,16 @@ export class CountryPercentageSectionComponent implements OnChanges {
   @Input() selectedPorbAowId: number | undefined;
   @Input() selectedCenterId: number | undefined;
   @Input() canEdit: boolean = true;
+  @Input() isAow00: boolean = false;
   @Output() budgetUpdated = new EventEmitter<void>();
+  @Output() rowAdded = new EventEmitter<void>();
 
   search = "";
   savingIds = new Set<string>();
   errorIds = new Set<string>();
   savedIds = new Set<string>();
 
-  constructor(private porbService: PorbService) {}
+  constructor(private porbService: PorbService, private dialog: MatDialog) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes["rows"]) {
@@ -115,6 +119,29 @@ export class CountryPercentageSectionComponent implements OnChanges {
       this.savingIds.delete(savingKey);
       this.errorIds.add(savingKey);
     }
+  }
+
+  openAddCountryDialog() {
+    const dialogRef = this.dialog.open(CountryAddDialogComponent, {
+      width: '500px',
+      data: {
+        existingCountries: this.rows.map((r) => r.country_name),
+        programId: this.selectedProgramId,
+        porbAowId: this.selectedPorbAowId,
+        centerId: this.selectedCenterId,
+      },
+    });
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) this.rowAdded.emit();
+    });
+  }
+
+  async deleteManualCountry(row: any) {
+    if (!row?.id || !confirm('Are you sure you want to delete this country?')) return;
+    try {
+      await this.porbService.deleteManualCountry(row.id);
+      this.rowAdded.emit();
+    } catch {}
   }
 
   export() {

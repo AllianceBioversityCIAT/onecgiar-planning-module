@@ -42,6 +42,10 @@ export class PorbCountryPercentage {
   @Column({ type: 'float', nullable: true })
   percentage: number;
 
+  @ApiProperty()
+  @Column({ type: 'boolean', default: false })
+  is_manual: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 
