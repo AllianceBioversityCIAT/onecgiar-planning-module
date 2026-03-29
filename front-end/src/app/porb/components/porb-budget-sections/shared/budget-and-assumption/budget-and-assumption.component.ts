@@ -119,6 +119,12 @@ export class BudgetAndAssumptionComponent {
   }
 
   openAssumptionModal() {
+    // In read-only mode (disabled), allow viewing assumptions but not editing
+    if (this.disabled && this.assumption) {
+      this.draftAssumption = this.assumption;
+      this.showAssumptionModal = true;
+      return;
+    }
     if (this.iconState === "disabled") {
       return;
     }

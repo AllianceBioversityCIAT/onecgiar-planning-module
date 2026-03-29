@@ -55,31 +55,40 @@
           {{ row.partner_outputs || "-" }}
         </td>
         <td class="contracted-cell" [class.deleted-cell]="row.toc_is_deleted">
-          <input
-            type="checkbox"
-            [attr.data-tour-anchor]="i === 0 ? 'porb-partner-contracted' : null"
-            [checked]="isContracted(row)"
-            [disabled]="!canEdit"
-            (change)="row.partner_is_contracted = $any($event.target).checked ? '1' : '0'; saveRow(row)"
-          />
+          <ng-container *ngIf="canEdit; else readonlyCheckbox">
+            <input
+              type="checkbox"
+              [attr.data-tour-anchor]="i === 0 ? 'porb-partner-contracted' : null"
+              [checked]="isContracted(row)"
+              (change)="row.partner_is_contracted = $any($event.target).checked ? '1' : '0'; saveRow(row)"
+            />
+          </ng-container>
+          <ng-template #readonlyCheckbox>
+            <span>{{ isContracted(row) ? 'Yes' : 'No' }}</span>
+          </ng-template>
         </td>
         <td class="geo-cell" [class.deleted-cell]="row.toc_is_deleted">
-          <ng-select
-            class="geo-select"
-            [items]="countryOptions"
-            bindLabel="name"
-            bindValue="code"
-            [multiple]="true"
-            [clearable]="true"
-            [searchable]="true"
-            [closeOnSelect]="false"
-            [appendTo]="'body'"
-            [disabled]="!isContracted(row) || !canEdit"
-            [(ngModel)]="row.partner_country_codes"
-            placeholder="Select countries"
-            (change)="saveRow(row)"
-          >
-          </ng-select>
+          <ng-container *ngIf="canEdit; else readonlyGeo">
+            <ng-select
+              class="geo-select"
+              [items]="countryOptions"
+              bindLabel="name"
+              bindValue="code"
+              [multiple]="true"
+              [clearable]="true"
+              [searchable]="true"
+              [closeOnSelect]="false"
+              [appendTo]="'body'"
+              [disabled]="!isContracted(row)"
+              [(ngModel)]="row.partner_country_codes"
+              placeholder="Select countries"
+              (change)="saveRow(row)"
+            >
+            </ng-select>
+          </ng-container>
+          <ng-template #readonlyGeo>
+            <span>{{ row.partner_geo || '-' }}</span>
+          </ng-template>
         </td>
           <td class="budget-cell-with-error num-cell" [class.deleted-cell]="row.toc_is_deleted">
             <app-budget-and-assumption

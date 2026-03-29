@@ -1,3 +1,22 @@
+<!-- Read-only mode: plain text (used in version view) -->
+<ng-container *ngIf="disabled; else editableMode">
+  <div class="budget-readonly-wrap">
+    <span class="budget-readonly-value">{{ displayValue || '0' }}</span>
+    <button
+      *ngIf="assumptionEnabled && assumption"
+      type="button"
+      tabindex="-1"
+      class="assumption-icon state-completed"
+      (click)="openAssumptionModal()"
+      title="View assumption"
+    >
+      <mat-icon>description</mat-icon>
+    </button>
+  </div>
+</ng-container>
+
+<!-- Editable mode: input + assumption -->
+<ng-template #editableMode>
 <div class="budget-assumption-wrap">
   <input
     class="budget-input"
@@ -8,7 +27,6 @@
     (focus)="onFocus()"
     (blur)="onBlur()"
     (paste)="onPaste($event)"
-    [disabled]="disabled"
     [class.is-saving]="isSaving"
     [class.is-saved]="isSaved"
     [class.is-error]="isError"
@@ -32,6 +50,7 @@
     <mat-icon>description</mat-icon>
   </button>
 </div>
+</ng-template>
 
 <div class="assumption-modal-backdrop" *ngIf="showAssumptionModal" (click)="closeAssumptionModal()"></div>
 <div class="assumption-modal" *ngIf="showAssumptionModal">
@@ -39,10 +58,14 @@
   <textarea
     class="assumption-textarea"
     [(ngModel)]="draftAssumption"
+    [readonly]="disabled"
     placeholder="Enter assumption..."
   ></textarea>
-  <div class="assumption-modal-actions">
+  <div class="assumption-modal-actions" *ngIf="!disabled">
     <button type="button" class="btn-cancel" (click)="closeAssumptionModal()">Cancel</button>
     <button type="button" class="btn-save" (click)="saveAssumption()">Save</button>
+  </div>
+  <div class="assumption-modal-actions" *ngIf="disabled">
+    <button type="button" class="btn-cancel" (click)="closeAssumptionModal()">Close</button>
   </div>
 </div>

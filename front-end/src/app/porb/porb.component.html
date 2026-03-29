@@ -620,7 +620,7 @@
             {{ exportingCenter ? 'Exporting...' : 'Export Center' }}
           </button>
           <button
-            *ngIf="canEditForSelectedCenter"
+            *ngIf="canToggleCenterCompletion"
             mat-raised-button
             class="new-btns mark-complete-btn"
             [class.completed-btn]="isSelectedCenterCompleted"

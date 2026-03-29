@@ -532,6 +532,10 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.centers,
       this.submissionStatus
     );
+    // Completed centers are not editable — user must mark incomplete first
+    for (const code of this.completedCenterCodes) {
+      this.canEditMap[code] = false;
+    }
   }
 
   get canEditForSelectedCenter(): boolean {
@@ -1094,6 +1098,19 @@ export class PorbComponent implements OnInit, OnDestroy {
     return this.completedCenterCodes.includes(centerCode);
   }
 
+  /** Can the user toggle Mark Complete/Incomplete? Based on role permission, ignoring completion status. */
+  get canToggleCenterCompletion(): boolean {
+    if (this.isSubmissionLocked) return false;
+    const key = this.getCenterKey(this.selectedCenter);
+    if (key == null) return false;
+    // Check base role permission (not gated by completion status)
+    return this.permissionService.canEditCenter(
+      this.initiative,
+      key,
+      this.submissionStatus
+    );
+  }
+
   get hasSelectedCenterErrors(): boolean {
     const centerCode = this.getCenterKey(this.selectedCenter);
     if (centerCode == null) {
@@ -1561,6 +1578,8 @@ export class PorbComponent implements OnInit, OnDestroy {
             status: nextStatus,
           });
         }
+        // Rebuild edit permissions so completed centers become read-only
+        this.buildCanEditMap();
       }
     } finally {
       this.centerStatusUpdating = false;
@@ -1728,6 +1747,18 @@ export class PorbComponent implements OnInit, OnDestroy {
     type: 'update' | 'delete' | 'add';
   }): Promise<void> {
     if (!this.initiativeId) return;
+
+    // If another user changed center status, reload the initiative to get updated center_status
+    if (data.section === 'center-status') {
+      try {
+        const init = await this.submissionService.getInitiative(this.initiativeId);
+        if (init?.center_status) {
+          this.initiative.center_status = init.center_status;
+          this.buildCanEditMap();
+        }
+      } catch { /* silent */ }
+      return;
+    }
 
     const eventCenterKey = data.center_id != null ? String(data.center_id) : null;
     const eventAowId = data.aow_id != null ? Number(data.aow_id) : null;

@@ -30,21 +30,25 @@
         >
           <td class="row-title">{{ row.country_name }}</td>
           <td class="num-cell">
-            <input
-              type="number"
-              class="percentage-input"
-              [ngModel]="row.percentage"
-              (ngModelChange)="row.percentage = $event"
-              (blur)="saveRow(row)"
-              [disabled]="!canEdit"
-              min="0"
-              max="100"
-              step="0.01"
-              placeholder="0"
-              [class.saving]="savingIds.has(row.country_name)"
-              [class.save-error]="errorIds.has(row.country_name)"
-              [class.save-success]="savedIds.has(row.country_name)"
-            />
+            <ng-container *ngIf="canEdit; else readonlyPercentage">
+              <input
+                type="number"
+                class="percentage-input"
+                [ngModel]="row.percentage"
+                (ngModelChange)="row.percentage = $event"
+                (blur)="saveRow(row)"
+                min="0"
+                max="100"
+                step="0.01"
+                placeholder="0"
+                [class.saving]="savingIds.has(row.country_name)"
+                [class.save-error]="errorIds.has(row.country_name)"
+                [class.save-success]="savedIds.has(row.country_name)"
+              />
+            </ng-container>
+            <ng-template #readonlyPercentage>
+              <span>{{ row.percentage || 0 }}%</span>
+            </ng-template>
           </td>
           <td class="action-cell" *ngIf="isAow00">
             <button

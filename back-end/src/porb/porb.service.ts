@@ -1562,7 +1562,7 @@ export class PorbService {
     program_id: number;
     center_id?: number | string;
     aow_id?: number | null;
-    section: 'hlo' | 'partner' | 'bilateral' | 'melia' | 'anaplan' | 'cross' | 'country-percentage';
+    section: 'hlo' | 'partner' | 'bilateral' | 'melia' | 'anaplan' | 'cross' | 'country-percentage' | 'center-status';
     type: 'update' | 'delete' | 'add';
     emitter_socket_id?: string;
   }) {
@@ -4584,22 +4584,37 @@ export class PorbService {
     await this.assertNotLocked(data.initiative_id);
     const { initiative_id, organization_code, phase_id, status, organization } = data;
 
-    let center_status: CenterStatus;
-    center_status = await this.centerStatusRepo.findOneBy({
+    const statusBool = status === true || status === 1 || status === '1' ? true : false;
+
+    let center_status = await this.centerStatusRepo.findOneBy({
       initiative_id,
       organization_code,
       phase_id,
     });
 
-    if (!center_status) center_status = this.centerStatusRepo.create();
-    center_status.initiative_id = initiative_id;
-    center_status.organization_code = organization_code;
-    center_status.phase_id = phase_id;
-    center_status.status = status;
-    if (status == false) center_status.is_valid = status;
-    await this.centerStatusRepo.save(center_status).then(
-      async (data) => {
-        if (data.status) {
+    if (center_status) {
+      // Use update() with raw value to avoid TypeORM boolean save issue on composite PKs
+      const updateData: any = { status: statusBool };
+      if (!statusBool) updateData.is_valid = false;
+      await this.centerStatusRepo.update(
+        { initiative_id, organization_code, phase_id },
+        updateData,
+      );
+    } else {
+      center_status = this.centerStatusRepo.create({
+        initiative_id,
+        organization_code,
+        phase_id,
+        status: statusBool,
+        is_valid: !statusBool ? false : undefined,
+      });
+      await this.centerStatusRepo.save(center_status);
+    }
+    center_status.status = statusBool;
+
+    await Promise.resolve(center_status).then(
+      async () => {
+        if (statusBool) {
           const init = await this.initiativeRepository.findOne({
             where: { id: initiative_id },
             relations: ['roles', 'roles.user', 'roles.organizations'],
@@ -4611,7 +4626,7 @@ export class PorbService {
               usersRole.push(d);
             } else if (d.role == INITIATIVE_ROLES.CONTRIBUTOR) {
               d.organizations.filter((x) => {
-                if (x.code == data.organization_code) {
+                if (x.code == organization_code) {
                   usersRole.push(d);
                 }
               });
@@ -4636,19 +4651,28 @@ export class PorbService {
           }
         }
         const history = this.historyRepository.create();
-        history.resource_property = data.status ? 'Mark as complete' : 'Mark as incomplete';
+        history.resource_property = statusBool ? 'Mark as complete' : 'Mark as incomplete';
         history.user_id = reqUser.id;
-        history.initiative_id = data.initiative_id;
+        history.initiative_id = initiative_id;
         history.organization_id = organization_code;
         await this.historyRepository.save(history);
         await this.initiativeRepository.update(initiative_id, {
           latest_history_id: history.id,
         });
       },
-      (error) => {
-        console.error(error);
-      },
-    );
+    ).catch((error) => {
+      console.error('updateCenterStatus error:', error);
+    });
+
+    // Emit socket event so other users see the status change in real-time
+    this.emitPorbBudgetChanged({
+      program_id: initiative_id,
+      center_id: organization_code,
+      aow_id: null,
+      section: 'center-status',
+      type: 'update',
+      emitter_socket_id: null,
+    });
 
     return { message: 'Data Saved' };
   }
