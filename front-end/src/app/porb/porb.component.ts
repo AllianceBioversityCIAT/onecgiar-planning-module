@@ -35,6 +35,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     "MELIA Study",
     "Anaplan",
     "Countries of Implementation",
+    "Location of Benefit",
   ];
 
   selectedCenter: any = null;
@@ -53,6 +54,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   anaplanRows: any[] = [];
   crossRows: any[] = [];
   countryPercentageRows: any[] = [];
+  locationBenefitRows: any[] = [];
   sectionValidation: Record<string, { hasError: boolean; message: string; partnerMismatch?: boolean; pooledMismatch?: boolean }> = {};
   centerErrorCodes: string[] = [];
   aowErrorIds: number[] = [];
@@ -75,6 +77,8 @@ export class PorbComponent implements OnInit, OnDestroy {
   w3ConsolidatedData: any = null;
   countryConsolidatedData: any = null;
   centerCountryConsolidatedData: any = null;
+  locationBenefitConsolidatedData: any = null;
+  centerLocationBenefitConsolidatedData: any = null;
 
   summarySelectedAow: any = null;
   summaryAowDetail: any = null;
@@ -90,6 +94,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   cachedFormattedPartners: any[] = [];
   cachedFormattedCross: any[] = [];
   cachedFormattedCountryPercentage: any[] = [];
+  cachedFormattedLocationBenefit: any[] = [];
   cachedFormattedSynergies: any[] = [];
   cachedFormattedOutcomes: any[] = [];
   cachedSummarySubtotals: any = {};
@@ -562,6 +567,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.anaplanRows = [];
     this.crossRows = [];
     this.countryPercentageRows = [];
+    this.locationBenefitRows = [];
   }
 
   private resetSectionValidation() {
@@ -795,6 +801,12 @@ export class PorbComponent implements OnInit, OnDestroy {
         this.countryPercentageRows = Array.isArray(data) ? data : [];
         return;
       }
+
+      if (this.selectedExtraNavigation === "Location of Benefit") {
+        const data = await this.porbService.getLocationBenefit(programId, porbAowId, centerId);
+        this.locationBenefitRows = Array.isArray(data) ? data : [];
+        return;
+      }
     } finally {
       this.sectionLoading = false;
     }
@@ -985,6 +997,7 @@ export class PorbComponent implements OnInit, OnDestroy {
         firstValueFrom(this.porbService.getAnaplanConsolidated(this.initiativeId, centerId)),
         this.porbService.getBilaterals(this.initiativeId, centerId, true),
         this.loadCountryConsolidated(this.initiativeId, centerId),
+        this.loadLocationBenefitConsolidated(this.initiativeId, centerId),
       ]);
       this.centerConsolidationData = consolidation;
       this.centerAnaplanConsolidatedData = anaplan;
@@ -1038,6 +1051,11 @@ export class PorbComponent implements OnInit, OnDestroy {
         if (selectedAowCode === 'AOW00') return false;
         return (counts.countryPercentage || 0) === 0;
       }
+      case 'Location of Benefit': {
+        const selectedAowCode = String(this.selectedAow?.code || this.selectedAow?.aow_acrnum || '').toUpperCase();
+        if (selectedAowCode === 'AOW00') return false;
+        return (counts.locationBenefit || 0) === 0;
+      }
       default: return false;
     }
   }
@@ -1058,6 +1076,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     }
     return [...filtered, 'Synergy Programs', 'Outcomes'];
   }
+  // Note: "Location of Benefit" is included in baseExtraNavigationItems and thus in summarySectionItems via the filtered array above.
 
   selectSummarySection(section: string) {
     this.summarySelectedSection = section;
@@ -1186,6 +1205,7 @@ export class PorbComponent implements OnInit, OnDestroy {
         this.loadAnaplanConsolidated(this.initiativeId),
         this.loadW3Consolidated(this.initiativeId),
         this.loadCountryConsolidated(this.initiativeId),
+        this.loadLocationBenefitConsolidated(this.initiativeId),
       ]);
       this.summaryConsolidationRows = Array.isArray(data?.rows) ? data.rows : [];
       this.summaryConsolidationTotals = data?.totals || {};
@@ -1251,6 +1271,29 @@ export class PorbComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadLocationBenefitConsolidated(programId: number, centerId?: number): Promise<void> {
+    return new Promise((resolve) => {
+      this.porbService.getLocationBenefitConsolidated(programId, centerId).subscribe({
+        next: (data) => {
+          if (centerId != null) {
+            this.centerLocationBenefitConsolidatedData = data;
+          } else {
+            this.locationBenefitConsolidatedData = data;
+          }
+          resolve();
+        },
+        error: () => {
+          if (centerId != null) {
+            this.centerLocationBenefitConsolidatedData = null;
+          } else {
+            this.locationBenefitConsolidatedData = null;
+          }
+          resolve();
+        },
+      });
+    });
+  }
+
   async selectSummaryAow(aow: any) {
     if (this.summarySelectedAow?.id === aow?.id && !this.summaryW3View) return;
     this.summaryW3View = false;
@@ -1281,6 +1324,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.cachedFormattedPartners = [];
       this.cachedFormattedCross = [];
       this.cachedFormattedCountryPercentage = [];
+      this.cachedFormattedLocationBenefit = [];
       this.cachedFormattedSynergies = [];
       this.cachedFormattedOutcomes = [];
       this.cachedSummarySubtotals = {};
@@ -1335,6 +1379,11 @@ export class PorbComponent implements OnInit, OnDestroy {
       .filter((c: any) => (Number(c?.percentage) || 0) > 0)
       .map((c: any) => ({ ...c, budget_fmt: this.formatCurrency(this.toNumber(c.budget)) }));
 
+    // Filtered + formatted Location of Benefit
+    this.cachedFormattedLocationBenefit = (d.locationBenefit || [])
+      .filter((l: any) => (Number(l?.percentage) || 0) > 0)
+      .map((l: any) => ({ ...l, budget_fmt: this.formatCurrency(this.toNumber(l.budget)) }));
+
     // Synergy programs (read-only, no budget filtering)
     this.cachedFormattedSynergies = d.synergies || [];
 
@@ -1362,6 +1411,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       'Anaplan': !(d.anaplan || []).some((a: any) => this.toNumber(a.anaplan_budget) > 0),
       'Cross Cutting': this.cachedFormattedCross.length === 0,
       'Countries of Implementation': (d.countryPercentageCount || 0) === 0,
+      'Location of Benefit': (d.locationBenefitCount || 0) === 0,
       'Synergy Programs': this.cachedFormattedSynergies.length === 0,
       'Outcomes': this.cachedFormattedOutcomes.length === 0,
     };
@@ -1701,6 +1751,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       case 'anaplan': return 'Anaplan';
       case 'cross': return 'Cross Cutting';
       case 'country-percentage': return 'Countries of Implementation';
+      case 'location-benefit': return 'Location of Benefit';
       case 'bilateral': return null; // W3/Bilateral is handled separately via isW3View
       default: return null;
     }
@@ -1748,6 +1799,11 @@ export class PorbComponent implements OnInit, OnDestroy {
       if (Array.isArray(data)) this.countryPercentageRows = data;
       return;
     }
+    if (this.selectedExtraNavigation === 'Location of Benefit') {
+      const data = await this.porbService.getLocationBenefit(programId, porbAowId, centerId);
+      if (Array.isArray(data)) this.locationBenefitRows = data;
+      return;
+    }
   }
 
   /**
@@ -1791,6 +1847,11 @@ export class PorbComponent implements OnInit, OnDestroy {
       // Reload Budget for Financial Reporting (Anaplan consolidated)
       if (this.anaplanConsolidatedData != null) {
         await this.loadAnaplanConsolidated(this.initiativeId);
+      }
+
+      // Reload Location of Benefit consolidated if relevant event arrived
+      if (data.section === 'location-benefit' && this.locationBenefitConsolidatedData != null) {
+        await this.loadLocationBenefitConsolidated(this.initiativeId);
       }
 
       // Reload W3 consolidated if a bilateral event arrived

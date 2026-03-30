@@ -41,6 +41,8 @@ import { Partner } from 'src/entities/partner.entity';
 import { Constants } from 'src/entities/constants.entity';
 import { PorbSynergy } from 'src/entities/porb-synergy.entity';
 import { PorbOutcome } from 'src/entities/porb-outcome.entity';
+import { PorbLocationBenefit } from 'src/entities/porb-location-benefit.entity';
+import { Region } from 'src/entities/region.entity';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import { AxiosError } from 'axios';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
@@ -112,6 +114,10 @@ export class PorbService {
     private porbSynergyRepository: Repository<PorbSynergy>,
     @InjectRepository(PorbOutcome)
     private porbOutcomeRepository: Repository<PorbOutcome>,
+    @InjectRepository(PorbLocationBenefit)
+    private readonly porbLocationBenefitRepository: Repository<PorbLocationBenefit>,
+    @InjectRepository(Region)
+    private readonly regionRepository: Repository<Region>,
     private readonly initService: InitiativesService,
     private readonly phasesService: PhasesService,
     private readonly httpService: HttpService,
@@ -720,6 +726,27 @@ export class PorbService {
       .getCount();
     const countryPercentageCount = hloCountrySet.size + manualCountryCount;
 
+    // Count location benefit rows: outcome-derived + manual (non-overlapping)
+    const outcomes = await this.porbOutcomeRepository.find({
+      where: { program_id, porb_aow_id, toc_is_deleted: false },
+    });
+    const outcomeLocationSet = new Set<string>();
+    for (const o of outcomes) {
+      if (!o.outcome_geo) continue;
+      const parsed = this.parseOutcomeGeo(o.outcome_geo);
+      for (const loc of parsed) {
+        outcomeLocationSet.add(`${loc.type}::${loc.name}`);
+      }
+    }
+    const manualLocationCount = await this.porbLocationBenefitRepository
+      .createQueryBuilder('lb')
+      .where('lb.program_id = :program_id', { program_id })
+      .andWhere('lb.porb_aow_id = :porb_aow_id', { porb_aow_id })
+      .andWhere('lb.center_id = :center_id', { center_id })
+      .andWhere('lb.is_manual = :isManual', { isManual: true })
+      .getCount();
+    const locationBenefitCount = outcomeLocationSet.size + manualLocationCount;
+
     return {
       indicators: [
         {
@@ -759,6 +786,7 @@ export class PorbService {
         anaplan: anaplanRows.length,
         cross: crossRows.length,
         countryPercentage: countryPercentageCount,
+        locationBenefit: locationBenefitCount,
       },
     };
   }
@@ -1596,11 +1624,413 @@ export class PorbService {
       .then(rows => rows.map(r => ({ code: r.code, name: r.name, isoAlpha2: r.isoAlpha2 })));
   }
 
+  // ── Location of Benefit ──
+
+  /**
+   * Parse outcome_geo string into array of { name, type } objects.
+   */
+  private parseOutcomeGeo(outcomeGeo: string): Array<{ name: string; type: string }> {
+    if (!outcomeGeo) return [];
+    const trimmed = outcomeGeo.trim();
+    if (trimmed === 'Global') {
+      return [{ name: 'Global', type: 'global' }];
+    }
+    if (trimmed.startsWith('Region: ')) {
+      const names = trimmed.substring('Region: '.length).split(', ');
+      return names.filter(n => n.trim()).map(n => ({ name: n.trim(), type: 'region' }));
+    }
+    if (trimmed.startsWith('Country: ')) {
+      const names = trimmed.substring('Country: '.length).split(', ');
+      return names.filter(n => n.trim()).map(n => ({ name: n.trim(), type: 'country' }));
+    }
+    return [];
+  }
+
+  /**
+   * Get location-of-benefit rows for a given program/AOW/center.
+   * Locations are derived from outcome-level geo data and merged with saved percentages.
+   */
+  async getLocationBenefit(program_id: number, porb_aow_id?: number, center_id?: number) {
+    if (porb_aow_id == null || center_id == null) return [];
+
+    const [outcomes, savedRows] = await Promise.all([
+      this.porbOutcomeRepository.find({
+        where: { program_id, porb_aow_id, toc_is_deleted: false },
+      }),
+      this.porbLocationBenefitRepository.find({
+        where: { program_id, porb_aow_id, center_id },
+      }),
+    ]);
+
+    // Extract unique locations from outcome geo data
+    const locationSet = new Map<string, { name: string; type: string }>();
+    for (const outcome of outcomes) {
+      if (!outcome.outcome_geo) continue;
+      const locations = this.parseOutcomeGeo(outcome.outcome_geo);
+      for (const loc of locations) {
+        const key = `${loc.type}::${loc.name}`;
+        if (!locationSet.has(key)) locationSet.set(key, loc);
+      }
+    }
+
+    // Build saved map keyed by (location_name, location_type)
+    const savedMap = new Map<string, PorbLocationBenefit>();
+    savedRows.forEach((row) => savedMap.set(`${row.location_type}::${row.location_name}`, row));
+
+    const result: Array<{
+      id?: number;
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      location_name: string;
+      location_type: string;
+      percentage: number | null;
+      is_manual: boolean;
+    }> = [];
+    const includedKeys = new Set<string>();
+
+    // Sort: global first, then regions, then countries — alphabetically within each group
+    const sortedLocations = Array.from(locationSet.values()).sort((a, b) => {
+      const typeOrder = { global: 0, region: 1, country: 2 };
+      const aOrder = typeOrder[a.type] ?? 3;
+      const bOrder = typeOrder[b.type] ?? 3;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Outcome-derived locations
+    for (const loc of sortedLocations) {
+      const key = `${loc.type}::${loc.name}`;
+      const saved = savedMap.get(key);
+      includedKeys.add(key);
+      result.push({
+        id: saved?.id,
+        program_id,
+        porb_aow_id,
+        center_id,
+        location_name: loc.name,
+        location_type: loc.type,
+        percentage: saved?.percentage ?? null,
+        is_manual: false,
+      });
+    }
+
+    // Manual rows that don't overlap with outcome-derived locations
+    for (const row of savedRows) {
+      const key = `${row.location_type}::${row.location_name}`;
+      if (row.is_manual && !includedKeys.has(key)) {
+        includedKeys.add(key);
+        result.push({
+          id: row.id,
+          program_id,
+          porb_aow_id,
+          center_id,
+          location_name: row.location_name,
+          location_type: row.location_type,
+          percentage: row.percentage ?? null,
+          is_manual: true,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Update (upsert) a location-of-benefit percentage.
+   */
+  async updateLocationBenefit(
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      location_name: string;
+      location_type: string;
+      percentage?: number | null;
+    },
+    reqUser?: { id: number },
+    emitterSocketId?: string,
+  ) {
+    await this.assertNotLocked(data.program_id);
+
+    // Cap individual percentage to 0-100
+    if (data.percentage != null) {
+      data.percentage = Math.min(100, Math.max(0, data.percentage));
+    }
+
+    // Validate total doesn't exceed 100% for this center+AOW
+    const allRows = await this.porbLocationBenefitRepository.find({
+      where: {
+        program_id: data.program_id,
+        porb_aow_id: data.porb_aow_id,
+        center_id: data.center_id,
+      },
+    });
+    const otherTotal = allRows
+      .filter((r) => !(r.location_name === data.location_name && r.location_type === data.location_type))
+      .reduce((sum, r) => sum + (Number(r.percentage) || 0), 0);
+    if ((data.percentage || 0) + otherTotal > 100) {
+      throw new BadRequestException('Total percentage cannot exceed 100%.');
+    }
+
+    const existing = await this.porbLocationBenefitRepository.findOne({
+      where: {
+        program_id: data.program_id,
+        porb_aow_id: data.porb_aow_id,
+        center_id: data.center_id,
+        location_name: data.location_name,
+        location_type: data.location_type,
+      },
+    });
+
+    if (existing) {
+      const oldPercentage = existing.percentage;
+
+      await this.porbLocationBenefitRepository.update(existing.id, {
+        percentage: data.percentage ?? null,
+      });
+
+      if (String(oldPercentage ?? '') !== String(data.percentage ?? '')) {
+        await this.logHistory({
+          initiative_id: data.program_id,
+          user_id: reqUser?.id,
+          item_name: `${data.location_name} (${data.location_type})`,
+          resource_property: 'Location of Benefit',
+          old_value: String(oldPercentage ?? ''),
+          new_value: String(data.percentage ?? ''),
+          organization_id: data.center_id,
+        });
+      }
+
+      const result = await this.porbLocationBenefitRepository.findOne({ where: { id: existing.id } });
+      this.emitPorbBudgetChanged({
+        program_id: data.program_id,
+        center_id: data.center_id,
+        aow_id: data.porb_aow_id,
+        section: 'location-benefit',
+        type: 'update',
+        emitter_socket_id: emitterSocketId,
+      });
+      return result;
+    }
+
+    const created = this.porbLocationBenefitRepository.create({
+      program_id: data.program_id,
+      porb_aow_id: data.porb_aow_id,
+      center_id: data.center_id,
+      location_name: data.location_name,
+      location_type: data.location_type,
+      percentage: data.percentage ?? null,
+    });
+    const saved = await this.porbLocationBenefitRepository.save(created);
+    this.emitPorbBudgetChanged({
+      program_id: data.program_id,
+      center_id: data.center_id,
+      aow_id: data.porb_aow_id,
+      section: 'location-benefit',
+      type: 'update',
+      emitter_socket_id: emitterSocketId,
+    });
+    return saved;
+  }
+
+  /**
+   * Add a manually-created location-of-benefit row.
+   */
+  async addManualLocation(
+    data: { program_id: number; porb_aow_id: number; center_id: number; location_name: string; location_type: string },
+    reqUser?: { id: number },
+    emitterSocketId?: string,
+  ) {
+    await this.assertNotLocked(data.program_id);
+
+    const existing = await this.porbLocationBenefitRepository.findOne({
+      where: {
+        program_id: data.program_id,
+        porb_aow_id: data.porb_aow_id,
+        center_id: data.center_id,
+        location_name: data.location_name,
+        location_type: data.location_type,
+      },
+    });
+    if (existing) {
+      throw new BadRequestException('Location already exists for this AOW and center.');
+    }
+
+    const created = this.porbLocationBenefitRepository.create({
+      program_id: data.program_id,
+      porb_aow_id: data.porb_aow_id,
+      center_id: data.center_id,
+      location_name: data.location_name,
+      location_type: data.location_type,
+      is_manual: true,
+      percentage: null,
+    });
+    const saved = await this.porbLocationBenefitRepository.save(created);
+
+    this.emitPorbBudgetChanged({
+      program_id: data.program_id,
+      center_id: data.center_id,
+      aow_id: data.porb_aow_id,
+      section: 'location-benefit',
+      type: 'add',
+      emitter_socket_id: emitterSocketId,
+    });
+
+    return saved;
+  }
+
+  /**
+   * Delete a manually-created location-of-benefit row.
+   */
+  async deleteManualLocation(id: number, reqUser?: { id: number }, emitterSocketId?: string) {
+    const row = await this.porbLocationBenefitRepository.findOne({ where: { id } });
+    if (!row) throw new NotFoundException('Location benefit row not found.');
+    if (!row.is_manual) throw new ForbiddenException('Only manually added locations can be deleted.');
+    await this.assertNotLocked(row.program_id);
+
+    await this.porbLocationBenefitRepository.delete(id);
+
+    this.emitPorbBudgetChanged({
+      program_id: row.program_id,
+      center_id: row.center_id,
+      aow_id: row.porb_aow_id,
+      section: 'location-benefit',
+      type: 'delete',
+      emitter_socket_id: emitterSocketId,
+    });
+  }
+
+  /**
+   * Search for locations (countries and/or regions) for manual add.
+   */
+  async searchLocations(query: string, type?: string) {
+    if (!query || query.length < 2) return [];
+
+    const results: Array<{ name: string; type: string }> = [];
+
+    if (!type || type === 'country') {
+      const countries = await this.clarisaCountryRepository
+        .createQueryBuilder('c')
+        .where('c.name LIKE :q', { q: `%${query}%` })
+        .orderBy('c.name', 'ASC')
+        .limit(20)
+        .getMany();
+      for (const c of countries) {
+        results.push({ name: c.name, type: 'country' });
+      }
+    }
+
+    if (!type || type === 'region') {
+      const regions = await this.regionRepository
+        .createQueryBuilder('r')
+        .where('r.name LIKE :q', { q: `%${query}%` })
+        .orderBy('r.name', 'ASC')
+        .limit(20)
+        .getMany();
+      for (const r of regions) {
+        results.push({ name: r.name, type: 'region' });
+      }
+    }
+
+    // Sort by name, limit to 20 total
+    results.sort((a, b) => a.name.localeCompare(b.name));
+    return results.slice(0, 20);
+  }
+
+  /**
+   * Get consolidated location-of-benefit data across AOWs.
+   */
+  async getLocationBenefitConsolidated(
+    program_id: number,
+    center_id?: number,
+  ): Promise<{
+    locations: Array<{ location_name: string; location_type: string; percentage: number; totalBudget: number }>;
+    grandTotal: number;
+  }> {
+    const lbWhere: Record<string, any> = { program_id };
+    if (center_id != null) lbWhere.center_id = center_id;
+    const lbRows = await this.porbLocationBenefitRepository.find({
+      where: lbWhere,
+    });
+
+    if (!lbRows.length) {
+      return { locations: [], grandTotal: 0 };
+    }
+
+    // Get pooled totals per (aow, center): HLO + Cross-cutting budgets
+    const hloWhere: Record<string, any> = { program_id };
+    if (center_id != null) hloWhere.center_id = center_id;
+    const hlos = await this.porbHloRepository.find({ where: hloWhere });
+
+    const crossWhere: Record<string, any> = { program_id };
+    if (center_id != null) crossWhere.center_id = center_id;
+    const crosses = await this.porbCrossRepository.find({ where: crossWhere });
+
+    const pooledMap = new Map<string, number>();
+
+    for (const h of hlos) {
+      const key = `${h.porb_aow_id}_${h.center_id}`;
+      pooledMap.set(key, (pooledMap.get(key) || 0) + (Number(h.hlo_budget) || 0));
+    }
+    for (const c of crosses) {
+      const key = `${c.porb_aow_id}_${c.center_id}`;
+      pooledMap.set(key, (pooledMap.get(key) || 0) + (Number(c.budget) || 0));
+    }
+
+    // Compute total pooled funding (denominator for percentage)
+    let totalPooledFunding = 0;
+    for (const val of pooledMap.values()) {
+      totalPooledFunding += val;
+    }
+
+    // Compute budget for each location, aggregate by (location_name, location_type)
+    const locationBudgetMap = new Map<string, { budget: number; type: string }>();
+
+    for (const row of lbRows) {
+      const pooledKey = `${row.porb_aow_id}_${row.center_id}`;
+      const pooledTotal = pooledMap.get(pooledKey) || 0;
+      const pct = Number(row.percentage) || 0;
+      const budget = Math.round((pct * pooledTotal) / 100);
+      const mapKey = `${row.location_type}::${row.location_name}`;
+      const existing = locationBudgetMap.get(mapKey);
+      locationBudgetMap.set(mapKey, {
+        budget: (existing?.budget || 0) + budget,
+        type: row.location_type,
+      });
+    }
+
+    const grandTotal = Array.from(locationBudgetMap.values()).reduce((a, b) => a + b.budget, 0);
+
+    // Recalculate percentage as location budget / total pooled funding
+    const locations = Array.from(locationBudgetMap.entries())
+      .map(([mapKey, { budget: totalBudget, type }]) => {
+        const location_name = mapKey.substring(mapKey.indexOf('::') + 2);
+        return {
+          location_name,
+          location_type: type,
+          percentage: totalPooledFunding > 0
+            ? Math.round((totalBudget / totalPooledFunding) * 10000) / 100
+            : 0,
+          totalBudget,
+        };
+      })
+      .sort((a, b) => {
+        const typeOrder = { global: 0, region: 1, country: 2 };
+        const aOrder = typeOrder[a.location_type] ?? 3;
+        const bOrder = typeOrder[b.location_type] ?? 3;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return a.location_name.localeCompare(b.location_name);
+      });
+
+    return { locations, grandTotal };
+  }
+
   private emitPorbBudgetChanged(payload: {
     program_id: number;
     center_id?: number | string;
     aow_id?: number | null;
-    section: 'hlo' | 'partner' | 'bilateral' | 'melia' | 'anaplan' | 'cross' | 'country-percentage' | 'center-status';
+    section: 'hlo' | 'partner' | 'bilateral' | 'melia' | 'anaplan' | 'cross' | 'country-percentage' | 'location-benefit' | 'center-status';
     type: 'update' | 'delete' | 'add';
     emitter_socket_id?: string;
   }) {
@@ -2460,7 +2890,35 @@ export class PorbService {
       }),
     ]);
 
-    return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals, countryPercentageCount, countryPercentage, synergies, outcomes };
+    // Location benefit rows for this AOW (with computed budgets aggregated across centers)
+    const lbRows = await this.porbLocationBenefitRepository.find({
+      where: { program_id, porb_aow_id },
+    });
+    const lbBudgetMap = new Map<string, { budget: number; type: string }>();
+    for (const row of lbRows) {
+      const pooled = pooledByCenter.get(Number(row.center_id)) || 0;
+      const budget = Math.round(((Number(row.percentage) || 0) * pooled) / 100);
+      const key = `${row.location_type}::${row.location_name}`;
+      const existing = lbBudgetMap.get(key);
+      lbBudgetMap.set(key, { budget: (existing?.budget || 0) + budget, type: row.location_type });
+    }
+    const locationBenefit = Array.from(lbBudgetMap.entries())
+      .map(([key, { budget, type }]) => ({
+        location_name: key.substring(key.indexOf('::') + 2),
+        location_type: type,
+        percentage: aowPooledTotal > 0 ? Math.round((budget / aowPooledTotal) * 10000) / 100 : 0,
+        budget,
+      }))
+      .sort((a, b) => {
+        const typeOrder = { global: 0, region: 1, country: 2 };
+        const ta = typeOrder[a.location_type as keyof typeof typeOrder] ?? 3;
+        const tb = typeOrder[b.location_type as keyof typeof typeOrder] ?? 3;
+        if (ta !== tb) return ta - tb;
+        return a.location_name.localeCompare(b.location_name);
+      });
+    const locationBenefitCount = lbRows.length;
+
+    return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals, countryPercentageCount, countryPercentage, locationBenefitCount, locationBenefit, synergies, outcomes };
   }
 
   async importTocToPorbTables(programId: number, officialCode: string, tocDataOverride?: any, setTocTimestamps = true) {
@@ -3042,6 +3500,18 @@ export class PorbService {
         if (!outcomeIndicators.length) outcomeIndicators = null;
       }
 
+      // Extract outcome-level geographic scope
+      let outcomeGeo = '';
+      if (item?.geo_scope === 'global' || item?.location === 'global') {
+        outcomeGeo = 'Global';
+      } else if (item?.geo_scope === 'regional' || item?.location === 'regional') {
+        const regionNames = [...(item?.regions ?? [])].map((r: any) => r.name).sort();
+        outcomeGeo = regionNames.length ? `Region: ${regionNames.join(', ')}` : '';
+      } else if (item?.geo_scope === 'country' || item?.location === 'country') {
+        const countryNames = [...(item?.countries ?? [])].map((c: any) => c.name).sort();
+        outcomeGeo = countryNames.length ? `Country: ${countryNames.join(', ')}` : '';
+      }
+
       outcomeRows.push(
         this.porbOutcomeRepository.create({
           program_id: programId,
@@ -3050,6 +3520,7 @@ export class PorbService {
           outcome_title: item?.title || '',
           outcome_type: item?.type_of_outcome?.name || item?.type?.name || '',
           outcome_indicators: outcomeIndicators,
+          outcome_geo: outcomeGeo || null,
           toc_is_deleted: false,
         }),
       );
@@ -3070,6 +3541,7 @@ export class PorbService {
       const existingIndicatorsJson = JSON.stringify(existing.outcome_indicators || null);
       const newIndicatorsJson = JSON.stringify(row.outcome_indicators || null);
       if (existingIndicatorsJson !== newIndicatorsJson) changes.outcome_indicators = row.outcome_indicators;
+      if ((existing.outcome_geo || '') !== (row.outcome_geo || '')) changes.outcome_geo = row.outcome_geo;
       if (Object.keys(changes).length) {
         if (setTocTimestamps) changes.toc_updated_at = new Date();
         outcomeUpdates.push({ id: existing.id, changes });
@@ -5111,7 +5583,7 @@ export class PorbService {
    * Load all data needed for Excel generation, build workbook, return as sheets.
    */
   private async buildPorbWorkbook(programId: number, centerId?: any) {
-    const [aows, hlos, partners, bilaterals, melias, summaryData, countryPercentageRows] = await Promise.all([
+    const [aows, hlos, partners, bilaterals, melias, summaryData, countryPercentageRows, locationBenefitRows] = await Promise.all([
       this.getAows(programId),
       this.getHlos(programId, undefined, centerId),
       this.getPartners(programId, undefined, centerId),
@@ -5119,6 +5591,9 @@ export class PorbService {
       this.getMelia(programId, undefined, centerId),
       this.getSummaryConsolidation(programId, centerId != null ? centerId : undefined),
       this.porbCountryPercentageRepository.find({
+        where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
+      }),
+      this.porbLocationBenefitRepository.find({
         where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
       }),
     ]);
@@ -5181,6 +5656,7 @@ export class PorbService {
         ...(Array.isArray(melias) ? melias : []).map((m: any) => m.center_id),
         ...crossRows.map((c) => c.center_id),
         ...countryPercentageRows.map((cp) => cp.center_id),
+        ...locationBenefitRows.map((lb) => lb.center_id),
       ].filter(Boolean)),
     ];
     const centerRows = centerIds.length
@@ -5227,6 +5703,12 @@ export class PorbService {
       wb,
       this.generatePorbCountryPercentageSheet(countryPercentageRows, aowMap, sortedAowIds, centerNameMap),
       'Countries of Implementation',
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      this.generatePorbLocationBenefitSheet(locationBenefitRows, aowMap, sortedAowIds, centerNameMap),
+      'Location of Benefit',
     );
 
     const synergyRows = await this.porbSynergyRepository.find({
@@ -5770,6 +6252,7 @@ export class PorbService {
       const tables = [
         { name: 'porb_contracted_partners', condition: aowWhere },
         { name: 'porb_country_percentage', condition: where },
+        { name: 'porb_location_benefit', condition: where },
         { name: 'porb_hlo', condition: aowWhere },
         { name: 'porb_melia', condition: aowWhere },
         { name: 'porb_anaplan', condition: where },
@@ -6674,6 +7157,82 @@ export class PorbService {
     return ws;
   }
 
+  private generatePorbLocationBenefitSheet(
+    lbRows: PorbLocationBenefit[],
+    aowMap: Map<number, { code: string; name: string }>,
+    sortedAowIds: number[],
+    centerNameMap: Map<number, string>,
+  ) {
+    const wsData: any[][] = [];
+    const merges: any[] = [];
+
+    wsData.push(['AOW', 'Center', 'Location', 'Type', 'Percentage (%)', 'id']);
+
+    // Group by AOW
+    const lbByAow = new Map<number, PorbLocationBenefit[]>();
+    for (const row of lbRows) {
+      const list = lbByAow.get(row.porb_aow_id) || [];
+      list.push(row);
+      lbByAow.set(row.porb_aow_id, list);
+    }
+
+    let currentRow = 1;
+
+    for (const aowId of sortedAowIds) {
+      const aowLb = lbByAow.get(aowId);
+      if (!aowLb?.length) continue;
+
+      const aowLabel = this.getAowLabel(aowId, aowMap);
+      const aowStartRow = currentRow;
+
+      // Sort: global first, regions, countries — alphabetically within each
+      aowLb.sort((a, b) => {
+        const typeOrder = { global: 0, region: 1, country: 2 };
+        const aOrder = typeOrder[a.location_type] ?? 3;
+        const bOrder = typeOrder[b.location_type] ?? 3;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return a.location_name.localeCompare(b.location_name);
+      });
+
+      for (const row of aowLb) {
+        const pct = Number(row.percentage) || 0;
+        wsData.push([
+          aowLabel,
+          centerNameMap.get(row.center_id) || String(row.center_id || ''),
+          row.location_name,
+          row.location_type,
+          pct,
+          row.id,
+        ]);
+        currentRow++;
+      }
+
+      const aowEndRow = currentRow - 1;
+      if (aowEndRow >= aowStartRow) {
+        merges.push({ s: { r: aowStartRow, c: 0 }, e: { r: aowEndRow, c: 0 } });
+      }
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!merges'] = merges;
+
+    ws['!cols'] = [
+      { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 12 }, { wch: 15 }, { wch: 10 },
+    ];
+
+    this.applySheetStyles(ws, wsData, {
+      headerRowCount: 1,
+      wpColumnIndex: 0,
+      numberColumns: [4],
+      rowHeights: { header: 60, data: 45, subtotal: 25 },
+      merges,
+    });
+
+    this.protectAndHideIds(ws, [5]);
+
+    return ws;
+  }
+
   private generatePorbSynergySheet(
     synergies: PorbSynergy[],
     aowMap: Map<number, { code: string; name: string }>,
@@ -6880,7 +7439,7 @@ export class PorbService {
           center.acronym || center.name || String(centerId);
 
         // Fetch all section data for this AOW+center combo
-        const [hlos, partners, melias, anaplan, cross, countryPercentages] =
+        const [hlos, partners, melias, anaplan, cross, countryPercentages, locationBenefits] =
           await Promise.all([
             this.getHlos(programId, aow.id, centerId),
             this.getPartners(programId, aow.id, centerId),
@@ -6888,6 +7447,7 @@ export class PorbService {
             this.getAnaplan(programId, aow.id, centerId),
             this.getCross(programId, aow.id, centerId),
             this.getCountryPercentage(programId, aow.id, centerId),
+            this.getLocationBenefit(programId, aow.id, centerId),
           ]);
 
         centerSnapshots.push({
@@ -6899,6 +7459,7 @@ export class PorbService {
           anaplan,
           cross_cutting: cross,
           country_percentages: countryPercentages,
+          location_benefits: locationBenefits,
         });
       }
 

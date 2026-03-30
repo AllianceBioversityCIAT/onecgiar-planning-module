@@ -933,3 +933,33 @@
     flex-wrap: wrap;
   }
 }
+
+
+// Type badges for Location of Benefit (used in consolidated/summary tables)
+.type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  white-space: nowrap;
+
+  &.global {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+  }
+
+  &.region {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+  }
+
+  &.country {
+    background: #fff8e1;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+  }
+}

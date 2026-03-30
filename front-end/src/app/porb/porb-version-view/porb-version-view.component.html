@@ -464,6 +464,16 @@
             [selectedPorbAowId]="selectedAow?.id"
             [selectedCenterId]="selectedCenter?.code"
           ></app-country-percentage-section>
+
+          <app-location-benefit-section
+            *ngSwitchCase="'Location of Benefit'"
+            [rows]="currentRows"
+            [canEdit]="false"
+            [pooledTotal]="pooledTotal"
+            [selectedProgramId]="programId"
+            [selectedPorbAowId]="selectedAow?.id"
+            [selectedCenterId]="selectedCenter?.code"
+          ></app-location-benefit-section>
         </ng-container>
       </div>
 

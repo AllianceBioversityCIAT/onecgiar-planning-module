@@ -471,6 +471,62 @@ export class PorbService {
     ).catch(() => false);
   }
 
+  async getLocationBenefit(programId: number, porbAowId?: number, centerId?: number) {
+    let params = new HttpParams().set("program_id", String(programId));
+    if (porbAowId != null) params = params.set("porb_aow_id", String(porbAowId));
+    if (centerId != null) params = params.set("center_id", String(centerId));
+    return firstValueFrom(
+      this.http.get(`${environment.api_url}/porb/location-benefit`, { params }).pipe(map((d: any) => d))
+    ).catch(() => []);
+  }
+
+  async updateLocationBenefit(data: {
+    program_id: number;
+    porb_aow_id: number;
+    center_id: number;
+    location_name: string;
+    location_type: string;
+    percentage?: number | null;
+  }) {
+    return firstValueFrom(
+      this.http
+        .patch(`${environment.api_url}/porb/location-benefit`, data)
+        .pipe(map((d: any) => d))
+    ).catch(() => false);
+  }
+
+  async addManualLocation(data: {
+    program_id: number;
+    porb_aow_id: number;
+    center_id: number;
+    location_name: string;
+    location_type: string;
+  }) {
+    return firstValueFrom(
+      this.http.post<any>(`${environment.api_url}/porb/location-benefit`, data).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async deleteManualLocation(id: number) {
+    return firstValueFrom(
+      this.http.delete(`${environment.api_url}/porb/location-benefit/${id}`).pipe(map((d: any) => d))
+    ).catch(() => null);
+  }
+
+  async searchLocations(query: string, type?: string) {
+    let params = new HttpParams().set("q", query);
+    if (type) params = params.set("type", type);
+    return firstValueFrom(
+      this.http.get<any[]>(`${environment.api_url}/porb/location-benefit/search`, { params }).pipe(map((d: any) => d))
+    ).catch(() => []);
+  }
+
+  getLocationBenefitConsolidated(programId: number, centerId?: number) {
+    let params = new HttpParams().set("program_id", String(programId));
+    if (centerId != null) params = params.set("center_id", String(centerId));
+    return this.http.get<any>(`${environment.api_url}/porb/location-benefit-consolidated`, { params });
+  }
+
   private async getByFilter(
     section: "hlo" | "partner" | "bilateral" | "melia" | "anaplan" | "cross" | "consolidation" | "validation" | "validation-summary" | "country-percentage",
     programId: number,

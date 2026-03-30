@@ -291,6 +291,31 @@
             </table>
           </div>
         </div>
+
+        <!-- Location of Benefit Consolidated Table -->
+        <div class="porb-consolidation-section" *ngIf="!summaryLoading && locationBenefitConsolidatedData?.locations?.length">
+          <h3>Location of Benefit</h3>
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left">Location</th>
+                  <th>Type</th>
+                  <th class="num-cell">Percentage (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let l of locationBenefitConsolidatedData.locations" [hidden]="!l.percentage">
+                  <td style="text-align: left">{{ l.location_name }}</td>
+                  <td>
+                    <span class="type-badge" [ngClass]="l.location_type?.toLowerCase()">{{ l.location_type | titlecase }}</span>
+                  </td>
+                  <td class="num-cell">{{ l.percentage }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
         </ng-container>
 
         <!-- DETAILED VIEW -->
@@ -589,6 +614,41 @@
                   <div class="summary-section-empty">
                     <mat-icon>info_outline</mat-icon>
                     <span><strong>Countries of Implementation</strong> — No country percentage data found. Country percentages must be entered in the Countries of Implementation section at the center level.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- Location of Benefit Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Location of Benefit'">
+              <div class="summary-section-block" *ngIf="cachedFormattedLocationBenefit.length; else lbEmpty">
+                <h4 class="summary-section-title">Location of Benefit</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>Location</th>
+                        <th>Type</th>
+                        <th class="num-cell">Percentage (%)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let l of cachedFormattedLocationBenefit">
+                        <td>{{ l.location_name }}</td>
+                        <td>
+                          <span class="type-badge" [ngClass]="l.location_type?.toLowerCase()">{{ l.location_type | titlecase }}</span>
+                        </td>
+                        <td class="num-cell">{{ l.percentage }}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #lbEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Location of Benefit</strong> — No location data found. Locations are derived from outcome data and can be added in the Location of Benefit section at the center level.</span>
                   </div>
                 </div>
               </ng-template>
@@ -953,6 +1013,19 @@
               (budgetUpdated)="onBudgetUpdated()"
               (rowAdded)="onRowAdded()"
             ></app-country-percentage-section>
+
+            <app-location-benefit-section
+              *ngSwitchCase="'Location of Benefit'"
+              [rows]="locationBenefitRows"
+              [pooledTotal]="consolidationBudgetSummaryData?.pooledTotal || 0"
+              [selectedProgramId]="initiativeId || undefined"
+              [selectedPorbAowId]="selectedPorbAowIdForSections"
+              [selectedCenterId]="selectedCenterIdForSections"
+              [canEdit]="canEditForSelectedCenter"
+              [isAow00]="isSelectedAowCrossCutting"
+              (budgetUpdated)="onBudgetUpdated()"
+              (rowAdded)="onRowAdded()"
+            ></app-location-benefit-section>
           </ng-container>
         </div>
       </ng-container>
@@ -1125,6 +1198,31 @@
                   <tr *ngFor="let c of centerCountryConsolidatedData.countries" [hidden]="!c.percentage">
                     <td style="text-align: left">{{ c.country_name }}</td>
                     <td class="num-cell">{{ c.percentage }}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Location of Benefit for this center -->
+          <div class="porb-consolidation-section" *ngIf="centerLocationBenefitConsolidatedData?.locations?.length">
+            <h3>Location of Benefit</h3>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Location</th>
+                    <th>Type</th>
+                    <th class="num-cell">Percentage (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let l of centerLocationBenefitConsolidatedData.locations" [hidden]="!l.percentage">
+                    <td style="text-align: left">{{ l.location_name }}</td>
+                    <td>
+                      <span class="type-badge" [ngClass]="l.location_type?.toLowerCase()">{{ l.location_type | titlecase }}</span>
+                    </td>
+                    <td class="num-cell">{{ l.percentage }}%</td>
                   </tr>
                 </tbody>
               </table>

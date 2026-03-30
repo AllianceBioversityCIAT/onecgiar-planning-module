@@ -31,6 +31,8 @@ import { Partner } from 'src/entities/partner.entity';
 import { Constants } from 'src/entities/constants.entity';
 import { PorbSynergy } from 'src/entities/porb-synergy.entity';
 import { PorbOutcome } from 'src/entities/porb-outcome.entity';
+import { PorbLocationBenefit } from 'src/entities/porb-location-benefit.entity';
+import { Region } from 'src/entities/region.entity';
 import { SubmissionModule } from 'src/submission/submission.module';
 import { InitiativesModule } from 'src/initiatives/initiatives.module';
 import { PhasesModule } from 'src/phases/phases.module';
@@ -68,6 +70,8 @@ import { EventsModule } from 'src/events/events.module';
       Constants,
       PorbSynergy,
       PorbOutcome,
+      PorbLocationBenefit,
+      Region,
     ]),
     HttpModule,
     SubmissionModule,

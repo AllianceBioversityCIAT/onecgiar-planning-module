@@ -298,6 +298,90 @@ export class PorbController {
     return this.porbService.deleteManualCountry(id, req.user, this.getSocketId(req));
   }
 
+  // ── Location of Benefit ──
+
+  @Get('location-benefit-consolidated')
+  getLocationBenefitConsolidated(
+    @Query('program_id', ParseIntPipe) program_id: number,
+    @Query('center_id') center_id?: string,
+  ) {
+    return this.porbService.getLocationBenefitConsolidated(
+      program_id,
+      this.parseOptionalNumber(center_id),
+    );
+  }
+
+  @Get('location-benefit/search')
+  searchLocations(@Query('q') query: string, @Query('type') type?: string) {
+    return this.porbService.searchLocations(query || '', type || undefined);
+  }
+
+  @Get('location-benefit')
+  getLocationBenefit(
+    @Query('program_id', ParseIntPipe) program_id: number,
+    @Query('porb_aow_id') porb_aow_id?: string,
+    @Query('center_id') center_id?: string,
+  ) {
+    return this.porbService.getLocationBenefit(
+      program_id,
+      this.parseOptionalNumber(porb_aow_id),
+      this.parseOptionalNumber(center_id),
+    );
+  }
+
+  @Patch('location-benefit')
+  updateLocationBenefit(
+    @Body()
+    data: {
+      program_id: number;
+      porb_aow_id: number;
+      center_id: number;
+      location_name: string;
+      location_type: string;
+      percentage?: number | null;
+    },
+    @Request() req,
+  ) {
+    return this.porbService.updateLocationBenefit(
+      {
+        program_id: Number(data.program_id),
+        porb_aow_id: Number(data.porb_aow_id),
+        center_id: Number(data.center_id),
+        location_name: String(data.location_name),
+        location_type: String(data.location_type),
+        percentage:
+          data.percentage != null && data.percentage !== ('' as any)
+            ? Number(data.percentage)
+            : null,
+      },
+      req.user,
+      this.getSocketId(req),
+    );
+  }
+
+  @Post('location-benefit')
+  addManualLocation(
+    @Body() body: { program_id: number; porb_aow_id: number; center_id: number; location_name: string; location_type: string },
+    @Request() req,
+  ) {
+    return this.porbService.addManualLocation(
+      {
+        program_id: Number(body.program_id),
+        porb_aow_id: Number(body.porb_aow_id),
+        center_id: Number(body.center_id),
+        location_name: String(body.location_name),
+        location_type: String(body.location_type),
+      },
+      req.user,
+      this.getSocketId(req),
+    );
+  }
+
+  @Delete('location-benefit/:id')
+  deleteManualLocation(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    return this.porbService.deleteManualLocation(id, req.user, this.getSocketId(req));
+  }
+
   @Patch('hlo/:id')
   updateHlo(
     @Param('id', ParseIntPipe) id: number,

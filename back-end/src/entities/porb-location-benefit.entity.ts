@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Initiative } from './initiative.entity';
+import { Organization } from './organization.entity';
 import { PorbAow } from './porb-aow.entity';
 
-@Entity('porb_outcome')
-export class PorbOutcome {
+@Entity('porb_location_benefit')
+export class PorbLocationBenefit {
   @ApiProperty()
   @PrimaryGeneratedColumn()
   id: number;
@@ -18,46 +19,40 @@ export class PorbOutcome {
   program: Initiative;
 
   @ApiProperty()
-  @Column({ nullable: true })
+  @Column()
   porb_aow_id: number;
 
-  @ManyToOne(() => PorbAow, { onDelete: 'SET NULL', onUpdate: 'CASCADE' })
+  @ManyToOne(() => PorbAow, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'porb_aow_id' })
   porb_aow: PorbAow;
 
   @ApiProperty()
-  @Column({ type: 'varchar', length: 255 })
-  toc_id: string;
+  @Column()
+  center_id: number;
+
+  @ManyToOne(() => Organization, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'center_id' })
+  center: Organization;
 
   @ApiProperty()
-  @Column({ type: 'mediumtext' })
-  outcome_title: string;
+  @Column({ type: 'varchar' })
+  location_name: string;
 
   @ApiProperty()
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  outcome_type: string;
+  @Column({ type: 'varchar', length: 20 })
+  location_type: string;
 
   @ApiProperty()
-  @Column({ type: 'json', nullable: true })
-  outcome_indicators: Array<{ type: string; description: string; location: string; target_value: number | null }> | null;
-
-  @ApiProperty()
-  @Column({ type: 'mediumtext', nullable: true })
-  outcome_geo: string;
+  @Column({ type: 'float', nullable: true })
+  percentage: number;
 
   @ApiProperty()
   @Column({ type: 'boolean', default: false })
-  toc_is_deleted: boolean;
+  is_manual: boolean;
 
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
-
-  @Column({ type: 'datetime', nullable: true, default: null })
-  toc_updated_at: Date;
-
-  @Column({ type: 'datetime', nullable: true, default: null })
-  toc_created_at: Date;
 }

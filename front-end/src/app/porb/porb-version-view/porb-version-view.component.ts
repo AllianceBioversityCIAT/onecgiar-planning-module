@@ -78,6 +78,7 @@ export class PorbVersionViewComponent implements OnInit {
     "Anaplan",
     "Cross Cutting",
     "Countries of Implementation",
+    "Location of Benefit",
   ];
   selectedSection: string | null = null;
   isW3View = false;
@@ -255,6 +256,9 @@ export class PorbVersionViewComponent implements OnInit {
       case "Countries of Implementation":
         this.currentRows = centerData.country_percentages || [];
         break;
+      case "Location of Benefit":
+        this.currentRows = centerData.location_benefits || [];
+        break;
       default:
         this.currentRows = [];
     }
@@ -293,6 +297,7 @@ export class PorbVersionViewComponent implements OnInit {
       case "Anaplan": return sumField(centerData.anaplan, "porb_budget") > 0;
       case "Cross Cutting": return sumField(centerData.cross_cutting, "budget") > 0;
       case "Countries of Implementation": return sumField(centerData.country_percentages, "percentage") > 0;
+      case "Location of Benefit": return sumField(centerData.location_benefits, "percentage") > 0;
       default: return false;
     }
   }
