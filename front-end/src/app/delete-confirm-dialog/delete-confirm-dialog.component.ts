@@ -4,9 +4,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import { HeaderService } from "../header.service";
 
 @Component({
-  selector: "app-delete-confirm-dialog",
-  templateUrl: "./delete-confirm-dialog.component.html",
-  styleUrls: ["./delete-confirm-dialog.component.scss"],
+    selector: "app-delete-confirm-dialog",
+    templateUrl: "./delete-confirm-dialog.component.html",
+    styleUrls: ["./delete-confirm-dialog.component.scss"],
+    standalone: false
 })
 export class DeleteConfirmDialogComponent implements OnInit {
   constructor(

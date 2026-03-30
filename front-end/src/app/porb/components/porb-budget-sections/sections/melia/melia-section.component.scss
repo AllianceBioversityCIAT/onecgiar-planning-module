@@ -1,0 +1,190 @@
+.additional-section {
+  margin-top: 1.6rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-family: "Poppins", sans-serif;
+    font-size: 1.8rem;
+    color: #212537;
+  }
+}
+
+.table-box {
+  border: 1px solid #b9b9b9b5;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.8rem;
+}
+
+.table-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.tool-input,
+.tool-select {
+  height: 3.2rem;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 6px;
+  padding: 0 0.8rem;
+  font-size: 1.3rem;
+  color: #0f212f;
+  background: #ffffff;
+}
+
+.tool-input {
+  min-width: 240px;
+}
+
+.tool-select {
+  min-width: 180px;
+}
+
+.export-btn {
+  height: 3.2rem;
+  border: 0;
+  border-radius: 6px;
+  background: #5569dd;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 500;
+  padding: 0 1rem;
+  cursor: pointer;
+}
+
+.additional-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 0;
+  table-layout: fixed;
+
+  th,
+  td {
+    border: 1px solid #b9b9b9b5;
+    padding: 0.65rem 0.7rem;
+    font-size: 1.3rem;
+    color: #0f212f;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    vertical-align: top;
+    font-family: "Poppins", sans-serif;
+  }
+
+  th {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 600;
+    background: linear-gradient(to right, #2a2e45, #212537);
+  }
+
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 42%;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 38%;
+  }
+
+  th:nth-child(3) {
+    width: 20%;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .num-cell {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .row-title {
+    text-align: left;
+    font-weight: 500;
+    background: #ffffff;
+    white-space: normal;
+  }
+
+  tr.row-error td {
+    background: #fff3f3;
+  }
+
+  td.deleted-cell {
+    background: #fff4e5 !important;
+    color: #9a3412 !important;
+  }
+}
+
+.row-error-icon {
+  position: absolute;
+  left: -2.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dc3545;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  z-index: 3;
+}
+
+// Delete button for TOC-deleted rows
+.row-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  min-width: 2.2rem;
+  border: none;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  transition: background 0.2s;
+
+  mat-icon, .mat-icon {
+    font-size: 1.4rem;
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  &:hover {
+    background: #dc2626;
+  }
+
+  &:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+}
+
+.budget-cell-with-error {
+  position: relative;
+  overflow: visible !important;
+  vertical-align: middle !important;
+  padding-top: 0.35rem !important;
+  padding-bottom: 0.35rem !important;
+}
+
+.budget-cell-with-error app-budget-and-assumption {
+  display: block;
+}
+

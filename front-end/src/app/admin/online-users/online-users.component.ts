@@ -16,9 +16,10 @@ interface OnlineUser {
 }
 
 @Component({
-  selector: "app-online-users",
-  templateUrl: "./online-users.component.html",
-  styleUrls: ["./online-users.component.scss"],
+    selector: "app-online-users",
+    templateUrl: "./online-users.component.html",
+    styleUrls: ["./online-users.component.scss"],
+    standalone: false
 })
 export class OnlineUsersComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = ["fullName", "sp", "connectedAt"];

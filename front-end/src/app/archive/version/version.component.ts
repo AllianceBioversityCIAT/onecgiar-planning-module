@@ -7,9 +7,10 @@ import { PhasesService } from 'src/app/services/phases.service';
 import { SubmissionService } from 'src/app/services/submission.service';
 
 @Component({
-  selector: 'app-version',
-  templateUrl: './version.component.html',
-  styleUrls: ['./version.component.scss']
+    selector: 'app-version',
+    templateUrl: './version.component.html',
+    styleUrls: ['./version.component.scss'],
+    standalone: false
 })
 export class VersionComponent implements OnInit {
   constructor(

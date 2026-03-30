@@ -10,9 +10,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import { ToastrService } from "ngx-toastr";
 
 @Component({
-  selector: "app-ipsr",
-  templateUrl: "./ipsr.component.html",
-  styleUrls: ["./ipsr.component.scss"],
+    selector: "app-ipsr",
+    templateUrl: "./ipsr.component.html",
+    styleUrls: ["./ipsr.component.scss"],
+    standalone: false
 })
 export class IpsrComponent implements OnInit {
   ipsrForm: FormGroup<any> = new FormGroup([]);

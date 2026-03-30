@@ -9,9 +9,10 @@ export interface DialogData {
 }
 
 @Component({
-  selector: 'app-organization-dialog',
-  templateUrl: './organization-dialog.component.html',
-  styleUrls: ['./organization-dialog.component.scss'],
+    selector: 'app-organization-dialog',
+    templateUrl: './organization-dialog.component.html',
+    styleUrls: ['./organization-dialog.component.scss'],
+    standalone: false
 })
 export class OrganizationDialogComponent implements OnInit {
   organizationCode: string = '0';

@@ -1,0 +1,45 @@
+<div class="tour-overlay" *ngIf="open && activeStep">
+  <div
+    class="tour-backdrop top"
+    [style.height.px]="spotlightTop"
+  ></div>
+  <div
+    class="tour-backdrop left"
+    [style.top.px]="spotlightTop"
+    [style.height.px]="spotlightBottom - spotlightTop"
+    [style.width.px]="spotlightLeft"
+  ></div>
+  <div
+    class="tour-backdrop right"
+    [style.top.px]="spotlightTop"
+    [style.left.px]="spotlightRight"
+    [style.height.px]="spotlightBottom - spotlightTop"
+  ></div>
+  <div
+    class="tour-backdrop bottom"
+    [style.top.px]="spotlightBottom"
+  ></div>
+
+  <div
+    class="tour-bubble"
+    [style.top.px]="bubbleTop"
+    [style.left.px]="bubbleLeft"
+    role="dialog"
+    aria-modal="true"
+    aria-label="PORB Tour"
+  >
+    <div class="tour-counter">Step {{ currentIndex + 1 }} / {{ steps.length }}</div>
+    <h3>{{ activeStep.title }}</h3>
+    <p>{{ activeStep.description }}</p>
+
+    <div class="tour-actions">
+      <button type="button" class="action-btn ghost" (click)="skip()">Skip</button>
+      <button type="button" class="action-btn ghost" (click)="previous()" [disabled]="!hasPrev">
+        Back
+      </button>
+      <button type="button" class="action-btn primary" (click)="next()">
+        {{ isLast ? "Finish" : "Next" }}
+      </button>
+    </div>
+  </div>
+</div>

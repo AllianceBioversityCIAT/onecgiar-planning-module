@@ -9,9 +9,10 @@ export interface DialogData {
 }
 
 @Component({
-  selector: "app-phase-dialog",
-  templateUrl: "./phase-dialog.component.html",
-  styleUrls: ["./phase-dialog.component.scss"],
+    selector: "app-phase-dialog",
+    templateUrl: "./phase-dialog.component.html",
+    styleUrls: ["./phase-dialog.component.scss"],
+    standalone: false
 })
 export class PhaseDialogComponent implements OnInit {
   phaseId: number = 0;

@@ -1,14 +1,20 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import { ROLES } from '../shared/roles';
 
 @Pipe({
-  name: 'grantedAccessPipe'
+    name: 'grantedAccessPipe',
+    standalone: false
 })
 export class GrantedAccessPipePipe implements PipeTransform {
 
+  private readonly specialRoles: string[] = [
+    'MELIA Focal Point',
+    ROLES.Financial_Focal_Point,
+  ];
+
   transform(data: any[], role: string = ''): string {
-     let newRoles = ['MELIA Focal Point', 'Financial Focal Point'];
     if (!Array.isArray(data) || data.length === 0) {
-      if(newRoles.includes(role)) {
+      if (this.specialRoles.includes(role)) {
         return role;
       } else {
         return 'Full access';

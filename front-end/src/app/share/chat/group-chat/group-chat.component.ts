@@ -6,9 +6,10 @@ import { ChatMessage } from "../chat/chat.component";
 import { ChatSocket } from "../module/chat-socket";
 
 @Component({
-  selector: "app-group-chat",
-  templateUrl: "./group-chat.component.html",
-  styleUrls: ["./group-chat.component.scss"],
+    selector: "app-group-chat",
+    templateUrl: "./group-chat.component.html",
+    styleUrls: ["./group-chat.component.scss"],
+    standalone: false
 })
 export class GroupChatComponent implements OnInit {
   @ViewChild(ChatBoxComponent) private chatBoxComponent: ChatBoxComponent;

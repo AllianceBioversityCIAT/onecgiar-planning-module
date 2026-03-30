@@ -1,0 +1,1297 @@
+<div class="toc-harvest-overlay" *ngIf="tocHarvesting">
+  <div class="toc-harvest-overlay__content">
+    <div class="toc-harvest-overlay__icon">
+      <mat-spinner diameter="48" color="primary"></mat-spinner>
+    </div>
+    <h3>Syncing with TOC</h3>
+    <p>We detected updates in the Theory of Change.<br>Your PORB data is being refreshed automatically.</p>
+    <span class="toc-harvest-overlay__hint">This will only take a moment</span>
+  </div>
+</div>
+
+<section class="porb-page">
+  <nav class="porb-breadcrumb">
+    <a routerLink="/">Programs</a>
+    <span>/</span>
+    <a
+      [routerLink]="[
+        '/program',
+        initiative?.id,
+        initiative?.official_code,
+        'porb'
+      ]"
+      >PORB</a
+    >
+  </nav>
+
+  <div data-tour-anchor="porb-overview">
+    <app-porb-overview
+      *ngIf="initiative"
+      [initiative]="initiative"
+      [onlineProgramUsers]="onlineProgramUsers"
+      [submissionStatus]="submissionStatus"
+      [submissionId]="submissionId"
+      [canSubmit]="canSubmit"
+      [submitting]="submitting"
+      [exportingZip]="exportingZip"
+      (exportOverview)="exportOverviewExcel()"
+      (exportAllZip)="exportAllZip()"
+      (submitClicked)="onSubmitClicked()"
+      (cancelSubmissionClicked)="onCancelSubmissionClicked()"
+      (historyClicked)="openHistoryDialog()"
+    ></app-porb-overview>
+  </div>
+
+  <!-- Submission locked banner -->
+  <div class="submission-locked-banner" [class.submission-locked-banner--approved]="submissionStatus === 'Approved'" *ngIf="isSubmissionLocked">
+    <mat-icon>lock</mat-icon>
+    <span *ngIf="submissionStatus === 'Pending' && !isNonLeadUser">
+      This PORB has been submitted and is pending review. You can cancel the submission using the Cancel button above if changes are needed.
+    </span>
+    <span *ngIf="submissionStatus === 'Pending' && isNonLeadUser">
+      This PORB has been submitted and is pending review. Please contact your Program Lead or coordinator if changes are needed.
+    </span>
+    <span *ngIf="submissionStatus === 'Approved'">
+      This PORB has been approved. Please contact admin (PCU) at
+      <a href="mailto:projectcoordinationunit@cgiar.org">projectcoordinationunit&#64;cgiar.org</a>
+      if changes are needed.
+    </span>
+  </div>
+
+  <div class="porb-main" *ngIf="!loading">
+    <!-- Level 1: Center nav list -->
+    <nav class="porb-nav porb-nav--centers" data-tour-anchor="porb-center-tabs">
+      <button
+        type="button"
+        class="porb-nav__item"
+        [class.porb-nav__item--active]="activeView === 'summary'"
+        (click)="selectSummary()"
+      >
+        Summary
+      </button>
+      <button
+        *ngFor="let center of centers"
+        type="button"
+        class="porb-nav__item"
+        [class.porb-nav__item--active]="activeView === 'center' && isCenterSelected(center)"
+        [class.porb-nav__item--completed]="isCenterCompleted(center)"
+        [class.porb-nav__item--no-access]="!canEditCenter(center)"
+        (click)="selectCenter(center)"
+      >
+        {{ center?.acronym || center?.name }}
+        <mat-icon class="nav-icon nav-icon--check" *ngIf="isCenterCompleted(center)">check_circle_outline</mat-icon>
+        <mat-icon class="nav-icon nav-icon--error" *ngIf="hasCenterError(center)">error_outline</mat-icon>
+      </button>
+    </nav>
+
+    <!-- Summary view -->
+    <div class="porb-view" *ngIf="activeView === 'summary'">
+      <div class="porb-summary-tab">
+        <div class="risk-report-box">
+          <div class="risk-report-title-box">
+            <h1 class="risk-report-title-box__title">
+              PORB Summary
+            </h1>
+          </div>
+          <div class="risk-report-btn-box">
+            <button
+              mat-stroked-button
+              class="center-action-btn center-export-btn"
+              title="Export Summary"
+              [disabled]="exportingSummary"
+              (click)="exportOverviewExcel()"
+            >
+              <mat-spinner *ngIf="exportingSummary" diameter="18"></mat-spinner>
+              <mat-icon *ngIf="!exportingSummary">download</mat-icon>
+              {{ exportingSummary ? 'Exporting...' : 'Export Summary' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary view mode nav -->
+        <nav class="porb-nav porb-nav--summary-mode" data-tour-anchor="porb-summary-view-mode" *ngIf="!summaryLoading">
+          <button type="button" class="porb-nav__item"
+            [class.porb-nav__item--active]="summaryViewMode === 'consolidated'"
+            (click)="summaryViewMode = 'consolidated'">
+            Consolidated
+          </button>
+          <button type="button" class="porb-nav__item"
+            [class.porb-nav__item--active]="summaryViewMode === 'detailed'"
+            (click)="summaryViewMode = 'detailed'">
+            Detailed
+          </button>
+        </nav>
+
+        <!-- CONSOLIDATED VIEW -->
+        <ng-container *ngIf="summaryViewMode === 'consolidated'">
+        <div class="porb-consolidation-section">
+          <h3>Budget Overview</h3>
+
+          <div *ngIf="summaryLoading" class="summary-skeleton">
+            <div class="skeleton-block sk-table-head"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+          </div>
+
+          <div class="summary-table-wrapper" *ngIf="!summaryLoading">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th rowspan="3" class="aow-col">Area of Work</th>
+                  <th colspan="9">Pooled Funding</th>
+                  <th colspan="3" class="other-budgets-group">Additional Information</th>
+                </tr>
+                <tr>
+                  <th colspan="2">Innovation Development</th>
+                  <th colspan="2">Knowledge Product</th>
+                  <th colspan="2">Capacity Sharing</th>
+                  <th colspan="2">Others Outputs</th>
+                  <th rowspan="2" class="total-col">Total Pooled<br>Funding (USD)</th>
+                  <th rowspan="2" class="other-budgets-group">Anaplan<br>budget</th>
+                  <th rowspan="2" class="other-budgets-group">Partner<br>budget</th>
+                  <th rowspan="2" class="other-budgets-group">MELIA Studies<br>budget</th>
+                </tr>
+                <tr>
+                  <th>Target</th><th>Budget</th>
+                  <th>Target</th><th>Budget</th>
+                  <th>Target</th><th>Budget</th>
+                  <th>Target</th><th>Budget</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of formattedSummaryRows" [class.cross-cutting-row]="row.aowCode === 'AOW00'">
+                  <td class="aow-col">{{ row.aowCode }}: {{ row.aowName }}</td>
+                  <ng-container *ngIf="row.aowCode !== 'AOW00'">
+                    <td>{{ row.innovationTargetFmt }}</td>
+                    <td>{{ row.innovationBudgetFmt }}</td>
+                    <td>{{ row.knowledgeTargetFmt }}</td>
+                    <td>{{ row.knowledgeBudgetFmt }}</td>
+                    <td>{{ row.capacityTargetFmt }}</td>
+                    <td>{{ row.capacityBudgetFmt }}</td>
+                    <td>{{ row.othersTargetFmt }}</td>
+                    <td>{{ row.othersBudgetFmt }}</td>
+                  </ng-container>
+                  <td *ngIf="row.aowCode === 'AOW00'" colspan="8" class="cross-cutting-block">
+                    Cross-Cutting
+                  </td>
+                  <td class="total-col">{{ row.totalPooledFundingFmt }}</td>
+                  <td class="other-budgets-group">{{ row.anaplanBudgetFmt }}</td>
+                  <td class="other-budgets-group">{{ row.partnerBudgetFmt }}</td>
+                  <td>{{ row.meliaBudgetFmt }}</td>
+                </tr>
+                <tr class="summary-total-row" *ngIf="formattedSummaryRows.length">
+                  <td class="aow-col"><strong>Total</strong></td>
+                  <td><strong></strong></td>
+                  <td><strong>{{ formattedSummaryTotals.innovationBudgetFmt }}</strong></td>
+                  <td><strong></strong></td>
+                  <td><strong>{{ formattedSummaryTotals.knowledgeBudgetFmt }}</strong></td>
+                  <td><strong></strong></td>
+                  <td><strong>{{ formattedSummaryTotals.capacityBudgetFmt }}</strong></td>
+                  <td><strong></strong></td>
+                  <td><strong>{{ formattedSummaryTotals.othersBudgetFmt }}</strong></td>
+                  <td class="total-col"><strong>{{ formattedSummaryTotals.totalPooledFundingFmt }}</strong></td>
+                  <td class="other-budgets-group"><strong>{{ formattedSummaryTotals.anaplanBudgetFmt }}</strong></td>
+                  <td class="other-budgets-group"><strong>{{ formattedSummaryTotals.partnerBudgetFmt }}</strong></td>
+                  <td><strong>{{ formattedSummaryTotals.meliaBudgetFmt }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Budget for Financial Reporting Table (full width) -->
+        <div class="porb-consolidation-section" *ngIf="!summaryLoading && anaplanConsolidatedData?.accounts?.length">
+          <div class="risk-report-box">
+            <h3>Budget for Financial Reporting</h3>
+            <button
+              mat-stroked-button
+              class="center-action-btn center-export-btn"
+              title="Export Budget for Financial Reporting"
+              [disabled]="exportingAnaplan"
+              (click)="exportAnaplanConsolidatedExcel()"
+            >
+              <mat-spinner *ngIf="exportingAnaplan" diameter="18"></mat-spinner>
+              <mat-icon *ngIf="!exportingAnaplan">download</mat-icon>
+              {{ exportingAnaplan ? 'Exporting...' : 'Export Anaplan' }}
+            </button>
+          </div>
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left">Account</th>
+                  <th *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">{{ aow }}</th>
+                  <th class="num-cell total-col">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let account of anaplanConsolidatedData.accounts">
+                  <td style="text-align: left">{{ account.label }}</td>
+                  <td *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">
+                    {{ formatAnaplanCurrency(account.budgetByAow[aow]) }}
+                  </td>
+                  <td class="num-cell total-col">{{ formatAnaplanCurrency(account.total) }}</td>
+                </tr>
+                <tr class="summary-total-row" *ngIf="anaplanConsolidatedData.grandTotal != null">
+                  <td><strong>Total</strong></td>
+                  <td *ngFor="let aow of anaplanConsolidatedData.aows" class="num-cell">
+                    <strong>{{ formatAnaplanCurrency(anaplanConsolidatedData.grandTotalByAow?.[aow]) }}</strong>
+                  </td>
+                  <td class="num-cell total-col"><strong>{{ formatAnaplanCurrency(anaplanConsolidatedData.grandTotal) }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- W3/Bilateral Consolidated Table (full width, per center) -->
+        <div class="porb-consolidation-section" *ngIf="!summaryLoading && w3ConsolidatedData?.centers?.length">
+          <h3>W3/Bilateral Consolidated</h3>
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left">Center</th>
+                  <th class="num-cell">Budget (USD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of w3ConsolidatedData.centers" [hidden]="!c.budget">
+                  <td style="text-align: left">{{ c.name }}</td>
+                  <td class="num-cell">{{ formatAnaplanCurrency(c.budget) }}</td>
+                </tr>
+                <tr class="summary-total-row">
+                  <td><strong>Total</strong></td>
+                  <td class="num-cell"><strong>{{ formatAnaplanCurrency(w3ConsolidatedData.grandTotal) }}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Countries of Implementation Consolidated Table -->
+        <div class="porb-consolidation-section" *ngIf="!summaryLoading && countryConsolidatedData?.countries?.length">
+          <h3>Countries of Implementation</h3>
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left">Country</th>
+                  <th class="num-cell">Percentage (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of countryConsolidatedData.countries" [hidden]="!c.percentage">
+                  <td style="text-align: left">{{ c.country_name }}</td>
+                  <td class="num-cell">{{ c.percentage }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Location of Benefit Consolidated Table -->
+        <div class="porb-consolidation-section" *ngIf="!summaryLoading && locationBenefitConsolidatedData?.locations?.length">
+          <h3>Location of Benefit</h3>
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-summary-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left">Location</th>
+                  <th>Type</th>
+                  <th class="num-cell">Percentage (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let l of locationBenefitConsolidatedData.locations" [hidden]="!l.percentage">
+                  <td style="text-align: left">{{ l.location_name }}</td>
+                  <td>
+                    <span class="type-badge" [ngClass]="l.location_type?.toLowerCase()">{{ l.location_type | titlecase }}</span>
+                  </td>
+                  <td class="num-cell">{{ l.percentage }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        </ng-container>
+
+        <!-- DETAILED VIEW -->
+        <ng-container *ngIf="summaryViewMode === 'detailed'">
+        <!-- AOW Detail View -->
+        <nav class="porb-nav porb-nav--aows summary-aow-nav" *ngIf="!summaryLoading && aows.length">
+          <button
+            *ngFor="let aow of aows"
+            type="button"
+            class="porb-nav__item"
+            [class.porb-nav__item--active]="summarySelectedAow?.id === aow.id && !summaryW3View"
+            (click)="selectSummaryAow(aow)"
+          >
+            {{ aow.code }}
+          </button>
+          <button
+            type="button"
+            class="porb-nav__item"
+            [class.porb-nav__item--active]="summaryW3View"
+            (click)="selectSummaryW3View()"
+          >
+            W3/Bilateral
+          </button>
+        </nav>
+
+        <!-- W3/Bilateral summary detail -->
+        <ng-container *ngIf="summaryW3View">
+          <div class="summary-aow-detail">
+            <h3 class="summary-aow-title">W3/Bilateral Projects</h3>
+            <div *ngIf="summaryW3Loading" class="summary-skeleton">
+              <div class="skeleton-block sk-table-head"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+            </div>
+            <div class="summary-section-block" *ngIf="!summaryW3Loading && summaryW3Rows.length">
+              <div class="summary-table-wrapper">
+                <table class="consolidation-table summary-detail-table">
+                  <thead>
+                    <tr>
+                      <th>Project Title</th>
+                      <th>High Level Output</th>
+                      <th class="num-cell">Budget (USD)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of summaryW3Rows">
+                      <td>{{ row.bilateral_name || '-' }}</td>
+                      <td>{{ row.bilateral_outputs || '-' }}</td>
+                      <td class="num-cell">
+                        {{ formatAnaplanCurrency(row.bilateral_budget) }}
+                        <app-summary-assumption-icon [assumptions]="row._assumptions"></app-summary-assumption-icon>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="summary-empty-sections" *ngIf="!summaryW3Loading && !summaryW3Rows.length">
+              <div class="summary-section-empty">
+                <mat-icon>info_outline</mat-icon>
+                <span><strong>W3/Bilateral</strong> — No bilateral project data found.</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Section nav for summary AOW detail -->
+        <nav class="porb-nav porb-nav--sections summary-section-nav"
+          *ngIf="!summaryLoading && !summaryW3View && summarySelectedAow && summarySectionItems.length">
+          <button
+            *ngFor="let section of summarySectionItems"
+            type="button"
+            class="porb-nav__item"
+            [class.porb-nav__item--active]="summarySelectedSection === section"
+            [class.porb-nav__item--empty]="isSummarySectionEmpty(section)"
+            [disabled]="isSummarySectionEmpty(section)"
+            [matTooltip]="isSummarySectionEmpty(section) ? 'No budget data for this section' : ''"
+            (click)="selectSummarySection(section)"
+          >{{ section }}</button>
+        </nav>
+
+        <div class="summary-aow-detail" *ngIf="!summaryW3View && summarySelectedAow && !summaryLoading">
+          <h3 class="summary-aow-title">{{ summarySelectedAow.code }}: {{ summarySelectedAow.title }}</h3>
+
+          <div *ngIf="summaryAowDetailLoading" class="summary-skeleton">
+            <div class="skeleton-block sk-table-head"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+            <div class="skeleton-block sk-table-row"></div>
+          </div>
+
+          <ng-container *ngIf="!summaryAowDetailLoading && summaryAowDetail">
+
+            <!-- HLO Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Pool funding HLO'">
+              <div class="summary-section-block" *ngIf="cachedGroupedHlos.length; else hloEmpty">
+                <h4 class="summary-section-title">High Level Outputs - Pooled Funding</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th rowspan="2">High Level Output</th>
+                        <th rowspan="2">Description</th>
+                        <th colspan="4">Key Performance Indicators</th>
+                        <th rowspan="2" class="num-cell">Total Budget (USD)</th>
+                      </tr>
+                      <tr>
+                        <th>Type</th>
+                        <th>Country(ies) of implementation</th>
+                        <th class="num-cell">Target</th>
+                        <th class="num-cell">Budget (USD)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <ng-container *ngFor="let group of cachedGroupedHlos">
+                        <tr *ngFor="let hlo of group.rows; let i = index">
+                          <td *ngIf="i === 0" [attr.rowspan]="group.rows.length" class="merged-cell">{{ group.name }}</td>
+                          <td>{{ hlo.hlo_description }}</td>
+                          <td>{{ hlo.hlo_type }}</td>
+                          <td>{{ hlo.hlo_geo }}</td>
+                          <td class="num-cell">{{ hlo.hlo_target_fmt }}</td>
+                          <td class="num-cell">
+                            {{ hlo.hlo_budget_fmt }}
+                            <app-summary-assumption-icon [assumption]="hlo.hlo_assumption" [label]="hlo.center_name ? hlo.center_name + ' — Assumption' : 'Assumption'"></app-summary-assumption-icon>
+                          </td>
+                          <td *ngIf="i === 0" [attr.rowspan]="group.rows.length" class="num-cell merged-cell">
+                            {{ group.totalBudgetFmt }}
+                            <app-summary-assumption-icon
+                              *ngIf="group.rows.length > 1"
+                              [assumptions]="group.assumptionEntries"
+                              [label]="group.name + ' — All Assumptions'"
+                            ></app-summary-assumption-icon>
+                          </td>
+                        </tr>
+                      </ng-container>
+                      <tr class="subtotal-row">
+                        <td colspan="6" class="subtotal-label">HLO budget subtotal</td>
+                        <td class="num-cell">{{ cachedSummarySubtotals.hlo }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #hloEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>High Level Outputs</strong> — No HLO budget data found. Budget values must be entered in the Pool Funding HLO section at the center level.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- Partners Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Partners'">
+              <div class="summary-section-block" *ngIf="cachedFormattedPartners.length; else partnersEmpty">
+                <h4 class="summary-section-title">Partners - Pooled Funding</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>Partners title</th>
+                        <th>Center</th>
+                        <th>Location of Work</th>
+                        <th class="num-cell">Total budget (USD)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let partner of cachedFormattedPartners">
+                        <td>{{ partner.partner_name }}</td>
+                        <td>{{ partner.center_name }}</td>
+                        <td>{{ partner.countries || 'Global' }}</td>
+                        <td class="num-cell">
+                          {{ partner.budget_fmt }}
+                          <app-summary-assumption-icon [assumption]="partner.assumption"></app-summary-assumption-icon>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #partnersEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Partners</strong> — No partner budget data found. Partners must be contracted and budgets assigned in the Partners section at the center level.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- MELIA Section -->
+            <ng-container *ngIf="summarySelectedSection === 'MELIA Study'">
+              <div class="summary-section-block" *ngIf="cachedFormattedMelia.length; else meliaEmpty">
+                <h4 class="summary-section-title">MELIA Study - Pooled funding</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>MELIA study</th>
+                        <th>Supported outcomes</th>
+                        <th>Location of Work</th>
+                        <th class="num-cell">Total budget (USD)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let m of cachedFormattedMelia">
+                        <td>{{ m.melia_name }}</td>
+                        <td>{{ m.melia_outputs }}</td>
+                        <td>Global</td>
+                        <td class="num-cell">
+                          {{ m.melia_budget_fmt }}
+                          <app-summary-assumption-icon [assumption]="m.melia_assumption"></app-summary-assumption-icon>
+                        </td>
+                      </tr>
+                      <tr class="subtotal-row">
+                        <td colspan="3" class="subtotal-label">MELIA budget subtotal</td>
+                        <td class="num-cell">{{ cachedSummarySubtotals.melia }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #meliaEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>MELIA Study</strong> — No MELIA study budget data found. MELIA budgets must be entered in the MELIA Study section at the center level.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- Anaplan Section -->
+            <!-- Cross Cutting Section (AOW00 only) -->
+            <ng-container *ngIf="summarySelectedSection === 'Cross Cutting'">
+              <div class="summary-section-block" *ngIf="summaryAowDetail.isAow00 && cachedFormattedCross.length; else crossEmpty">
+                <h4 class="summary-section-title">Cross Cutting</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>Cross-Cutting</th>
+                        <th>Description</th>
+                        <th class="num-cell">Total budget (USD)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let c of cachedFormattedCross">
+                        <td>{{ c.title }}</td>
+                        <td>{{ c.description }}</td>
+                        <td class="num-cell">{{ c.budget_fmt }}</td>
+                      </tr>
+                      <tr class="subtotal-row">
+                        <td colspan="2" class="subtotal-label">Cross Cutting budget subtotal</td>
+                        <td class="num-cell">{{ cachedSummarySubtotals.cross }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #crossEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Cross Cutting</strong> — No Cross Cutting budget data found. Cross Cutting budgets must be entered in the Cross Cutting section at the center level.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- Countries of Implementation Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Countries of Implementation'">
+              <div class="summary-section-block" *ngIf="cachedFormattedCountryPercentage.length; else cpEmpty">
+                <h4 class="summary-section-title">Countries of Implementation</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>Country</th>
+                        <th class="num-cell">Percentage (%)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let c of cachedFormattedCountryPercentage">
+                        <td>{{ c.country_name }}</td>
+                        <td class="num-cell">{{ c.percentage }}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #cpEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Countries of Implementation</strong> — No country percentage data found. Country percentages must be entered in the Countries of Implementation section at the center level.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- Location of Benefit Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Location of Benefit'">
+              <div class="summary-section-block" *ngIf="cachedFormattedLocationBenefit.length; else lbEmpty">
+                <h4 class="summary-section-title">Location of Benefit</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>Location</th>
+                        <th>Type</th>
+                        <th class="num-cell">Percentage (%)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let l of cachedFormattedLocationBenefit">
+                        <td>{{ l.location_name }}</td>
+                        <td>
+                          <span class="type-badge" [ngClass]="l.location_type?.toLowerCase()">{{ l.location_type | titlecase }}</span>
+                        </td>
+                        <td class="num-cell">{{ l.percentage }}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #lbEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Location of Benefit</strong> — No location data found. Locations are derived from outcome data and can be added in the Location of Benefit section at the center level.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- Synergy Programs Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Synergy Programs'">
+              <div class="summary-section-block" *ngIf="cachedFormattedSynergies.length; else synergyEmpty">
+                <h4 class="summary-section-title">Synergy Programs</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>Program or Accelerator</th>
+                        <th>High Level Output</th>
+                        <th>Brief description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let s of cachedFormattedSynergies">
+                        <td>{{ s.synergy_program_name }}</td>
+                        <td>{{ s.synergy_hlo_title }}</td>
+                        <td>{{ s.synergy_description }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #synergyEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Synergy Programs</strong> — The data is missing in the TOC.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- Outcomes Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Outcomes'">
+              <div class="summary-section-block" *ngIf="cachedFormattedOutcomes.length; else outcomesEmpty">
+                <h4 class="summary-section-title">Outcomes</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th rowspan="2">Outcome title</th>
+                        <th rowspan="2" style="width: 15%;">Type of Outcome</th>
+                        <th colspan="3">Key Performance Indicators</th>
+                      </tr>
+                      <tr>
+                        <th>Type</th>
+                        <th>Geographic Location</th>
+                        <th>Target</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <ng-container *ngFor="let o of cachedFormattedOutcomes">
+                        <ng-container *ngIf="o.flatIndicators.length > 0; else noIndicators">
+                          <tr *ngFor="let ind of o.flatIndicators; let i = index">
+                            <td *ngIf="i === 0" [attr.rowspan]="o.flatIndicators.length">{{ o.outcome_title }}</td>
+                            <td *ngIf="i === 0" [attr.rowspan]="o.flatIndicators.length">{{ o.outcome_type }}</td>
+                            <td>{{ ind.type }}</td>
+                            <td>{{ ind.location }}</td>
+                            <td class="num-cell">{{ ind.target_value }}</td>
+                          </tr>
+                        </ng-container>
+                        <ng-template #noIndicators>
+                          <tr>
+                            <td>{{ o.outcome_title }}</td>
+                            <td>{{ o.outcome_type }}</td>
+                            <td colspan="3" class="text-muted">No indicators</td>
+                          </tr>
+                        </ng-template>
+                      </ng-container>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #outcomesEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Outcomes</strong> — The data is missing in the TOC.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+          </ng-container>
+        </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Center view -->
+    <div class="porb-view" *ngIf="activeView === 'center' && selectedCenter">
+      <!-- Center header -->
+      <div class="porb-center-header">
+        <div class="center-header-left">
+          <h2>{{ selectedCenter?.name || selectedCenter?.acronym }}</h2>
+        </div>
+        <div class="center-header-right">
+          <button
+            mat-stroked-button
+            class="center-action-btn center-export-btn"
+            [title]="'Export ' + (selectedCenter?.acronym || selectedCenter?.name) + ' data'"
+            [disabled]="exportingCenter"
+            (click)="exportCenterExcel()"
+          >
+            <mat-spinner *ngIf="exportingCenter" diameter="18"></mat-spinner>
+            <mat-icon *ngIf="!exportingCenter">download</mat-icon>
+            {{ exportingCenter ? 'Exporting...' : 'Export Center' }}
+          </button>
+          <button
+            *ngIf="canToggleCenterCompletion"
+            mat-raised-button
+            class="new-btns mark-complete-btn"
+            [class.completed-btn]="isSelectedCenterCompleted"
+            [title]="isSelectedCenterCompleted ? 'Mark ' + (selectedCenter?.acronym || selectedCenter?.name) + ' as incomplete' : 'Mark ' + (selectedCenter?.acronym || selectedCenter?.name) + ' as complete'"
+            [disabled]="centerStatusUpdating"
+            (click)="onToggleSelectedCenterCompletion()"
+          >
+            {{ isSelectedCenterCompleted ? 'Mark Incomplete' : 'Mark Complete' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Center view mode toggle -->
+      <nav class="porb-nav porb-nav--summary-mode" data-tour-anchor="porb-center-view-mode">
+        <button type="button" class="porb-nav__item"
+          [class.porb-nav__item--active]="centerViewMode === 'consolidated'"
+          (click)="onCenterViewModeChange('consolidated')">
+          Consolidated
+        </button>
+        <button type="button" class="porb-nav__item"
+          [class.porb-nav__item--active]="centerViewMode === 'budget-entry'"
+          (click)="onCenterViewModeChange('budget-entry')">
+          Budget Entry
+        </button>
+      </nav>
+
+      <!-- Budget Entry view -->
+      <ng-container *ngIf="centerViewMode === 'budget-entry'">
+
+      <!-- Level 2: AOW nav list -->
+      <nav class="porb-nav porb-nav--aows" data-tour-anchor="porb-aow-tabs">
+        <button
+          *ngFor="let aow of visibleAows"
+          type="button"
+          class="porb-nav__item"
+          [class.porb-nav__item--active]="isAowSelected(aow) && !isW3View"
+          (click)="selectAow(aow)"
+        >
+          {{ aow.code }}
+          <mat-icon class="nav-icon nav-icon--error" *ngIf="hasAowError(aow)">error_outline</mat-icon>
+        </button>
+        <button
+          type="button"
+          class="porb-nav__item"
+          [class.porb-nav__item--active]="isW3View"
+          [class.porb-nav__item--empty]="isW3Empty"
+          [disabled]="isW3Empty"
+          [matTooltip]="isW3Empty ? 'No W3/Bilateral data for this center' : ''"
+          (click)="selectW3View()"
+        >
+          W3/Bilateral
+        </button>
+      </nav>
+
+      <!-- Consolidation (hidden when W3 view is active) -->
+      <div class="porb-consolidation-section" data-tour-anchor="porb-consolidation" *ngIf="!isW3View && (sectionLoading || consolidationBudgetSummary)">
+        <h4>Consolidated ({{ selectedAow?.code }})</h4>
+        <ng-container *ngIf="sectionLoading">
+          <div class="section-skeleton-inline">
+            <div class="skeleton-block sk-table-head"></div>
+            <div class="skeleton-block sk-table-row"></div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="!sectionLoading && consolidationBudgetSummary">
+          <div class="summary-table-wrapper">
+            <table class="consolidation-table porb-consolidation-table">
+              <thead>
+                <tr>
+                  <th [attr.colspan]="selectedAow?.code === 'AOW00' ? 2 : 10">Pooled Funding</th>
+                  <th colspan="3" class="other-budgets-group">Additional Information</th>
+                </tr>
+                <ng-container *ngIf="selectedAow?.code !== 'AOW00'">
+                  <tr>
+                    <th colspan="2">Innovation Development</th>
+                    <th colspan="2">Knowledge Product</th>
+                    <th colspan="2">Capacity Sharing</th>
+                    <th colspan="2">Others Outputs</th>
+                    <th rowspan="2">Cross-<br>Cutting</th>
+                    <th rowspan="2">Total Pooled<br>Funding</th>
+                    <th rowspan="2" class="other-budgets-group">Anaplan</th>
+                    <th rowspan="2">Partners</th>
+                    <th rowspan="2">MELIA</th>
+                  </tr>
+                  <tr>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                  </tr>
+                </ng-container>
+                <ng-container *ngIf="selectedAow?.code === 'AOW00'">
+                  <tr>
+                    <th>Cross-<br>Cutting</th>
+                    <th>Total Pooled<br>Funding</th>
+                    <th class="other-budgets-group">Anaplan</th>
+                    <th>Partners</th>
+                    <th>MELIA</th>
+                  </tr>
+                </ng-container>
+              </thead>
+              <tbody>
+                <tr>
+                  <ng-container *ngIf="selectedAow?.code !== 'AOW00'">
+                    <ng-container *ngFor="let ind of orderedConsolidationIndicators">
+                      <td>{{ ind.target }}</td>
+                      <td>{{ ind.budget }}</td>
+                    </ng-container>
+                  </ng-container>
+                  <td>{{ consolidationBudgetSummary.crossCutting }}</td>
+                  <td [class.validation-mismatch]="sectionValidation['Anaplan']?.pooledMismatch"
+                    [matTooltip]="sectionValidation['Anaplan']?.pooledMismatch ? 'Total Pooled Funding does not match Anaplan budget' : ''">{{ consolidationBudgetSummary.pooledTotal }}</td>
+                  <td class="other-budgets-group" [class.validation-mismatch]="sectionValidation['Anaplan']?.pooledMismatch"
+                    [matTooltip]="sectionValidation['Anaplan']?.pooledMismatch ? 'Anaplan budget does not match Total Pooled Funding' : ''">{{ consolidationBudgetSummary.anaplan }}</td>
+                  <td [class.validation-mismatch]="sectionValidation['Anaplan']?.partnerMismatch"
+                    [matTooltip]="sectionValidation['Anaplan']?.partnerMismatch ? 'Partners budget does not match Anaplan Collaborators non-CGIAR Centers' : ''">{{ consolidationBudgetSummary.partners }}</td>
+                  <td>{{ consolidationBudgetSummary.melia }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- W3/Bilateral center-level view (no consolidation sidebar, no section nav) -->
+      <ng-container *ngIf="isW3View">
+        <div class="porb-section-content">
+          <ng-container *ngIf="sectionLoading">
+            <div class="section-skeleton-block">
+              <div class="section-sk-toolbar">
+                <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--wide"></div>
+                <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--med"></div>
+                <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--narrow"></div>
+              </div>
+              <div class="skeleton-block sk-table-head"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+            </div>
+          </ng-container>
+          <app-w3-section
+            *ngIf="!sectionLoading"
+            [rows]="w3CenterRows"
+            [canEdit]="canEditForSelectedCenter"
+            (budgetUpdated)="onBudgetUpdated()"
+          ></app-w3-section>
+        </div>
+      </ng-container>
+
+      <!-- Level 3: Section nav list (hidden in W3 view) -->
+      <ng-container *ngIf="!isW3View">
+        <nav class="porb-nav porb-nav--sections" data-tour-anchor="porb-section-tabs">
+          <button
+            *ngFor="let section of extraNavigationItems"
+            type="button"
+            class="porb-nav__item"
+            [class.porb-nav__item--active]="selectedExtraNavigation === section"
+            [class.porb-nav__item--empty]="isCenterSectionEmpty(section)"
+            [disabled]="isCenterSectionEmpty(section)"
+            [matTooltip]="isCenterSectionEmpty(section) ? 'No budget data for this section' : ''"
+            (click)="selectSection(section)"
+          >
+            {{ section }}
+            <mat-icon
+              class="nav-icon nav-icon--error"
+              *ngIf="hasSectionError(section)"
+              [matTooltip]="getSectionError(section)"
+            >error_outline</mat-icon>
+          </button>
+        </nav>
+
+        <!-- Section content (single ngSwitch, no destroy/recreate on nav click) -->
+        <div class="porb-section-content" *ngIf="isPorbSelectionComplete">
+
+          <!-- Section loading skeleton -->
+          <ng-container *ngIf="sectionLoading">
+            <div class="section-skeleton-block">
+              <div class="section-sk-toolbar">
+                <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--wide"></div>
+                <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--med"></div>
+                <div class="skeleton-block sk-toolbar-bar sk-toolbar-bar--narrow"></div>
+              </div>
+              <div class="skeleton-block sk-table-head"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+              <div class="skeleton-block sk-table-row"></div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="!sectionLoading" [ngSwitch]="selectedExtraNavigation">
+            <app-pool-section
+              *ngSwitchCase="'Pool funding HLO'"
+              [rows]="poolFundingRows"
+              [canEdit]="canEditForSelectedCenter"
+              (budgetUpdated)="onBudgetUpdated()"
+            ></app-pool-section>
+
+            <app-partners-section
+              *ngSwitchCase="'Partners'"
+              [rows]="partnersRows"
+              [selectedCenterId]="selectedCenterIdForSections"
+              [programId]="initiativeId || undefined"
+              [porbAowId]="selectedPorbAowIdForSections"
+              [canEdit]="canEditForSelectedCenter"
+              (budgetUpdated)="onBudgetUpdated()"
+              (rowAdded)="onRowAdded()"
+            ></app-partners-section>
+
+            <app-melia-section
+              *ngSwitchCase="'MELIA Study'"
+              [rows]="meliaRows"
+              [canEdit]="canEditForSelectedCenter"
+              (budgetUpdated)="onBudgetUpdated()"
+            ></app-melia-section>
+
+            <app-anaplan-section
+              *ngSwitchCase="'Anaplan'"
+              [rows]="anaplanRows"
+              [canEdit]="canEditForSelectedCenter"
+              [sectionValidation]="sectionValidation['Anaplan']"
+              (budgetUpdated)="onBudgetUpdated()"
+            ></app-anaplan-section>
+
+            <app-cross-section
+              *ngSwitchCase="'Cross Cutting'"
+              [rows]="crossRows"
+              [selectedProgramId]="initiativeId || undefined"
+              [selectedPorbAowId]="selectedPorbAowIdForSections"
+              [selectedCenterId]="selectedCenterIdForSections"
+              [canEdit]="canEditForSelectedCenter"
+              (budgetUpdated)="onBudgetUpdated()"
+            ></app-cross-section>
+
+            <app-country-percentage-section
+              *ngSwitchCase="'Countries of Implementation'"
+              [rows]="countryPercentageRows"
+              [pooledTotal]="consolidationBudgetSummaryData?.pooledTotal || 0"
+              [selectedProgramId]="initiativeId || undefined"
+              [selectedPorbAowId]="selectedPorbAowIdForSections"
+              [selectedCenterId]="selectedCenterIdForSections"
+              [canEdit]="canEditForSelectedCenter"
+              [isAow00]="isSelectedAowCrossCutting"
+              (budgetUpdated)="onBudgetUpdated()"
+              (rowAdded)="onRowAdded()"
+            ></app-country-percentage-section>
+
+            <app-location-benefit-section
+              *ngSwitchCase="'Location of Benefit'"
+              [rows]="locationBenefitRows"
+              [pooledTotal]="consolidationBudgetSummaryData?.pooledTotal || 0"
+              [selectedProgramId]="initiativeId || undefined"
+              [selectedPorbAowId]="selectedPorbAowIdForSections"
+              [selectedCenterId]="selectedCenterIdForSections"
+              [canEdit]="canEditForSelectedCenter"
+              [isAow00]="isSelectedAowCrossCutting"
+              (budgetUpdated)="onBudgetUpdated()"
+              (rowAdded)="onRowAdded()"
+            ></app-location-benefit-section>
+          </ng-container>
+        </div>
+      </ng-container>
+
+      </ng-container>
+      <!-- /Budget Entry view -->
+
+      <!-- Consolidated view -->
+      <ng-container *ngIf="centerViewMode === 'consolidated'">
+        <!-- Loading skeleton -->
+        <div *ngIf="centerConsolidationLoading" class="summary-skeleton">
+          <div class="skeleton-block sk-table-head"></div>
+          <div class="skeleton-block sk-table-row"></div>
+          <div class="skeleton-block sk-table-row"></div>
+          <div class="skeleton-block sk-table-row"></div>
+        </div>
+
+        <ng-container *ngIf="!centerConsolidationLoading && centerConsolidationData">
+          <!-- Budget Overview Table -->
+          <div class="porb-consolidation-section">
+            <h3>Budget Overview</h3>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th rowspan="3" class="aow-col">Area of Work</th>
+                    <th colspan="9">Pooled Funding</th>
+                    <th colspan="3" class="other-budgets-group">Additional Information</th>
+                  </tr>
+                  <tr>
+                    <th colspan="2">Innovation Development</th>
+                    <th colspan="2">Knowledge Product</th>
+                    <th colspan="2">Capacity Sharing</th>
+                    <th colspan="2">Others Outputs</th>
+                    <th rowspan="2" class="total-col">Total Pooled<br>Funding (USD)</th>
+                    <th rowspan="2" class="other-budgets-group">Anaplan<br>budget</th>
+                    <th rowspan="2" class="other-budgets-group">Partner<br>budget</th>
+                    <th rowspan="2" class="other-budgets-group">MELIA Studies<br>budget</th>
+                  </tr>
+                  <tr>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                    <th>Target</th><th>Budget</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of formattedCenterConsolidationRows" [class.cross-cutting-row]="row.aowCode === 'AOW00'">
+                    <td class="aow-col">{{ row.aowCode }}: {{ row.aowName }}</td>
+                    <ng-container *ngIf="row.aowCode !== 'AOW00'">
+                      <td>{{ row.innovationTargetFmt }}</td>
+                      <td>{{ row.innovationBudgetFmt }}</td>
+                      <td>{{ row.knowledgeTargetFmt }}</td>
+                      <td>{{ row.knowledgeBudgetFmt }}</td>
+                      <td>{{ row.capacityTargetFmt }}</td>
+                      <td>{{ row.capacityBudgetFmt }}</td>
+                      <td>{{ row.othersTargetFmt }}</td>
+                      <td>{{ row.othersBudgetFmt }}</td>
+                    </ng-container>
+                    <td *ngIf="row.aowCode === 'AOW00'" colspan="8" class="cross-cutting-block">
+                      Cross-Cutting
+                    </td>
+                    <td class="total-col">{{ row.totalPooledFundingFmt }}</td>
+                    <td class="other-budgets-group">{{ row.anaplanBudgetFmt }}</td>
+                    <td class="other-budgets-group">{{ row.partnerBudgetFmt }}</td>
+                    <td>{{ row.meliaBudgetFmt }}</td>
+                  </tr>
+                  <tr class="summary-total-row" *ngIf="formattedCenterConsolidationRows.length">
+                    <td class="aow-col"><strong>Total</strong></td>
+                    <td><strong></strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.innovationBudgetFmt }}</strong></td>
+                    <td><strong></strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.knowledgeBudgetFmt }}</strong></td>
+                    <td><strong></strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.capacityBudgetFmt }}</strong></td>
+                    <td><strong></strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.othersBudgetFmt }}</strong></td>
+                    <td class="total-col"><strong>{{ formattedCenterConsolidationTotals.totalPooledFundingFmt }}</strong></td>
+                    <td class="other-budgets-group"><strong>{{ formattedCenterConsolidationTotals.anaplanBudgetFmt }}</strong></td>
+                    <td class="other-budgets-group"><strong>{{ formattedCenterConsolidationTotals.partnerBudgetFmt }}</strong></td>
+                    <td><strong>{{ formattedCenterConsolidationTotals.meliaBudgetFmt }}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Budget for Financial Reporting Table (for this center) -->
+          <div class="porb-consolidation-section" *ngIf="centerAnaplanConsolidatedData?.accounts?.length">
+            <div class="risk-report-box">
+              <h3>Budget for Financial Reporting</h3>
+              <button
+                mat-stroked-button
+                class="center-action-btn center-export-btn"
+                title="Export Anaplan"
+                [disabled]="exportingCenterAnaplan"
+                (click)="exportCenterAnaplan()"
+              >
+                <mat-spinner *ngIf="exportingCenterAnaplan" diameter="18"></mat-spinner>
+                <mat-icon *ngIf="!exportingCenterAnaplan">download</mat-icon>
+                {{ exportingCenterAnaplan ? 'Exporting...' : 'Export Anaplan' }}
+              </button>
+            </div>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Account</th>
+                    <th *ngFor="let aow of centerAnaplanConsolidatedData.aows" class="num-cell">{{ aow }}</th>
+                    <th class="num-cell total-col">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let account of centerAnaplanConsolidatedData.accounts">
+                    <td style="text-align: left">{{ account.label }}</td>
+                    <td *ngFor="let aow of centerAnaplanConsolidatedData.aows" class="num-cell">
+                      {{ formatAnaplanCurrency(account.budgetByAow[aow]) }}
+                    </td>
+                    <td class="num-cell total-col">{{ formatAnaplanCurrency(account.total) }}</td>
+                  </tr>
+                  <tr class="summary-total-row" *ngIf="centerAnaplanConsolidatedData.grandTotal != null">
+                    <td><strong>Total</strong></td>
+                    <td *ngFor="let aow of centerAnaplanConsolidatedData.aows" class="num-cell">
+                      <strong>{{ formatAnaplanCurrency(centerAnaplanConsolidatedData.grandTotalByAow?.[aow]) }}</strong>
+                    </td>
+                    <td class="num-cell total-col"><strong>{{ formatAnaplanCurrency(centerAnaplanConsolidatedData.grandTotal) }}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- W3/Bilateral for this center -->
+          <div class="porb-consolidation-section" *ngIf="centerW3Data?.length">
+            <h3>W3/Bilateral Projects</h3>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Project Title</th>
+                    <th class="num-cell">Budget (USD)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of centerW3Data">
+                    <td style="text-align: left">{{ row.bilateral_name || '-' }}</td>
+                    <td class="num-cell">{{ formatAnaplanCurrency(row.bilateral_budget) }}</td>
+                  </tr>
+                  <tr class="summary-total-row">
+                    <td style="text-align: left"><strong>Total</strong></td>
+                    <td class="num-cell"><strong>{{ centerW3Subtotal }}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Countries of Implementation for this center -->
+          <div class="porb-consolidation-section" *ngIf="centerCountryConsolidatedData?.countries?.length">
+            <h3>Countries of Implementation</h3>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Country</th>
+                    <th class="num-cell">Percentage (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let c of centerCountryConsolidatedData.countries" [hidden]="!c.percentage">
+                    <td style="text-align: left">{{ c.country_name }}</td>
+                    <td class="num-cell">{{ c.percentage }}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Location of Benefit for this center -->
+          <div class="porb-consolidation-section" *ngIf="centerLocationBenefitConsolidatedData?.locations?.length">
+            <h3>Location of Benefit</h3>
+            <div class="summary-table-wrapper">
+              <table class="consolidation-table porb-summary-table">
+                <thead>
+                  <tr>
+                    <th style="text-align: left">Location</th>
+                    <th>Type</th>
+                    <th class="num-cell">Percentage (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let l of centerLocationBenefitConsolidatedData.locations" [hidden]="!l.percentage">
+                    <td style="text-align: left">{{ l.location_name }}</td>
+                    <td>
+                      <span class="type-badge" [ngClass]="l.location_type?.toLowerCase()">{{ l.location_type | titlecase }}</span>
+                    </td>
+                    <td class="num-cell">{{ l.percentage }}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+      <!-- /Consolidated view -->
+
+    </div>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div class="porb-skeleton" *ngIf="loading">
+    <div class="skeleton-breadcrumb-row">
+      <div class="skeleton-block sk-line sk-breadcrumb-a"></div>
+      <div class="skeleton-block sk-line sk-breadcrumb-sep"></div>
+      <div class="skeleton-block sk-line sk-breadcrumb-b"></div>
+    </div>
+
+    <div class="skeleton-overview-card">
+      <div class="skeleton-overview-left">
+        <div class="skeleton-block sk-chip"></div>
+        <div class="skeleton-block sk-title"></div>
+        <div class="skeleton-block sk-subtitle"></div>
+      </div>
+      <div class="skeleton-overview-right">
+        <div class="skeleton-block sk-online-label"></div>
+        <div class="skeleton-avatars">
+          <div class="skeleton-block sk-avatar"></div>
+          <div class="skeleton-block sk-avatar"></div>
+          <div class="skeleton-block sk-avatar"></div>
+        </div>
+        <div class="skeleton-actions">
+          <div class="skeleton-block sk-action"></div>
+          <div class="skeleton-block sk-action"></div>
+          <div class="skeleton-block sk-action"></div>
+          <div class="skeleton-block sk-action"></div>
+          <div class="skeleton-block sk-action"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="skeleton-tab-bar">
+      <div class="skeleton-block sk-tab"></div>
+      <div class="skeleton-block sk-tab"></div>
+      <div class="skeleton-block sk-tab"></div>
+      <div class="skeleton-block sk-tab"></div>
+      <div class="skeleton-block sk-tab"></div>
+    </div>
+
+    <div class="skeleton-content-card">
+      <div class="skeleton-block sk-content-title"></div>
+      <div class="skeleton-content-toolbar">
+        <div class="skeleton-block sk-filter"></div>
+        <div class="skeleton-block sk-filter"></div>
+        <div class="skeleton-block sk-filter"></div>
+      </div>
+      <div class="skeleton-block sk-table-head"></div>
+      <div class="skeleton-block sk-table-row"></div>
+      <div class="skeleton-block sk-table-row"></div>
+      <div class="skeleton-block sk-table-row"></div>
+      <div class="skeleton-block sk-table-row"></div>
+    </div>
+  </div>
+
+  <app-porb-tour
+    [open]="showTour"
+    [steps]="tourSteps"
+    (closed)="onTourClosed()"
+  ></app-porb-tour>
+</section>

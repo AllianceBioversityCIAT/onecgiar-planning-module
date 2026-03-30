@@ -6,9 +6,10 @@ export interface DialogData {
   message2: string;
 }
 @Component({
-  selector: 'app-submit-message',
-  templateUrl: './submit-message.component.html',
-  styleUrls: ['./submit-message.component.scss']
+    selector: 'app-submit-message',
+    templateUrl: './submit-message.component.html',
+    styleUrls: ['./submit-message.component.scss'],
+    standalone: false
 })
 export class SubmitMessageComponent {
 

@@ -44,6 +44,7 @@ import { Response } from 'express';
 import { AnaplanValues } from 'src/entities/anaplan-values.entity';
 import { Constants } from 'src/entities/constants.entity';
 import { EventsGateway } from 'src/events/events.gateway';
+import { INITIATIVE_ROLES, LEAD_ROLES, isLeadRole } from '../shared/roles';
 
 @Injectable()
 export class SubmissionService {
@@ -129,13 +130,9 @@ export class SubmissionService {
 
           const usersRole = [];
           init.roles.filter((d) => {
-            if (
-              d.role == 'Leader' ||
-              d.role == 'Coordinator' ||
-              'Financial Focal Point'
-            ) {
+            if (isLeadRole(d.role)) {
               usersRole.push(d);
-            } else if (d.role == 'Contributor') {
+            } else if (d.role == INITIATIVE_ROLES.CONTRIBUTOR) {
               d.organizations.filter((x) => {
                 if (x.code == data.organization_code) {
                   usersRole.push(d);
@@ -230,13 +227,9 @@ export class SubmissionService {
 
           const usersRole = [];
           init.roles.filter((d) => {
-            if (
-              d.role == 'Leader' ||
-              d.role == 'Coordinator' ||
-              'Financial Focal Point'
-            ) {
+            if (isLeadRole(d.role)) {
               usersRole.push(d);
-            } else if (d.role == 'Contributor') {
+            } else if (d.role == INITIATIVE_ROLES.CONTRIBUTOR) {
               d.organizations.filter((x) => {
                 if (x.code == data.organization_code) {
                   usersRole.push(d);
@@ -360,12 +353,19 @@ export class SubmissionService {
     );
   }
   async findSubmissionsByInitiativeId(id, query: any) {
+    const addHasPorbData = (rows: Submission[]) =>
+      rows.map(({ porb_data, ...rest }) => ({
+        ...rest,
+        has_porb_data: porb_data != null && porb_data !== '',
+      }));
+
     if (query.withFilters == 'false') {
-      return this.submissionRepository.find({
+      const rows = await this.submissionRepository.find({
         where: { initiative: { id } },
         relations: ['user', 'phase'],
         order: { id: 'DESC' },
       });
+      return addHasPorbData(rows);
     } else {
       const take = query.limit || 10;
       const skip = (Number(query.page || 1) - 1) * take;
@@ -387,7 +387,7 @@ export class SubmissionService {
         order: { ...this.sort(query) },
       });
       return {
-        result: result,
+        result: addHasPorbData(result),
         count: total,
       };
     }
@@ -573,7 +573,7 @@ export class SubmissionService {
           where: {
             id: initiative_id,
             roles: {
-              role: In(['Leader', 'Coordinator', 'Financial Focal Point']),
+              role: In([...LEAD_ROLES]),
             },
           },
           relations: ['roles', 'roles.user'],

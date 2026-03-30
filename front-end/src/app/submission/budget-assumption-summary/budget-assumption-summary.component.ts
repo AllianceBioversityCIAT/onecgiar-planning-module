@@ -3,9 +3,10 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { BudgetAssumptionsService } from 'src/app/services/budget-assumptions.service';
 
 @Component({
-  selector: 'app-budget-assumption-summary',
-  templateUrl: './budget-assumption-summary.component.html',
-  styleUrls: ['./budget-assumption-summary.component.scss']
+    selector: 'app-budget-assumption-summary',
+    templateUrl: './budget-assumption-summary.component.html',
+    styleUrls: ['./budget-assumption-summary.component.scss'],
+    standalone: false
 })
 export class BudgetAssumptionSummaryComponent {
   constructor(

@@ -16,9 +16,10 @@ import { Meta, Title } from "@angular/platform-browser";
 import { FormBuilder, FormGroup } from "@angular/forms";
 
 @Component({
-  selector: "app-organizations",
-  templateUrl: "./organizations.component.html",
-  styleUrls: ["./organizations.component.scss"],
+    selector: "app-organizations",
+    templateUrl: "./organizations.component.html",
+    styleUrls: ["./organizations.component.scss"],
+    standalone: false
 })
 export class OrganizationsComponent implements OnInit {
   columnsToDisplay: string[] = ["name", "acronym", "code", "actions"];

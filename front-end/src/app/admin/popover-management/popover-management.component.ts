@@ -10,9 +10,10 @@ import { PopoverDialogComponent } from "./popover-dialog/popover-dialog.componen
 import { PopoverManagementService } from "src/app/services/popover-management.service";
 
 @Component({
-  selector: "app-popover-management",
-  templateUrl: "./popover-management.component.html",
-  styleUrls: ["./popover-management.component.scss"],
+    selector: "app-popover-management",
+    templateUrl: "./popover-management.component.html",
+    styleUrls: ["./popover-management.component.scss"],
+    standalone: false
 })
 export class PopoverManagementComponent implements OnInit {
   columnsToDisplay: string[] = ["id", "description", "name", "actions"];

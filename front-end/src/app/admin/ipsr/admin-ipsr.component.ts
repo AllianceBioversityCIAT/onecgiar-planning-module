@@ -16,9 +16,10 @@ import { Meta, Title } from "@angular/platform-browser";
 import { FormBuilder, FormGroup } from "@angular/forms";
 
 @Component({
-  selector: "app-admin-ipsr",
-  templateUrl: "./admin-ipsr.component.html",
-  styleUrls: ["./admin-ipsr.component.scss"],
+    selector: "app-admin-ipsr",
+    templateUrl: "./admin-ipsr.component.html",
+    styleUrls: ["./admin-ipsr.component.scss"],
+    standalone: false
 })
 export class AdminIpsrComponent implements OnInit {
   columnsToDisplay: string[] = ["id", "title", "description", "actions"];

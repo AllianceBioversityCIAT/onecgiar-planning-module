@@ -1,28 +1,6 @@
-<div *ngIf="this.loader.getLoading()" class="cssload-container">
-  <div class="cssload-speeding-wheel"></div>
-  <div *ngIf="loader.message" class="dot-box cssload-speeding-wheel-2">
-    <span>{{ loader.message }}</span>
-    <span class="dot-one"> .</span>
-    <span class="dot-two"> .</span>
-    <span class="dot-three"> .</span>
+<div *ngIf="this.loader.getLoading()" class="loading-overlay">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <span class="loading-text">{{ loader.message || 'Loading' }}</span>
   </div>
-
-  <!-- <app-submited-version *ngIf="k == false" (pdfClicked)="onPdfClicked($event)">
-  </app-submited-version> -->
 </div>
-
-<!-- <app-submited-version (pdfClicked)="onPdfClicked('sda')"></app-submited-version> -->
-<!-- <section
-  class="cssload-container"
-  fxLayout="column"
-  fxLayoutAlign="center center"
-  *ngIf="this.loader.getLoading()"
->
-  <mat-progress-spinner
-    class="cssload-speeding-wheel"
-    mode="determinate"
-    [value]="progress"
-  ></mat-progress-spinner>
-  <h1>{{ progress }}%</h1>
-  <p>Keep on going, you can do it!</p>
-</section> -->

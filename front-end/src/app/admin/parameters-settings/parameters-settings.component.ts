@@ -7,9 +7,10 @@ import { ConstantService } from "src/app/services/constant.service";
 import { EditUnderMaintenanceComponent } from "./edit-under-maintenance/edit-under-maintenance.component";
 import { UnderMaintenanceService } from "src/app/services/under-maintenance.service";
 @Component({
-  selector: "app-parameters-settings",
-  templateUrl: "./parameters-settings.component.html",
-  styleUrls: ["./parameters-settings.component.scss"],
+    selector: "app-parameters-settings",
+    templateUrl: "./parameters-settings.component.html",
+    styleUrls: ["./parameters-settings.component.scss"],
+    standalone: false
 })
 export class ParametersSettingsComponent {
   canSubmit!: boolean;

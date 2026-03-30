@@ -16,7 +16,7 @@
               'program',
               initiativeId,
               officalCode,
-              'submission'
+              'porb'
             ]"
             class="risk-nav-link"
             ><span class="line">&nbsp;</span>{{ officalCode }}</a
@@ -101,7 +101,7 @@
                   class="team-members-icon-table"
                   matTooltip="View"
                   matTooltipPosition="above"
-                  routerLink="./{{ row['id'] }}"
+                  [routerLink]="row.has_porb_data ? ['/program', initiativeId, officalCode, 'porb', 'version', row.id] : './' + row['id']"
                 >
                   <mat-icon class="user-management-table__icon"
                     ><svg
@@ -158,11 +158,11 @@
                 </button> -->
 
                 <button
-                  *ngIf="row.status == 'Approved'"
+                  *ngIf="row.status == 'Approved' || row.has_porb_data"
                   class="team-members-icon-table"
-                  matTooltip="Download"
+                  matTooltip="Export ZIP"
                   matTooltipPosition="above"
-                  (click)="generateExcel(row.id)"
+                  (click)="generateExcel(row)"
                 >
                   <mat-icon
                     class="user-management-table__icon"

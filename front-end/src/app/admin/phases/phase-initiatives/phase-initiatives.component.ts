@@ -10,9 +10,10 @@ import { HeaderService } from "src/app/header.service";
 import { PhasesService } from "src/app/services/phases.service";
 
 @Component({
-  selector: "app-phase-initiatives",
-  templateUrl: "./phase-initiatives.component.html",
-  styleUrls: ["./phase-initiatives.component.scss"],
+    selector: "app-phase-initiatives",
+    templateUrl: "./phase-initiatives.component.html",
+    styleUrls: ["./phase-initiatives.component.scss"],
+    standalone: false
 })
 export class PhaseInitiativesComponent {
   columnsToDisplay: string[] = [

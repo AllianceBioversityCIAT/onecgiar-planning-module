@@ -9,11 +9,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 7rem;
+    height: 5.6rem;
   }
 
   &__main-nav {
-    height: 5.4rem;
+    height: 4.2rem;
     // background-color: #2a2e45;
 
     &__background-c-primary {
@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.5rem 0.5rem 0;
+  padding: 0.25rem 0.5rem 0;
 
   @media only screen and (max-width: 64em) {
     //change on 1024
@@ -57,14 +57,14 @@
   }
 
   &--2 {
-    width: 40.6rem;
-    height: 8rem;
+    width: 34rem;
+    height: 5.8rem;
     &__title {
-      font-size: 1.8rem;
+      font-size: 1.45rem;
       font-weight: 400;
-      line-height: 3rem;
+      line-height: 2.2rem;
       letter-spacing: 0em;
-      margin-top: 2.4rem;
+      margin-top: 1.45rem;
       // color: rgba(255, 255, 255, 0.8745098039);
       background-image: linear-gradient(to bottom, #ffffff, #ededed7f);
       -webkit-background-clip: text;
@@ -74,9 +74,9 @@
       font-weight: 600;
 
       &--1 {
-        font-size: 2rem;
+        font-size: 1.7rem;
         font-weight: 700;
-        line-height: 3rem;
+        line-height: 2.2rem;
         letter-spacing: 0em;
 
         // color: #ffffff;
@@ -94,8 +94,8 @@
 .header-user-nav-box {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  padding: 0 2rem 0 0rem;
+  gap: 1rem;
+  padding: 0 1.2rem 0 0rem;
 
   @media only screen and (max-width: 64em) {
     //change on 1024
@@ -109,11 +109,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 20.6rem;
-  height: 4.6rem;
+  width: 17.2rem;
+  height: 3.8rem;
   border-radius: 4px;
-  gap: 1.5rem;
-  padding: 2.5rem;
+  gap: 1rem;
+  padding: 1.4rem 1.1rem;
 
   @media only screen and (max-width: 64em) {
     //change on 1024
@@ -130,11 +130,11 @@
 
   &__icon {
     width: 3.1rem;
-    height: 3rem;
+    height: 2.6rem;
 
     &--1 {
       width: 3.1rem;
-      height: 3rem;
+      height: 2.6rem;
 
       // @media only screen and (max-width: 64em) {
       //   //change on 1024
@@ -146,13 +146,13 @@
 
     &--2 {
       width: 2.2rem;
-      height: 2.2rem;
+      height: 2rem;
       object-fit: contain;
     }
 
     &--3 {
       width: 3.2rem;
-      height: 3.2rem;
+      height: 2.6rem;
       object-fit: contain;
     }
   }
@@ -222,37 +222,37 @@
     color: #ffffff;
 
     padding: 0.5rem;
-    font-size: 1.6rem;
+    font-size: 1.25rem;
     font-weight: 400;
-    line-height: 2.4rem;
+    line-height: 1.8rem;
     letter-spacing: 0em;
     text-align: center;
     text-overflow: ellipsis;
     text-wrap: nowrap;
     overflow: hidden;
-    max-width: 107px;
+    max-width: 120px;
   }
 
   &__title--3 {
     color: #ffffff;
 
     padding: 0.5rem;
-    font-size: 1.6rem;
+    font-size: 1.25rem;
     font-weight: 400;
-    line-height: 2.4rem;
+    line-height: 1.8rem;
     letter-spacing: 0em;
     text-align: center;
     text-overflow: ellipsis;
     text-wrap: nowrap;
     overflow: hidden;
-    max-width: 170px;
+    max-width: 150px;
   }
 
   &__title--2 {
     padding: 0.5rem;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 400;
-    line-height: 3rem;
+    line-height: 2rem;
     letter-spacing: 0em;
     text-align: left;
     color: #ffffff;
@@ -271,8 +271,8 @@
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 4rem;
-  margin-left: 5rem;
+  gap: 1.8rem;
+  margin-left: 1.8rem;
 
   @media only screen and (max-width: 160em) {
     //change on 1024
@@ -297,10 +297,10 @@
 
 .main-nav-link:link,
 .main-nav-link:visited {
-  margin: 1.2rem -5rem 0.9rem 4rem;
+  margin: 0.45rem 0.2rem;
   display: inline-block;
-  padding: 0.7rem;
-  font-size: 2rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 1.45rem;
   font-weight: 400;
   letter-spacing: 0em;
   text-align: center;
@@ -318,8 +318,8 @@
 }
 
 .header-logo-size {
-  height: 4.8rem;
-  width: 7rem;
+  height: 3.9rem;
+  width: 5.8rem;
   object-fit: contain;
 }
 
@@ -337,7 +337,7 @@
   }
 
   &__visible {
-    padding: 2rem 7.5rem;
+    padding: 0.7rem 1rem;
   }
 
   &__invisible {

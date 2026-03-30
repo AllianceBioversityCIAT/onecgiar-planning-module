@@ -10,9 +10,10 @@ import { HeaderService } from 'src/app/header.service';
 import { InitiativesService } from 'src/app/services/initiatives.service';
 
 @Component({
-  selector: 'app-sync-init',
-  templateUrl: './sync-init.component.html',
-  styleUrls: ['./sync-init.component.scss']
+    selector: 'app-sync-init',
+    templateUrl: './sync-init.component.html',
+    styleUrls: ['./sync-init.component.scss'],
+    standalone: false
 })
 export class SyncInitComponent {
   constructor(

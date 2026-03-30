@@ -1,0 +1,137 @@
+<div class="table-box">
+  <div class="table-tools" data-tour-anchor="porb-section-tools">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search partner or location"
+      [(ngModel)]="search"
+    />
+    <select class="tool-select" [(ngModel)]="filterContracted">
+      <option value="">All</option>
+      <option *ngFor="let option of contractedOptions" [value]="option">{{ option }}</option>
+    </select>
+    <select class="tool-select" [(ngModel)]="filterCountry">
+      <option value="">All Countries</option>
+      <option *ngFor="let c of countryFilterOptions" [value]="c.code">{{ c.name }}</option>
+    </select>
+    <button type="button" class="export-btn" (click)="export()">Export Excel</button>
+    <button type="button" class="add-unknown-btn" (click)="addUnknownPartner()" [disabled]="!canEdit || addingUnknown || !programId || !porbAowId">
+      {{ addingUnknown ? 'Adding...' : '+ Add Unknown Partner' }}
+    </button>
+  </div>
+
+  <div class="table-scroll">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th>Partners title</th>
+          <th>High level outputs</th>
+          <th>Contracted Partners</th>
+          <th>Location of Work</th>
+          <th>Total budget (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.toc-updated]="isTocUpdated(row) || isTocAdded(row)">
+        <td [class.deleted-cell]="row.toc_is_deleted">
+          <div class="partner-name-cell">
+            <span *ngIf="row.toc_is_deleted" class="deleted-badge" matTooltip="Removed from TOC">Deleted</span>
+            <span *ngIf="isTocUpdated(row) && !row.toc_is_deleted" class="toc-badge" matTooltip="Recently Updated from TOC">TOC</span>
+            <span *ngIf="isTocAdded(row) && !row.toc_is_deleted" class="new-badge" matTooltip="Recently Added from TOC">NEW</span>
+            <span class="partner-name-text">{{ row.partner_name || "-" }}</span>
+            <button *ngIf="row.is_unknown && canEdit" mat-icon-button class="resolve-btn" matTooltip="Resolve to real partner" (click)="openResolveDialog(row)">
+              <mat-icon>link</mat-icon>
+            </button>
+            <button *ngIf="row.is_unknown && canEdit" mat-icon-button class="delete-unknown-btn" matTooltip="Delete unknown partner" (click)="deleteUnknownPartner(row)" [disabled]="deletingIds.has(row.id)">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </td>
+        <td
+          class="row-title"
+          *ngIf="isGroupedCellStart(filteredRows, i, 'partner_outputs')"
+          [attr.rowspan]="getGroupedCellRowspan(filteredRows, i, 'partner_outputs')"
+        >
+          {{ row.partner_outputs || "-" }}
+        </td>
+        <td class="contracted-cell" [class.deleted-cell]="row.toc_is_deleted">
+          <ng-container *ngIf="canEdit; else readonlyCheckbox">
+            <input
+              type="checkbox"
+              [attr.data-tour-anchor]="i === 0 ? 'porb-partner-contracted' : null"
+              [checked]="isContracted(row)"
+              (change)="row.partner_is_contracted = $any($event.target).checked ? '1' : '0'; saveRow(row)"
+            />
+          </ng-container>
+          <ng-template #readonlyCheckbox>
+            <span>{{ isContracted(row) ? 'Yes' : 'No' }}</span>
+          </ng-template>
+        </td>
+        <td class="geo-cell" [class.deleted-cell]="row.toc_is_deleted">
+          <ng-container *ngIf="canEdit; else readonlyGeo">
+            <ng-select
+              class="geo-select"
+              [items]="countryOptions"
+              bindLabel="name"
+              bindValue="code"
+              [multiple]="true"
+              [clearable]="true"
+              [searchable]="true"
+              [closeOnSelect]="false"
+              [appendTo]="'body'"
+              [disabled]="!isContracted(row)"
+              [(ngModel)]="row.partner_country_codes"
+              placeholder="Select countries"
+              (change)="saveRow(row)"
+            >
+            </ng-select>
+          </ng-container>
+          <ng-template #readonlyGeo>
+            <span>{{ row.partner_geo || '-' }}</span>
+          </ng-template>
+        </td>
+          <td class="budget-cell-with-error num-cell" [class.deleted-cell]="row.toc_is_deleted">
+            <app-budget-and-assumption
+              [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
+              [(value)]="row.partner_budget"
+              [(assumption)]="row.partner_assumption"
+              [disabled]="!isContracted(row) || !canEdit"
+              [isSaving]="savingIds.has(row.id)"
+              [isError]="errorIds.has(row.id)"
+              [isSaved]="savedIds.has(row.id)"
+              (commit)="saveRow(row)"
+              (assumptionCommit)="saveRow(row)"
+              (pasteBudget)="pasteFromSpreadsheet($event, i, 'partner_budget', 'partner_geo')"
+            ></app-budget-and-assumption>
+            <span
+              *ngIf="rowHasValidationError(row)"
+              class="row-error-icon"
+              [attr.data-tour-anchor]="i === 0 ? 'porb-row-error' : null"
+              [matTooltip]="rowErrorMessage(row)"
+              matTooltipPosition="left"
+            >
+              !
+            </span>
+            <button
+              *ngIf="row.toc_is_deleted && canEdit"
+              class="row-delete-btn"
+              matTooltip="Remove this TOC-deleted item"
+              matTooltipPosition="left"
+              [disabled]="deletingIds.has(row.id)"
+              (click)="deleteRow(row)"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="5">No data found for selected filters.</td>
+        </tr>
+        <tr class="subtotal-row" *ngIf="filteredRows.length">
+          <td colspan="4" class="subtotal-label">Subtotal</td>
+          <td class="num-cell">{{ subtotal }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

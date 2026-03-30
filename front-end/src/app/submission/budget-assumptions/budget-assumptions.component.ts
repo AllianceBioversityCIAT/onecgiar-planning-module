@@ -5,9 +5,10 @@ import { ToastrService } from "ngx-toastr";
 import { BudgetAssumptionsService } from "src/app/services/budget-assumptions.service";
 
 @Component({
-  selector: "app-budget-assumptions",
-  templateUrl: "./budget-assumptions.component.html",
-  styleUrls: ["./budget-assumptions.component.scss"],
+    selector: "app-budget-assumptions",
+    templateUrl: "./budget-assumptions.component.html",
+    styleUrls: ["./budget-assumptions.component.scss"],
+    standalone: false
 })
 export class BudgetAssumptionsComponent implements OnInit {
   Form: FormGroup;

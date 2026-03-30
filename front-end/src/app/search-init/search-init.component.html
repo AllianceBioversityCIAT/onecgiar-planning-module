@@ -145,14 +145,16 @@
 <div class="risk-management-export">
   <div class="risk-management-export-box">
     <!-- <form class="risk-management-export-box"> -->
-    <div>
-      <mat-label class="initiatives-text-checkbox">My Programs</mat-label>
-      <mat-checkbox
-        labelPosition="before"
-        [(ngModel)]="myIni"
-        (ngModelChange)="myIniChange()"
-      >
-      </mat-checkbox>
+    <div class="my-programs-toggle">
+      <label class="initiatives-text-checkbox">My Programs</label>
+      <label class="custom-checkbox">
+        <input
+          type="checkbox"
+          [(ngModel)]="myIni"
+          (ngModelChange)="myIniChange()"
+        />
+        <span class="checkmark"></span>
+      </label>
     </div>
     <!-- //Reset Button----- -->
     <!-- <div class="risk-report-button-box">

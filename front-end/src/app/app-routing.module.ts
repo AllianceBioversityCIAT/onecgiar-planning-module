@@ -35,6 +35,10 @@ import { TableComponent } from "./archive/table/table.component";
 import { VersionComponent } from "./archive/version/version.component";
 import { ExportComponent } from "./admin/export/export.component";
 import { OnlineUsersComponent } from "./admin/online-users/online-users.component";
+import { PorbComponent } from "./porb/porb.component";
+import { PorbVersionViewComponent } from "./porb/porb-version-view/porb-version-view.component";
+import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
+import { PorbDangerZoneComponent } from "./admin/porb-danger-zone/porb-danger-zone.component";
 
 const routes: Routes = [
   {
@@ -90,13 +94,24 @@ const routes: Routes = [
       { path: "archive", component: ArchivedComponent },
       { path: "export", component: ExportComponent },
       { path: "online-users", component: OnlineUsersComponent },
-
+      { path: "standerd-cross-cutting", component: StanderdCrossCuttingComponent },
+      { path: "porb-danger-zone", component: PorbDangerZoneComponent },
     ],
   },
 
   {
     path: "program/:id/:code/submission",
     component: SubmissionComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "program/:id/:code/porb/version/:submission_id",
+    component: PorbVersionViewComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: "program/:id/:code/porb",
+    component: PorbComponent,
     canActivate: [AuthGuard],
   },
   {

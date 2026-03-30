@@ -9,7 +9,7 @@ async function bootstrap() {
   app.enableCors({
     origin: '*',
     methods: 'GET, PUT, POST, PATCH, DELETE',
-    allowedHeaders: 'Content-Type, Authorization',
+    allowedHeaders: 'Content-Type, Authorization, x-socket-id',
     credentials: true,
   });
   const config = new DocumentBuilder()

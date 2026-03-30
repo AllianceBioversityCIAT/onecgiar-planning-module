@@ -3,23 +3,21 @@ import { PageEvent } from "@angular/material/paginator";
 import { MatTableDataSource } from "@angular/material/table";
 import { Meta, Title } from "@angular/platform-browser";
 import { HeaderService } from "src/app/header.service";
-import { AuthService } from "src/app/services/auth.service";
-import { InitiativesService } from "src/app/services/initiatives.service";
 import { PhasesService } from "src/app/services/phases.service";
-import { SubmissionService } from "src/app/services/submission.service";
+import { PorbService } from "src/app/services/porb.service";
 import { AppSocket } from "src/app/socket.service";
 
 @Component({
-  selector: "app-export",
-  templateUrl: "./export.component.html",
-  styleUrls: ["./export.component.scss"],
+    selector: "app-export",
+    templateUrl: "./export.component.html",
+    styleUrls: ["./export.component.scss"],
+    standalone: false
 })
 export class ExportComponent {
   constructor(
     private headerService: HeaderService,
     private phasesService: PhasesService,
-    private initiativesService: InitiativesService,
-    private submissionService: SubmissionService,
+    private porbService: PorbService,
     public socket: AppSocket,
     private title: Title,
     private meta: Meta
@@ -40,7 +38,6 @@ export class ExportComponent {
 
   phases: any;
   initiatives: any = [];
-  user: any;
   progressValue = 0;
   isExporting = false;
   downloadReady = false;
@@ -50,25 +47,22 @@ export class ExportComponent {
   columnsToDisplay: string[] = ["official_code", "title", "status"];
   dataSource: MatTableDataSource<any>;
   selectedPhase: any;
-  statusOptions: string[] = ["Approved", "Pending"];
+  statusOptions: string[] = ["Approved", "Pending", "Draft"];
   selectedStatus: string = "Approved";
+
   async ngOnInit() {
     await this.getPhases();
     this.selectedPhase = this.phases.filter((phase: any) => phase.active)[0];
-
-    await this.getInitiatives(this.selectedPhase.id);
+    await this.getInitiatives();
     this.title.setTitle("Export");
     this.meta.updateTag({ name: "description", content: "Export" });
 
     this.socket.connect();
-
     this.socket.on("isExporting", (data: any) => {
-      console.log('isExporting',data)
       this.isExporting = data.isExporting;
-      this.progressValue = data.progressValue
+      this.progressValue = data.progressValue;
     });
     this.socket.on("downloadReady", (data: any) => {
-      console.log('downloadReady',data)
       this.downloadReady = data.downloadReady;
       this.downloadUrl = data.downloadUrl;
       this.downloadFilename = data.downloadFilename;
@@ -79,14 +73,12 @@ export class ExportComponent {
     this.phases = await this.phasesService.getPhases();
   }
 
-  async onPhaseChange(selectedValue: any) {
-    await this.getInitiatives(selectedValue.id);
+  async onPhaseChange(_selectedValue: any) {
+    await this.getInitiatives();
   }
 
-  async onStatusChange(status: string) {
-    this.selectedStatus = status;
-    if (!this.selectedPhase) return;
-    await this.getInitiatives(this.selectedPhase.id);
+  async onStatusChange(_status: string) {
+    await this.getInitiatives();
   }
 
   async pagination(event: PageEvent) {
@@ -94,15 +86,14 @@ export class ExportComponent {
     this.pageSize = event.pageSize;
   }
 
-  async getInitiatives(phase_id: number) {
-    this.initiatives = await this.initiativesService.getInitiativeForExport(
-      phase_id,
+  async getInitiatives() {
+    this.initiatives = await this.porbService.getExportList(
+      this.selectedPhase?.id,
       this.selectedStatus
     );
     this.dataSource = new MatTableDataSource(this.initiatives);
     this.length = this.initiatives?.length || 0;
   }
-
 
   async exportData() {
     this.isExporting = true;
@@ -114,48 +105,48 @@ export class ExportComponent {
         this.progressValue += 5;
         this.socket.emit("isExporting", {
           isExporting: this.isExporting,
-          progressValue: this.progressValue
-    
+          progressValue: this.progressValue,
         });
       }
     }, 300);
 
-    const data = this.initiatives.map((item: any) => ({
-      latest_submission_id: item.latest_submission_id,
-      official_code: item.official_code,
-      initiatives_id: item.id,
-    }));
+    const programIds = this.initiatives.map((item: any) => item.id);
 
-    const body = {
-      phase: this.selectedPhase,
-      initiatives: data,
-    };
+    try {
+      const response: any = await this.porbService.exportBulkZip(programIds);
 
-    const result = await this.submissionService.exportInit(
-      body,
-      this.selectedPhase.id
-    );
+      clearInterval(interval);
+      this.progressValue = 100;
 
-    clearInterval(interval);
-    this.progressValue = 100;
-
-    if (result.success) {
-      this.downloadUrl = result.url;
-      this.downloadFilename = result.filename;
-      this.downloadReady = true;
-      this.socket.emit("downloadReady", {
-        downloadReady: this.downloadReady,
-        downloadUrl: result.url,
-        downloadFilename: result.filename
-      });
+      if (response?.body) {
+        const blob = response.body as Blob;
+        const contentDisposition = response.headers?.get("Content-Disposition");
+        let filename = "PORB_Export.zip";
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) filename = match[1];
+        }
+        const url = window.URL.createObjectURL(blob);
+        this.downloadUrl = url;
+        this.downloadFilename = filename;
+        this.downloadReady = true;
+        this.socket.emit("downloadReady", {
+          downloadReady: true,
+          downloadUrl: url,
+          downloadFilename: filename,
+        });
+      }
+    } catch (e) {
+      clearInterval(interval);
+      console.error("Export failed:", e);
     }
 
     setTimeout(() => {
       this.isExporting = false;
       this.progressValue = 0;
       this.socket.emit("isExporting", {
-        isExporting: this.isExporting,
-        progressValue: 0
+        isExporting: false,
+        progressValue: 0,
       });
     }, 500);
   }
@@ -172,9 +163,9 @@ export class ExportComponent {
     this.downloadUrl = null;
     this.downloadReady = false;
     this.socket.emit("downloadReady", {
-      downloadReady: this.downloadReady,
+      downloadReady: false,
       downloadUrl: null,
-      downloadFilename: null
+      downloadFilename: null,
     });
   }
 }

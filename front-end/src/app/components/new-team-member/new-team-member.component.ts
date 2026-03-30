@@ -14,19 +14,13 @@ import {
 import { PhasesService } from "src/app/services/phases.service";
 import { SubmissionService } from "src/app/services/submission.service";
 import { UserService } from "src/app/services/user.service";
-
-export enum ROLES {
-  LEAD = "Leader",
-  COORDINATOR = "Coordinator",
-  CONTRIBUTOR = "Contributor",
-  CoLeader = "Co-leader",
-  Financial_Focal_Point = "Financial Focal Point"
-}
+import { ROLES } from "src/app/shared/roles";
 
 @Component({
-  selector: "app-new-team-member",
-  templateUrl: "./new-team-member.component.html",
-  styleUrls: ["./new-team-member.component.scss"],
+    selector: "app-new-team-member",
+    templateUrl: "./new-team-member.component.html",
+    styleUrls: ["./new-team-member.component.scss"],
+    standalone: false
 })
 export class NewTeamMemberComponent implements OnInit {
 

@@ -8,9 +8,10 @@ import {
 import { PopoverManagementService } from "src/app/services/popover-management.service";
 
 @Component({
-  selector: "app-popover",
-  templateUrl: "./popover.component.html",
-  styleUrls: ["./popover.component.scss"],
+    selector: "app-popover",
+    templateUrl: "./popover.component.html",
+    styleUrls: ["./popover.component.scss"],
+    standalone: false
 })
 export class PopoverComponent implements OnInit {
   @HostBinding("style.top")

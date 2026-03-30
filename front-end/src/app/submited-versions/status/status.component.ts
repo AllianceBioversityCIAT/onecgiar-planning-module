@@ -5,9 +5,10 @@ import { SubmissionService } from "src/app/services/submission.service";
 import { AppSocket } from "src/app/socket.service";
 
 @Component({
-  selector: "app-status",
-  templateUrl: "./status.component.html",
-  styleUrls: ["./status.component.scss"],
+    selector: "app-status",
+    templateUrl: "./status.component.html",
+    styleUrls: ["./status.component.scss"],
+    standalone: false
 })
 export class StatusComponent implements OnInit {
   constructor(

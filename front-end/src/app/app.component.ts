@@ -7,18 +7,21 @@ import {
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { ClarityService } from "./services/clarity.service";
+import { TawkService } from "./services/tawk.service";
 
 @Component({
-  selector: "app-root",
-  templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.scss"],
+    selector: "app-root",
+    templateUrl: "./app.component.html",
+    styleUrls: ["./app.component.scss"],
+    standalone: false
 })
 export class AppComponent implements OnInit {
   constructor(
     private authService: AuthService,
     public dialog: MatDialog,
     public router: Router,
-    private clarity: ClarityService
+    private clarity: ClarityService,
+    private tawk: TawkService
   ) {
     const faviconTag: any = document.getElementById("faviconTag");
 

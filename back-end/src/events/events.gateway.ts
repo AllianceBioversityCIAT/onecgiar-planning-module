@@ -13,6 +13,21 @@ import { SubmissionService } from 'src/submission/submission.service';
 import { PhasesService } from 'src/phases/phases.service';
 import { UsersService } from 'src/users/users.service';
 import { verify } from 'jsonwebtoken';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+function loadAppVersion(): string {
+  if (process.env.APP_BUILD_VERSION && process.env.APP_BUILD_VERSION !== 'dev') {
+    return process.env.APP_BUILD_VERSION;
+  }
+  try {
+    const versionFile = readFileSync(join(__dirname, '..', '..', '..', 'version.json'), 'utf8');
+    return JSON.parse(versionFile).version || 'dev';
+  } catch {
+    return 'dev';
+  }
+}
+const APP_VERSION = loadAppVersion();
 
 interface OnlineUser {
   socketId: string;
@@ -198,8 +213,10 @@ export class EventsGateway implements OnModuleInit, OnGatewayDisconnect {
   }
 
   onModuleInit() {
+    this.logger.log(`App version: ${APP_VERSION}`);
     this.server?.on('connect', (socket) => {
       this.logger.log(`Socket connected: ${socket.id}`);
+      socket.emit('appVersion', { version: APP_VERSION });
     });
   }
 }

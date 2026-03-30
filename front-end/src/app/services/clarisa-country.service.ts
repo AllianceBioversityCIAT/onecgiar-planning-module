@@ -7,14 +7,33 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root',
 })
 export class ClarisaCountryService {
+  private cachedCountries: any[] | null = null;
+  private pendingRequest: Promise<any> | null = null;
+
   constructor(private http: HttpClient) {}
 
   async getAll() {
-    return firstValueFrom(
+    if (this.cachedCountries) {
+      return this.cachedCountries;
+    }
+    if (this.pendingRequest) {
+      return this.pendingRequest;
+    }
+    this.pendingRequest = firstValueFrom(
       this.http
         .get(environment.api_url + '/clarisa-country/all')
         .pipe(map((d: any) => d))
-    ).catch((e) => false);
+    )
+      .then((result) => {
+        this.cachedCountries = Array.isArray(result) ? result : [];
+        this.pendingRequest = null;
+        return this.cachedCountries;
+      })
+      .catch((e) => {
+        this.pendingRequest = null;
+        return false;
+      });
+    return this.pendingRequest;
   }
 
   createOrUpdate(data: any) {

@@ -25,15 +25,17 @@ import { PhasesService } from "src/app/services/phases.service";
 import { ChatComponent } from "../share/chat/chat/chat.component";
 import { InitiativesService } from "../services/initiatives.service";
 import { ChatSocket } from "../share/chat/module/chat-socket";
+import { PorbService } from "../services/porb.service";
 import html2canvas from 'html2canvas';
 
 /**
  * @title Data table with sorting, pagination, and filtering.
  */
 @Component({
-  selector: "app-submited-versions",
-  templateUrl: "./submited-versions.component.html",
-  styleUrls: ["./submited-versions.component.scss"],
+    selector: "app-submited-versions",
+    templateUrl: "./submited-versions.component.html",
+    styleUrls: ["./submited-versions.component.scss"],
+    standalone: false
 })
 export class SubmitedVersionsComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = [
@@ -70,7 +72,7 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
     private phasesService: PhasesService,
     private initiativesService: InitiativesService,
     private socket: ChatSocket,
-
+    private porbService: PorbService,
   ) {
     this.headerService.background =
       "linear-gradient(to right, #04030F, #04030F)";
@@ -1039,8 +1041,30 @@ export class SubmitedVersionsComponent implements OnInit, OnDestroy {
     }, 500);
   }
   submition: any;
-  async generateExcel(id: number) {
-    this.submition = await this.submissionService.excel(id);
+  async generateExcel(row: any) {
+    if (row.has_porb_data) {
+      try {
+        const response: any = await this.porbService.exportVersionZip(row.id);
+        if (!response?.body) return;
+        const blob = response.body as Blob;
+        const contentDisposition = response.headers?.get('Content-Disposition');
+        let filename = `PORB_v${row.id}.zip`;
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) filename = match[1];
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch {
+        this.toastrService.error('Export failed');
+      }
+    } else {
+      this.submition = await this.submissionService.excel(row.id);
+    }
   }
 
   finalCenterItemPeriodVal(partner_code: any, wp_id: any, period_id: any) {

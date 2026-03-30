@@ -1,0 +1,85 @@
+<h2 mat-dialog-title>Add Location</h2>
+<mat-dialog-content>
+  <p class="add-hint">Select a location type, then search or add to this AOW.</p>
+
+  <div class="type-selector">
+    <button
+      type="button"
+      class="type-btn"
+      [class.active]="selectedType === 'country'"
+      (click)="onTypeChange('country')"
+    >
+      <span class="type-badge country">Country</span>
+    </button>
+    <button
+      type="button"
+      class="type-btn"
+      [class.active]="selectedType === 'region'"
+      (click)="onTypeChange('region')"
+    >
+      <span class="type-badge region">Region</span>
+    </button>
+    <button
+      type="button"
+      class="type-btn"
+      [class.active]="selectedType === 'global'"
+      (click)="onTypeChange('global')"
+    >
+      <span class="type-badge global">Global</span>
+    </button>
+  </div>
+
+  <!-- Global: one-click add -->
+  <ng-container *ngIf="selectedType === 'global'">
+    <div class="global-section">
+      <p class="global-hint" *ngIf="globalAlreadyExists">
+        "Global" has already been added to this AOW.
+      </p>
+      <button
+        *ngIf="!globalAlreadyExists"
+        type="button"
+        class="add-global-btn"
+        [disabled]="adding"
+        (click)="addGlobal()"
+      >
+        <mat-icon>public</mat-icon>
+        Add Global
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- Country / Region: search -->
+  <ng-container *ngIf="selectedType === 'country' || selectedType === 'region'">
+    <div class="search-wrapper">
+      <input
+        class="location-search-input"
+        type="text"
+        [placeholder]="'Type to search ' + (selectedType === 'country' ? 'countries' : 'regions') + '...'"
+        [ngModel]="searchQuery"
+        (ngModelChange)="onSearch($event)"
+        autocomplete="off"
+      />
+      <mat-spinner *ngIf="searching" diameter="20" class="search-spinner"></mat-spinner>
+    </div>
+
+    <div class="results-list" *ngIf="searchResults.length">
+      <button
+        *ngFor="let location of searchResults"
+        type="button"
+        class="result-item"
+        [disabled]="adding"
+        (click)="selectLocation(location)"
+      >
+        <span class="location-name">{{ location.name }}</span>
+      </button>
+    </div>
+
+    <div class="no-results" *ngIf="!searching && searchQuery.length >= 2 && !searchResults.length">
+      No {{ selectedType === 'country' ? 'countries' : 'regions' }} found.
+    </div>
+  </ng-container>
+
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+</mat-dialog-actions>

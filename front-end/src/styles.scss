@@ -2,7 +2,52 @@
 @import "app/sass/base/base";
 @import "app/sass/abstracts/variables";
 
-@import "~@ng-select/ng-select/themes/default.theme.css";
+@import "@ng-select/ng-select/themes/default.theme.css";
+
+tr.toc-updated td:not(.row-title) {
+  border-left: 3px solid #0d6efd;
+}
+
+.toc-badge,
+.new-badge,
+.deleted-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-right: 6px;
+  vertical-align: middle;
+  line-height: 16px;
+}
+
+.toc-badge {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.new-badge {
+  background: #198754;
+  color: #fff;
+}
+
+.deleted-badge {
+  background: #dc3545;
+  color: #fff;
+}
+
+.subtotal-row {
+  td {
+    background: #f0f2f5;
+    font-weight: 700;
+    font-size: 1.3rem;
+    border-top: 2px solid #2a2e45;
+  }
+  .subtotal-label {
+    text-align: center !important;
+  }
+}
 // @import "@angular/material/prebuilt-themes/deeppurple-amber.css";
 :ng-deep .cdk-overlay-pane .x {
   margin: 1rem -1rem !important;
@@ -49,4 +94,12 @@
   height: auto !important;
   overflow: visible !important;
   border-radius: 10px;
+}
+
+.porb-tour-highlight {
+  position: relative;
+  z-index: 5002 !important;
+  box-shadow: 0 0 0 3px #60a5fa, 0 0 0 7px rgba(96, 165, 250, 0.35) !important;
+  border-radius: 8px !important;
+  transition: box-shadow 0.2s ease;
 }

@@ -31,6 +31,7 @@ import { PhasesService } from 'src/phases/phases.service';
 import { WpBudget } from 'src/entities/wp-budget.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { Archive } from 'src/entities/archive.entity';
+import { INITIATIVE_ROLES, LEAD_ROLES, isLeadRole } from '../shared/roles';
 
 @Injectable()
 export class InitiativesService {
@@ -671,10 +672,10 @@ async findOne(id: number) {
         );
       }
     }
-    if (user.role != 'admin' && initiativeRoles.role == 'Leader')
+    if (user.role != 'admin' && initiativeRoles.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Only Admin Can Add Leader';
 
-    if (user.role != 'admin' && currentRole.role == 'Leader')
+    if (user.role != 'admin' && currentRole.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Admin Only Can edit Leader';
 
     if (!errorMsg) {
@@ -708,7 +709,7 @@ async findOne(id: number) {
     });
 
     let errorMsg = null;
-    if (roles.role == 'Leader' && user.role != 'admin')
+    if (roles.role == INITIATIVE_ROLES.LEAD && user.role != 'admin')
       errorMsg = 'Only admin can delete leader';
 
     if (roles && !errorMsg) return await this.iniRolesRepository.remove(roles);
@@ -741,7 +742,7 @@ async findOne(id: number) {
     };
     //To the user that was added by the Admin or Leader/Coordinator
 
-    if (user.role != 'admin' && role.role == 'Leader')
+    if (user.role != 'admin' && role.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Only Admin Can Add Leader';
 
     if (!errorMsg) {
@@ -755,10 +756,10 @@ async findOne(id: number) {
           });
 
           if (
-            data.role == 'Coordinator' ||
-            data.role == 'Contributor' ||
-            data.role == 'Co-leader'   ||
-            data.role =='Financial Focal Point'
+            data.role == INITIATIVE_ROLES.COORDINATOR ||
+            data.role == INITIATIVE_ROLES.CONTRIBUTOR ||
+            data.role == INITIATIVE_ROLES.CO_LEADER   ||
+            data.role == INITIATIVE_ROLES.FINANCIAL_FOCAL_POINT
           ) {
             this.emailService.sendEmailTobyVarabel(
               user,
@@ -803,7 +804,7 @@ async findOne(id: number) {
           initiative_id,
         },
       });
-      return ['Contributor', 'Leader', 'Contributor'].includes(result?.role);
+      return [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(result?.role as INITIATIVE_ROLES);
     } catch (error) {
       return false;
     }
@@ -818,7 +819,7 @@ async findOne(id: number) {
           initiative_id,
         },
       });
-      return ['Contributor', 'Leader', 'Contributor'].includes(result?.role);
+      return [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(result?.role as INITIATIVE_ROLES);
     } catch (error) {
       return false;
     }
@@ -834,7 +835,7 @@ async findOne(id: number) {
           initiative_id,
         },
       })
-      .then((r) => ['Contributor', 'Leader', 'Contributor'].includes(r.role))
+      .then((r) => [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(r.role as INITIATIVE_ROLES))
       .catch(() => false);
 
     return isMember;
@@ -853,7 +854,7 @@ async findOne(id: number) {
           initiative_id: messageRecord.initiative_id,
         },
       })
-      .then((r) => ['Contributor', 'Leader'].includes(r.role))
+      .then((r) => [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(r.role as INITIATIVE_ROLES))
       .catch(() => false);
 
     const message = await this.chatGroupRepositoryService.getMessagesById(
@@ -868,53 +869,108 @@ async findOne(id: number) {
   }
 
   async getInitPartnersBudget(query: any) {
-    const initiative = await this.initiativeRepository
-      .createQueryBuilder('init')
-      .leftJoinAndSelect('init.submissions', 'submissions')
-      .where(
-        'submissions.id = (' +
-          this.submissionRepository
-            .createQueryBuilder('submissions')
-            .select('MAX(id)')
-            .where('submissions.initiative_id = init.id')
-            .getQuery() +
-          ')',
-      )
-      .andWhere('submissions.status = :status', {
-        status: SubmissionStatus.APPROVED,
-      })
-      .select([
-        'init.official_code',
-        'init.name',
-        'submissions.id',
-        'wp_budget.*',
-      ])
-      .addSelect('SUM(wp_budget.budget)', 'wp_budget_total')
-      .leftJoinAndSelect('submissions.wp_budget', 'wp_budget')
-       .leftJoinAndSelect('wp_budget.workPackage', 'wp_budget_wp')
-      .leftJoinAndSelect('wp_budget.phase', 'phase')
-      .andWhere('phase.id = :phase_id', { phase_id: query.phase_id })
-      .leftJoinAndSelect('wp_budget.organization', 'organization')
-      .andWhere(`LOWER(wp_budget_wp.name) NOT LIKE '%project%'`)
-      .andWhere(
-        new Brackets((qb) => {
-          if (query.initiatives) {
-            qb.andWhere('init.id IN (:initiatives)', {
-              initiatives: query.initiatives,
-            });
-          }
-          if (query.partners) {
-            qb.andWhere('organization.code IN (:partners)', {
-              partners: query.partners,
-            });
-          }
-        }),
-      )
+    // Build a map of organization code -> org entity for name/acronym lookup
+    const allOrgs = await this.organizationRepository.find();
+    const orgMap = new Map<string, Organization>();
+    allOrgs.forEach((o) => orgMap.set(String(o.code), o));
 
-      .groupBy('init.id , wp_budget.organization_code')
-      .getMany();
+    // Find the latest approved submission per initiative that has porb_data
+    const qb = this.submissionRepository
+      .createQueryBuilder('sub')
+      .innerJoinAndSelect('sub.initiative', 'init')
+      .where('sub.status = :status', { status: SubmissionStatus.APPROVED })
+      .andWhere('sub.porb_data IS NOT NULL')
+      .andWhere("sub.porb_data != ''")
+      .orderBy('sub.id', 'DESC');
 
-    return initiative;
+    if (query.initiatives) {
+      const ids = Array.isArray(query.initiatives)
+        ? query.initiatives
+        : [query.initiatives];
+      qb.andWhere('init.id IN (:...ids)', { ids });
+    }
+
+    const approvedSubs = await qb.getMany();
+
+    // Keep only the latest per initiative
+    const seenInit = new Set<number>();
+    const latestSubs: Submission[] = [];
+    for (const sub of approvedSubs) {
+      if (seenInit.has(sub.initiative_id)) continue;
+      seenInit.add(sub.initiative_id);
+      latestSubs.push(sub);
+    }
+
+    // Parse porb_data and build the same shape the frontend expects
+    const partnerFilter = query.partners
+      ? new Set(
+          (Array.isArray(query.partners) ? query.partners : [query.partners]).map(String),
+        )
+      : null;
+
+    const result: any[] = [];
+
+    for (const sub of latestSubs) {
+      let porbData: any;
+      try {
+        porbData = typeof sub.porb_data === 'string'
+          ? JSON.parse(sub.porb_data)
+          : sub.porb_data;
+      } catch {
+        continue;
+      }
+
+      // Aggregate budget per center from porb_data
+      const centerBudgets = new Map<string, number>();
+
+      for (const aow of porbData.aows || []) {
+        for (const center of aow.centers || []) {
+          const code = String(center.center_code);
+          if (partnerFilter && !partnerFilter.has(code)) continue;
+
+          let budget = 0;
+          for (const h of center.hlos || []) budget += Number(h.hlo_budget) || 0;
+          for (const p of center.partners || []) budget += Number(p.partner_budget) || 0;
+          for (const m of center.melias || []) budget += Number(m.melia_budget) || 0;
+          for (const a of center.anaplan || []) budget += Number(a.porb_budget) || 0;
+          for (const c of center.cross_cutting || []) budget += Number(c.budget) || 0;
+
+          centerBudgets.set(code, (centerBudgets.get(code) || 0) + budget);
+        }
+      }
+
+      // Add bilateral budgets (center-level)
+      for (const b of porbData.bilaterals || []) {
+        const code = String(b.center_id);
+        if (partnerFilter && !partnerFilter.has(code)) continue;
+        centerBudgets.set(code, (centerBudgets.get(code) || 0) + (Number(b.bilateral_budget) || 0));
+      }
+
+      // Build wp_budget-compatible array
+      const wpBudget = Array.from(centerBudgets.entries()).map(
+        ([orgCode, total]) => {
+          const org = orgMap.get(orgCode);
+          return {
+            organization_code: orgCode,
+            total,
+            organization: org
+              ? { code: org.code, acronym: org.acronym, name: org.name }
+              : { code: orgCode, acronym: orgCode, name: orgCode },
+          };
+        },
+      );
+
+      result.push({
+        official_code: sub.initiative?.official_code,
+        name: sub.initiative?.name,
+        submissions: [{ id: sub.id, wp_budget: wpBudget }],
+      });
+    }
+
+    // Sort by official_code
+    result.sort((a, b) => (a.official_code || '').localeCompare(b.official_code || ''));
+
+    return result;
   }
   async getInitExport(
     phase_id: number,

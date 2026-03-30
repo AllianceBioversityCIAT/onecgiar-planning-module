@@ -4,6 +4,8 @@ services:
     container_name: planning_api
     build: back-end
     restart: always
+    environment:
+      - APP_BUILD_VERSION=${APP_BUILD_VERSION:-dev}
     volumes:
       -  /var/lib/jenkins/workspace/Environments/planning/back-end/generated_files:/back-end/generated_files
   planning_front_end:
@@ -12,7 +14,10 @@ services:
     links:
       - planning_api  
     container_name: planning_front_end
-    build: front-end
+    build:
+      context: front-end
+      args:
+        - APP_BUILD_VERSION=${APP_BUILD_VERSION:-dev}
     restart: always
     ports:
       - 127.0.0.1:4240:80

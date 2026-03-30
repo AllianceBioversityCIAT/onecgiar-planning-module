@@ -1,0 +1,6 @@
+<button type="button" class="assumption-view-icon"
+  [class.assumption-view-icon--empty]="!hasAssumption"
+  [matTooltip]="hasAssumption ? 'View assumption' : 'No assumption'"
+  (click)="onIconClick()">
+  <mat-icon>description</mat-icon>
+</button>

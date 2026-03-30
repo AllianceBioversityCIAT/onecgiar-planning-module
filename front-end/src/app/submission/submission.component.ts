@@ -12,7 +12,7 @@ import { ViewDataComponent } from "./view-data/view-data.component";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AuthService } from "../services/auth.service";
 import { ToastrService } from "ngx-toastr";
-import { ROLES } from "../components/new-team-member/new-team-member.component";
+import { ROLES } from "../shared/roles";
 import { IpsrComponent } from "./ipsr/ipsr.component";
 import { PhasesService } from "../services/phases.service";
 import { HeaderService } from "../header.service";
@@ -22,7 +22,6 @@ import { Meta, Title } from "@angular/platform-browser";
 import { ConstantService } from "../services/constant.service";
 import { InitiativesService } from "../services/initiatives.service";
 import { filter, firstValueFrom, from, iif, of, switchMap, tap } from "rxjs";
-import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
 import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
 import { UserService } from "../services/user.service";
@@ -38,10 +37,11 @@ import { DecimalPipe, Location } from "@angular/common";
 import { SubmitMessageComponent } from "./submit-message/submit-message.component";
 
 @Component({
-  selector: "app-submission",
-  templateUrl: "./submission.component.html",
-  styleUrls: ["./submission.component.scss"],
-  providers: [DecimalPipe] 
+    selector: "app-submission",
+    templateUrl: "./submission.component.html",
+    styleUrls: ["./submission.component.scss"],
+    providers: [DecimalPipe],
+    standalone: false
 })
 export class SubmissionComponent implements OnInit, OnDestroy {
   title = "planning";
@@ -743,7 +743,7 @@ if(!this.timeCalcForIndicator[item_id])
       this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
-          title: "Cancel submission",
+          title: "Cancel PORB",
           custom_message_1: `Are you sure to clear all data ?`,
           custom_message_2: `All the data you added will be removed.`,
         },
@@ -2095,8 +2095,8 @@ this.tocSubmissionData = toc_data.info
     this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
-          title: "Cancel submission",
-          message: `Are you sure you want to Cancel submission ?`,
+          title: "Cancel PORB",
+          message: `Are you sure you want to cancel PORB?`,
         },
       })
       .afterClosed()
@@ -3228,10 +3228,10 @@ this.submitDialog()
   openHistoryDialog(initiative_id: number) {
     this.dialog
       .open(HistoryOfChangeComponent, {
-        width: '600px',
-        maxWidth: '700px',
-        maxHeight: '500px',
-        height: '500px',
+        width: '750px',
+        maxWidth: '90vw',
+        height: '80vh',
+        maxHeight: '85vh',
         data: {
           initiative_id: initiative_id
         },

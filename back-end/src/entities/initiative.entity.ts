@@ -140,6 +140,10 @@ export class Initiative {
   @Column({type: 'bool', default: false})
   synchronized: boolean;
 
+  @ApiProperty()
+  @Column({ nullable: true, default: 0 })
+  toc_last_update: number;
+
 
   @OneToMany(() => AnaplanValues, (AnaplanValues) => AnaplanValues.initiative)
   anaplan_values: AnaplanValues[];

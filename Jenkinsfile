@@ -1,5 +1,8 @@
 pipeline {
   agent any
+  environment {
+    APP_BUILD_VERSION = sh(script: 'date +%s', returnStdout: true).trim()
+  }
   stages {
     stage('verify tooling') {
       steps {
@@ -25,9 +28,19 @@ pipeline {
         sh 'docker system prune -a -f'
       }
     }
-    stage('Start container') {
+    stage('Build backend') {
       steps {
-        sh 'docker compose up -d --no-color --build --wait'
+        sh 'docker compose build planning_api'
+      }
+    }
+    stage('Build frontend') {
+      steps {
+        sh 'docker compose build planning_front_end'
+      }
+    }
+    stage('Start containers') {
+      steps {
+        sh 'docker compose up -d --no-color --wait'
         sh 'docker compose ps'
       }
     }

@@ -15,10 +15,11 @@ import { BudgetAssumptionsService } from "src/app/services/budget-assumptions.se
 import { AnaplanService } from "src/app/services/anaplan.service";
 
 @Component({
-  selector: "app-submited-version",
-  templateUrl: "./submited-version.component.html",
-  styleUrls: ["./submited-version.component.scss"],
-  providers: [DecimalPipe] 
+    selector: "app-submited-version",
+    templateUrl: "./submited-version.component.html",
+    styleUrls: ["./submited-version.component.scss"],
+    providers: [DecimalPipe],
+    standalone: false
 })
 export class SubmitedVersionComponent implements OnInit {
   title = "planning";

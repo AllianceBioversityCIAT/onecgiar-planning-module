@@ -12,9 +12,10 @@ import { DeleteConfirmDialogComponent } from "src/app/delete-confirm-dialog/dele
 import { AnticipatedYearService } from "src/app/services/anticipated-year.service";
 
 @Component({
-  selector: "app-anticipated-year",
-  templateUrl: "./anticipated-year.component.html",
-  styleUrls: ["./anticipated-year.component.scss"],
+    selector: "app-anticipated-year",
+    templateUrl: "./anticipated-year.component.html",
+    styleUrls: ["./anticipated-year.component.scss"],
+    standalone: false
 })
 export class AnticipatedYearComponent implements OnInit {
   // columnsToDisplay: string[] = ["id", "month", "year", "phase", "actions"];

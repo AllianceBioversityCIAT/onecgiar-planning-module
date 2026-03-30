@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import * as saveAs from "file-saver";
+import { saveAs } from "file-saver";
 import { Observable, firstValueFrom, map } from "rxjs";
 import { environment } from "src/environments/environment";
 

@@ -17,9 +17,10 @@ import { FormBuilder, FormGroup } from "@angular/forms";
 import { SortPipe } from "src/app/share/pipes/sort.pipe";
 
 @Component({
-  selector: "app-users",
-  templateUrl: "./users.component.html",
-  styleUrls: ["./users.component.scss"],
+    selector: "app-users",
+    templateUrl: "./users.component.html",
+    styleUrls: ["./users.component.scss"],
+    standalone: false
 })
 export class UsersComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;

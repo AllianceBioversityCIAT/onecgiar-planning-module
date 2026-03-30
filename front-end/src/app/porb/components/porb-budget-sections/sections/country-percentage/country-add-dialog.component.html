@@ -1,0 +1,35 @@
+<h2 mat-dialog-title>Add Country</h2>
+<mat-dialog-content>
+  <p class="add-hint">Search for a country to add to this AOW.</p>
+  <div class="search-wrapper">
+    <input
+      class="country-search-input"
+      type="text"
+      placeholder="Type to search countries..."
+      [ngModel]="searchQuery"
+      (ngModelChange)="onSearch($event)"
+      autocomplete="off"
+    />
+    <mat-spinner *ngIf="searching" diameter="20" class="search-spinner"></mat-spinner>
+  </div>
+
+  <div class="results-list" *ngIf="searchResults.length">
+    <button
+      *ngFor="let country of searchResults"
+      type="button"
+      class="result-item"
+      [disabled]="adding"
+      (click)="selectCountry(country)"
+    >
+      <span class="country-name">{{ country.name }}</span>
+      <span class="country-iso" *ngIf="country.isoAlpha2"> ({{ country.isoAlpha2 }})</span>
+    </button>
+  </div>
+
+  <div class="no-results" *ngIf="!searching && searchQuery.length >= 2 && !searchResults.length">
+    No countries found.
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+</mat-dialog-actions>
