@@ -59,6 +59,7 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true,
+              "outputHashing": "all",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -71,6 +72,7 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true,
+              "outputHashing": "all",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
