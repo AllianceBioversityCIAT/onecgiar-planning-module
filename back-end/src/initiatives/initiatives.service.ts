@@ -878,10 +878,15 @@ async findOne(id: number) {
     const qb = this.submissionRepository
       .createQueryBuilder('sub')
       .innerJoinAndSelect('sub.initiative', 'init')
+      .innerJoin('sub.phase', 'phase')
       .where('sub.status = :status', { status: SubmissionStatus.APPROVED })
       .andWhere('sub.porb_data IS NOT NULL')
       .andWhere("sub.porb_data != ''")
       .orderBy('sub.id', 'DESC');
+
+    if (query.phase_id) {
+      qb.andWhere('phase.id = :phase_id', { phase_id: Number(query.phase_id) });
+    }
 
     if (query.initiatives) {
       const ids = Array.isArray(query.initiatives)

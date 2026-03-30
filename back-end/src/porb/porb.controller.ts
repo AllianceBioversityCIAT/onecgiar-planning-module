@@ -688,6 +688,8 @@ export class PorbController {
   }
 
   // Temporary endpoint for TOC -> PORB import (single program)
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
   @Post('temp/import-toc')
   tempImportToc(
     @Body() data: { program_id?: number; official_code?: string } = {},
