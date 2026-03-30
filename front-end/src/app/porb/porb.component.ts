@@ -306,6 +306,15 @@ export class PorbComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Guest users (no role on this initiative and not admin) cannot access PORB
+    if (!this.permissionService.isAdmin()) {
+      const userRole = this.permissionService.getUserInitiativeRole(this.initiative);
+      if (!userRole) {
+        this.router.navigateByUrl("/");
+        return;
+      }
+    }
+
     const activePhase = await this.phasesService.getActivePhase();
     this.activePhaseId = Number(activePhase?.id) || null;
     let centers = await this.phasesService.getAssignedOrgs(

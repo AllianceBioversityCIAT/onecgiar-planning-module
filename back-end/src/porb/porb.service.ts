@@ -5193,20 +5193,14 @@ export class PorbService {
   async resetAllToDraft() {
     const initiatives = await this.initiativeRepository.find({
       where: { latest_submission_id: Not(IsNull()) },
-      relations: ['latest_submission'],
     });
 
     let updated = 0;
     for (const init of initiatives) {
-      if (init.latest_submission && init.latest_submission.status !== SubmissionStatus.DRAFT) {
-        await this.submissionRepository.update(init.latest_submission.id, {
-          status: SubmissionStatus.DRAFT,
-        });
-        updated++;
-      }
       await this.initiativeRepository.update(init.id, {
         latest_submission_id: null as any,
       });
+      updated++;
     }
 
     return { updated };
