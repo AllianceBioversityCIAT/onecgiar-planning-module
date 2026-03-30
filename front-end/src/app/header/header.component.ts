@@ -11,6 +11,7 @@ import { ConfirmComponent } from "../confirm/confirm.component";
 import { AuthService } from "../services/auth.service";
 import { DeleteConfirmDialogComponent } from "../delete-confirm-dialog/delete-confirm-dialog.component";
 import { VersionCheckService } from "../services/version-check.service";
+import { TawkService } from "../services/tawk.service";
 declare global {
   interface Window { clarity: any; }
 }
@@ -91,7 +92,8 @@ export class HeaderComponent implements OnInit {
     public router: Router,
     public headerService: HeaderService,
     private authService: AuthService,
-    public versionCheck: VersionCheckService
+    public versionCheck: VersionCheckService,
+    private tawkService: TawkService
   ) {
     this.notificationNumberCount = 5;
     this.headerService.background =
@@ -116,6 +118,9 @@ export class HeaderComponent implements OnInit {
        if (window.clarity) {
           window.clarity('set', 'userId', this.user_info.id);
           window.clarity('set', 'username', this.user_info.full_name);
+        }
+       if (this.user_info?.full_name || this.user_info?.email) {
+          this.tawkService.setVisitor(this.user_info.full_name || '', this.user_info.email || '');
         }
       this.isAdmin = this.authService.isAdmin();
     });
