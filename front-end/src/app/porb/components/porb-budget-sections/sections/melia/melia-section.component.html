@@ -7,7 +7,7 @@
       [(ngModel)]="search"
     />
     <select class="tool-select" [(ngModel)]="filterOutputs">
-      <option value="">All Outputs</option>
+      <option value="">All Outcomes</option>
       <option *ngFor="let option of outputOptions" [value]="option">{{ option }}</option>
     </select>
     <button type="button" class="export-btn" (click)="export()">Export Excel</button>

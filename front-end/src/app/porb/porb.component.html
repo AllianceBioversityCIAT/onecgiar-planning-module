@@ -594,6 +594,90 @@
               </ng-template>
             </ng-container>
 
+            <!-- Synergy Programs Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Synergy Programs'">
+              <div class="summary-section-block" *ngIf="cachedFormattedSynergies.length; else synergyEmpty">
+                <h4 class="summary-section-title">Synergy Programs</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th>Program or Accelerator</th>
+                        <th>High Level Output</th>
+                        <th>Brief description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let s of cachedFormattedSynergies">
+                        <td>{{ s.synergy_program_name }}</td>
+                        <td>{{ s.synergy_hlo_title }}</td>
+                        <td>{{ s.synergy_description }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #synergyEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Synergy Programs</strong> — The data is missing in the TOC.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
+            <!-- Outcomes Section -->
+            <ng-container *ngIf="summarySelectedSection === 'Outcomes'">
+              <div class="summary-section-block" *ngIf="cachedFormattedOutcomes.length; else outcomesEmpty">
+                <h4 class="summary-section-title">Outcomes</h4>
+                <div class="summary-table-wrapper">
+                  <table class="consolidation-table summary-detail-table">
+                    <thead>
+                      <tr>
+                        <th rowspan="2">Outcome title</th>
+                        <th rowspan="2" style="width: 15%;">Type of Outcome</th>
+                        <th colspan="3">Key Performance Indicators</th>
+                      </tr>
+                      <tr>
+                        <th>Type</th>
+                        <th>Geographic Location</th>
+                        <th>Target</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <ng-container *ngFor="let o of cachedFormattedOutcomes">
+                        <ng-container *ngIf="o.flatIndicators.length > 0; else noIndicators">
+                          <tr *ngFor="let ind of o.flatIndicators; let i = index">
+                            <td *ngIf="i === 0" [attr.rowspan]="o.flatIndicators.length">{{ o.outcome_title }}</td>
+                            <td *ngIf="i === 0" [attr.rowspan]="o.flatIndicators.length">{{ o.outcome_type }}</td>
+                            <td>{{ ind.type }}</td>
+                            <td>{{ ind.location }}</td>
+                            <td class="num-cell">{{ ind.target_value }}</td>
+                          </tr>
+                        </ng-container>
+                        <ng-template #noIndicators>
+                          <tr>
+                            <td>{{ o.outcome_title }}</td>
+                            <td>{{ o.outcome_type }}</td>
+                            <td colspan="3" class="text-muted">No indicators</td>
+                          </tr>
+                        </ng-template>
+                      </ng-container>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ng-template #outcomesEmpty>
+                <div class="summary-empty-sections">
+                  <div class="summary-section-empty">
+                    <mat-icon>info_outline</mat-icon>
+                    <span><strong>Outcomes</strong> — The data is missing in the TOC.</span>
+                  </div>
+                </div>
+              </ng-template>
+            </ng-container>
+
           </ng-container>
         </div>
         </ng-container>

@@ -716,4 +716,18 @@ export class PorbController {
   tocLastUpdates() {
     return this.porbService.getTocLastUpdates();
   }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Get('toc-auto-sync')
+  async getTocAutoSync() {
+    return { enabled: await this.porbService.isTocAutoSyncEnabled() };
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Patch('toc-auto-sync')
+  setTocAutoSync(@Body() body: { enabled: boolean }) {
+    return this.porbService.setTocAutoSync(body.enabled);
+  }
 }

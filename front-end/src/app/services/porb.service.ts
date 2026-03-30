@@ -108,7 +108,7 @@ export class PorbService {
       this.http
         .get(`${environment.api_url}/porb/summary-aow-detail`, { params })
         .pipe(map((d: any) => d))
-    ).catch(() => ({ hlos: [], partners: [], melia: [], bilateral: [], subtotals: {} }));
+    ).catch(() => ({ hlos: [], partners: [], melia: [], bilateral: [], subtotals: {}, synergies: [], outcomes: [] }));
   }
 
   async getValidation(
@@ -554,6 +554,20 @@ export class PorbService {
       this.http
         .get(`${environment.api_url}/porb/toc-last-updates`)
         .pipe(map((d: any) => d))
+    );
+  }
+
+  async getTocAutoSync(): Promise<{ enabled: boolean }> {
+    return firstValueFrom(
+      this.http
+        .get<{ enabled: boolean }>(`${environment.api_url}/porb/toc-auto-sync`)
+    );
+  }
+
+  async setTocAutoSync(enabled: boolean): Promise<{ enabled: boolean }> {
+    return firstValueFrom(
+      this.http
+        .patch<{ enabled: boolean }>(`${environment.api_url}/porb/toc-auto-sync`, { enabled })
     );
   }
 

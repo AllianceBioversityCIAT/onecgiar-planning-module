@@ -90,6 +90,8 @@ export class PorbComponent implements OnInit, OnDestroy {
   cachedFormattedPartners: any[] = [];
   cachedFormattedCross: any[] = [];
   cachedFormattedCountryPercentage: any[] = [];
+  cachedFormattedSynergies: any[] = [];
+  cachedFormattedOutcomes: any[] = [];
   cachedSummarySubtotals: any = {};
   cachedSummarySectionEmpty: Record<string, boolean> = {};
 
@@ -1052,9 +1054,9 @@ export class PorbComponent implements OnInit, OnDestroy {
     ).toUpperCase();
     const filtered = this.baseExtraNavigationItems.filter(i => i !== "Anaplan");
     if (aowCode === "AOW00") {
-      return ["Cross Cutting", ...filtered.filter(i => i !== "Pool funding HLO")];
+      return ["Cross Cutting", ...filtered.filter(i => i !== "Pool funding HLO"), 'Synergy Programs', 'Outcomes'];
     }
-    return filtered;
+    return [...filtered, 'Synergy Programs', 'Outcomes'];
   }
 
   selectSummarySection(section: string) {
@@ -1279,6 +1281,8 @@ export class PorbComponent implements OnInit, OnDestroy {
       this.cachedFormattedPartners = [];
       this.cachedFormattedCross = [];
       this.cachedFormattedCountryPercentage = [];
+      this.cachedFormattedSynergies = [];
+      this.cachedFormattedOutcomes = [];
       this.cachedSummarySubtotals = {};
       this.cachedSummarySectionEmpty = {};
       return;
@@ -1331,6 +1335,15 @@ export class PorbComponent implements OnInit, OnDestroy {
       .filter((c: any) => (Number(c?.percentage) || 0) > 0)
       .map((c: any) => ({ ...c, budget_fmt: this.formatCurrency(this.toNumber(c.budget)) }));
 
+    // Synergy programs (read-only, no budget filtering)
+    this.cachedFormattedSynergies = d.synergies || [];
+
+    // Outcomes with flattened indicators for display
+    this.cachedFormattedOutcomes = (d.outcomes || []).map((o: any) => ({
+      ...o,
+      flatIndicators: Array.isArray(o.outcome_indicators) ? o.outcome_indicators : [],
+    }));
+
     // Subtotals
     const s = d.subtotals || {};
     this.cachedSummarySubtotals = {
@@ -1349,6 +1362,8 @@ export class PorbComponent implements OnInit, OnDestroy {
       'Anaplan': !(d.anaplan || []).some((a: any) => this.toNumber(a.anaplan_budget) > 0),
       'Cross Cutting': this.cachedFormattedCross.length === 0,
       'Countries of Implementation': (d.countryPercentageCount || 0) === 0,
+      'Synergy Programs': this.cachedFormattedSynergies.length === 0,
+      'Outcomes': this.cachedFormattedOutcomes.length === 0,
     };
   }
 

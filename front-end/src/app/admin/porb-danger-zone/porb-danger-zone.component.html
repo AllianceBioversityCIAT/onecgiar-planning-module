@@ -22,6 +22,16 @@
         {{ pendingUpdates.length }} pending
       </span>
       <span class="badge badge--muted" *ngIf="tocStatusLoading">loading...</span>
+      <span class="auto-sync-toggle">
+        <mat-slide-toggle
+          [checked]="tocAutoSyncEnabled"
+          [disabled]="tocAutoSyncLoading"
+          (change)="toggleTocAutoSync()"
+          color="primary"
+        >
+          Auto-sync {{ tocAutoSyncEnabled ? 'ON' : 'OFF' }}
+        </mat-slide-toggle>
+      </span>
     </div>
     <p class="status-card__description">
       The cron job runs every minute comparing TOC counters against our stored

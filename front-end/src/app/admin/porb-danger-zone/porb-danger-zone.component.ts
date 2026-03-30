@@ -37,6 +37,8 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
   // TOC Status
   tocStatus: any[] = [];
   tocStatusLoading = false;
+  tocAutoSyncEnabled = true;
+  tocAutoSyncLoading = false;
   private tocPollInterval: any;
 
   constructor(
@@ -71,6 +73,7 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
     });
     this.loadPrograms();
     this.loadTocStatus();
+    this.loadTocAutoSync();
     // Poll every 30s to reflect cron updates
     this.tocPollInterval = setInterval(() => this.loadTocStatus(), 30000);
   }
@@ -119,6 +122,28 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
       this.tocStatus = [];
     } finally {
       this.tocStatusLoading = false;
+    }
+  }
+
+  async loadTocAutoSync() {
+    try {
+      const data = await this.porbService.getTocAutoSync();
+      this.tocAutoSyncEnabled = data.enabled;
+    } catch {
+      this.tocAutoSyncEnabled = true;
+    }
+  }
+
+  async toggleTocAutoSync() {
+    this.tocAutoSyncLoading = true;
+    try {
+      const data = await this.porbService.setTocAutoSync(!this.tocAutoSyncEnabled);
+      this.tocAutoSyncEnabled = data.enabled;
+      this.toastr.success(`Auto-sync ${this.tocAutoSyncEnabled ? 'enabled' : 'disabled'}`);
+    } catch (err: any) {
+      this.toastr.error(err?.error?.message || 'Failed to toggle auto-sync');
+    } finally {
+      this.tocAutoSyncLoading = false;
     }
   }
 

@@ -38,6 +38,9 @@ import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { StanderdCrossCutting } from 'src/entities/standerd-cross-cutting.entity';
 import { Partner } from 'src/entities/partner.entity';
+import { Constants } from 'src/entities/constants.entity';
+import { PorbSynergy } from 'src/entities/porb-synergy.entity';
+import { PorbOutcome } from 'src/entities/porb-outcome.entity';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import { AxiosError } from 'axios';
 import { InitiativesService } from 'src/initiatives/initiatives.service';
@@ -103,6 +106,12 @@ export class PorbService {
     private readonly standerdCrossCuttingRepository: Repository<StanderdCrossCutting>,
     @InjectRepository(Partner)
     private readonly partnerRepository: Repository<Partner>,
+    @InjectRepository(Constants)
+    private readonly constantsRepository: Repository<Constants>,
+    @InjectRepository(PorbSynergy)
+    private porbSynergyRepository: Repository<PorbSynergy>,
+    @InjectRepository(PorbOutcome)
+    private porbOutcomeRepository: Repository<PorbOutcome>,
     private readonly initService: InitiativesService,
     private readonly phasesService: PhasesService,
     private readonly httpService: HttpService,
@@ -113,10 +122,39 @@ export class PorbService {
 
   private readonly cronLogger = new Logger('TocCronJob');
   private tocCronRunning = false;
+  private static readonly TOC_AUTO_SYNC_LABEL = 'toc_auto_sync';
+
+  async isTocAutoSyncEnabled(): Promise<boolean> {
+    const row = await this.constantsRepository.findOne({
+      where: { label: PorbService.TOC_AUTO_SYNC_LABEL },
+    });
+    // Default to true if no row exists yet
+    return !row || row.value === 'true';
+  }
+
+  async setTocAutoSync(enabled: boolean): Promise<{ enabled: boolean }> {
+    let row = await this.constantsRepository.findOne({
+      where: { label: PorbService.TOC_AUTO_SYNC_LABEL },
+    });
+    if (row) {
+      row.value = String(enabled);
+      await this.constantsRepository.save(row);
+    } else {
+      row = this.constantsRepository.create({
+        label: PorbService.TOC_AUTO_SYNC_LABEL,
+        value: String(enabled),
+      });
+      await this.constantsRepository.save(row);
+    }
+    this.cronLogger.log(`TOC auto-sync ${enabled ? 'enabled' : 'disabled'}`);
+    return { enabled };
+  }
 
   @Cron('*/10 * * * * *')
   async checkTocUpdates() {
     if (this.tocCronRunning) return;
+    const autoSyncEnabled = await this.isTocAutoSyncEnabled();
+    if (!autoSyncEnabled) return;
     this.tocCronRunning = true;
 
     try {
@@ -2413,7 +2451,16 @@ export class PorbService {
       .sort((a, b) => a.country_name.localeCompare(b.country_name));
     const countryPercentageCount = cpRows.length;
 
-    return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals, countryPercentageCount, countryPercentage };
+    const [synergies, outcomes] = await Promise.all([
+      this.porbSynergyRepository.find({
+        where: { program_id, porb_aow_id, toc_is_deleted: false },
+      }),
+      this.porbOutcomeRepository.find({
+        where: { program_id, porb_aow_id, toc_is_deleted: false },
+      }),
+    ]);
+
+    return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals, countryPercentageCount, countryPercentage, synergies, outcomes };
   }
 
   async importTocToPorbTables(programId: number, officialCode: string, tocDataOverride?: any, setTocTimestamps = true) {
@@ -2894,6 +2941,161 @@ export class PorbService {
       new Set(validMeliaRows.map((row: any) => String(row.toc_id))),
     );
 
+    // ── Synergy Programs ──
+    const synergyNodes = results.filter((item: any) => item?.category === 'synergy-programs');
+    const synergyRows: any[] = [];
+    const synergyRowKeySet = new Set<string>();
+    for (const item of synergyNodes) {
+      const tocId = String(item?.id || item?.related_node_id || '');
+      if (!tocId || synergyRowKeySet.has(tocId)) continue;
+      synergyRowKeySet.add(tocId);
+      const parentAow = resolveParentAow(item?.wp?.id, item?.parent_id);
+      synergyRows.push(
+        this.porbSynergyRepository.create({
+          program_id: programId,
+          porb_aow_id: parentAow?.id ?? null,
+          toc_id: tocId,
+          synergy_program_name: item?.flow?.title || '',
+          synergy_hlo_title: item?.result?.title || '',
+          synergy_description: item?.description || '',
+          toc_is_deleted: false,
+        }),
+      );
+    }
+    const existingSynergies = await this.porbSynergyRepository.find({
+      where: { program_id: programId },
+    });
+    const existingSynergyByTocId = new Map<string, PorbSynergy>();
+    existingSynergies.forEach((row) => existingSynergyByTocId.set(String(row.toc_id), row));
+    const synergyUpdates: Array<{ id: number; changes: any }> = [];
+    for (const row of synergyRows) {
+      const existing = existingSynergyByTocId.get(String(row.toc_id));
+      if (!existing) continue;
+      const changes: any = {};
+      if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
+      if ((existing.synergy_program_name || '') !== (row.synergy_program_name || '')) changes.synergy_program_name = row.synergy_program_name;
+      if ((existing.synergy_hlo_title || '') !== (row.synergy_hlo_title || '')) changes.synergy_hlo_title = row.synergy_hlo_title;
+      if ((existing.synergy_description || '') !== (row.synergy_description || '')) changes.synergy_description = row.synergy_description;
+      if (Object.keys(changes).length) {
+        if (setTocTimestamps) changes.toc_updated_at = new Date();
+        synergyUpdates.push({ id: existing.id, changes });
+      }
+    }
+    if (synergyUpdates.length) {
+      await Promise.all(
+        synergyUpdates.map((item) => this.porbSynergyRepository.update(item.id, item.changes)),
+      );
+    }
+    const newSynergyRows = synergyRows.filter(
+      (row) => !existingSynergyByTocId.has(String(row.toc_id)),
+    );
+    if (setTocTimestamps) {
+      newSynergyRows.forEach(r => {
+        (r as any).toc_updated_at = new Date();
+        (r as any).toc_created_at = new Date();
+      });
+    }
+    const savedSynergies = newSynergyRows.length ? await this.porbSynergyRepository.save(newSynergyRows) : [];
+    await this.syncTocDeletedFlags(
+      this.porbSynergyRepository,
+      existingSynergies as any,
+      new Set(synergyRows.map((row: any) => String(row.toc_id))),
+    );
+
+    // ── Outcomes ──
+    const outcomeNodes = results.filter((item: any) => item?.category === 'OUTCOME' || item?.category === 'EOI');
+    const outcomeRows: any[] = [];
+    const outcomeRowKeySet = new Set<string>();
+    for (const item of outcomeNodes) {
+      const tocId = String(item?.related_node_id || item?.id || '');
+      if (!tocId || outcomeRowKeySet.has(tocId)) continue;
+      outcomeRowKeySet.add(tocId);
+      const parentAow = resolveParentAow(item?.group, item?.parent_id);
+
+      // Extract indicators
+      let outcomeIndicators: any[] | null = null;
+      if (item?.quantitative_indicators?.length) {
+        outcomeIndicators = [];
+        for (const indicator of item.quantitative_indicators) {
+          let location = '';
+          if (indicator?.location === 'global') {
+            location = 'Global';
+          } else if (indicator?.location === 'regional') {
+            const regionNames = [...(indicator?.regions ?? [])].map((r: any) => r.name).sort();
+            location = `Region: ${regionNames.join(', ')}`;
+          } else if (indicator?.location === 'country') {
+            const countryNames = [...(indicator?.countries ?? [])].map((c: any) => c.name).sort();
+            location = `Country: ${countryNames.join(', ')}`;
+          }
+          let targetValue = 0;
+          for (const target of indicator?.targets || []) {
+            const val = parseFloat(target[activePhase?.reportingYear]);
+            if (!isNaN(val)) targetValue += val;
+          }
+          outcomeIndicators.push({
+            type: indicator?.type?.name || indicator?.type?.value || '',
+            description: indicator?.description || '',
+            location,
+            target_value: targetValue,
+          });
+        }
+        if (!outcomeIndicators.length) outcomeIndicators = null;
+      }
+
+      outcomeRows.push(
+        this.porbOutcomeRepository.create({
+          program_id: programId,
+          porb_aow_id: parentAow?.id ?? null,
+          toc_id: tocId,
+          outcome_title: item?.title || '',
+          outcome_type: item?.type_of_outcome?.name || item?.type?.name || '',
+          outcome_indicators: outcomeIndicators,
+          toc_is_deleted: false,
+        }),
+      );
+    }
+    const existingOutcomes = await this.porbOutcomeRepository.find({
+      where: { program_id: programId },
+    });
+    const existingOutcomeByTocId = new Map<string, PorbOutcome>();
+    existingOutcomes.forEach((row) => existingOutcomeByTocId.set(String(row.toc_id), row));
+    const outcomeUpdates: Array<{ id: number; changes: any }> = [];
+    for (const row of outcomeRows) {
+      const existing = existingOutcomeByTocId.get(String(row.toc_id));
+      if (!existing) continue;
+      const changes: any = {};
+      if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
+      if ((existing.outcome_title || '') !== (row.outcome_title || '')) changes.outcome_title = row.outcome_title;
+      if ((existing.outcome_type || '') !== (row.outcome_type || '')) changes.outcome_type = row.outcome_type;
+      const existingIndicatorsJson = JSON.stringify(existing.outcome_indicators || null);
+      const newIndicatorsJson = JSON.stringify(row.outcome_indicators || null);
+      if (existingIndicatorsJson !== newIndicatorsJson) changes.outcome_indicators = row.outcome_indicators;
+      if (Object.keys(changes).length) {
+        if (setTocTimestamps) changes.toc_updated_at = new Date();
+        outcomeUpdates.push({ id: existing.id, changes });
+      }
+    }
+    if (outcomeUpdates.length) {
+      await Promise.all(
+        outcomeUpdates.map((item) => this.porbOutcomeRepository.update(item.id, item.changes)),
+      );
+    }
+    const newOutcomeRows = outcomeRows.filter(
+      (row) => !existingOutcomeByTocId.has(String(row.toc_id)),
+    );
+    if (setTocTimestamps) {
+      newOutcomeRows.forEach(r => {
+        (r as any).toc_updated_at = new Date();
+        (r as any).toc_created_at = new Date();
+      });
+    }
+    const savedOutcomes = newOutcomeRows.length ? await this.porbOutcomeRepository.save(newOutcomeRows) : [];
+    await this.syncTocDeletedFlags(
+      this.porbOutcomeRepository,
+      existingOutcomes as any,
+      new Set(outcomeRows.map((row: any) => String(row.toc_id))),
+    );
+
     return {
       program_id: programId,
       official_code: officialCode,
@@ -2903,12 +3105,16 @@ export class PorbService {
         partners: savedPartners.length,
         bilaterals: savedBilaterals.length,
         melias: savedMelias.length,
+        synergies: savedSynergies.length,
+        outcomes: savedOutcomes.length,
       },
       updated: {
         hlos: hloUpdates.length,
         partners: partnerUpdates.length,
         bilaterals: bilateralUpdates.length,
         melias: meliaUpdates.length,
+        synergies: synergyUpdates.length,
+        outcomes: outcomeUpdates.length,
       },
       skipped_center_ids: skippedCenterIds.size
         ? Array.from(skippedCenterIds)
@@ -5023,6 +5229,24 @@ export class PorbService {
       'Countries of Implementation',
     );
 
+    const synergyRows = await this.porbSynergyRepository.find({
+      where: { program_id: programId, toc_is_deleted: false },
+    });
+    const outcomeRows = await this.porbOutcomeRepository.find({
+      where: { program_id: programId, toc_is_deleted: false },
+    });
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      this.generatePorbSynergySheet(synergyRows, aowMap, sortedAowIds),
+      'Synergy Programs',
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      this.generatePorbOutcomeSheet(outcomeRows, aowMap, sortedAowIds),
+      'Outcomes',
+    );
+
     return wb;
   }
 
@@ -5552,6 +5776,8 @@ export class PorbService {
         { name: 'porb_cross', condition: aowWhere },
         { name: 'porb_bilateral', condition: where },
         { name: 'porb_partner', condition: aowWhere },
+        { name: 'porb_synergy', condition: where },
+        { name: 'porb_outcome', condition: where },
         { name: 'porb_aow', condition: where },
       ];
 
@@ -6448,6 +6674,160 @@ export class PorbService {
     return ws;
   }
 
+  private generatePorbSynergySheet(
+    synergies: PorbSynergy[],
+    aowMap: Map<number, { code: string; name: string }>,
+    sortedAowIds: number[],
+  ) {
+    const wsData: any[][] = [];
+    const merges: any[] = [];
+
+    wsData.push(['AOW', 'Program or Accelerator', 'High Level Output', 'Brief description', 'id']);
+
+    let currentRow = 1;
+
+    // Group by AOW
+    const synergyByAow = new Map<number, PorbSynergy[]>();
+    for (const s of synergies) {
+      const list = synergyByAow.get(s.porb_aow_id) || [];
+      list.push(s);
+      synergyByAow.set(s.porb_aow_id, list);
+    }
+
+    for (const aowId of sortedAowIds) {
+      const aowSynergies = synergyByAow.get(aowId);
+      if (!aowSynergies?.length) continue;
+
+      const aowLabel = this.getAowLabel(aowId, aowMap);
+      const aowStartRow = currentRow;
+
+      for (const s of aowSynergies) {
+        wsData.push([
+          aowLabel,
+          s.synergy_program_name || '',
+          s.synergy_hlo_title || '',
+          s.synergy_description || '',
+          s.id,
+        ]);
+        currentRow++;
+      }
+
+      // AOW vertical merge
+      const aowEndRow = currentRow - 1;
+      if (aowEndRow > aowStartRow) {
+        merges.push({ s: { r: aowStartRow, c: 0 }, e: { r: aowEndRow, c: 0 } });
+      }
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!merges'] = merges;
+
+    ws['!cols'] = [
+      { wch: 8 }, { wch: 35 }, { wch: 40 }, { wch: 50 }, { wch: 10 },
+    ];
+
+    this.applySheetStyles(ws, wsData, {
+      headerRowCount: 1,
+      wpColumnIndex: 0,
+      rowHeights: { header: 30, data: 60, subtotal: 25 },
+      merges,
+    });
+
+    this.protectAndHideIds(ws, [4]);
+
+    return ws;
+  }
+
+  private generatePorbOutcomeSheet(
+    outcomes: PorbOutcome[],
+    aowMap: Map<number, { code: string; name: string }>,
+    sortedAowIds: number[],
+  ) {
+    const wsData: any[][] = [];
+    const merges: any[] = [];
+
+    wsData.push(['AOW', 'Outcome', 'Type of Outcome', 'Indicator Type', 'Geographic Location', 'Target Value', 'id']);
+
+    let currentRow = 1;
+
+    // Group by AOW
+    const outcomeByAow = new Map<number, PorbOutcome[]>();
+    for (const o of outcomes) {
+      const list = outcomeByAow.get(o.porb_aow_id) || [];
+      list.push(o);
+      outcomeByAow.set(o.porb_aow_id, list);
+    }
+
+    for (const aowId of sortedAowIds) {
+      const aowOutcomes = outcomeByAow.get(aowId);
+      if (!aowOutcomes?.length) continue;
+
+      const aowLabel = this.getAowLabel(aowId, aowMap);
+      const aowStartRow = currentRow;
+
+      for (const o of aowOutcomes) {
+        const indicators = Array.isArray(o.outcome_indicators) ? o.outcome_indicators as any[] : [];
+        if (indicators.length > 0) {
+          const outcomeStartRow = currentRow;
+          for (const ind of indicators) {
+            wsData.push([
+              aowLabel,
+              o.outcome_title || '',
+              o.outcome_type || '',
+              ind.type || '',
+              ind.location || '',
+              Number(ind.target_value) || 0,
+              o.id,
+            ]);
+            currentRow++;
+          }
+          // Merge Outcome + Type columns across indicator rows
+          if (indicators.length > 1) {
+            merges.push({ s: { r: outcomeStartRow, c: 1 }, e: { r: currentRow - 1, c: 1 } });
+            merges.push({ s: { r: outcomeStartRow, c: 2 }, e: { r: currentRow - 1, c: 2 } });
+          }
+        } else {
+          // No indicators — single row with empty indicator cells
+          wsData.push([
+            aowLabel,
+            o.outcome_title || '',
+            o.outcome_type || '',
+            '',
+            '',
+            0,
+            o.id,
+          ]);
+          currentRow++;
+        }
+      }
+
+      // AOW vertical merge
+      const aowEndRow = currentRow - 1;
+      if (aowEndRow > aowStartRow) {
+        merges.push({ s: { r: aowStartRow, c: 0 }, e: { r: aowEndRow, c: 0 } });
+      }
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!merges'] = merges;
+
+    ws['!cols'] = [
+      { wch: 8 }, { wch: 40 }, { wch: 25 }, { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 10 },
+    ];
+
+    this.applySheetStyles(ws, wsData, {
+      headerRowCount: 1,
+      wpColumnIndex: 0,
+      numberColumns: [5],
+      rowHeights: { header: 30, data: 60, subtotal: 25 },
+      merges,
+    });
+
+    this.protectAndHideIds(ws, [6]);
+
+    return ws;
+  }
+
   /**
    * Build a full JSON snapshot of all PORB data for a program.
    * Used when submitting to freeze the data at that point in time.
@@ -6469,9 +6849,30 @@ export class PorbService {
       centers = await this.organizationRepo.find();
     }
 
+    // Bulk-load synergies and outcomes for all AOWs (avoid N+1)
+    const [allSynergies, allOutcomes] = await Promise.all([
+      this.porbSynergyRepository.find({ where: { program_id: programId, toc_is_deleted: false } }),
+      this.porbOutcomeRepository.find({ where: { program_id: programId, toc_is_deleted: false } }),
+    ]);
+    const synergyByAow = new Map<number, PorbSynergy[]>();
+    for (const s of allSynergies) {
+      const list = synergyByAow.get(s.porb_aow_id) || [];
+      list.push(s);
+      synergyByAow.set(s.porb_aow_id, list);
+    }
+    const outcomeByAow = new Map<number, PorbOutcome[]>();
+    for (const o of allOutcomes) {
+      const list = outcomeByAow.get(o.porb_aow_id) || [];
+      list.push(o);
+      outcomeByAow.set(o.porb_aow_id, list);
+    }
+
     // Build per-AOW, per-center data
     const aowSnapshots = [];
     for (const aow of aows) {
+      const synergies = synergyByAow.get(aow.id) || [];
+      const outcomes = outcomeByAow.get(aow.id) || [];
+
       const centerSnapshots = [];
       for (const center of centers) {
         const centerId = Number(center.code);
@@ -6506,6 +6907,8 @@ export class PorbService {
         toc_id: aow.toc_id,
         aow_name: aow.aow_name,
         aow_acrnum: aow.aow_acrnum,
+        synergies,
+        outcomes,
         centers: centerSnapshots,
       });
     }

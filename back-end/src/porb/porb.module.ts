@@ -28,6 +28,9 @@ import { BudgetAssumptions } from 'src/entities/budget-assumptions.entity';
 import { PartnerCountry } from 'src/entities/Partner-country.entity';
 import { StanderdCrossCutting } from 'src/entities/standerd-cross-cutting.entity';
 import { Partner } from 'src/entities/partner.entity';
+import { Constants } from 'src/entities/constants.entity';
+import { PorbSynergy } from 'src/entities/porb-synergy.entity';
+import { PorbOutcome } from 'src/entities/porb-outcome.entity';
 import { SubmissionModule } from 'src/submission/submission.module';
 import { InitiativesModule } from 'src/initiatives/initiatives.module';
 import { PhasesModule } from 'src/phases/phases.module';
@@ -62,6 +65,9 @@ import { EventsModule } from 'src/events/events.module';
       PartnerCountry,
       StanderdCrossCutting,
       Partner,
+      Constants,
+      PorbSynergy,
+      PorbOutcome,
     ]),
     HttpModule,
     SubmissionModule,
