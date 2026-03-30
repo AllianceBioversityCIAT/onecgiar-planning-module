@@ -813,6 +813,7 @@
           [class.porb-nav__item--empty]="isW3Empty"
           [disabled]="isW3Empty"
           [matTooltip]="isW3Empty ? 'No W3/Bilateral data for this center' : ''"
+          data-tour-anchor="porb-section-btn-w3"
           (click)="selectW3View()"
         >
           W3/Bilateral
@@ -926,6 +927,7 @@
             [class.porb-nav__item--empty]="isCenterSectionEmpty(section)"
             [disabled]="isCenterSectionEmpty(section)"
             [matTooltip]="isCenterSectionEmpty(section) ? 'No budget data for this section' : ''"
+            [attr.data-tour-anchor]="'porb-section-btn-' + getSectionSlug(section)"
             (click)="selectSection(section)"
           >
             {{ section }}

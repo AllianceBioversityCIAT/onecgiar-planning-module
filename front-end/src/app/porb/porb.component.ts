@@ -127,7 +127,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   exportingCenterAnaplan = false;
 
   showTour = false;
-  private readonly porbTourStorageKey = "porb_tour_seen_v2";
+  private readonly porbTourStorageKey = "porb_tour_seen_v3";
   tourSteps: PorbTourStep[] = [
     {
       anchorId: "porb-overview",
@@ -202,6 +202,54 @@ export class PorbComponent implements OnInit, OnDestroy {
         "This table summarizes totals and indicator-level budgets for the selected center and AOW.",
     },
     {
+      anchorId: "porb-section-btn-pool-funding-hlo",
+      title: "Pool Funding HLO",
+      description:
+        "Budget table for Pool Funding HLOs. Each row is a high-level output from TOC. Enter budget per HLO and add assumptions where required.",
+    },
+    {
+      anchorId: "porb-section-btn-partners",
+      title: "Partners",
+      description:
+        "Budget table for Partners. Each partner may have contracted partners per center. Unknown partners can be added manually and resolved later to CLARISA institutions.",
+    },
+    {
+      anchorId: "porb-section-btn-melia-study",
+      title: "MELIA Study",
+      description:
+        "Budget table for MELIA studies. Each row is a study linked to outcomes from TOC. Use the Outcomes filter to narrow down by outcome.",
+    },
+    {
+      anchorId: "porb-section-btn-anaplan",
+      title: "Anaplan",
+      description:
+        "Budget table for Anaplan accounts. Budgets here are validated against Pool HLO + Cross-Cutting totals and Partner totals.",
+    },
+    {
+      anchorId: "porb-section-btn-cross-cutting",
+      title: "Cross Cutting",
+      description:
+        "Budget table for the 7 standard cross-cutting items (Gender, Youth, Climate, etc.). These are fixed items — no new items can be added.",
+    },
+    {
+      anchorId: "porb-section-btn-countries-of-implementation",
+      title: "Countries of Implementation",
+      description:
+        "Shows countries extracted from HLO geographic data. Enter a percentage per country (total capped at 100%). Budget is computed automatically from the pooled total.",
+    },
+    {
+      anchorId: "porb-section-btn-location-of-benefit",
+      title: "Location of Benefit",
+      description:
+        "Shows locations (countries, regions, global) extracted from outcome geographic data. Enter percentages like Countries of Implementation.",
+    },
+    {
+      anchorId: "porb-section-btn-w3",
+      title: "W3/Bilateral",
+      description:
+        "Budget table for W3 and Bilateral projects. This is a center-level section (not per-AOW). Access it via the W3/Bilateral button in the AOW navigation.",
+    },
+    {
       anchorId: "porb-section-tools",
       title: "Table Tools",
       description:
@@ -211,7 +259,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       anchorId: "porb-budget-input",
       title: "Budget Input",
       description:
-        "Enter budget directly in table cells. You can also paste values from spreadsheet for faster entry.",
+        "Enter budget directly in table cells. Values are formatted with commas when not editing. You can also paste values from a spreadsheet for faster entry.",
     },
     {
       anchorId: "porb-assumption-icon",
@@ -624,7 +672,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.consolidationRowCounts = null;
   }
 
-  private getSectionSlug(value: string): string {
+  getSectionSlug(value: string): string {
     return String(value || "")
       .trim()
       .toLowerCase()

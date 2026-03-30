@@ -12,6 +12,7 @@ import { AuthService } from "../services/auth.service";
 import { DeleteConfirmDialogComponent } from "../delete-confirm-dialog/delete-confirm-dialog.component";
 import { VersionCheckService } from "../services/version-check.service";
 import { TawkService } from "../services/tawk.service";
+import { environment } from "../../environments/environment";
 declare global {
   interface Window { clarity: any; }
 }
@@ -24,6 +25,7 @@ declare global {
 export class HeaderComponent implements OnInit {
   notificationNumberCount: number;
   isAdmin = false;
+  isTestEnv = !environment.production;
 
   increment() {
     this.notificationNumberCount++;
