@@ -1631,19 +1631,21 @@ export class PorbService {
    */
   private parseOutcomeGeo(outcomeGeo: string): Array<{ name: string; type: string }> {
     if (!outcomeGeo) return [];
-    const trimmed = outcomeGeo.trim();
-    if (trimmed === 'Global') {
-      return [{ name: 'Global', type: 'global' }];
+    const results: Array<{ name: string; type: string }> = [];
+    // Support multi-part format: "Global; Region: X; Country: Y, Z"
+    const parts = outcomeGeo.split(';').map(p => p.trim()).filter(Boolean);
+    for (const part of parts) {
+      if (part === 'Global') {
+        results.push({ name: 'Global', type: 'global' });
+      } else if (part.startsWith('Region: ')) {
+        const names = part.substring('Region: '.length).split(', ');
+        for (const n of names) if (n.trim()) results.push({ name: n.trim(), type: 'region' });
+      } else if (part.startsWith('Country: ')) {
+        const names = part.substring('Country: '.length).split(', ');
+        for (const n of names) if (n.trim()) results.push({ name: n.trim(), type: 'country' });
+      }
     }
-    if (trimmed.startsWith('Region: ')) {
-      const names = trimmed.substring('Region: '.length).split(', ');
-      return names.filter(n => n.trim()).map(n => ({ name: n.trim(), type: 'region' }));
-    }
-    if (trimmed.startsWith('Country: ')) {
-      const names = trimmed.substring('Country: '.length).split(', ');
-      return names.filter(n => n.trim()).map(n => ({ name: n.trim(), type: 'country' }));
-    }
-    return [];
+    return results;
   }
 
   /**
@@ -3512,6 +3514,27 @@ export class PorbService {
         outcomeGeo = countryNames.length ? `Country: ${countryNames.join(', ')}` : '';
       }
 
+      // Fallback: derive geo from indicators if outcome-level geo is empty
+      if (!outcomeGeo && item?.quantitative_indicators?.length) {
+        const geoCountries = new Set<string>();
+        const geoRegions = new Set<string>();
+        let hasGlobal = false;
+        for (const ind of item.quantitative_indicators) {
+          if (ind?.location === 'global') {
+            hasGlobal = true;
+          } else if (ind?.location === 'regional') {
+            for (const r of ind?.regions ?? []) if (r?.name) geoRegions.add(r.name);
+          } else if (ind?.location === 'country') {
+            for (const c of ind?.countries ?? []) if (c?.name) geoCountries.add(c.name);
+          }
+        }
+        const parts: string[] = [];
+        if (hasGlobal) parts.push('Global');
+        if (geoRegions.size) parts.push(`Region: ${[...geoRegions].sort().join(', ')}`);
+        if (geoCountries.size) parts.push(`Country: ${[...geoCountries].sort().join(', ')}`);
+        outcomeGeo = parts.join('; ');
+      }
+
       outcomeRows.push(
         this.porbOutcomeRepository.create({
           program_id: programId,
@@ -3619,6 +3642,8 @@ export class PorbService {
         const detail = await this.importTocToPorbTables(
           initiative.id,
           initiative.official_code,
+          undefined,
+          false,
         );
         results.push({
           program_id: initiative.id,
@@ -6534,12 +6559,12 @@ export class PorbService {
     // 2-row header with Center column
     wsData.push([
       'AOW', 'Center', 'High Level Output',
-      'Key Performance Indicators', null, null, null, null, null,
-      'Total Budget (USD)', 'id',
+      'Key Performance Indicators', null, null, null, null,
+      'Assumption', 'id',
     ]);
     wsData.push([
       null, null, null,
-      'Description', 'Type', 'Country(ies) of implementation', 'Target', 'Budget (USD)', 'Assumption',
+      'Description', 'Type', 'Country(ies) of implementation', 'Target', 'Budget (USD)',
       null, null,
     ]);
 
@@ -6547,9 +6572,9 @@ export class PorbService {
     merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } });   // AOW
     merges.push({ s: { r: 0, c: 1 }, e: { r: 1, c: 1 } });   // Center
     merges.push({ s: { r: 0, c: 2 }, e: { r: 1, c: 2 } });   // High Level Output
-    merges.push({ s: { r: 0, c: 3 }, e: { r: 0, c: 8 } });   // KPI colspan=6
-    merges.push({ s: { r: 0, c: 9 }, e: { r: 1, c: 9 } });   // Total Budget
-    merges.push({ s: { r: 0, c: 10 }, e: { r: 1, c: 10 } });  // id
+    merges.push({ s: { r: 0, c: 3 }, e: { r: 0, c: 7 } });   // KPI colspan=5
+    merges.push({ s: { r: 0, c: 8 }, e: { r: 1, c: 8 } });   // Assumption
+    merges.push({ s: { r: 0, c: 9 }, e: { r: 1, c: 9 } });   // id
 
     let currentRow = 2;
 
@@ -6596,23 +6621,21 @@ export class PorbService {
             Number(h.hlo_target) || 0,
             Number(h.hlo_budget) || 0,
             h.hlo_assumption || '',
-            idx === 0 ? totalBudget : null,
             h.id,
           ]);
           currentRow++;
         });
 
-        // Merge HLO name + Total Budget across indicator rows
+        // Merge HLO name across indicator rows
         if (group.items.length > 1) {
           merges.push({ s: { r: startRowForHlo, c: 2 }, e: { r: currentRow - 1, c: 2 } });
-          merges.push({ s: { r: startRowForHlo, c: 9 }, e: { r: currentRow - 1, c: 9 } });
         }
       }
 
       // Subtotal row
       const hloBudgetTotal = aowHlos.reduce((sum, h) => sum + (Number(h.hlo_budget) || 0), 0);
-      wsData.push([null, null, 'HLO budget subtotal', null, null, null, null, null, null, hloBudgetTotal, '']);
-      merges.push({ s: { r: currentRow, c: 2 }, e: { r: currentRow, c: 8 } });
+      wsData.push([null, null, 'HLO budget subtotal', null, null, null, null, hloBudgetTotal, null, '']);
+      merges.push({ s: { r: currentRow, c: 2 }, e: { r: currentRow, c: 6 } });
       currentRow++;
 
       // AOW vertical merge
@@ -6627,19 +6650,19 @@ export class PorbService {
 
     ws['!cols'] = [
       { wch: 8 }, { wch: 15 }, { wch: 40 }, { wch: 30 }, { wch: 30 }, { wch: 30 },
-      { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 10 },
+      { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 10 },
     ];
 
     this.applySheetStyles(ws, wsData, {
       headerRowCount: 2,
       subtotalDetector: (row) => row?.[2] === 'HLO budget subtotal',
       wpColumnIndex: 0,
-      numberColumns: [6, 7, 9],
+      numberColumns: [6, 7],
       rowHeights: { header: 30, data: 50, subtotal: 25 },
       merges,
     });
 
-    this.protectAndHideIds(ws, [10]);
+    this.protectAndHideIds(ws, [9]);
 
     return ws;
   }

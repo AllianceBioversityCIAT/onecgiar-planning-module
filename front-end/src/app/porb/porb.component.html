@@ -39,6 +39,7 @@
       (submitClicked)="onSubmitClicked()"
       (cancelSubmissionClicked)="onCancelSubmissionClicked()"
       (historyClicked)="openHistoryDialog()"
+      (tourClicked)="replayTour()"
     ></app-porb-overview>
   </div>
 
@@ -696,7 +697,6 @@
                     <thead>
                       <tr>
                         <th rowspan="2">Outcome title</th>
-                        <th rowspan="2" style="width: 15%;">Type of Outcome</th>
                         <th colspan="3">Key Performance Indicators</th>
                       </tr>
                       <tr>
@@ -710,7 +710,6 @@
                         <ng-container *ngIf="o.flatIndicators.length > 0; else noIndicators">
                           <tr *ngFor="let ind of o.flatIndicators; let i = index">
                             <td *ngIf="i === 0" [attr.rowspan]="o.flatIndicators.length">{{ o.outcome_title }}</td>
-                            <td *ngIf="i === 0" [attr.rowspan]="o.flatIndicators.length">{{ o.outcome_type }}</td>
                             <td>{{ ind.type }}</td>
                             <td>{{ ind.location }}</td>
                             <td class="num-cell">{{ ind.target_value }}</td>
@@ -719,7 +718,6 @@
                         <ng-template #noIndicators>
                           <tr>
                             <td>{{ o.outcome_title }}</td>
-                            <td>{{ o.outcome_type }}</td>
                             <td colspan="3" class="text-muted">No indicators</td>
                           </tr>
                         </ng-template>

@@ -30,9 +30,17 @@
       </div>
 
       <div class="overview-actions">
+        <button
+          type="button"
+          class="icon-btn"
+          matTooltip="Replay Tour"
+          (click)="tourClicked.emit()"
+        >
+          <mat-icon>help_outline</mat-icon>
+        </button>
         <a
           class="icon-btn"
-          title="Team Members"
+          matTooltip="Team Members"
           data-tour-anchor="porb-action-team"
           [routerLink]="[
             '/program',
@@ -46,7 +54,7 @@
         <button
           type="button"
           class="icon-btn"
-          title="History of Change"
+          matTooltip="History of Change"
           data-tour-anchor="porb-action-history"
           (click)="historyClicked.emit()"
         >
@@ -54,7 +62,7 @@
         </button>
         <a
           class="icon-btn"
-          title="Submitted Versions"
+          matTooltip="Submitted Versions"
           data-tour-anchor="porb-action-versions"
           [routerLink]="[
             '/program',
@@ -69,7 +77,7 @@
           *ngIf="submissionStatus === 'Pending' && submissionId"
           type="button"
           class="icon-btn cancel-submit"
-          title="Cancel PORB"
+          matTooltip="Cancel PORB"
           data-tour-anchor="porb-action-cancel"
           (click)="cancelSubmissionClicked.emit()"
         >
@@ -78,7 +86,7 @@
         <button
           type="button"
           class="icon-btn"
-          title="Export All (ZIP)"
+          matTooltip="Export All (ZIP)"
           data-tour-anchor="porb-action-export"
           [disabled]="exportingZip"
           (click)="exportAllZip.emit()"
@@ -90,7 +98,7 @@
           *ngIf="canSubmit && submissionStatus === 'Draft'"
           type="button"
           class="submit-btn"
-          title="Submit PORB"
+          matTooltip="Submit PORB"
           data-tour-anchor="porb-action-submit"
           [disabled]="submitting"
           (click)="submitClicked.emit()"
