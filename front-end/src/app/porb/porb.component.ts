@@ -1790,6 +1790,10 @@ export class PorbComponent implements OnInit, OnDestroy {
     }
   }
 
+  replayTour() {
+    this.showTour = true;
+  }
+
   onTourClosed() {
     this.showTour = false;
     try {
