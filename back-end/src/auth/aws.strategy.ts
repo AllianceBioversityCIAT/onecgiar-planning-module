@@ -61,15 +61,18 @@ export class AwsStrategy extends PassportStrategy(Strategy, 'AWS') {
     ).catch((e) => false);
 
     if (!profile) throw new UnauthorizedException();
+    console.log('[Cognito userInfo]', JSON.stringify(profile, null, 2));
     let userInfo = null;
     const email = (<string>profile.email || '').toLowerCase();
-    const first_name = profile?.given_name || profile?.username || email.split('@')[0];
-    const last_name = profile?.family_name || '';
+    const profileName = profile?.name?.includes('@') ? null : profile?.name;
+    const first_name = profile?.given_name || profileName?.split(' ')[0] || email.split('@')[0];
+    const last_name = profile?.family_name || profileName?.split(' ').slice(1).join(' ') || '';
 
     const user = await this.userService.findOneByEmail(email);
 
     if (user) {
-      if (user.first_name !== first_name || user.last_name !== last_name) {
+      // Only update name if user doesn't already have one set
+      if (!user.first_name && !user.last_name) {
         user.first_name = first_name;
         user.last_name = last_name;
         await this.userService.userRepository.save(user);
