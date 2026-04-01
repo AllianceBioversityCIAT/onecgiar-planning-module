@@ -1,0 +1,507 @@
+<!-- Header bar -->
+<div class="version-header">
+  <div class="version-header__info">
+    <h2>{{ submission?.initiative?.official_code }} - {{ submission?.initiative?.name }}</h2>
+    <div class="version-header__meta">
+      <span>Submitted by {{ submission?.user?.full_name }} on {{ submission?.created_at | date:'mediumDate' }}</span>
+      <span
+        class="status-badge"
+        [ngClass]="'status-' + (submission?.status || '').toLowerCase()"
+      >
+        {{ submission?.status }}
+      </span>
+    </div>
+  </div>
+  <div class="version-header__actions">
+    <button mat-raised-button color="primary" [disabled]="exportingZip" (click)="exportZip()">
+      <mat-spinner *ngIf="exportingZip" diameter="18"></mat-spinner>
+      <mat-icon *ngIf="!exportingZip">download</mat-icon>
+      {{ exportingZip ? 'Exporting...' : 'Export ZIP' }}
+    </button>
+    <button
+      mat-button
+      [routerLink]="['/program', programId, officalCode, 'submited-versions']"
+    >
+      Back to Versions
+    </button>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div *ngIf="loading" class="loading-container">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<!-- Main content -->
+<div *ngIf="!loading && porbData" class="version-body">
+
+  <!-- ── Level 1: Centers + Summary ─────────────────────────────────────── -->
+  <div class="porb-nav porb-nav--centers">
+    <!-- Summary button comes first -->
+    <button
+      class="porb-nav__item"
+      [class.porb-nav__item--active]="activeView === 'summary'"
+      (click)="selectSummary()"
+    >
+      Summary
+    </button>
+
+    <!-- Per-center buttons (hide centers with no budget) -->
+    <ng-container *ngFor="let center of centers">
+      <button
+        *ngIf="centerHasBudget(center)"
+        class="porb-nav__item"
+        [class.porb-nav__item--active]="activeView === 'center' && selectedCenter?.code === center.code"
+        (click)="selectCenter(center)"
+      >
+        {{ center.name }}
+      </button>
+    </ng-container>
+  </div>
+
+  <!-- ╔══════════════════════════════════════════════════════════════════════╗
+       ║  SUMMARY VIEW                                                       ║
+       ╚══════════════════════════════════════════════════════════════════════╝ -->
+  <ng-container *ngIf="activeView === 'summary'">
+
+    <!-- Budget Overview -->
+    <div class="porb-consolidation-section">
+      <h3>Budget Overview</h3>
+      <div class="summary-table-wrapper" *ngIf="summaryBudgetOverviewRows.length; else noSummaryData">
+        <table class="consolidation-table porb-summary-table">
+          <thead>
+            <tr>
+              <th rowspan="3" class="aow-col">Area of Work</th>
+              <th colspan="9">Pooled Funding</th>
+              <th colspan="3" class="other-budgets-group">Additional Information</th>
+            </tr>
+            <tr>
+              <th colspan="2">Innovation Development</th>
+              <th colspan="2">Knowledge Product</th>
+              <th colspan="2">Capacity Sharing</th>
+              <th colspan="2">Others Outputs</th>
+              <th rowspan="2" class="total-col">Total Pooled<br>Funding (USD)</th>
+              <th rowspan="2" class="other-budgets-group">Anaplan<br>budget</th>
+              <th rowspan="2" class="other-budgets-group">Partner<br>budget</th>
+              <th rowspan="2" class="other-budgets-group">MELIA Studies<br>budget</th>
+            </tr>
+            <tr>
+              <th>Target</th><th>Budget</th>
+              <th>Target</th><th>Budget</th>
+              <th>Target</th><th>Budget</th>
+              <th>Target</th><th>Budget</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let row of summaryBudgetOverviewRows"
+              [class.cross-cutting-row]="row.aowCode === 'AOW00'"
+            >
+              <td class="aow-col">{{ row.aowCode }}: {{ row.aowName }}</td>
+              <ng-container *ngIf="row.aowCode !== 'AOW00'">
+                <td class="num-cell">{{ row.innovationTargetFmt }}</td>
+                <td class="num-cell">{{ row.innovationBudgetFmt }}</td>
+                <td class="num-cell">{{ row.knowledgeTargetFmt }}</td>
+                <td class="num-cell">{{ row.knowledgeBudgetFmt }}</td>
+                <td class="num-cell">{{ row.capacityTargetFmt }}</td>
+                <td class="num-cell">{{ row.capacityBudgetFmt }}</td>
+                <td class="num-cell">{{ row.othersTargetFmt }}</td>
+                <td class="num-cell">{{ row.othersBudgetFmt }}</td>
+              </ng-container>
+              <td *ngIf="row.aowCode === 'AOW00'" colspan="8" class="cross-cutting-block">
+                Cross-Cutting
+              </td>
+              <td class="num-cell total-col">{{ row.totalPooledFundingFmt }}</td>
+              <td class="num-cell other-budgets-group">{{ row.anaplanBudgetFmt }}</td>
+              <td class="num-cell other-budgets-group">{{ row.partnerBudgetFmt }}</td>
+              <td class="num-cell other-budgets-group">{{ row.meliaBudgetFmt }}</td>
+            </tr>
+            <tr class="summary-total-row">
+              <td class="aow-col"><strong>Total</strong></td>
+              <td class="num-cell"><strong></strong></td>
+              <td class="num-cell"><strong>{{ summaryBudgetOverviewTotals.innovationBudgetFmt }}</strong></td>
+              <td class="num-cell"><strong></strong></td>
+              <td class="num-cell"><strong>{{ summaryBudgetOverviewTotals.knowledgeBudgetFmt }}</strong></td>
+              <td class="num-cell"><strong></strong></td>
+              <td class="num-cell"><strong>{{ summaryBudgetOverviewTotals.capacityBudgetFmt }}</strong></td>
+              <td class="num-cell"><strong></strong></td>
+              <td class="num-cell"><strong>{{ summaryBudgetOverviewTotals.othersBudgetFmt }}</strong></td>
+              <td class="num-cell total-col"><strong>{{ summaryBudgetOverviewTotals.totalPooledFundingFmt }}</strong></td>
+              <td class="num-cell other-budgets-group"><strong>{{ summaryBudgetOverviewTotals.anaplanBudgetFmt }}</strong></td>
+              <td class="num-cell other-budgets-group"><strong>{{ summaryBudgetOverviewTotals.partnerBudgetFmt }}</strong></td>
+              <td class="num-cell other-budgets-group"><strong>{{ summaryBudgetOverviewTotals.meliaBudgetFmt }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noSummaryData>
+        <p class="version-empty-msg">No budget data in this snapshot.</p>
+      </ng-template>
+    </div>
+
+    <!-- Budget for Financial Reporting (Anaplan) -->
+    <div class="porb-consolidation-section" *ngIf="summaryAnaplanConsolidated">
+      <h3>Budget for Financial Reporting</h3>
+      <div class="summary-table-wrapper">
+        <table class="consolidation-table porb-summary-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Account</th>
+              <th
+                *ngFor="let aow of summaryAnaplanConsolidated.aows"
+                class="num-cell"
+              >{{ aow }}</th>
+              <th class="num-cell total-col">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let account of summaryAnaplanConsolidated.accounts">
+              <td style="text-align:left">{{ account.label }}</td>
+              <td
+                *ngFor="let aow of summaryAnaplanConsolidated.aows"
+                class="num-cell"
+              >{{ fmtCurrency(account.budgetByAow[aow]) }}</td>
+              <td class="num-cell total-col">{{ fmtCurrency(account.total) }}</td>
+            </tr>
+            <tr class="summary-total-row">
+              <td><strong>Total</strong></td>
+              <td
+                *ngFor="let aow of summaryAnaplanConsolidated.aows"
+                class="num-cell"
+              >
+                <strong>{{ fmtCurrency(summaryAnaplanConsolidated.grandTotalByAow[aow]) }}</strong>
+              </td>
+              <td class="num-cell total-col">
+                <strong>{{ fmtCurrency(summaryAnaplanConsolidated.grandTotal) }}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- W3/Bilateral Consolidated -->
+    <div class="porb-consolidation-section" *ngIf="summaryW3Consolidated.length">
+      <h3>W3/Bilateral Consolidated</h3>
+      <div class="summary-table-wrapper">
+        <table class="consolidation-table porb-summary-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Center</th>
+              <th class="num-cell">Budget (USD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of summaryW3Consolidated">
+              <td style="text-align:left">{{ c.name }}</td>
+              <td class="num-cell">{{ c.budgetFmt }}</td>
+            </tr>
+            <tr class="summary-total-row">
+              <td><strong>Total</strong></td>
+              <td class="num-cell"><strong>{{ summaryW3GrandTotal }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+  <!-- /SUMMARY VIEW -->
+
+  <!-- ╔══════════════════════════════════════════════════════════════════════╗
+       ║  CENTER VIEW                                                        ║
+       ╚══════════════════════════════════════════════════════════════════════╝ -->
+  <ng-container *ngIf="activeView === 'center' && selectedCenter">
+
+    <!-- Consolidated / Budget Entry toggle -->
+    <nav class="porb-nav porb-nav--summary-mode">
+      <button
+        type="button"
+        class="porb-nav__item"
+        [class.porb-nav__item--active]="centerViewMode === 'consolidated'"
+        (click)="centerViewMode = 'consolidated'"
+      >
+        Consolidated
+      </button>
+      <button
+        type="button"
+        class="porb-nav__item"
+        [class.porb-nav__item--active]="centerViewMode === 'budget-entry'"
+        (click)="centerViewMode = 'budget-entry'"
+      >
+        Budget Entry
+      </button>
+    </nav>
+
+    <!-- ── CONSOLIDATED view ───────────────────────────────────────────── -->
+    <ng-container *ngIf="centerViewMode === 'consolidated'">
+
+      <!-- Budget Overview for this center -->
+      <div class="porb-consolidation-section">
+        <h3>Budget Overview</h3>
+        <div class="summary-table-wrapper" *ngIf="centerBudgetOverviewRows.length; else noCenterData">
+          <table class="consolidation-table porb-summary-table">
+            <thead>
+              <tr>
+                <th rowspan="3" class="aow-col">Area of Work</th>
+                <th colspan="9">Pooled Funding</th>
+                <th colspan="3" class="other-budgets-group">Additional Information</th>
+              </tr>
+              <tr>
+                <th colspan="2">Innovation Development</th>
+                <th colspan="2">Knowledge Product</th>
+                <th colspan="2">Capacity Sharing</th>
+                <th colspan="2">Others Outputs</th>
+                <th rowspan="2" class="total-col">Total Pooled<br>Funding (USD)</th>
+                <th rowspan="2" class="other-budgets-group">Anaplan<br>budget</th>
+                <th rowspan="2" class="other-budgets-group">Partner<br>budget</th>
+                <th rowspan="2" class="other-budgets-group">MELIA Studies<br>budget</th>
+              </tr>
+              <tr>
+                <th>Target</th><th>Budget</th>
+                <th>Target</th><th>Budget</th>
+                <th>Target</th><th>Budget</th>
+                <th>Target</th><th>Budget</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of centerBudgetOverviewRows"
+                [class.cross-cutting-row]="row.aowCode === 'AOW00'"
+              >
+                <td class="aow-col">{{ row.aowCode }}: {{ row.aowName }}</td>
+                <ng-container *ngIf="row.aowCode !== 'AOW00'">
+                  <td class="num-cell">{{ row.innovationTargetFmt }}</td>
+                  <td class="num-cell">{{ row.innovationBudgetFmt }}</td>
+                  <td class="num-cell">{{ row.knowledgeTargetFmt }}</td>
+                  <td class="num-cell">{{ row.knowledgeBudgetFmt }}</td>
+                  <td class="num-cell">{{ row.capacityTargetFmt }}</td>
+                  <td class="num-cell">{{ row.capacityBudgetFmt }}</td>
+                  <td class="num-cell">{{ row.othersTargetFmt }}</td>
+                  <td class="num-cell">{{ row.othersBudgetFmt }}</td>
+                </ng-container>
+                <td *ngIf="row.aowCode === 'AOW00'" colspan="8" class="cross-cutting-block">
+                  Cross-Cutting
+                </td>
+                <td class="num-cell total-col">{{ row.totalPooledFundingFmt }}</td>
+                <td class="num-cell other-budgets-group">{{ row.anaplanBudgetFmt }}</td>
+                <td class="num-cell other-budgets-group">{{ row.partnerBudgetFmt }}</td>
+                <td class="num-cell other-budgets-group">{{ row.meliaBudgetFmt }}</td>
+              </tr>
+              <tr class="summary-total-row">
+                <td class="aow-col"><strong>Total</strong></td>
+                <td class="num-cell"><strong></strong></td>
+                <td class="num-cell"><strong>{{ centerBudgetOverviewTotals.innovationBudgetFmt }}</strong></td>
+                <td class="num-cell"><strong></strong></td>
+                <td class="num-cell"><strong>{{ centerBudgetOverviewTotals.knowledgeBudgetFmt }}</strong></td>
+                <td class="num-cell"><strong></strong></td>
+                <td class="num-cell"><strong>{{ centerBudgetOverviewTotals.capacityBudgetFmt }}</strong></td>
+                <td class="num-cell"><strong></strong></td>
+                <td class="num-cell"><strong>{{ centerBudgetOverviewTotals.othersBudgetFmt }}</strong></td>
+                <td class="num-cell total-col"><strong>{{ centerBudgetOverviewTotals.totalPooledFundingFmt }}</strong></td>
+                <td class="num-cell other-budgets-group"><strong>{{ centerBudgetOverviewTotals.anaplanBudgetFmt }}</strong></td>
+                <td class="num-cell other-budgets-group"><strong>{{ centerBudgetOverviewTotals.partnerBudgetFmt }}</strong></td>
+                <td class="num-cell other-budgets-group"><strong>{{ centerBudgetOverviewTotals.meliaBudgetFmt }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noCenterData>
+          <p class="version-empty-msg">No budget data for {{ selectedCenter?.name }} in this snapshot.</p>
+        </ng-template>
+      </div>
+
+      <!-- Budget for Financial Reporting for this center -->
+      <div class="porb-consolidation-section" *ngIf="centerAnaplanConsolidated">
+        <h3>Budget for Financial Reporting</h3>
+        <div class="summary-table-wrapper">
+          <table class="consolidation-table porb-summary-table">
+            <thead>
+              <tr>
+                <th style="text-align:left">Account</th>
+                <th
+                  *ngFor="let aow of centerAnaplanConsolidated.aows"
+                  class="num-cell"
+                >{{ aow }}</th>
+                <th class="num-cell total-col">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let account of centerAnaplanConsolidated.accounts">
+                <td style="text-align:left">{{ account.label }}</td>
+                <td
+                  *ngFor="let aow of centerAnaplanConsolidated.aows"
+                  class="num-cell"
+                >{{ fmtCurrency(account.budgetByAow[aow]) }}</td>
+                <td class="num-cell total-col">{{ fmtCurrency(account.total) }}</td>
+              </tr>
+              <tr class="summary-total-row">
+                <td><strong>Total</strong></td>
+                <td
+                  *ngFor="let aow of centerAnaplanConsolidated.aows"
+                  class="num-cell"
+                >
+                  <strong>{{ fmtCurrency(centerAnaplanConsolidated.grandTotalByAow[aow]) }}</strong>
+                </td>
+                <td class="num-cell total-col">
+                  <strong>{{ fmtCurrency(centerAnaplanConsolidated.grandTotal) }}</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- W3/Bilateral for this center -->
+      <div class="porb-consolidation-section" *ngIf="centerW3Rows.length">
+        <h3>W3/Bilateral Projects</h3>
+        <div class="summary-table-wrapper">
+          <table class="consolidation-table porb-summary-table">
+            <thead>
+              <tr>
+                <th style="text-align:left">Project Title</th>
+                <th class="num-cell">Budget (USD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of centerW3Rows">
+                <td style="text-align:left">{{ row.bilateral_name || '-' }}</td>
+                <td class="num-cell">{{ fmtCurrency(row.bilateral_budget) }}</td>
+              </tr>
+              <tr class="summary-total-row">
+                <td style="text-align:left"><strong>Total</strong></td>
+                <td class="num-cell"><strong>{{ centerW3Subtotal }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </ng-container>
+    <!-- /CONSOLIDATED view -->
+
+    <!-- ── BUDGET ENTRY view ───────────────────────────────────────────── -->
+    <ng-container *ngIf="centerViewMode === 'budget-entry'">
+
+      <!-- Level 2: AOWs + W3/Bilateral (hide AOWs with no budget) -->
+      <div class="porb-nav porb-nav--aows">
+        <ng-container *ngFor="let aow of aows">
+          <button
+            *ngIf="aowHasBudget(aow)"
+            class="porb-nav__item"
+            [class.porb-nav__item--active]="selectedAow?.id === aow.id && !isW3View"
+            (click)="selectAow(aow)"
+          >
+            {{ aow.aow_acrnum || aow.aow_name }}
+          </button>
+        </ng-container>
+        <button
+          *ngIf="hasW3Data"
+          class="porb-nav__item porb-nav__item--w3"
+          [class.porb-nav__item--active]="isW3View"
+          (click)="selectW3()"
+        >
+          W3/Bilateral
+        </button>
+      </div>
+
+      <!-- Level 3: Sections (only when AOW selected, not W3) — hide empty sections -->
+      <div class="porb-nav porb-nav--sections" *ngIf="selectedAow && !isW3View">
+        <ng-container *ngFor="let section of extraNavigationItems">
+          <button
+            *ngIf="sectionHasData(section)"
+            class="porb-nav__item"
+            [class.porb-nav__item--active]="selectedSection === section"
+            (click)="selectSection(section)"
+          >
+            {{ section }}
+          </button>
+        </ng-container>
+      </div>
+
+      <!-- Section content -->
+      <div class="section-content" *ngIf="!isW3View && selectedSection">
+        <ng-container [ngSwitch]="selectedSection">
+          <app-pool-section
+            *ngSwitchCase="'Pool funding HLO'"
+            [rows]="currentRows"
+            [canEdit]="false"
+          ></app-pool-section>
+
+          <app-partners-section
+            *ngSwitchCase="'Partners'"
+            [rows]="currentRows"
+            [canEdit]="false"
+          ></app-partners-section>
+
+          <app-melia-section
+            *ngSwitchCase="'MELIA Study'"
+            [rows]="currentRows"
+            [canEdit]="false"
+          ></app-melia-section>
+
+          <app-anaplan-section
+            *ngSwitchCase="'Anaplan'"
+            [rows]="currentRows"
+            [canEdit]="false"
+          ></app-anaplan-section>
+
+          <app-cross-section
+            *ngSwitchCase="'Cross Cutting'"
+            [rows]="currentRows"
+            [canEdit]="false"
+            [selectedProgramId]="programId"
+            [selectedPorbAowId]="selectedAow?.id"
+            [selectedCenterId]="selectedCenter?.code"
+          ></app-cross-section>
+
+          <app-country-percentage-section
+            *ngSwitchCase="'Countries of Implementation'"
+            [rows]="currentRows"
+            [canEdit]="false"
+            [pooledTotal]="pooledTotal"
+            [selectedProgramId]="programId"
+            [selectedPorbAowId]="selectedAow?.id"
+            [selectedCenterId]="selectedCenter?.code"
+          ></app-country-percentage-section>
+
+          <app-location-benefit-section
+            *ngSwitchCase="'Location of Benefit'"
+            [rows]="currentRows"
+            [canEdit]="false"
+            [pooledTotal]="pooledTotal"
+            [selectedProgramId]="programId"
+            [selectedPorbAowId]="selectedAow?.id"
+            [selectedCenterId]="selectedCenter?.code"
+          ></app-location-benefit-section>
+        </ng-container>
+      </div>
+
+      <!-- W3/Bilateral content -->
+      <div class="section-content" *ngIf="isW3View">
+        <app-w3-section [rows]="currentRows" [canEdit]="false"></app-w3-section>
+      </div>
+
+    </ng-container>
+    <!-- /BUDGET ENTRY view -->
+
+  </ng-container>
+  <!-- /CENTER VIEW -->
+
+</div>
+
+<!-- No porb_data fallback -->
+<div *ngIf="!loading && !porbData" class="no-data">
+  <mat-icon class="no-data__icon">history</mat-icon>
+  <p class="no-data__title">No PORB data available</p>
+  <p class="no-data__hint">
+    This submission was created before PORB snapshots were introduced and cannot
+    be displayed in this view.
+  </p>
+  <button
+    mat-stroked-button
+    [routerLink]="['/program', programId, officalCode, 'submited-versions']"
+  >
+    Back to Versions
+  </button>
+</div>

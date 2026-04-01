@@ -26,7 +26,7 @@
               'program',
               initiativeId,
               officalCode,
-              'submission'
+              'porb'
             ]"
             class="risk-nav-link"
             ><span class="line">&nbsp;</span>{{ officalCode }}</a
@@ -65,11 +65,11 @@
               {{ initiative_data.name }}</mat-card-subtitle
             >
           </div>
-          <div *ngIf="this.submission_data?.toc_version">
+          <!-- <div *ngIf="this.submission_data?.toc_version">
             <mat-card-subtitle class="card-title-3 m-b-t"
               >ToC version ID: {{this.submission_data?.toc_version}}</mat-card-subtitle
             >
-          </div>
+          </div> -->
         </form>
       </div>
     </mat-card>
@@ -1081,7 +1081,7 @@
                           {{  getScope(indicator, 'item')  }}
                         </td>
                         <td class="talign-center" style="width: 10% !important">
-                          {{  getTargetValue(indicator?.targets) }}
+                          {{  getTargetValue(indicator?.targets,partner.code) }}
                         </td>
                         <td class="talign-center" style="width: 10% !important">
                             {{displayBudgetValuesIndicator[partner.code][
@@ -1380,7 +1380,7 @@
                       </td>
                     </ng-container> -->
                     
-                    <td *ngIf="!toggleIndicatorValues">
+                    <td *ngIf="!toggleIndicatorValues"> ss
                       {{ totalTargetsIndicator?.[wp.ost_wp.wp_official_code]?.['Number of innovations (innovation development)'] ?? 0 }}
                     </td>
                     <td *ngIf="toggleIndicatorValues">
@@ -1671,7 +1671,7 @@
                             {{  getScope(indicator, 'item')  }}
                           </td>
                           <td class="talign-center" style="width: 10% !important">
-                            {{  getTargetValue(indicator?.targets) }}
+                            {{  getTargetValue(indicator?.targets,partner.code) }}
                           </td>
                           <td class="talign-center" style="width: 10% !important">
                             {{  displayBudgetValuesIndicator[partner.code][

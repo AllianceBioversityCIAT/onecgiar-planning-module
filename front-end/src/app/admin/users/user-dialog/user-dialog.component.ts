@@ -9,9 +9,10 @@ export interface DialogData {
 }
 
 @Component({
-  selector: "app-user-dialog",
-  templateUrl: "./user-dialog.component.html",
-  styleUrls: ["./user-dialog.component.scss"],
+    selector: "app-user-dialog",
+    templateUrl: "./user-dialog.component.html",
+    styleUrls: ["./user-dialog.component.scss"],
+    standalone: false
 })
 export class UserDialogComponent implements OnInit {
   userId: number = 0;

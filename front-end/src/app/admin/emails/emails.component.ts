@@ -9,9 +9,10 @@ import { ToastrService } from "ngx-toastr";
 import { Meta, Title } from '@angular/platform-browser';
 import { EmailBodyComponent } from './email-body/email-body.component';
 @Component({
-  selector: 'app-emails',
-  templateUrl: './emails.component.html',
-  styleUrls: ['./emails.component.scss']
+    selector: 'app-emails',
+    templateUrl: './emails.component.html',
+    styleUrls: ['./emails.component.scss'],
+    standalone: false
 })
 export class EmailsComponent {
   @ViewChild(MatPaginator) paginator: MatPaginator;

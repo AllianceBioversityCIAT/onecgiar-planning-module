@@ -12,9 +12,10 @@ export interface DialogData {
 }
 
 @Component({
-  selector: "app-assign-organizations",
-  templateUrl: "./assign-organizations.component.html",
-  styleUrls: ["./assign-organizations.component.scss"],
+    selector: "app-assign-organizations",
+    templateUrl: "./assign-organizations.component.html",
+    styleUrls: ["./assign-organizations.component.scss"],
+    standalone: false
 })
 export class AssignOrganizationsComponent implements OnInit {
   phaseId: number;

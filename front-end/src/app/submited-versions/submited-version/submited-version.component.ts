@@ -15,10 +15,11 @@ import { BudgetAssumptionsService } from "src/app/services/budget-assumptions.se
 import { AnaplanService } from "src/app/services/anaplan.service";
 
 @Component({
-  selector: "app-submited-version",
-  templateUrl: "./submited-version.component.html",
-  styleUrls: ["./submited-version.component.scss"],
-  providers: [DecimalPipe] 
+    selector: "app-submited-version",
+    templateUrl: "./submited-version.component.html",
+    styleUrls: ["./submited-version.component.scss"],
+    providers: [DecimalPipe],
+    standalone: false
 })
 export class SubmitedVersionComponent implements OnInit {
   title = "planning";
@@ -350,7 +351,7 @@ export class SubmitedVersionComponent implements OnInit {
   //   });
   //   // this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
   // }
-  sammaryCalc() {
+ sammaryCalc() {
     let totalsum: any = {};
     let totalsumcenter: any = {};
     let totalWp: any = {};
@@ -497,6 +498,7 @@ export class SubmitedVersionComponent implements OnInit {
     Object.keys(this.sammaryTotal).forEach((wp_id) => {
       this.wpsTotalSum += this.sammaryTotalConsolidated[wp_id];
     });
+    // this.wpsTotalSum = this.wpsTotalSum / Object.keys(this.sammaryTotal).length;
   }
   allvalueChange() {
     for (let wp of this.wps) {
@@ -570,7 +572,7 @@ export class SubmitedVersionComponent implements OnInit {
   initiative_data: any = {};
   ipsr_value_data: any;
   actualWps:any;
-  toggleIndicatorValues: any;
+  toggleIndicatorValues: any= true;
   savedValuesForIndicator: any = null;
 
   partnersMelia:any;
@@ -1005,9 +1007,18 @@ export class SubmitedVersionComponent implements OnInit {
             this.partnersData[partner.code] = {};
 
          const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
-          if(filterd_results.length > 0 && this.toggleIndicatorValues)
-          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
-         else
+         if(filterd_results.length > 0){
+          const indicator_filterd = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
+          const updatedIndicators = indicator_filterd.map((res: any) => ({
+                          ...res,
+                          quantitative_indicators: (res.quantitative_indicators ?? []).filter((i: any) =>
+                            i.targets?.some((t: any) =>
+                              t.centers?.some((co: any) => co.code === partner.code)
+                            )
+                          )
+                        }));
+        this.partnersData[partner.code][wp.ost_wp.wp_official_code] = updatedIndicators;
+         } else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
         }
 
@@ -1296,7 +1307,7 @@ export class SubmitedVersionComponent implements OnInit {
       'Innovation Use',
       'custom-OUTCOME'
     ]
-    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.submission_data.phase.id);
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.submission_data.phase.id,this.initiativeId);
 
     this.InitData();
     this.period = this.submission_data.phase.periods;
@@ -1602,16 +1613,13 @@ export class SubmitedVersionComponent implements OnInit {
               valuesToSet[code][wp_id][item_id]
             ) {
               let percentValue = +valuesToSet[code][wp_id][item_id];
-              let budgetValue = this.budgetValue(
-                percentValue,
-                this.wp_budgets[code][wp_id]
-              );
+
               this.values[code][wp_id][item_id] = percentValue;
               this.displayValues[code][wp_id][item_id] =
                 Math.round(percentValue);
-              this.budgetValues[code][wp_id][item_id] = budgetValue;
+              this.budgetValues[code][wp_id][item_id] = percentValue;
               this.displayBudgetValues[code][wp_id][item_id] =
-                Math.round(budgetValue);
+                Math.round(percentValue);
             } else {
               this.values[code][wp_id][item_id] = 0;
               this.displayValues[code][wp_id][item_id] = 0;
@@ -1981,8 +1989,14 @@ totalConsolidatedTargetPartner: any;
       return scope
   }
 
-  getTargetValue(targets: any[]) {
-    return targets.reduce((sum, target) => {
+  getTargetValue(targets: any[],code:string='') {
+   let  filterd;
+    
+    if(code!='')
+      filterd = targets.filter((target:any)=>target?.centers?.map((d:any)=>d.code).includes(code))
+    else
+      filterd = targets;
+    return filterd.reduce((sum, target) => {
       const val = parseFloat(target?.[this.submission_data.phase.reportingYear]) || 0; 
       return sum + val;
     }, 0);
@@ -2025,7 +2039,7 @@ totalConsolidatedTargetPartner: any;
         }
       }
     }
-   
+   let targetsCounted:any=[];
     for (let wp of this.actualWps) {
       const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
     
@@ -2035,7 +2049,7 @@ totalConsolidatedTargetPartner: any;
         for (let indicator of wpData.quantitative_indicators || []) {
           const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
             ? indicator.type.value
-            : 'Other';
+            : indicator?.type?.value + '-' + wpData.category;
     
           for (let target of indicator.targets || []) {
             for (let targetPartner of target.centers || []) {
@@ -2053,7 +2067,7 @@ totalConsolidatedTargetPartner: any;
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] = 0;
               }
               const value = parseFloat(target[this.submission_data.phase.reportingYear]); 
-              if (!isNaN(value)) {
+             if (!isNaN(value) && !targetsCounted.includes(target.id)) {
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
               }
             }

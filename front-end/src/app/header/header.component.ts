@@ -10,17 +10,22 @@ import { HeaderService } from "../header.service";
 import { ConfirmComponent } from "../confirm/confirm.component";
 import { AuthService } from "../services/auth.service";
 import { DeleteConfirmDialogComponent } from "../delete-confirm-dialog/delete-confirm-dialog.component";
+import { VersionCheckService } from "../services/version-check.service";
+import { TawkService } from "../services/tawk.service";
+import { environment } from "../../environments/environment";
 declare global {
   interface Window { clarity: any; }
 }
 @Component({
-  selector: "app-header",
-  templateUrl: "./header.component.html",
-  styleUrls: ["./header.component.scss"],
+    selector: "app-header",
+    templateUrl: "./header.component.html",
+    styleUrls: ["./header.component.scss"],
+    standalone: false
 })
 export class HeaderComponent implements OnInit {
   notificationNumberCount: number;
   isAdmin = false;
+  isTestEnv = !environment.production;
 
   increment() {
     this.notificationNumberCount++;
@@ -88,7 +93,9 @@ export class HeaderComponent implements OnInit {
     private loadingService: LoadingService,
     public router: Router,
     public headerService: HeaderService,
-    private authService: AuthService
+    private authService: AuthService,
+    public versionCheck: VersionCheckService,
+    private tawkService: TawkService
   ) {
     this.notificationNumberCount = 5;
     this.headerService.background =
@@ -113,6 +120,9 @@ export class HeaderComponent implements OnInit {
        if (window.clarity) {
           window.clarity('set', 'userId', this.user_info.id);
           window.clarity('set', 'username', this.user_info.full_name);
+        }
+       if (this.user_info?.full_name || this.user_info?.email) {
+          this.tawkService.setVisitor(this.user_info.full_name || '', this.user_info.email || '');
         }
       this.isAdmin = this.authService.isAdmin();
     });
@@ -145,6 +155,10 @@ export class HeaderComponent implements OnInit {
       this.authService.goToLogin();
     }
   }
+  reloadPage() {
+    window.location.reload();
+  }
+
   homeRoute: any = "./home";
   accessHome() {
     if (this.user_info) {

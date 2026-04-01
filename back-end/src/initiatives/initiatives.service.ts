@@ -31,6 +31,7 @@ import { PhasesService } from 'src/phases/phases.service';
 import { WpBudget } from 'src/entities/wp-budget.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { Archive } from 'src/entities/archive.entity';
+import { INITIATIVE_ROLES, LEAD_ROLES, isLeadRole } from '../shared/roles';
 
 @Injectable()
 export class InitiativesService {
@@ -242,84 +243,174 @@ export class InitiativesService {
     });
   }
 
-  async findAllFull(query: any, req: any) {
-    try {
-      const take = query.limit || 10;
-      const skip = (Number(query.page || 1) - 1) * take;
-      const [finalResult, total] = await this.initiativeRepository
-        .createQueryBuilder('init')
-        .where(
-          new Brackets((qb) => {
-            qb.where('init.name like :name', { name: `%${query.name || ''}%` });
-            qb.andWhere('init.archived = :archived', { archived: false });
-            if (query.initiative_id != undefined) {
-              qb.andWhere('init.official_code IN (:...initiative_id)', {
-                initiative_id: [
-                  `INIT-0${query.initiative_id}`,
-                  `INIT-${query.initiative_id}`,
-                  `PLAT-${query.initiative_id}`,
-                  `PLAT-0${query.initiative_id}`,
-                  `SGP-${query.initiative_id}`,
-                  `SGP-0${query.initiative_id}`,
-                  `SP0${query.initiative_id}`,
-                  `SP${query.initiative_id}`,
-                ],
-              });
-            }
-            if (query?.my_role) {
-              if (Array.isArray(query?.my_role)) {
-                qb.andWhere('roles.role IN (:...my_role)', {
-                  my_role: query.my_role,
-                });
-                qb.andWhere(`roles.user_id = ${req.user.id}`);
-              } else {
-                qb.andWhere('roles.role = :my_role', {
-                  my_role: query.my_role,
-                });
-                qb.andWhere(`roles.user_id = ${req.user.id}`);
-              }
-            } else if (query?.my_ini == 'true') {
-              qb.andWhere(`roles.user_id = ${req.user.id}`);
-            }
-          }),
-        )
-        .andWhere(
-          new Brackets((qb) => {
-            if (query.status) {
-              if (query.status != 'Draft') {
-                qb.andWhere('latest_submission.status = :status', {
-                  status: query.status,
-                });
-                qb.andWhere('init.last_update_at = init.last_submitted_at');
-              } else if (query.status == 'Draft') {
-                qb.andWhere('init.last_submitted_at is null');
-                qb.orWhere('init.last_update_at != init.last_submitted_at');
-                qb.orWhere('latest_submission.status = :status', {
-                  status: 'Draft',
-                });
-              }
-            }
-          }),
-        )
-        .orderBy(this.sort(query))
-        .leftJoinAndSelect('init.roles', 'roles')
-        .leftJoinAndSelect('init.latest_submission', 'latest_submission')
-        .leftJoinAndSelect('init.center_status', 'center_status')
-        .leftJoinAndSelect('init.latest_history', 'latest_history')
-        .leftJoinAndSelect('latest_history.user', 'user')
+async findAllFull(query: any, req: any) {
+  try {
+    const take = Number(query.limit) || 10;
+    const page = Number(query.page) || 1;
+    const skip = (page - 1) * take;
+    const userId = req.user.id;
 
-        .take(take)
-        .skip(skip)
-        .getManyAndCount();
+    // ---------- 1) MAIN QUERY: initiatives WITHOUT latest_submission join ----------
+    // Build base query selecting only initiative + small joins. Avoid joining one-to-many relations
+    // (like roles) unless required by filters to reduce result-set explosion.
+    const baseQb = this.initiativeRepository.createQueryBuilder('init').where(
+      'init.archived = :archived',
+      { archived: false },
+    );
 
-      return {
-        result: finalResult,
-        count: total,
-      };
-    } catch (error) {
-      throw new BadRequestException('Connection Error');
+    // center status and latest_history are lightweight single-valued relations used in list view
+    baseQb.leftJoinAndSelect('init.center_status', 'center_status');
+    baseQb.leftJoinAndSelect('init.latest_history', 'latest_history');
+    baseQb.leftJoinAndSelect('latest_history.user', 'user');
+
+    // Only join roles (one-to-many) when filtering by role or user membership to avoid
+    // row multiplication which hurts pagination performance.
+   baseQb.leftJoinAndSelect('init.roles', 'roles');
+
+    // name filter
+    if (query.name && String(query.name).trim() !== '') {
+      baseQb.andWhere('init.name LIKE :name', {
+        name: `%${String(query.name).trim()}%`,
+      });
     }
-  }
+
+    // initiative_id filter
+    if (query.initiative_id != null && query.initiative_id !== '') {
+      const id = String(query.initiative_id);
+      baseQb.andWhere('init.official_code IN (:...initiative_id)', {
+        initiative_id: [
+          `INIT-0${id}`,
+          `INIT-${id}`,
+          `PLAT-${id}`,
+          `PLAT-0${id}`,
+          `SGP-${id}`,
+          `SGP-0${id}`,
+          `SP0${id}`,
+          `SP${id}`,
+        ],
+      });
+    }
+
+    // my_role / my_ini
+    if (query?.my_role) {
+      if (Array.isArray(query.my_role)) {
+        baseQb.andWhere('roles.role IN (:...my_role)', {
+          my_role: query.my_role,
+        });
+      } else {
+        baseQb.andWhere('roles.role = :my_role', {
+          my_role: query.my_role,
+        });
+      }
+      baseQb.andWhere('roles.user_id = :userId', { userId });
+    } else if (query?.my_ini === 'true') {
+      baseQb.andWhere('roles.user_id = :userId', { userId });
+    }
+
+    // NOTE: here I'm only applying status logic that uses INIT columns.
+    // Anything that depends on latest_submission.status we will handle in 2nd query or skip.
+    if (query.status === 'Draft') {
+      baseQb.andWhere(
+        new Brackets((qb) => {
+          qb.where('init.last_submitted_at IS NULL')
+            .orWhere('init.last_update_at != init.last_submitted_at');
+        }),
+      );
+    } else if (query.status && query.status !== 'Draft') {
+      // simplest option: leave this out here and handle in 2nd query,
+      // or if you must filter at DB level, you'll need a subquery on latest_submission
+      // (I explain trade-offs below).
+    }
+
+    // count query (cheap)
+    const countQb = baseQb
+      .clone()
+      .select('COUNT(DISTINCT init.id)', 'cnt')
+      .orderBy(undefined)
+      .skip(undefined)
+      .take(undefined);
+
+    // data query (page of initiatives)
+    const dataQb = baseQb
+      .clone()
+      .orderBy(this.sort(query))
+      .take(take)
+      .skip(skip);
+
+    const [initiatives, rawCount] = await Promise.all([
+      dataQb.getMany(),
+      countQb.getRawOne<{ cnt: string }>(),
+    ]);
+
+    const total = Number(rawCount?.cnt ?? 0);
+    if (!initiatives.length) {
+      return { result: [], count: total };
+    }
+
+    // ---------- 2) SECOND QUERY: latest_submissions for these initiatives only ----------
+    const initiativeIds = initiatives.map((i) => i.latest_submission_id);
+
+    const submissionQb = this.submissionRepository
+      .createQueryBuilder('latest_submission')
+      // select only essential columns to reduce payload
+      .select([
+        'latest_submission.id',
+        'latest_submission.initiative_id',
+        'latest_submission.status',
+        'latest_submission.created_at',
+        'latest_submission.phase_id',
+      ])
+      .where('latest_submission.id IN (:...ids)', { ids: initiativeIds })
+    
+    // If you still want to filter by status using latest_submission:
+    if (query.status && query.status !== 'Draft') {
+      console.log('query.status',query.status)
+      submissionQb.andWhere('latest_submission.status = :status', {
+        status: query.status,
+
+      });
+    } else if (query.status === 'Draft') {
+      // optional: if you had a "Draft" in latest_submission too
+      // submissionQb.andWhere('latest_submission.status = :status', { status: 'Draft' });
+    }
+
+    const latestSubmissions = await submissionQb.getMany();
+
+    // Build a map: initiative_id -> latest_submission
+    const submissionByInitiative = new Map<
+      number | string,
+      typeof latestSubmissions[number]
+    >();
+
+    for (const sub of latestSubmissions) {
+      // adjust property name to match your entity (initiativeId / initiative_id)
+      const key = (sub as any).initiative_id ?? (sub as any).initiativeId;
+      if (key != null) {
+        submissionByInitiative.set(key, sub);
+      }
+    }
+
+    // ---------- 3) MERGE: attach latest_submission to initiatives ----------
+    for (const ini of initiatives) {
+      const submission = submissionByInitiative.get(ini.id);
+      // This assumes the relation name is "latest_submission"
+      (ini as any).latest_submission = submission ?? null;
+    }
+    let result;
+    if(query.status && query.status !== 'Draft')
+      result = initiatives.filter(d=>d.latest_submission)
+    else result= initiatives;
+        return {
+          result: result,
+          count: total,
+        };
+      } catch (error) {
+        console.log(error)
+        throw new BadRequestException('Connection Error');
+      }
+}
+
+
   async exportInitForTrack() {
     try {
       const data = await this.initiativeRepository
@@ -530,19 +621,32 @@ export class InitiativesService {
     };
   }
 
-  findOne(id: number) {
-    return this.initiativeRepository.findOne({
-      where: { id },
-      relations: [
-        'organizations',
-        'roles',
-        'roles.organizations',
-        'center_status',
-        'latest_submission',
-      ],
-      order: { id: 'desc' },
-    });
-  }
+async findOne(id: number) {
+  // 1) Load initiative & the cheap relations
+  const initiative = await this.initiativeRepository.findOne({
+    where: { id },
+    relations: [
+      'organizations',
+      'roles',
+      'roles.organizations',
+      'center_status',
+      // ⚠️  no latest_submission here
+    ],
+  });
+
+  if (!initiative) return null;
+
+  // 2) Load only the latest submission, optimized
+  const latestSubmission = await this.submissionRepository.findOne({
+    where: { initiative: { id } }, // or { initiativeId: id } depending on your model
+    order: { created_at: 'DESC' }, // or whatever date column you use
+    // select: ['id', 'title', 'created_at'], // limit columns if needed
+  });
+
+  // 3) Attach it manually
+  return { ...initiative, latest_submission: latestSubmission };
+}
+
 
   async updateRoles(initiative_id, id, initiativeRoles: InitiativeRoles, user) {
     const currentRole = await this.iniRolesRepository.findOne({
@@ -568,10 +672,10 @@ export class InitiativesService {
         );
       }
     }
-    if (user.role != 'admin' && initiativeRoles.role == 'Leader')
+    if (user.role != 'admin' && initiativeRoles.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Only Admin Can Add Leader';
 
-    if (user.role != 'admin' && currentRole.role == 'Leader')
+    if (user.role != 'admin' && currentRole.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Admin Only Can edit Leader';
 
     if (!errorMsg) {
@@ -605,7 +709,7 @@ export class InitiativesService {
     });
 
     let errorMsg = null;
-    if (roles.role == 'Leader' && user.role != 'admin')
+    if (roles.role == INITIATIVE_ROLES.LEAD && user.role != 'admin')
       errorMsg = 'Only admin can delete leader';
 
     if (roles && !errorMsg) return await this.iniRolesRepository.remove(roles);
@@ -638,7 +742,7 @@ export class InitiativesService {
     };
     //To the user that was added by the Admin or Leader/Coordinator
 
-    if (user.role != 'admin' && role.role == 'Leader')
+    if (user.role != 'admin' && role.role == INITIATIVE_ROLES.LEAD)
       errorMsg = 'Only Admin Can Add Leader';
 
     if (!errorMsg) {
@@ -652,10 +756,10 @@ export class InitiativesService {
           });
 
           if (
-            data.role == 'Coordinator' ||
-            data.role == 'Contributor' ||
-            data.role == 'Co-leader'   ||
-            data.role =='Financial Focal Point'
+            data.role == INITIATIVE_ROLES.COORDINATOR ||
+            data.role == INITIATIVE_ROLES.CONTRIBUTOR ||
+            data.role == INITIATIVE_ROLES.CO_LEADER   ||
+            data.role == INITIATIVE_ROLES.FINANCIAL_FOCAL_POINT
           ) {
             this.emailService.sendEmailTobyVarabel(
               user,
@@ -700,7 +804,7 @@ export class InitiativesService {
           initiative_id,
         },
       });
-      return ['Contributor', 'Leader', 'Contributor'].includes(result?.role);
+      return [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(result?.role as INITIATIVE_ROLES);
     } catch (error) {
       return false;
     }
@@ -715,7 +819,7 @@ export class InitiativesService {
           initiative_id,
         },
       });
-      return ['Contributor', 'Leader', 'Contributor'].includes(result?.role);
+      return [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(result?.role as INITIATIVE_ROLES);
     } catch (error) {
       return false;
     }
@@ -731,7 +835,7 @@ export class InitiativesService {
           initiative_id,
         },
       })
-      .then((r) => ['Contributor', 'Leader', 'Contributor'].includes(r.role))
+      .then((r) => [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(r.role as INITIATIVE_ROLES))
       .catch(() => false);
 
     return isMember;
@@ -750,7 +854,7 @@ export class InitiativesService {
           initiative_id: messageRecord.initiative_id,
         },
       })
-      .then((r) => ['Contributor', 'Leader'].includes(r.role))
+      .then((r) => [INITIATIVE_ROLES.CONTRIBUTOR, INITIATIVE_ROLES.LEAD].includes(r.role as INITIATIVE_ROLES))
       .catch(() => false);
 
     const message = await this.chatGroupRepositoryService.getMessagesById(
@@ -765,51 +869,138 @@ export class InitiativesService {
   }
 
   async getInitPartnersBudget(query: any) {
-    const initiative = await this.initiativeRepository
-      .createQueryBuilder('init')
-      .leftJoinAndSelect('init.submissions', 'submissions')
-      .where(
-        'submissions.id = (' +
-          this.submissionRepository
-            .createQueryBuilder('submissions')
-            .select('MAX(id)')
-            .where('submissions.initiative_id = init.id')
-            .getQuery() +
-          ')',
-      )
-      .andWhere('submissions.status = :status', {
-        status: SubmissionStatus.APPROVED,
-      })
-      .select([
-        'init.official_code',
-        'init.name',
-        'submissions.id',
-        'wp_budget.*',
-      ])
-      .addSelect('SUM(wp_budget.budget)', 'wp_budget_total')
-      .leftJoinAndSelect('submissions.wp_budget', 'wp_budget')
-      .leftJoinAndSelect('wp_budget.phase', 'phase')
-      .andWhere('phase.id = :phase_id', { phase_id: query.phase_id })
-      .leftJoinAndSelect('wp_budget.organization', 'organization')
-      .andWhere(
-        new Brackets((qb) => {
-          if (query.initiatives) {
-            qb.andWhere('init.id IN (:initiatives)', {
-              initiatives: query.initiatives,
-            });
-          }
-          if (query.partners) {
-            qb.andWhere('organization.code IN (:partners)', {
-              partners: query.partners,
-            });
-          }
-        }),
-      )
+    // Build a map of organization code -> org entity for name/acronym lookup
+    const allOrgs = await this.organizationRepository.find();
+    const orgMap = new Map<string, Organization>();
+    allOrgs.forEach((o) => orgMap.set(String(o.code), o));
 
-      .groupBy('init.id , wp_budget.organization_code')
+    // Find the latest approved submission per initiative that has porb_data
+    const qb = this.submissionRepository
+      .createQueryBuilder('sub')
+      .innerJoinAndSelect('sub.initiative', 'init')
+      .where('sub.status = :status', { status: SubmissionStatus.APPROVED })
+      .andWhere('sub.porb_data IS NOT NULL')
+      .andWhere("sub.porb_data != ''")
+      .orderBy('sub.id', 'DESC');
+
+    if (query.initiatives) {
+      const ids = Array.isArray(query.initiatives)
+        ? query.initiatives
+        : [query.initiatives];
+      qb.andWhere('init.id IN (:...ids)', { ids });
+    }
+
+    const approvedSubs = await qb.getMany();
+
+    // Keep only the latest per initiative
+    const seenInit = new Set<number>();
+    const latestSubs: Submission[] = [];
+    for (const sub of approvedSubs) {
+      if (seenInit.has(sub.initiative_id)) continue;
+      seenInit.add(sub.initiative_id);
+      latestSubs.push(sub);
+    }
+
+    // Parse porb_data and build the same shape the frontend expects
+    const partnerFilter = query.partners
+      ? new Set(
+          (Array.isArray(query.partners) ? query.partners : [query.partners]).map(String),
+        )
+      : null;
+
+    const result: any[] = [];
+
+    for (const sub of latestSubs) {
+      let porbData: any;
+      try {
+        porbData = typeof sub.porb_data === 'string'
+          ? JSON.parse(sub.porb_data)
+          : sub.porb_data;
+      } catch {
+        continue;
+      }
+
+      // Aggregate budget per center from porb_data
+      const centerBudgets = new Map<string, number>();
+
+      for (const aow of porbData.aows || []) {
+        for (const center of aow.centers || []) {
+          const code = String(center.center_code);
+          if (partnerFilter && !partnerFilter.has(code)) continue;
+
+          let budget = 0;
+          for (const h of center.hlos || []) budget += Number(h.hlo_budget) || 0;
+          for (const p of center.partners || []) budget += Number(p.partner_budget) || 0;
+          for (const m of center.melias || []) budget += Number(m.melia_budget) || 0;
+          for (const a of center.anaplan || []) budget += Number(a.porb_budget) || 0;
+          for (const c of center.cross_cutting || []) budget += Number(c.budget) || 0;
+
+          centerBudgets.set(code, (centerBudgets.get(code) || 0) + budget);
+        }
+      }
+
+      // Add bilateral budgets (center-level)
+      for (const b of porbData.bilaterals || []) {
+        const code = String(b.center_id);
+        if (partnerFilter && !partnerFilter.has(code)) continue;
+        centerBudgets.set(code, (centerBudgets.get(code) || 0) + (Number(b.bilateral_budget) || 0));
+      }
+
+      // Build wp_budget-compatible array
+      const wpBudget = Array.from(centerBudgets.entries()).map(
+        ([orgCode, total]) => {
+          const org = orgMap.get(orgCode);
+          return {
+            organization_code: orgCode,
+            total,
+            organization: org
+              ? { code: org.code, acronym: org.acronym, name: org.name }
+              : { code: orgCode, acronym: orgCode, name: orgCode },
+          };
+        },
+      );
+
+      result.push({
+        official_code: sub.initiative?.official_code,
+        name: sub.initiative?.name,
+        submissions: [{ id: sub.id, wp_budget: wpBudget }],
+      });
+    }
+
+    // Sort by official_code
+    result.sort((a, b) => (a.official_code || '').localeCompare(b.official_code || ''));
+
+    return result;
+  }
+  async getInitExport(
+    phase_id: number,
+    statusFilter?: string | string[],
+  ) {
+    const allowedStatuses = Object.values(SubmissionStatus);
+    const normalizedStatuses = Array.isArray(statusFilter)
+      ? statusFilter
+      : statusFilter
+      ? statusFilter.split(',').map((status) => status.trim())
+      : [];
+
+    const statuses = normalizedStatuses.filter((status): status is SubmissionStatus =>
+      allowedStatuses.includes(status as SubmissionStatus),
+    );
+
+    const fallbackStatuses =
+      statuses.length > 0 ? statuses : [SubmissionStatus.APPROVED];
+
+    const data = await this.initiativeRepository
+      .createQueryBuilder('init')
+      .leftJoinAndSelect('init.latest_submission', 'submission')
+      .where('submission.phase_id = :phase_id', { phase_id })
+      .andWhere('submission.status IN (:...statuses)', {
+        statuses: fallbackStatuses,
+      })
+      .andWhere('init.archived = :archived', { archived: false })
       .getMany();
 
-    return initiative;
+    return data;
   }
 
   async exportBudgetSummary(query: any) {

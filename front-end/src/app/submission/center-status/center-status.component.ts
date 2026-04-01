@@ -10,9 +10,10 @@ import { AppSocket } from 'src/app/socket.service';
 import { SubmitMessageComponent } from '../submit-message/submit-message.component';
 
 @Component({
-  selector: 'app-center-status',
-  templateUrl: './center-status.component.html',
-  styleUrls: ['./center-status.component.scss'],
+    selector: 'app-center-status',
+    templateUrl: './center-status.component.html',
+    styleUrls: ['./center-status.component.scss'],
+    standalone: false
 })
 export class CenterStatusComponent implements OnInit {
   @Input('organization_code') organization_code: string;

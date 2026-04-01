@@ -1,4 +1,5 @@
 export const environment = {
+    buildVersion: 'dev',
     production: false,
     clarityProjectId: null,
     socket_path:"/socket.io",
@@ -6,5 +7,7 @@ export const environment = {
     api_url:'https://planningtest-serv.ciat.cgiar.org',
     aws_cognito_link:'https://ost-toc.auth.us-east-1.amazoncognito.com',
     aws_cognito_client_id:'7j40ekbpnbq4aegcsgjmm66c90',
-    aws_cognito_client_redirect_uri:'https://plannigtest.ciat.cgiar.org/auth'
+    aws_cognito_client_redirect_uri:'https://plannigtest.ciat.cgiar.org/auth',
+    tawkPropertyId: '69c2f66b46a6c41c341aabe8',
+    tawkWidgetId: '1jkgp5563',
 };

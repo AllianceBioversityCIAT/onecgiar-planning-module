@@ -6,9 +6,10 @@ import { ToastrService } from "ngx-toastr";
 import { AsyncSubject, Subject } from "rxjs";
 
 @Component({
-  selector: "app-edit-under-maintenance",
-  templateUrl: "./edit-under-maintenance.component.html",
-  styleUrls: ["./edit-under-maintenance.component.scss"],
+    selector: "app-edit-under-maintenance",
+    templateUrl: "./edit-under-maintenance.component.html",
+    styleUrls: ["./edit-under-maintenance.component.scss"],
+    standalone: false
 })
 export class EditUnderMaintenanceComponent implements OnInit {
   constructor(

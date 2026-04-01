@@ -9,9 +9,10 @@ import { HeaderService } from 'src/app/header.service';
 import { AppSocket } from 'src/app/socket.service';
 
 @Component({
-  selector: 'app-center-validate',
-  templateUrl: './center-validate.component.html',
-  styleUrls: ['./center-validate.component.scss']
+    selector: 'app-center-validate',
+    templateUrl: './center-validate.component.html',
+    styleUrls: ['./center-validate.component.scss'],
+    standalone: false
 })
 export class CenterValidateComponent {
   @Input('organization_code') organization_code: string;

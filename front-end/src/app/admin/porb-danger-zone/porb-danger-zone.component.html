@@ -1,0 +1,268 @@
+<div class="user-management__icon-box">
+  <mat-icon class="user-management__icon-box__icon" style="color: #dc3545">
+    warning
+  </mat-icon>
+  <span class="user-management__icon-box__title">PORB Danger Zone</span>
+</div>
+
+<div class="user-management__text-box--1">
+  <p>
+    Admin tools for managing PORB data. A background cron job checks the TOC
+    API every minute and auto-harvests programs with updated data.
+  </p>
+</div>
+
+<div class="danger-zone-container">
+  <!-- Section 1: TOC Update Status -->
+  <div class="status-card">
+    <div class="status-card__header">
+      <mat-icon class="status-icon">sync</mat-icon>
+      <h3>TOC Sync Status</h3>
+      <span class="badge badge--info" *ngIf="!tocStatusLoading">
+        {{ pendingUpdates.length }} pending
+      </span>
+      <span class="badge badge--muted" *ngIf="tocStatusLoading">loading...</span>
+      <span class="auto-sync-toggle">
+        <mat-slide-toggle
+          [checked]="tocAutoSyncEnabled"
+          [disabled]="tocAutoSyncLoading"
+          (change)="toggleTocAutoSync()"
+          color="primary"
+        >
+          Auto-sync {{ tocAutoSyncEnabled ? 'ON' : 'OFF' }}
+        </mat-slide-toggle>
+      </span>
+    </div>
+    <p class="status-card__description">
+      The cron job runs every minute comparing TOC counters against our stored
+      values. Programs with a higher TOC counter are auto-harvested. The table
+      below shows the current state. Refreshes every 30s.
+    </p>
+
+    <div class="status-card__table-wrapper" *ngIf="tocStatus.length">
+      <table class="status-table">
+        <thead>
+          <tr>
+            <th>Program</th>
+            <th>TOC Title</th>
+            <th class="center">Our Counter</th>
+            <th class="center">TOC Counter</th>
+            <th class="center">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of tocStatus" [class.needs-update]="s.needs_update">
+            <td>
+              <strong>{{ s.official_code }}</strong>
+              <span class="program-name">{{ s.name }}</span>
+            </td>
+            <td>{{ s.toc_title || '-' }}</td>
+            <td class="center mono">{{ s.our_counter }}</td>
+            <td class="center mono">{{ s.toc_counter !== null ? s.toc_counter : '-' }}</td>
+            <td class="center">
+              <span *ngIf="!s.matched" class="badge badge--muted">No match</span>
+              <span *ngIf="s.matched && !s.needs_update" class="badge badge--ok">Up to date</span>
+              <span *ngIf="s.needs_update" class="badge badge--warn">Pending harvest</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p *ngIf="!tocStatus.length && !tocStatusLoading" class="empty-msg">
+      No programs found.
+    </p>
+  </div>
+
+  <!-- Section 2: Manual TOC Import -->
+  <div class="action-card">
+    <div class="action-card__header">
+      <mat-icon class="action-icon">cloud_download</mat-icon>
+      <h3>Manual TOC Import</h3>
+    </div>
+    <p class="action-card__description">
+      Manually trigger a TOC import for selected programs. Use this if you need
+      to force a re-harvest regardless of the counter.
+    </p>
+
+    <div class="action-card__controls">
+      <div class="program-list">
+        <div class="program-list__header">
+          <mat-checkbox
+            [checked]="selectedImportProgramIds.length === programs.length && programs.length > 0"
+            [indeterminate]="selectedImportProgramIds.length > 0 && selectedImportProgramIds.length < programs.length"
+            (change)="selectAllImport()"
+          >
+            Select All ({{ selectedImportProgramIds.length }}/{{ programs.length }})
+          </mat-checkbox>
+        </div>
+        <div class="program-list__items">
+          <mat-checkbox
+            *ngFor="let p of programs"
+            [checked]="isImportSelected(p.id)"
+            (change)="toggleImportProgram(p.id)"
+          >
+            {{ p.official_code }} - {{ p.name }}
+          </mat-checkbox>
+        </div>
+      </div>
+
+      <button
+        mat-raised-button
+        class="action-btn"
+        (click)="importToc()"
+        [disabled]="importLoading || !selectedImportProgramIds.length"
+      >
+        <mat-icon>cloud_download</mat-icon>
+        <span *ngIf="!importLoading">Import TOC Data</span>
+        <span *ngIf="importLoading">Importing...</span>
+      </button>
+    </div>
+
+    <div class="action-card__result" *ngIf="importResult">
+      <h4>Import Result</h4>
+      <pre>{{ importResult | json }}</pre>
+    </div>
+  </div>
+
+  <!-- Section 3: Clear PORB Data -->
+  <div class="danger-card">
+    <div class="danger-card__header">
+      <mat-icon class="danger-icon">delete_forever</mat-icon>
+      <h3>Clear PORB Data</h3>
+    </div>
+    <p class="danger-card__description">
+      Permanently delete all data from the 9 PORB tables. Choose a specific
+      program or clear everything. This also resets the TOC counter to 0.
+    </p>
+
+    <div class="danger-card__controls">
+      <mat-form-field appearance="outline" class="program-select">
+        <mat-label>Target Program</mat-label>
+        <mat-select [(value)]="selectedProgramId">
+          <mat-option [value]="null">All Programs</mat-option>
+          <mat-option *ngFor="let p of programs" [value]="p.id">
+            {{ p.official_code }} - {{ p.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        class="danger-btn"
+        (click)="clearAllData()"
+        [disabled]="loading"
+      >
+        <mat-icon>delete_forever</mat-icon>
+        <span *ngIf="!loading">Clear PORB Data</span>
+        <span *ngIf="loading">Clearing...</span>
+      </button>
+    </div>
+
+    <div class="danger-card__result" *ngIf="lastResult">
+      <h4>Result</h4>
+      <p>
+        Target: <strong>{{ lastResult.programId }}</strong> | Total deleted:
+        <strong>{{ lastResult.totalDeleted }}</strong> rows
+      </p>
+      <table class="result-table">
+        <tr>
+          <th>Table</th>
+          <th>Rows Deleted</th>
+        </tr>
+        <tr *ngFor="let item of lastResult.deletedRows | keyvalue">
+          <td>{{ item.key }}</td>
+          <td>{{ item.value }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 4: Reset All PORB Status to Draft -->
+  <div class="danger-card">
+    <div class="danger-card__header">
+      <mat-icon class="danger-icon">restart_alt</mat-icon>
+      <h3>Reset All PORB Status to Draft</h3>
+    </div>
+    <p class="danger-card__description">
+      Reset all programs' PORB status back to Draft so they can be edited
+      again. This sets each program's latest submission to Draft and unlocks
+      the PORB for editing.
+    </p>
+
+    <div class="danger-card__controls">
+      <button
+        mat-raised-button
+        class="danger-btn"
+        (click)="resetAllToDraft()"
+        [disabled]="resetDraftLoading"
+      >
+        <mat-icon>restart_alt</mat-icon>
+        <span *ngIf="!resetDraftLoading">Reset All to Draft</span>
+        <span *ngIf="resetDraftLoading">Resetting...</span>
+      </button>
+    </div>
+
+    <div class="danger-card__result" *ngIf="resetDraftResult !== null">
+      <p>
+        <strong>{{ resetDraftResult.updated }}</strong> submission(s) reset to Draft.
+      </p>
+    </div>
+  </div>
+
+  <!-- Section 5: Clear Emails -->
+  <div class="danger-card">
+    <div class="danger-card__header">
+      <mat-icon class="danger-icon">email</mat-icon>
+      <h3>Clear Emails</h3>
+    </div>
+    <p class="danger-card__description">
+      Permanently delete all records from the email table.
+    </p>
+
+    <div class="danger-card__controls">
+      <button
+        mat-raised-button
+        class="danger-btn"
+        (click)="clearEmails()"
+        [disabled]="clearEmailsLoading"
+      >
+        <mat-icon>email</mat-icon>
+        <span *ngIf="!clearEmailsLoading">Clear Emails</span>
+        <span *ngIf="clearEmailsLoading">Clearing...</span>
+      </button>
+    </div>
+
+    <div class="danger-card__result" *ngIf="clearEmailsResult !== null">
+      <p>Emails table cleared.</p>
+    </div>
+  </div>
+
+  <!-- Section 6: Clear History -->
+  <div class="danger-card">
+    <div class="danger-card__header">
+      <mat-icon class="danger-icon">history</mat-icon>
+      <h3>Clear History of Changes</h3>
+    </div>
+    <p class="danger-card__description">
+      Permanently delete all records from the history table and clear
+      latest_history references on initiatives.
+    </p>
+
+    <div class="danger-card__controls">
+      <button
+        mat-raised-button
+        class="danger-btn"
+        (click)="clearHistory()"
+        [disabled]="clearHistoryLoading"
+      >
+        <mat-icon>history</mat-icon>
+        <span *ngIf="!clearHistoryLoading">Clear History</span>
+        <span *ngIf="clearHistoryLoading">Clearing...</span>
+      </button>
+    </div>
+
+    <div class="danger-card__result" *ngIf="clearHistoryResult !== null">
+      <p>History table cleared.</p>
+    </div>
+  </div>
+</div>

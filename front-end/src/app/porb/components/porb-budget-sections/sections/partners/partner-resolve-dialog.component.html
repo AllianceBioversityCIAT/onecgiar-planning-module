@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>Resolve Unknown Partner</h2>
+<mat-dialog-content>
+  <p class="resolve-hint">Search for a CLARISA institution to replace the unknown partner.</p>
+  <ng-select
+    class="clarisa-search"
+    [items]="searchResults"
+    bindLabel="name"
+    [searchable]="true"
+    [clearable]="true"
+    [loading]="searching"
+    [(ngModel)]="selectedPartner"
+    (search)="onSearch($event)"
+    placeholder="Type to search institutions..."
+    notFoundText="No institutions found"
+    [appendTo]="'body'"
+  >
+    <ng-template ng-option-tmp let-item="item">
+      <span class="option-name">{{ item.name }}</span>
+      <span class="option-acronym" *ngIf="item.acronym"> ({{ item.acronym }})</span>
+    </ng-template>
+  </ng-select>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="resolve()" [disabled]="!selectedPartner || resolving">
+    {{ resolving ? 'Resolving...' : 'Resolve' }}
+  </button>
+</mat-dialog-actions>

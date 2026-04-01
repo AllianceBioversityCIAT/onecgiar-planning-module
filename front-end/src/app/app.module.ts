@@ -1,10 +1,8 @@
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
-import { SatPopoverModule } from "@ncstate/sat-popover";
-
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
-import { HTTP_INTERCEPTORS, HttpClientModule } from "@angular/common/http";
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
 import { MatCardModule } from "@angular/material/card";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MatIconModule } from "@angular/material/icon";
@@ -64,6 +62,7 @@ import { AssignOrganizationsComponent } from "./assign-organizations/assign-orga
 import { SpinnerComponent } from "./spinner/spinner.component";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { LoadingInterceptor } from "./loading.interceptor";
+import { SocketIdInterceptor } from "./socket-id.interceptor";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatRadioModule } from "@angular/material/radio";
 import { AccessDeniedComponent } from "./access-denied/access-denied.component";
@@ -110,138 +109,188 @@ import { BudgetAssumptionSummaryComponent } from './submission/budget-assumption
 import { GeographicLocationComponent } from './submission/geographic-location/geographic-location.component';
 import { StickyOnScrollDirective } from "./sticky-on-scroll.directive";
 import { SubmitMessageComponent } from './submission/submit-message/submit-message.component';
+import { ExportComponent } from './admin/export/export.component';
+import { OnlineUsersComponent } from './admin/online-users/online-users.component';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { PorbComponent } from "./porb/porb.component";
+import { PorbOverviewComponent } from "./porb/components/porb-overview/porb-overview.component";
+import { PoolSectionComponent } from "./porb/components/porb-budget-sections/sections/pool/pool-section.component";
+import { PartnersSectionComponent } from "./porb/components/porb-budget-sections/sections/partners/partners-section.component";
+import { W3SectionComponent } from "./porb/components/porb-budget-sections/sections/w3/w3-section.component";
+import { MeliaSectionComponent } from "./porb/components/porb-budget-sections/sections/melia/melia-section.component";
+import { AnaplanSectionComponent } from "./porb/components/porb-budget-sections/sections/anaplan/anaplan-section.component";
+import { BudgetAndAssumptionComponent } from "./porb/components/porb-budget-sections/shared/budget-and-assumption/budget-and-assumption.component";
+import { CrossSectionComponent } from "./porb/components/porb-budget-sections/sections/cross/cross-section.component";
+import { CountryPercentageSectionComponent } from "./porb/components/porb-budget-sections/sections/country-percentage/country-percentage-section.component";
+import { ClearBudgetConfirmDialogComponent } from "./porb/components/porb-budget-sections/shared/clear-budget-confirm-dialog.component";
+import { PorbTourComponent } from "./porb/components/porb-tour/porb-tour.component";
+import { StanderdCrossCuttingComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting.component";
+import { StanderdCrossCuttingDialogComponent } from "./admin/standerd-cross-cutting/standerd-cross-cutting-dialog/standerd-cross-cutting-dialog.component";
+import { PartnerResolveDialogComponent } from "./porb/components/porb-budget-sections/sections/partners/partner-resolve-dialog.component";
+import { CountryAddDialogComponent } from "./porb/components/porb-budget-sections/sections/country-percentage/country-add-dialog.component";
+import { LocationBenefitSectionComponent } from "./porb/components/porb-budget-sections/sections/location-benefit/location-benefit-section.component";
+import { LocationAddDialogComponent } from "./porb/components/porb-budget-sections/sections/location-benefit/location-add-dialog.component";
+import { SummaryAssumptionIconComponent } from "./porb/components/summary-assumption-icon/summary-assumption-icon.component";
+import { SummaryAssumptionDialogComponent } from "./porb/components/summary-assumption-icon/summary-assumption-dialog.component";
+import { ValidationErrorsDialogComponent } from "./porb/components/validation-errors-dialog.component";
+import { PorbDangerZoneComponent } from "./admin/porb-danger-zone/porb-danger-zone.component";
+import { PorbVersionViewComponent } from "./porb/porb-version-view/porb-version-view.component";
 
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    InQuePipe,
-    SubmissionComponent,
-    ConfirmComponent,
-    CrossCuttingComponent,
-    ViewDataComponent,
-    InitiativesComponent,
-    PhasesComponent,
-    PhaseDialogComponent,
-    TeamMembersComponent,
-    NewTeamMemberComponent,
-    PeriodsComponent,
-    PeriodDialogComponent,
-    UsersComponent,
-    UserDialogComponent,
-    AuthComponent,
-    SubmitedVersionsComponent,
-    SubmitedVersionComponent,
-    AdminComponent,
-    AdminNavbarComponent,
-    StatusComponent,
-    IpsrComponent,
-    HeaderComponent,
-    FooterComponent,
-    CenterStatusComponent,
-    OrganizationsComponent,
-    OrganizationDialogComponent,
-    AdminIpsrComponent,
-    IpsrDialogComponent,
-    PhaseInitiativesComponent,
-    AssignOrganizationsComponent,
-    SpinnerComponent,
-    AccessDeniedComponent,
-    DeleteConfirmDialogComponent,
-    SearchInitComponent,
-    FilterVersionComponent,
-    ParametersSettingsComponent,
-    // AnticipatedYearComponent,
-    AnticipatedYearDialogComponent,
-    OrderSelectPipePipe,
-    PopoverManagementComponent,
-    PopoverDialogComponent,
-    SortPipe,
-    EmailsComponent,
-    EmailBodyComponent,
-    CustomMessageComponent,
-    TrackPORBsComponent,
-    HistoryOfChangeComponent,
-    UnderMaintenancePageComponent,
-    EditUnderMaintenanceComponent,
-    TotalInitSummaryComponent,
-    SyncInitComponent,
-    ArchivedComponent,
-    ArchiveComponent,
-    SubmittedVersionComponent,
-    TeamMemberComponent,
-    TableComponent,
-    VersionComponent,
-    GrantedAccessPipePipe,
-    CenterValidateComponent,
-    QualitativeIndicatorsComponent,
-    BudgetAssumptionsComponent,
-    BudgetAssumptionSummaryComponent,
-    GeographicLocationComponent,
-    StickyOnScrollDirective,
-    SubmitMessageComponent
-  ],
-  imports: [ 
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    FormsModule,
-    MatCardModule,
-    MatIconModule,
-    MatTabsModule,
-    MatChipsModule,
-    BrowserAnimationsModule,
-    MatCheckboxModule,
-    MatDialogModule,
-    MatButtonModule,
-    ReactiveFormsModule,
-    MatMenuModule,
-    MatProgressSpinnerModule,
-    NgxJsonViewerModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatSelectModule,
-    BrowserAnimationsModule,
-    NgSelectModule,
-    ToastrModule.forRoot(),
-    MatTooltipModule,
-    MatToolbarModule,
-    MatSlideToggleModule,
-    MatRadioModule,
-    NoopAnimationsModule,
-    SatPopoverModule,
-    PopoverModule,
-    EditorModule,
-    TrustHTMLModule,
-    ChatModule,
-    HighchartsChartModule,
-    TimeagoModule.forRoot(),
-    NgxMaskDirective, NgxMaskPipe
-  ],
-  providers: [
-    AppSocket,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: HttpHeaderService,
-      multi: true,
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: LoadingInterceptor,
-      multi: true,
-    },
-    // {
-    //   provide: TINYMCE_SCRIPT_SRC,
-    //   useValue: "tinymce/tinymce.min.js",
-    // },
-    SortPipe,
-    provideNgxMask()
-  ],
-  bootstrap: [AppComponent],
-})
+@NgModule({ declarations: [
+        AppComponent,
+        InQuePipe,
+        SubmissionComponent,
+        ConfirmComponent,
+        CrossCuttingComponent,
+        ViewDataComponent,
+        InitiativesComponent,
+        PhasesComponent,
+        PhaseDialogComponent,
+        TeamMembersComponent,
+        NewTeamMemberComponent,
+        PeriodsComponent,
+        PeriodDialogComponent,
+        UsersComponent,
+        UserDialogComponent,
+        AuthComponent,
+        SubmitedVersionsComponent,
+        SubmitedVersionComponent,
+        AdminComponent,
+        AdminNavbarComponent,
+        StatusComponent,
+        IpsrComponent,
+        HeaderComponent,
+        FooterComponent,
+        CenterStatusComponent,
+        OrganizationsComponent,
+        OrganizationDialogComponent,
+        AdminIpsrComponent,
+        IpsrDialogComponent,
+        PhaseInitiativesComponent,
+        AssignOrganizationsComponent,
+        SpinnerComponent,
+        AccessDeniedComponent,
+        DeleteConfirmDialogComponent,
+        SearchInitComponent,
+        FilterVersionComponent,
+        ParametersSettingsComponent,
+        // AnticipatedYearComponent,
+        AnticipatedYearDialogComponent,
+        OrderSelectPipePipe,
+        PopoverManagementComponent,
+        PopoverDialogComponent,
+        SortPipe,
+        EmailsComponent,
+        EmailBodyComponent,
+        CustomMessageComponent,
+        TrackPORBsComponent,
+        HistoryOfChangeComponent,
+        UnderMaintenancePageComponent,
+        EditUnderMaintenanceComponent,
+        TotalInitSummaryComponent,
+        SyncInitComponent,
+        ArchivedComponent,
+        ArchiveComponent,
+        SubmittedVersionComponent,
+        TeamMemberComponent,
+        TableComponent,
+        VersionComponent,
+        GrantedAccessPipePipe,
+        CenterValidateComponent,
+        QualitativeIndicatorsComponent,
+        BudgetAssumptionsComponent,
+        BudgetAssumptionSummaryComponent,
+        GeographicLocationComponent,
+        StickyOnScrollDirective,
+        SubmitMessageComponent,
+        ExportComponent,
+        OnlineUsersComponent,
+        PorbComponent,
+        PorbOverviewComponent,
+        PoolSectionComponent,
+        PartnersSectionComponent,
+        W3SectionComponent,
+        MeliaSectionComponent,
+        AnaplanSectionComponent,
+        BudgetAndAssumptionComponent,
+        CrossSectionComponent,
+        CountryPercentageSectionComponent,
+        ClearBudgetConfirmDialogComponent,
+        PorbTourComponent,
+        StanderdCrossCuttingComponent,
+        StanderdCrossCuttingDialogComponent,
+        PartnerResolveDialogComponent,
+        CountryAddDialogComponent,
+        LocationBenefitSectionComponent,
+        LocationAddDialogComponent,
+        SummaryAssumptionIconComponent,
+        SummaryAssumptionDialogComponent,
+        ValidationErrorsDialogComponent,
+        PorbDangerZoneComponent,
+        PorbVersionViewComponent,
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        FormsModule,
+        MatCardModule,
+        MatIconModule,
+        MatTabsModule,
+        MatChipsModule,
+        BrowserAnimationsModule,
+        MatCheckboxModule,
+        MatDialogModule,
+        MatButtonModule,
+        ReactiveFormsModule,
+        MatMenuModule,
+        MatProgressSpinnerModule,
+        NgxJsonViewerModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatTableModule,
+        MatSortModule,
+        MatPaginatorModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
+        MatSelectModule,
+        BrowserAnimationsModule,
+        NgSelectModule,
+        ToastrModule.forRoot(),
+        MatTooltipModule,
+        MatToolbarModule,
+        MatSlideToggleModule,
+        MatRadioModule,
+        NoopAnimationsModule,
+        PopoverModule,
+        EditorModule,
+        TrustHTMLModule,
+        ChatModule,
+        HighchartsChartModule,
+        TimeagoModule.forRoot(),
+        NgxMaskDirective, NgxMaskPipe,
+        MatProgressBarModule], providers: [
+        AppSocket,
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: HttpHeaderService,
+            multi: true,
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: LoadingInterceptor,
+            multi: true,
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: SocketIdInterceptor,
+            multi: true,
+        },
+        // {
+        //   provide: TINYMCE_SCRIPT_SRC,
+        //   useValue: "tinymce/tinymce.min.js",
+        // },
+        SortPipe,
+        provideNgxMask(),
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule {}

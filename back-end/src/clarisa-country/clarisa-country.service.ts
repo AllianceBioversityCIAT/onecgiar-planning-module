@@ -68,7 +68,7 @@ export class ClarisaCountryService {
       initiative_id,
       center_code: partner_code,
       wp_id:  workPackageObject.wp_id,
-      result_id: result_id,
+      result_id: String(result_id),
       phase_id: activePhase.id
     });
 
@@ -78,7 +78,7 @@ export class ClarisaCountryService {
         center_code: partner_code,
         wp_id: workPackageObject.wp_id,
         country_code: c,
-        result_id: result_id,
+        result_id: String(result_id),
         phase_id: activePhase.id
       }),
     );

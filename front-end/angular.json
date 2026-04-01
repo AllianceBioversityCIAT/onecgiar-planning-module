@@ -15,11 +15,11 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-devkit/build-angular:application",
           "options": {
             "outputPath": "dist/planning",
             "index": "src/index.html",
-            "main": "src/main.ts",
+            "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -55,12 +55,11 @@
               "outputHashing": "all"
             },
             "development": {
-              "buildOptimizer": false,
               "optimization": false,
-              "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true,
+              "outputHashing": "all",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -69,16 +68,27 @@
               ]
             },
             "staging": {
-              "buildOptimizer": false,
               "optimization": false,
-              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.staging.ts"
+                }
+              ]
+            },
+            "local": {
+              "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true,
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.staging.ts"
+                  "with": "src/environments/environment.local.ts"
                 }
               ]
             }
@@ -89,13 +99,16 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "planning:build:production"
+              "buildTarget": "planning:build:production"
             },
             "development": {
-              "browserTarget": "planning:build:development"
+              "buildTarget": "planning:build:development"
             },
             "staging": {
-              "browserTarget": "planning:build:staging"
+              "buildTarget": "planning:build:staging"
+            },
+            "local": {
+              "buildTarget": "planning:build:local"
             }
           },
           "defaultConfiguration": "development"
@@ -103,7 +116,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "planning:build"
+            "buildTarget": "planning:build"
           }
         },
         "test": {

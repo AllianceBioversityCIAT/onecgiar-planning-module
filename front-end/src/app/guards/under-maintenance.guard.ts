@@ -1,15 +1,15 @@
-import { Injectable } from "@angular/core";
+import { Injectable } from '@angular/core';
 import {
   ActivatedRouteSnapshot,
   Router,
   RouterStateSnapshot,
   UrlTree,
-} from "@angular/router";
-import { Observable } from "rxjs";
-import { AuthService } from "../services/auth.service";
-import { UnderMaintenanceService } from "../services/under-maintenance.service";
+} from '@angular/router';
+import { Observable } from 'rxjs';
+import { AuthService } from '../services/auth.service';
+import { UnderMaintenanceService } from '../services/under-maintenance.service';
 
-@Injectable({ providedIn: "root" })
+@Injectable({ providedIn: 'root' })
 export class UserGuard {
   constructor(
     private authService: AuthService,
@@ -34,14 +34,19 @@ export class UserGuard {
     console.log(isUser);
 
     this.hold.push(await this.underMaintenanceService.getUnderMaintenance());
+
     for (let item of this.hold) this.k = item[0].status;
+
+    console.log('this.hold', this.hold, this.k);
     // if (UserGuard)
     //   if (this.k === 0) return this.router.navigateByUrl("/under");
     //   else return this.router.navigateByUrl("/");
 
     // const loggedUser = this.authService.getLoggedInUser();
-    if (isUser && this.k == 1) return this.router.navigateByUrl("/under");
-    else return true;
+    if (isUser && this.k == 1) {
+      this.router.navigateByUrl('/under');
+      return false;
+    } else return true;
 
     // if (isUser && this.underMaintenanceService.k === false) return true;
     // else this.router.navigateByUrl("/under");

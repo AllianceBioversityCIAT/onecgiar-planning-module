@@ -10,9 +10,10 @@ export interface DialogData {
 }
 
 @Component({
-  selector: "app-period-dialog",
-  templateUrl: "./period-dialog.component.html",
-  styleUrls: ["./period-dialog.component.scss"],
+    selector: "app-period-dialog",
+    templateUrl: "./period-dialog.component.html",
+    styleUrls: ["./period-dialog.component.scss"],
+    standalone: false
 })
 export class PeriodDialogComponent implements OnInit {
   periodId: number = 0;

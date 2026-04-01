@@ -4,9 +4,10 @@ import { AuthService } from "src/app/services/auth.service";
 import { UnderMaintenanceService } from "src/app/services/under-maintenance.service";
 
 @Component({
-  selector: "app-under-maintenance-page",
-  templateUrl: "./under-maintenance-page.component.html",
-  styleUrls: ["./under-maintenance-page.component.scss"],
+    selector: "app-under-maintenance-page",
+    templateUrl: "./under-maintenance-page.component.html",
+    styleUrls: ["./under-maintenance-page.component.scss"],
+    standalone: false
 })
 export class UnderMaintenancePageComponent implements OnInit {
   data: string;

@@ -4,7 +4,7 @@ import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
 import { InitiativesService } from "../services/initiatives.service";
 import { AuthService } from "../services/auth.service";
-import { ROLES } from "../components/new-team-member/new-team-member.component";
+import { ROLES } from "../shared/roles";
 import { AssignOrganizationsComponent } from "../assign-organizations/assign-organizations.component";
 import { PhasesService } from "../services/phases.service";
 import { MatDialog } from "@angular/material/dialog";
@@ -16,9 +16,10 @@ import { ToastrService } from "ngx-toastr";
  * @title Data table with sorting, pagination, and filtering.
  */
 @Component({
-  selector: "app-initiatives",
-  templateUrl: "./initiatives.component.html",
-  styleUrls: ["./initiatives.component.scss"],
+    selector: "app-initiatives",
+    templateUrl: "./initiatives.component.html",
+    styleUrls: ["./initiatives.component.scss"],
+    standalone: false
 })
 export class InitiativesComponent implements OnInit {
   displayedColumns: string[] = [

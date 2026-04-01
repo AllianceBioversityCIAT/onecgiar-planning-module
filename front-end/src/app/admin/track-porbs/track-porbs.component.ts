@@ -2,243 +2,160 @@ import { Component, OnInit } from "@angular/core";
 import { MatTableDataSource } from "@angular/material/table";
 import { PageEvent } from "@angular/material/paginator";
 import * as Highcharts from "highcharts";
+import HighchartsMore from "highcharts/highcharts-more";
 import { HeaderService } from "src/app/header.service";
-import { AuthService } from "src/app/services/auth.service";
-import { InitiativesService } from "src/app/services/initiatives.service";
 import { PhasesService } from "src/app/services/phases.service";
+import { PorbService } from "src/app/services/porb.service";
 import { Meta, Title } from "@angular/platform-browser";
-declare var require: any;
-require("highcharts/highcharts-more.js")(Highcharts);
+HighchartsMore(Highcharts);
 
 @Component({
-  selector: "app-track-porbs",
-  templateUrl: "./track-porbs.component.html",
-  styleUrls: ["./track-porbs.component.scss"],
+    selector: "app-track-porbs",
+    templateUrl: "./track-porbs.component.html",
+    styleUrls: ["./track-porbs.component.scss"],
+    standalone: false
 })
-export class TrackPORBsComponent {
-  // Chartstuff
+export class TrackPORBsComponent implements OnInit {
+  Highcharts: typeof Highcharts = Highcharts;
 
   constructor(
     private headerService: HeaderService,
     private phasesService: PhasesService,
-    private initiativesService: InitiativesService,
-    private authService: AuthService,
+    private porbService: PorbService,
     private title: Title,
     private meta: Meta
   ) {
     this.headerService.background =
-      "linear-gradient(to  bottom, #04030F, #020106)";
+      "linear-gradient(to bottom, #04030F, #020106)";
     this.headerService.backgroundNavMain =
-      "linear-gradient(to  top, #0F212F, #09151E)";
+      "linear-gradient(to top, #0F212F, #09151E)";
     this.headerService.backgroundUserNavButton =
-      "linear-gradient(to  top, #0F212F, #09151E)";
+      "linear-gradient(to top, #0F212F, #09151E)";
     this.headerService.backgroundFooter =
-      "linear-gradient(to  top, #0F212F, #09151E)";
+      "linear-gradient(to top, #0F212F, #09151E)";
   }
 
-  length!: number;
-  pageSize: number = 100;
-  pageIndex: number = 1;
+  length = 0;
+  pageSize = 100;
+  pageIndex = 1;
 
-  filters: any = null;
-
-  phase: any;
-  initiatives: any = [];
-  initiativesOnly: any = [];
-  user: any;
-  map: any = [];
-  status: any = [];
-  result: any = [];
+  phase: any = null;
+  allPrograms: any[] = [];
+  columnsToDisplay = ["official_code", "title", "status"];
+  dataSource: MatTableDataSource<any>;
   pieChart: any = null;
 
-  columnsToDisplay: string[] = [
-    "official_code",
-    "title",
-    "updated by",
-    "status",
-  ];
-  dataSource: MatTableDataSource<any>;
+  private readonly statusColors: Record<string, string> = {
+    Approved: "#198754",
+    Pending: "#e65100",
+    Draft: "#616A9E",
+  };
 
   async ngOnInit() {
-    if (this.authService.getLoggedInUser()) await this.getInitiativesOnly();
-
-    if (this.authService.getLoggedInUser()) await this.getInitiatives();
-    this.user = this.authService.getLoggedInUser();
-
     this.phase = await this.phasesService.getActivePhase();
+    await this.loadData();
+    this.title.setTitle("Track PORBs");
+    this.meta.updateTag({ name: "description", content: "Track PORBs" });
+  }
 
+  async loadData() {
+    const phaseId = this.phase?.id;
+
+    const [approved, pending, draft] = await Promise.all([
+      this.porbService.getExportList(phaseId, "Approved"),
+      this.porbService.getExportList(phaseId, "Pending"),
+      this.porbService.getExportList(phaseId, "Draft"),
+    ]);
+
+    this.buildPieChart({
+      Approved: approved?.length || 0,
+      Pending: pending?.length || 0,
+      Draft: draft?.length || 0,
+    });
+
+    // Combine all into one table
+    this.allPrograms = [
+      ...(approved || []),
+      ...(pending || []),
+      ...(draft || []),
+    ].sort((a, b) => (a.official_code || "").localeCompare(b.official_code || ""));
+
+    this.dataSource = new MatTableDataSource(this.allPrograms);
+    this.length = this.allPrograms.length;
+  }
+
+  buildPieChart(counts: Record<string, number>) {
+    const data = Object.entries(counts)
+      .filter(([, count]) => count > 0)
+      .map(([name, count]) => ({
+        name,
+        y: count,
+        color: this.statusColors[name] || "#999",
+      }));
 
     this.pieChart = {
       chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
         type: "pie",
-        backgroundColor: { fill: "#e2e2e2" },
+        backgroundColor: "transparent",
+        height: 340,
       },
-      credits: {
-        enabled: false,
-      },
-
+      credits: { enabled: false },
       title: {
-        text: "Track PORBs graph",
+        text: `PORB Status — ${this.phase?.name || ""}`,
         align: "center",
-        style: {
-          fontSize: "1.9rem",
-          color: "#04030f",
-        },
+        style: { fontSize: "16px", color: "#1e1e1e", fontWeight: "600" },
       },
       tooltip: {
-        borderWidth: 0,
-        backgroundColor: "rgba(255,255,255,0)",
-        shadow: false,
-        useHTML: true,
-        style: {
-          textAlign: "left",
-          color: "#04030f",
-          fontFamily: '"Poppins", sans-serif !important',
-          fontSize: "1.6rem",
-          fontStyle: "normal",
-          fontWeight: "400",
-
-          border: "1px solid #172f8f !important",
-          borderRadius: "5px",
-          opacity: "1",
-          zIndex: "9999 !important",
-          padding: "4.8em 5.2em 0",
-          left: "0 !important",
-          top: "0 !important",
-        },
-        headerFormat: "<table>",
-        pointFormat:
-          '<tr><th colspan="2"><span class="chart-bubble-title"><b class="title-tooltip">{point.name}</b></span></th></tr>' +
-          "<tr><th>" +
-          "</th><td>{series.name}: <b>{point.percentage:.1f}%</b></td></tr>",
-        footerFormat: "</table>",
-        followPointer: true,
-      },
-      accessibility: {
-        point: {
-          valueSuffix: "%",
-        },
+        pointFormat: "<b>{point.y}</b> program(s) ({point.percentage:.1f}%)",
       },
       plotOptions: {
         pie: {
           allowPointSelect: true,
           cursor: "pointer",
           dataLabels: {
-            style: {
-              textAlign: "left",
-              color: "#04030f",
-              fontFamily: '"Poppins", sans-serif !important',
-              fontSize: "1.6rem",
-              fontStyle: "normal",
-              fontWeight: "400",
-              backgroundColor: "#fff",
-              border: "1px solid #172f8f !important",
-              borderRadius: "5px",
-              opacity: "1",
-              zIndex: "9999 !important",
-              padding: "4.8em 5.2em 0",
-              left: "0 !important",
-              top: "0 !important",
-            },
             enabled: true,
-            format: "<b>{point.name}</b>: {point.percentage:.1f} %",
+            format: "<b>{point.name}</b>: {point.y}",
+            style: { fontSize: "13px", fontWeight: "400", color: "#333" },
           },
         },
       },
       series: [
         {
-          name: "Usage",
+          name: "Programs",
           colorByPoint: true,
-          data: this.status
-            .filter((d: any) => d.count)
-            .map((d: any) => {
-              return { name: d.el, y: +d.count };
-            }),
-
-          colors: ["#2A2E45", "#616A9E", "#FBBCBC", "#DCDEE9"],
+          data,
         },
       ],
     };
-
-    this.title.setTitle("Track PORBs");
-    this.meta.updateTag({ name: "description", content: "Track PORBs" });
   }
 
-  async getInitiativesOnly() {
-    this.initiativesOnly = await this.initiativesService.getInitiativesOnly();
-    const arr = [];
-    for (let i = 0; i < this.initiativesOnly.result.length; i++) {
-      arr.push(
-        this.initiativesOnly?.result[i]?.last_submitted_at != null &&
-          this.initiativesOnly?.result[i]?.last_update_at ==
-            this.initiativesOnly?.result[i]?.last_submitted_at
-          ? this.initiativesOnly?.result[i]?.latest_submission
-            ? this.initiativesOnly?.result[i]?.latest_submission?.status
-            : "Draft"
-          : "Draft"
-      );
-    }
-    this.status = arr.reduce(
-      (b, c) => (
-        (
-          b[b.findIndex((d: { el: any }) => d.el === c)] ||
-          b[b.push({ el: c, count: 0 }) - 1]
-        ).count++,
-        b
-      ),
-      []
-    );
-    this.result = this.status
-      .filter((d: any) => d.count)
-      .map((d: any) => {
-        return { name: d.el, y: +d.count };
-      });
-  }
-
-  async getInitiatives() {
-    if (this.authService.getLoggedInUser())
-      this.initiatives = await this.initiativesService.getInitiatives(
-        null,
-        this.pageIndex,
-        this.pageSize
-      );
-    this.dataSource = new MatTableDataSource(this.initiatives?.result);
-    this.length = this.initiatives.count;
-
-  }
-
-  async pagination(event: PageEvent) {
+  pagination(event: PageEvent) {
     this.pageIndex = event.pageIndex + 1;
     this.pageSize = event.pageSize;
-    this.getInitiatives();
   }
-
 
   async exportData() {
-    await this.initiativesService.exportInitiativesForTrackPORBs();
-  }
-
-  Highcharts: typeof Highcharts = Highcharts;
-
-  color(level: number) {
-    switch (level) {
-      case 25:
-        return ` background-color: #1f6ca6;`;
-      case 20:
-        return ` background-color: #357AAE;`;
-
-      case 16:
-        return ` background-color: #257fc2;`;
-      case 12:
-        return ` background-color: #3090d9;`;
-      case 9:
-        return ` background-color: #0091ff;`;
-
-      default:
-        return ` background-color: #6ab8f2;`;
+    if (!this.allPrograms.length) return;
+    const programIds = this.allPrograms.map((p: any) => p.id);
+    try {
+      const response: any = await this.porbService.exportBulkZip(programIds);
+      if (response?.body) {
+        const blob = response.body as Blob;
+        const contentDisposition = response.headers?.get("Content-Disposition");
+        let filename = "PORB_Export.zip";
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) filename = match[1];
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error("Export failed:", e);
     }
   }
 }

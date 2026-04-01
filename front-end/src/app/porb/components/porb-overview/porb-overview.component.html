@@ -1,0 +1,113 @@
+<div class="overview" *ngIf="initiative">
+  <div class="overview-top">
+    <div class="initiative-header">
+      <span class="overview-chip">PORB Overview</span>
+      <h1>{{ initiative?.official_code }} - {{ initiative?.name }}</h1>
+      <p class="initiative-description">
+        Select Center, AOW, then Additional section to continue.
+      </p>
+      <span class="submission-status-badge" [ngClass]="statusClass">
+        {{ submissionStatus }}
+      </span>
+    </div>
+
+    <div class="overview-right">
+      <div class="online-inline" data-tour-anchor="porb-online-users">
+        <span class="online-title">Online Now</span>
+        <div class="online-avatars" *ngIf="onlineProgramUsers.length; else noOnlineUsers">
+          <div
+            class="avatar-item"
+            *ngFor="let colleague of onlineProgramUsers"
+            [matTooltip]="colleague.name"
+          >
+            <span class="colleague-avatar">{{ colleague.initials }}</span>
+            <span class="colleague-dot"></span>
+          </div>
+        </div>
+        <ng-template #noOnlineUsers>
+          <span class="online-empty">No users online</span>
+        </ng-template>
+      </div>
+
+      <div class="overview-actions">
+        <button
+          type="button"
+          class="icon-btn"
+          matTooltip="Replay Tour"
+          (click)="tourClicked.emit()"
+        >
+          <mat-icon>help_outline</mat-icon>
+        </button>
+        <a
+          class="icon-btn"
+          matTooltip="Team Members"
+          data-tour-anchor="porb-action-team"
+          [routerLink]="[
+            '/program',
+            initiative?.id,
+            initiative?.official_code,
+            'team-members'
+          ]"
+        >
+          <mat-icon>groups</mat-icon>
+        </a>
+        <button
+          type="button"
+          class="icon-btn"
+          matTooltip="History of Change"
+          data-tour-anchor="porb-action-history"
+          (click)="historyClicked.emit()"
+        >
+          <mat-icon>manage_history</mat-icon>
+        </button>
+        <a
+          class="icon-btn"
+          matTooltip="Submitted Versions"
+          data-tour-anchor="porb-action-versions"
+          [routerLink]="[
+            '/program',
+            initiative?.id,
+            initiative?.official_code,
+            'submited-versions'
+          ]"
+        >
+          <mat-icon>checklist</mat-icon>
+        </a>
+        <button
+          *ngIf="submissionStatus === 'Pending' && submissionId"
+          type="button"
+          class="icon-btn cancel-submit"
+          matTooltip="Cancel PORB"
+          data-tour-anchor="porb-action-cancel"
+          (click)="cancelSubmissionClicked.emit()"
+        >
+          <mat-icon>cancel</mat-icon>
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          matTooltip="Export All (ZIP)"
+          data-tour-anchor="porb-action-export"
+          [disabled]="exportingZip"
+          (click)="exportAllZip.emit()"
+        >
+          <mat-spinner *ngIf="exportingZip" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!exportingZip">folder_zip</mat-icon>
+        </button>
+        <button
+          *ngIf="canSubmit && submissionStatus === 'Draft'"
+          type="button"
+          class="submit-btn"
+          matTooltip="Submit PORB"
+          data-tour-anchor="porb-action-submit"
+          [disabled]="submitting"
+          (click)="submitClicked.emit()"
+        >
+          <mat-spinner *ngIf="submitting" diameter="18"></mat-spinner>
+          <mat-icon *ngIf="!submitting">publish</mat-icon>
+          <span>{{ submitting ? 'Submitting...' : 'Submit' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

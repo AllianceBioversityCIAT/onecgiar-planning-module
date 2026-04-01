@@ -2,9 +2,10 @@ import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { AppSocket } from "../../socket.service";
 
 @Component({
-  selector: "app-geographic-location",
-  templateUrl: "./geographic-location.component.html",
-  styleUrls: ["./geographic-location.component.scss"],
+    selector: "app-geographic-location",
+    templateUrl: "./geographic-location.component.html",
+    styleUrls: ["./geographic-location.component.scss"],
+    standalone: false
 })
 export class GeographicLocationComponent implements OnInit {
   constructor(public socket: AppSocket) {}
@@ -64,7 +65,7 @@ export class GeographicLocationComponent implements OnInit {
       (val) =>
         val.initiative_id === this.initiative_id &&
         val.center_code === this.center.code &&
-        val.result_id === this.item_id &&
+        val.result_id == this.item_id &&
         val.workPackage.wp_official_code ===
           this.workPackage?.ost_wp.wp_official_code + "-partners"
     );

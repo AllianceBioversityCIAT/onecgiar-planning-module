@@ -1,0 +1,170 @@
+<aside class="side-navigation">
+  <div class="nav-panels-row">
+    <div class="nav-panel centers-panel" [class.collapsed]="centersCollapsed" data-tour-anchor="porb-centers-nav">
+      <div class="nav-header">
+        <h3>Centers</h3>
+        <button
+          type="button"
+          class="panel-toggle"
+          [disabled]="!selectedCenter"
+          (click)="toggleCenters.emit()"
+        >
+          {{ centersCollapsed ? "+" : "-" }}
+        </button>
+      </div>
+      <button
+        *ngFor="let center of centers"
+        type="button"
+        class="nav-item"
+        [class.active]="isCenterActive(center)"
+        [class.completed]="isCenterCompleted(center)"
+        (click)="selectCenter.emit(center)"
+      >
+        <span class="center-label">{{ getCenterLabel(center, centersCollapsed) }}</span>
+        <span class="center-icons">
+          <span
+            *ngIf="hasCenterError(center)"
+            class="section-error-icon"
+            [matTooltip]="'This center has validation errors'"
+            matTooltipPosition="right"
+            (click)="$event.stopPropagation()"
+          >
+            !
+          </span>
+          <span
+            *ngIf="canShowCenterCompleteAction(center)"
+            class="center-complete-icon"
+            [class.is-completed]="selectedCenterCompleted"
+            [class.is-disabled]="centerStatusUpdating"
+            [matTooltip]="selectedCenterCompleted ? 'Mark center as incomplete' : 'Mark center as complete'"
+            matTooltipPosition="right"
+            (click)="$event.stopPropagation(); !centerStatusUpdating && toggleSelectedCenterCompletion.emit()"
+          >
+            ✓
+          </span>
+        </span>
+      </button>
+    </div>
+
+    <div
+      class="nav-panel aows-panel"
+      [class.disabled]="!selectedCenter"
+      [class.collapsed]="aowsCollapsed"
+      data-tour-anchor="porb-aow-nav"
+    >
+      <div class="nav-header">
+        <h3>AOWs</h3>
+        <button
+          type="button"
+          class="panel-toggle"
+          [disabled]="!selectedCenter || !selectedAow"
+          (click)="toggleAows.emit()"
+        >
+          {{ aowsCollapsed ? "+" : "-" }}
+        </button>
+      </div>
+      <ng-container *ngIf="selectedCenter; else aowLockedState">
+        <button
+          *ngFor="let aow of aows"
+          type="button"
+          class="nav-item"
+          [class.active]="
+            (selectedAow?.id && aow?.id && selectedAow?.id === aow?.id) ||
+            (selectedAow?.wpCode && selectedAow?.wpCode === aow?.wpCode) ||
+            (selectedAow?.code && selectedAow?.code === aow?.code)
+          "
+          (click)="selectAow.emit(aow)"
+        >
+          <span class="section-label">{{ getAowLabel(aow, aowsCollapsed) }}</span>
+          <span
+            *ngIf="hasAowError(aow)"
+            class="section-error-icon"
+            [matTooltip]="'This AOW has validation errors for selected center'"
+            matTooltipPosition="right"
+            (click)="$event.stopPropagation()"
+          >
+            !
+          </span>
+        </button>
+      </ng-container>
+      <ng-template #aowLockedState>
+        <p class="nav-empty-state">Select Center first</p>
+      </ng-template>
+    </div>
+
+    <div class="nav-panel extra-nav-panel" [class.disabled]="!selectedAow" data-tour-anchor="porb-sections-nav">
+      <h3>Budget Sections</h3>
+      <ng-container *ngIf="selectedAow; else sectionLockedState">
+        <button
+          *ngFor="let item of extraNavigationItems"
+          type="button"
+          class="nav-item"
+          [class.active]="selectedExtraNavigation === item"
+          (click)="selectExtra.emit(item)"
+        >
+          <span class="section-label">{{ item }}</span>
+          <span
+            *ngIf="hasSectionError(item)"
+            class="section-error-icon"
+            [matTooltip]="getSectionError(item)"
+            matTooltipPosition="right"
+            (click)="$event.stopPropagation()"
+          >
+            !
+          </span>
+        </button>
+      </ng-container>
+      <ng-template #sectionLockedState>
+        <p class="nav-empty-state">Select AOW first</p>
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="nav-panel consolidation-panel" *ngIf="selectedAow && consolidationBudgetSummary" data-tour-anchor="porb-consolidation">
+    <h3>Consolidated ({{ selectedAow?.code }})</h3>
+    <table class="consolidation-table indicators-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Target</th>
+          <th>Budget (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of consolidationIndicators">
+          <td>{{ item.title }}</td>
+          <td>{{ item.target }}</td>
+          <td>{{ item.budget }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="consolidation-table totals-table">
+      <tbody>
+        <tr>
+          <td><strong>Pool HLO</strong></td>
+          <td>{{ consolidationBudgetSummary.poolHlo }}</td>
+          <td><strong>Partners</strong></td>
+          <td>{{ consolidationBudgetSummary.partners }}</td>
+        </tr>
+        <tr>
+          <td><strong>MELIA</strong></td>
+          <td>{{ consolidationBudgetSummary.melia }}</td>
+          <td><strong>Pooled Total</strong></td>
+          <td>{{ consolidationBudgetSummary.pooledTotal }}</td>
+        </tr>
+        <tr>
+          <td><strong>W3/Bilateral</strong></td>
+          <td>{{ consolidationBudgetSummary.w3 }}</td>
+          <td><strong>Consolidated Total</strong></td>
+          <td>{{ consolidationBudgetSummary.consolidatedTotal }}</td>
+        </tr>
+        <tr>
+          <td><strong>Anaplan Total</strong></td>
+          <td>{{ consolidationBudgetSummary.anaplan }}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</aside>

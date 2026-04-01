@@ -1,0 +1,92 @@
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+}
+
+.tour-backdrop {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.44);
+  z-index: 5000;
+  pointer-events: none;
+}
+
+.tour-backdrop.top {
+  inset: 0 0 auto 0;
+}
+
+.tour-backdrop.left {
+  left: 0;
+}
+
+.tour-backdrop.right {
+  right: 0;
+}
+
+.tour-backdrop.bottom {
+  inset: auto 0 0 0;
+  background: rgba(15, 23, 42, 0.44);
+}
+
+.tour-bubble {
+  position: fixed;
+  width: min(420px, calc(100vw - 32px));
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #cfd8f3;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28);
+  padding: 1.1rem;
+  z-index: 5004;
+
+  h3 {
+    margin: 0 0 0.45rem;
+    color: #111827;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: #334155;
+    font-size: 1.3rem;
+    line-height: 1.45;
+  }
+}
+
+.tour-counter {
+  margin-bottom: 0.4rem;
+  font-size: 1.15rem;
+  color: #475569;
+}
+
+.tour-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.action-btn {
+  height: 3.1rem;
+  border-radius: 8px;
+  padding: 0 0.9rem;
+  border: 1px solid transparent;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.action-btn.ghost {
+  border-color: #d0d8ec;
+  color: #334155;
+  background: #f8faff;
+}
+
+.action-btn.primary {
+  color: #ffffff;
+  background: #5569dd;
+}
+
+.action-btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

@@ -38,6 +38,7 @@ import { SignedInUser } from 'src/user.decorator';
 import { firstValueFrom, map } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 
+
 @UseGuards(JwtAuthGuard)
 @ApiTags('Initiatives')
 @Controller('initiatives')
@@ -125,6 +126,15 @@ export class InitiativesController {
   @ApiBearerAuth()
   getInitPartnersBudget(@Query() query: any) {
     return this.initiativesService.getInitPartnersBudget(query);
+  }
+
+  @Get('export/:phase_id')
+  @ApiBearerAuth()
+  getInitExport(
+    @Param('phase_id') phase_id: number,
+    @Query('status') status?: string | string[],
+  ) {
+    return this.initiativesService.getInitExport(phase_id, status);
   }
 
 

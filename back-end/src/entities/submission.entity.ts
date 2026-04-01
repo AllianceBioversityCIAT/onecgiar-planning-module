@@ -85,6 +85,9 @@ export class Submission {
   @Column({ nullable: true })
   toc_version: number;
 
+  @Column({ type: 'longtext', nullable: true })
+  porb_data: string;
+
   @Column({ nullable: true })
   toc_phase_id: string;
 

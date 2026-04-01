@@ -4,9 +4,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import { HeaderService } from "src/app/header.service";
 
 @Component({
-  selector: "app-cross-cutting",
-  templateUrl: "./cross-cutting.component.html",
-  styleUrls: ["./cross-cutting.component.scss"],
+    selector: "app-cross-cutting",
+    templateUrl: "./cross-cutting.component.html",
+    styleUrls: ["./cross-cutting.component.scss"],
+    standalone: false
 })
 export class CrossCuttingComponent implements OnInit {
   crossForm: FormGroup<any> = new FormGroup([]);

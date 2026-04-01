@@ -61,36 +61,33 @@ export class AwsStrategy extends PassportStrategy(Strategy, 'AWS') {
     ).catch((e) => false);
 
     if (!profile) throw new UnauthorizedException();
+    console.log('[Cognito userInfo]', JSON.stringify(profile, null, 2));
     let userInfo = null;
-    let newinfo: any = null;
-    const user = await this.userService.findOneByEmail(
-      (<string>profile.email || '').toLowerCase(),
-    );
-    newinfo = {
-      email: profile.email.toLowerCase(),
-      first_name: profile?.given_name,
-      last_name: profile?.family_name,
-    };
+    const email = (<string>profile.email || '').toLowerCase();
+    const profileName = profile?.name?.includes('@') ? null : profile?.name;
+    const first_name = profile?.given_name || profileName?.split(' ')[0] || email.split('@')[0];
+    const last_name = profile?.family_name || profileName?.split(' ').slice(1).join(' ') || '';
+
+    const user = await this.userService.findOneByEmail(email);
+
     if (user) {
-      if (
-        user.email.toLowerCase() == (<string>profile.email || '').toLowerCase() &&
-        (user?.first_name != profile?.given_name ||
-          user?.last_name != profile?.family_name)
-      ) {
-        user.first_name = profile.given_name;
-        user.last_name = profile.family_name;
-        userInfo = await this.userService.userRepository.save(user, {
-          reload: true,
-        });
+      // Only update name if user doesn't already have one set
+      if (!user.first_name && !user.last_name) {
+        user.first_name = first_name;
+        user.last_name = last_name;
+        await this.userService.userRepository.save(user);
       }
-      userInfo = user;
-    } else
-      userInfo = await this.userService.userRepository.save(newinfo, {
-        reload: true,
-      });
+      // Re-fetch to get the generated full_name column
+      userInfo = await this.userService.findOneByEmail(email);
+    } else {
+      await this.userService.userRepository.save(
+        this.userService.userRepository.create({ email, first_name, last_name }),
+      );
+      userInfo = await this.userService.findOneByEmail(email);
+    }
 
     if (userInfo) {
-      let access_token = this.jwtService.sign({...user}, {
+      let access_token = this.jwtService.sign({...userInfo}, {
         expiresIn: 10 * 365 * 24 * 60 * 60,
       });
       return {

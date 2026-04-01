@@ -15,7 +15,7 @@
               'program',
               initiative_data.id,
               initiative_data.official_code,
-              'submission'
+              'porb'
             ]"
             class="risk-nav-link"
             ><span class="line">&nbsp;</span
@@ -30,7 +30,7 @@
           <a
             routerLink="/program/{{ initiative_data.id }}/{{
               initiative_data.official_code
-            }}/submission"
+            }}/porb"
             class="risk-nav-link"
             >Complete the PORB</a
           >
@@ -150,7 +150,7 @@
                     (initUser?.role == 'Contributor' || initUser?.role == 'Financial Focal Point' || initUser?.role == 'MELIA Focal Point') && user?.role == 'user'
                   }"
                 >
-                  Cancel Submission
+                  Cancel PORB
                 </button>
               </div>
             </div>
@@ -166,9 +166,9 @@
               </div>
 
               <div class="tab-phase card-title-3 m-b-t">{{ this.phase.name }}</div>
-              <div class="tab-version card-title-3 m-b-t">
+              <!-- <div class="tab-version card-title-3 m-b-t">
                 ToC version ID: {{ this.tocSubmissionData.version }}
-              </div>
+              </div> -->
               <div class="tab-title card-title-3 m-b-t">
                 Section: Summary
               </div>
@@ -202,7 +202,7 @@
             Please contact admin (PCU) if you would like to make any changes to
             the approved PORB
             <a href="mailto:projectcoordinationunit@cgiar.org"
-              >projectcoordinationunit@cgiar.org</a
+              >projectcoordinationunit&#64;cgiar.org</a
             >
           </div>
         </mat-card>
@@ -1605,9 +1605,9 @@
             </div>
 
             <div class="card-title-3 m-b-t">{{ this.phase.name }}</div>
-            <div class="card-title-3 m-b-t">
+            <!-- <div class="card-title-3 m-b-t">
               ToC version ID: {{ this.tocSubmissionData.version }}
-            </div>
+            </div> -->
             <div [ngClass]="{
               'approved': getStatus() === 'Approved',
               'rejected': getStatus() === 'Rejected',
@@ -1646,7 +1646,7 @@
           Please contact admin (PCU) if you would like to make any changes to
           the approved PORB
           <a href="mailto:projectcoordinationunit@cgiar.org"
-            >projectcoordinationunit@cgiar.org</a
+            >projectcoordinationunit&#64;cgiar.org</a
           >
         </div>
       </mat-card>
@@ -1668,8 +1668,15 @@
           *ngFor="let wp of actualWps?.slice(0, 1)"
          
          
-          label="{{ wp.ost_wp.acronym }}"
         >
+          <ng-template mat-tab-label>
+            <span>{{ wp.ost_wp.acronym }}</span>
+            <mat-icon
+              *ngIf="hasAowError(partner.code, wp.ost_wp.wp_official_code)"
+              style="color: red"
+              >error_outline</mat-icon
+            >
+          </ng-template>
           <mat-card>
             <div class="plural-head">
               <mat-card-title class="card-title-table"
@@ -1749,7 +1756,7 @@
                           {{  getScope(indicator, 'item')  }}
                         </td>
                         <td class="talign-center" style="width: 10% !important">
-                          {{  getTargetValue(indicator?.targets) }}
+                          {{  getTargetValue(indicator?.targets,partner.code) }}
                         </td>
                         <td [ngClass]="{ itemIndicatorHasError: itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] }" 
                             class="talign-center" style="width: 10% !important">
@@ -1768,7 +1775,8 @@
                               partnersStatus[partner.code] ||
                               initStatus == 'Pending' ||
                               initStatus == 'Approved' ||
-                              !partner?.canEdit
+                              !partner?.canEdit ||
+                              !getTargetValue(indicator?.targets,partner.code)
                             "
                               (keyup)="
                                 changeCalcForIndicator(
@@ -2459,9 +2467,9 @@
               </div>
               <div class="tab-title card-title-3 m-b-t">Center: {{ partner.acronym }}</div>
               <div class="tab-phase card-title-3 m-b-t">{{ this.phase.name }}</div>
-              <div class="tab-version card-title-3 m-b-t">
+              <!-- <div class="tab-version card-title-3 m-b-t">
                 ToC version ID: {{ this.tocSubmissionData.version }}
-              </div>
+              </div> -->
               <div [ngClass]="{
                 'approved': getStatus() === 'Approved',
                 'rejected': getStatus() === 'Rejected',
@@ -2501,7 +2509,7 @@
             Please contact admin (PCU) if you would like to make any changes to
             the approved PORB
             <a href="mailto:projectcoordinationunit@cgiar.org"
-              >projectcoordinationunit@cgiar.org</a
+              >projectcoordinationunit&#64;cgiar.org</a
             >
           </div>
         </mat-card>
@@ -2750,12 +2758,19 @@
           [disableRipple]="true"
           dynamicHeight="true"
         >
-          <mat-tab
-            *ngFor="let wp of actualWps; let i = index; first as isFirst; last as isLast"
+        <mat-tab
+          *ngFor="let wp of actualWps; let i = index; first as isFirst; last as isLast"
            
            
-            label="{{ wp.ost_wp.acronym }}"
           >
+            <ng-template mat-tab-label>
+              <span>{{ wp.ost_wp.acronym }}</span>
+              <mat-icon
+                *ngIf="hasAowError(partner.code, wp.ost_wp.wp_official_code)"
+                style="color: red"
+                >error_outline</mat-icon
+              >
+            </ng-template>
             <mat-card>
               <div class="plural-head">
                 <mat-card-title class="card-title-table"
@@ -2841,7 +2856,7 @@
                             {{  getScope(indicator, 'item')  }}
                           </td>
                           <td class="talign-center" style="width: 10% !important">
-                            {{  getTargetValue(indicator?.targets) }}
+                            {{  getTargetValue(indicator?.targets,partner.code) }}
                           </td>
                           <td [ngClass]="{ itemIndicatorHasError: itemIndicatorHasError[partner.code][wp.ost_wp.wp_official_code][item.id][indicator.id] }" 
                               class="talign-center" style="width: 10% !important">
@@ -2860,7 +2875,8 @@
                                 partnersStatus[partner.code] ||
                                 initStatus == 'Pending' ||
                                 initStatus == 'Approved' ||
-                                !partner?.canEdit
+                                !partner?.canEdit ||
+                                !getTargetValue(indicator?.targets,partner.code)
                               "
                                 (keyup)="
                                   changeCalcForIndicator(
@@ -3904,7 +3920,7 @@
                         ]
                       "
                     >
-                    <ng-container *ngIf="item.code">
+                    <ng-container>
                       <tr>
                         <td class="wp-title">
                             {{item.name}}
@@ -4132,7 +4148,15 @@
 
 
 
-          <mat-tab label="W3/Bilateral">
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <span>W3/Bilateral</span>
+              <mat-icon
+                *ngIf="hasW3Error(partner.code)"
+                style="color: red"
+                >error_outline</mat-icon
+              >
+            </ng-template>
             <ng-container *ngIf="partnerProjects[partner.code].length">
             <mat-card>
               <div class="sub-head">
@@ -4338,7 +4362,15 @@
 
 
 
-          <mat-tab label="MELIA Study">
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <span>MELIA Study</span>
+              <mat-icon
+                *ngIf="hasMeliaError(partner.code)"
+                style="color: red"
+                >error_outline</mat-icon
+              >
+            </ng-template>
             <ng-container *ngIf="partnersMelia.length">
             <mat-card>
               <div class="sub-head">

@@ -1,0 +1,63 @@
+<div class="table-box">
+  <div class="table-tools" *ngIf="rows.length" data-tour-anchor="porb-section-tools">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search account"
+      [(ngModel)]="search"
+    />
+    <select class="tool-select" [(ngModel)]="filterAccount">
+      <option value="">All Accounts</option>
+      <option *ngFor="let option of accountOptions" [value]="option">{{ option }}</option>
+    </select>
+    <button type="button" class="export-btn" (click)="export()">Export Excel</button>
+  </div>
+
+  <div class="validation-warnings" *ngIf="sectionValidation?.hasError">
+    <div class="validation-warning" *ngFor="let msg of validationMessages">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ msg }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="rows.length" class="table-scroll">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th>Main Accounts</th>
+          <th>Total budget (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of filteredRows">
+          <td class="row-title">{{ row.account }}</td>
+          <td class="num-cell">
+            <app-budget-and-assumption
+              [attr.data-tour-anchor]="row === filteredRows[0] ? 'porb-budget-input' : null"
+              [(value)]="row.porb_budget"
+              [assumptionEnabled]="false"
+              [disabled]="!canEdit"
+              [isSaving]="savingIds.has(row.anaplan_id)"
+              [isError]="errorIds.has(row.anaplan_id)"
+              [isSaved]="savedIds.has(row.anaplan_id)"
+              (commit)="saveRow(row)"
+            ></app-budget-and-assumption>
+          </td>
+        </tr>
+
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="2">No data found for selected filters.</td>
+        </tr>
+        <tr class="subtotal-row" *ngIf="filteredRows.length">
+          <td class="subtotal-label">Subtotal</td>
+          <td class="num-cell">{{ subtotal }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="!rows.length">
+    <mat-icon>info_outline</mat-icon>
+    <span>No Anaplan records found for the selected Center and AOW. Budget data is imported from Anaplan.</span>
+  </div>
+</div>

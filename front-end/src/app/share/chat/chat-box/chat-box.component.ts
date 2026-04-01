@@ -4,9 +4,10 @@ import { AuthService } from "src/app/services/auth.service";
 import { ChatMessage } from "../chat/chat.component";
 
 @Component({
-  selector: "app-chat-box",
-  templateUrl: "./chat-box.component.html",
-  styleUrls: ["./chat-box.component.scss"],
+    selector: "app-chat-box",
+    templateUrl: "./chat-box.component.html",
+    styleUrls: ["./chat-box.component.scss"],
+    standalone: false
 })
 export class ChatBoxComponent implements OnInit {
   readonly lastId = uuid();

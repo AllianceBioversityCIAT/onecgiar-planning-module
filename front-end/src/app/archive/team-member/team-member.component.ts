@@ -7,9 +7,10 @@ import { HeaderService } from 'src/app/header.service';
 import { ArchiveService } from 'src/app/services/archive.service';
 
 @Component({
-  selector: 'app-team-member',
-  templateUrl: './team-member.component.html',
-  styleUrls: ['./team-member.component.scss']
+    selector: 'app-team-member',
+    templateUrl: './team-member.component.html',
+    styleUrls: ['./team-member.component.scss'],
+    standalone: false
 })
 export class TeamMemberComponent implements OnInit {
 

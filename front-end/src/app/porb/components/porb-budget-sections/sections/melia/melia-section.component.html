@@ -1,0 +1,84 @@
+<div class="table-box">
+  <div class="table-tools" data-tour-anchor="porb-section-tools">
+    <input
+      class="tool-input"
+      type="text"
+      placeholder="Search MELIA"
+      [(ngModel)]="search"
+    />
+    <select class="tool-select" [(ngModel)]="filterOutputs">
+      <option value="">All Outcomes</option>
+      <option *ngFor="let option of outputOptions" [value]="option">{{ option }}</option>
+    </select>
+    <button type="button" class="export-btn" (click)="export()">Export Excel</button>
+  </div>
+
+  <div class="table-scroll">
+    <table class="additional-table">
+      <thead>
+        <tr>
+          <th>MELIA study</th>
+          <th>Supported outcomes</th>
+          <th>Total budget (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of filteredRows; let i = index" [class.row-error]="rowHasValidationError(row)" [class.toc-updated]="isTocUpdated(row) || isTocAdded(row)">
+          <td [class.deleted-cell]="row.toc_is_deleted">
+            <span *ngIf="row.toc_is_deleted" class="deleted-badge" matTooltip="Removed from TOC">Deleted</span>
+            <span *ngIf="isTocUpdated(row) && !row.toc_is_deleted" class="toc-badge" matTooltip="Recently Updated from TOC">TOC</span>
+            <span *ngIf="isTocAdded(row) && !row.toc_is_deleted" class="new-badge" matTooltip="Recently Added from TOC">NEW</span>
+            {{ row.melia_name || "-" }}
+          </td>
+          <td
+            class="row-title"
+            *ngIf="isGroupedCellStart(filteredRows, i, 'melia_outputs')"
+            [attr.rowspan]="getGroupedCellRowspan(filteredRows, i, 'melia_outputs')"
+          >
+            {{ row.melia_outputs || "-" }}
+          </td>
+          <td class="budget-cell-with-error num-cell" [class.deleted-cell]="row.toc_is_deleted">
+            <app-budget-and-assumption
+              [attr.data-tour-anchor]="i === 0 ? 'porb-budget-input' : null"
+              [(value)]="row.melia_budget"
+              [(assumption)]="row.melia_assumption"
+              [disabled]="!canEdit"
+              [isSaving]="savingIds.has(row.id)"
+              [isError]="errorIds.has(row.id)"
+              [isSaved]="savedIds.has(row.id)"
+              (commit)="saveRow(row)"
+              (assumptionCommit)="saveRow(row)"
+              (pasteBudget)="pasteFromSpreadsheet($event, i, 'melia_budget', 'melia_assumption')"
+            ></app-budget-and-assumption>
+            <span
+              *ngIf="rowHasValidationError(row)"
+              class="row-error-icon"
+              [attr.data-tour-anchor]="i === 0 ? 'porb-row-error' : null"
+              matTooltip="Budget requires assumption"
+              matTooltipPosition="left"
+            >
+              !
+            </span>
+            <button
+              *ngIf="row.toc_is_deleted && canEdit"
+              class="row-delete-btn"
+              matTooltip="Remove this TOC-deleted item"
+              matTooltipPosition="left"
+              [disabled]="deletingIds.has(row.id)"
+              (click)="deleteRow(row)"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="!filteredRows.length">
+          <td colspan="3">No data found for selected filters.</td>
+        </tr>
+        <tr class="subtotal-row" *ngIf="filteredRows.length">
+          <td colspan="2" class="subtotal-label">Subtotal</td>
+          <td class="num-cell">{{ subtotal }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

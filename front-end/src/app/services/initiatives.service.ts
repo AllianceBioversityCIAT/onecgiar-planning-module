@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import * as saveAs from "file-saver";
+import { saveAs } from "file-saver";
 import { Observable, firstValueFrom, map } from "rxjs";
 import { environment } from "src/environments/environment";
 
@@ -22,6 +22,20 @@ export class InitiativesService {
     return firstValueFrom(
       this.http
         .get(environment.api_url + "/initiatives/" + id + "/history")
+        .pipe(map((d: any) => d))
+    ).catch((e) => false);
+  }
+
+  async getInitiativeForExport(phase_id: number, status?: string | string[]) {
+    const params: Record<string, string | string[]> = {};
+    if (status && (Array.isArray(status) ? status.length : true)) {
+      params['status'] = status;
+    }
+    return firstValueFrom(
+      this.http
+        .get(environment.api_url + "/initiatives/export/" + phase_id, {
+          params,
+        })
         .pipe(map((d: any) => d))
     ).catch((e) => false);
   }

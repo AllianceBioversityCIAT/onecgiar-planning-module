@@ -1,0 +1,232 @@
+.overview {
+  border: 1px solid #e5e7ef;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.overview-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.2rem;
+}
+
+.initiative-header {
+  min-width: 0;
+
+  h1 {
+    margin: 0.3rem 0 0;
+    font-family: "Poppins", sans-serif;
+    font-size: 1.9rem;
+    color: #212537;
+    line-height: 1.2;
+  }
+}
+
+.overview-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 2.3rem;
+  border-radius: 999px;
+  padding: 0 0.8rem;
+  background: #eef2ff;
+  color: #384eb8;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.initiative-description {
+  margin: 0.55rem 0 0;
+  font-size: 1.3rem;
+  color: #4b5565;
+}
+
+.overview-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.8rem;
+}
+
+.online-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.online-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2f3a56;
+}
+
+.online-avatars {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.avatar-item {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.colleague-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to right, #2a2e45, #212537);
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.colleague-dot {
+  position: absolute;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background: #27c46b;
+  border: 2px solid #ffffff;
+  right: 0;
+  bottom: 0;
+}
+
+.online-empty {
+  font-size: 1.2rem;
+  color: #6a7387;
+}
+
+.overview-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 8px;
+  background: #5569dd;
+  color: #ffffff;
+  text-decoration: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 3rem;
+  padding: 0 1.2rem;
+  border-radius: 8px;
+  background: #2a7f45;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 1.8rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    line-height: 1.8rem;
+  }
+
+  &:hover {
+    filter: brightness(0.93);
+  }
+}
+
+.icon-btn.cancel-submit {
+  background: #b03030;
+}
+
+.submission-status-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  border-radius: 999px;
+  padding: 0 0.8rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+
+  &.status-draft {
+    background: #f0f1f5;
+    color: #6a7387;
+  }
+
+  &.status-pending {
+    background: #fff7e6;
+    color: #b36a00;
+  }
+
+  &.status-approved {
+    background: #e8f8ef;
+    color: #1a7a3e;
+  }
+
+  &.status-rejected {
+    background: #fdeaea;
+    color: #b03030;
+  }
+}
+
+.icon-btn mat-icon {
+  font-size: 1.8rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  line-height: 1.8rem;
+}
+
+.icon-btn:hover:not(:disabled) {
+  filter: brightness(0.93);
+}
+
+.icon-btn:disabled,
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.icon-btn ::ng-deep .mat-mdc-progress-spinner,
+.submit-btn ::ng-deep .mat-mdc-progress-spinner {
+  display: inline-flex;
+
+  circle {
+    stroke: #ffffff;
+  }
+}
+
+@media (max-width: 1024px) {
+  .overview-top {
+    flex-direction: column;
+  }
+
+  .overview-right {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .online-inline {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

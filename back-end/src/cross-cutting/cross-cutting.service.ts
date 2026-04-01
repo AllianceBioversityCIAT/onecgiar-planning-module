@@ -21,9 +21,9 @@ export class CrossCuttingService {
     return this.CrossCuttingRepository.find();
   }
 
-  findByInitiativeID(id) {
+  findByInitiativeID(id,submission_id =null) {
     return this.CrossCuttingRepository.find({
-      where: { initiative: { id: id }, submission_id: IsNull() },
+      where: { initiative: { id: id }, submission_id: submission_id?submission_id: IsNull() },
     });
   }
 

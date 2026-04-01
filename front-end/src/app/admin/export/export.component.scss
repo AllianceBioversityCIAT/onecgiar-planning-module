@@ -1,0 +1,110 @@
+@import "../../sass/layout/admin-module/admin-module";
+@import "../../sass/pages/admin-module/user-management";
+@import "../../sass/components/table-user-management";
+@import "../../sass/components/button";
+
+.track-porbs__icon-box {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 4rem 0 0 0;
+
+  &__icon {
+    width: 4rem;
+    height: 3rem;
+  }
+
+  &__title {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.5rem;
+    text-transform: capitalize;
+    color: #1e1e1e;
+  }
+}
+
+.track-porbs__text-box {
+  &--1 {
+    margin: 2rem 0 2rem 0;
+  }
+  &__title {
+    font-size: 1.4rem;
+    font-weight: 400;
+    line-height: 1.8rem;
+    color: #000000;
+  }
+}
+
+.track-porbs__content--1 {
+  height: 100%;
+  border-radius: 0 1rem 1rem 1rem;
+  background-color: #ffffff;
+  position: relative;
+  padding: 2rem;
+  box-shadow: 0 0.4rem 0.4rem 0 #00000040;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 0 8px;
+
+  .filter-field {
+    width: 220px;
+    flex-shrink: 0;
+  }
+
+  &__actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.action-btn {
+  height: 48px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  &--export {
+    background-color: #9e553e !important;
+    color: #fff;
+  }
+
+  &--download {
+    background-color: #198754 !important;
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.export-progress-bar {
+  margin-bottom: 12px;
+  height: 6px;
+  border-radius: 4px;
+}
+
+.table-box {
+  width: 100%;
+  overflow: auto;
+  margin: 0;
+}
+
+::ng-deep .mat-mdc-select-arrow {
+  width: 16px !important;
+  height: 10px !important;
+  background-color: #ffffff !important;
+  background-image: url("../../../assets/shared-image/Vector-risk-m.svg");
+  background-position: center;
+  background-size: cover;
+}

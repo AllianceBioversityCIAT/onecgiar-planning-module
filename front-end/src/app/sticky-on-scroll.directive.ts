@@ -8,7 +8,8 @@ import {
 } from '@angular/core';
 
 @Directive({
-  selector: '[stickyOnScroll]',
+    selector: '[stickyOnScroll]',
+    standalone: false
 })
 export class StickyOnScrollDirective
   implements OnInit, AfterViewInit, OnDestroy

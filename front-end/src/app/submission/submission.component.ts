@@ -12,7 +12,7 @@ import { ViewDataComponent } from "./view-data/view-data.component";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AuthService } from "../services/auth.service";
 import { ToastrService } from "ngx-toastr";
-import { ROLES } from "../components/new-team-member/new-team-member.component";
+import { ROLES } from "../shared/roles";
 import { IpsrComponent } from "./ipsr/ipsr.component";
 import { PhasesService } from "../services/phases.service";
 import { HeaderService } from "../header.service";
@@ -22,7 +22,6 @@ import { Meta, Title } from "@angular/platform-browser";
 import { ConstantService } from "../services/constant.service";
 import { InitiativesService } from "../services/initiatives.service";
 import { filter, firstValueFrom, from, iif, of, switchMap, tap } from "rxjs";
-import { RESOURCE_CACHE_PROVIDER } from "@angular/platform-browser-dynamic";
 import { CustomMessageComponent } from "../custom-message/custom-message.component";
 import { HistoryOfChangeComponent } from "./history-of-change/history-of-change.component";
 import { UserService } from "../services/user.service";
@@ -38,10 +37,11 @@ import { DecimalPipe, Location } from "@angular/common";
 import { SubmitMessageComponent } from "./submit-message/submit-message.component";
 
 @Component({
-  selector: "app-submission",
-  templateUrl: "./submission.component.html",
-  styleUrls: ["./submission.component.scss"],
-  providers: [DecimalPipe] 
+    selector: "app-submission",
+    templateUrl: "./submission.component.html",
+    styleUrls: ["./submission.component.scss"],
+    providers: [DecimalPipe],
+    standalone: false
 })
 export class SubmissionComponent implements OnInit, OnDestroy {
   title = "planning";
@@ -98,8 +98,20 @@ getFirstError(partner: any,section:string): string | null {
 
   for (const wp of this.wps) {
     const key = wp?.ost_wp?.wp_official_code + '-'+section;
-    if (this.errors[partner.code]?.[key]) {
-      return this.errors[partner.code][key];
+    const message = this.errors[partner.code]?.[key];
+
+    // Skip pooled-funding mismatch warning on W3/Bilateral tab
+    if (
+      section === 'project' &&
+      message?.includes(
+        'The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.'
+      )
+    ) {
+      continue;
+    }
+
+    if (message) {
+      return message;
     }
   }
   return null;
@@ -149,6 +161,9 @@ getFirstError(partner: any,section:string): string | null {
   noValuesAssigned: any = {};
   partnersStatus: any = {};
   centerHasError: any = {};
+  aowHasError: any = {};
+  w3HasError: any = {};
+  meliaHasError: any = {};
   itemHasError: any = {};
   geoLocationErrors: any = {};
   itemIndicatorHasError: any = {};
@@ -557,23 +572,8 @@ if(!this.timeCalcForIndicator[item_id])
     } else return false;
   }
   partnerStatusChange(event: any, partnerCode: number) {
-    let index = 0;
-    if (!this.isCenter) {
-      index =
-        this.partners
-          .map((d: any) => {
-            return d.id;
-          })
-          .indexOf(partnerCode) + 1;
-    } else {
-      index = this.partners
-        .map((d: any) => {
-          return d.id;
-        })
-        .indexOf(partnerCode);
-    }
-    this.InitData();
-    this.selectedTabIndex = index;
+
+    // this.InitData();
   }
 
   tabChanged(organization: any) {
@@ -739,12 +739,11 @@ if(!this.timeCalcForIndicator[item_id])
     value: boolean,
     is_project: boolean
   ) {
-    console.log(partner_code, wp_id, value)
     if(!value) {
       this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
-          title: "Cancel submission",
+          title: "Cancel PORB",
           custom_message_1: `Are you sure to clear all data ?`,
           custom_message_2: `All the data you added will be removed.`,
         },
@@ -1030,7 +1029,6 @@ if(!this.timeCalcForIndicator[item_id])
         }
 
     }
-    console.log(this.perAllValuesIndicator)
 
     this.wps.forEach((wp: any) => {
       this.period.forEach((per) => {
@@ -1122,6 +1120,9 @@ if(!this.timeCalcForIndicator[item_id])
     this.noValuesAssigned = {};
     this.partnersStatus = {};
     this.centerHasError = {};
+    this.aowHasError = {};
+    this.w3HasError = {};
+    this.meliaHasError = {};
     this.itemHasError = {};
     this.geoLocationErrors = {};
     this.itemIndicatorHasError = {};
@@ -1144,7 +1145,7 @@ if(!this.timeCalcForIndicator[item_id])
           return d;
         });
     }
-  const toc_data = await this.submissionService.getTocData(this.initiative_data.synchronized == true ? this.params.code : this.params.id).catch(e=>{
+  const toc_data = await this.submissionService.getTocData(this.initiative_data.official_code).catch(e=>{
         this.dialog
           .open(CustomMessageComponent, {
             disableClose: true,
@@ -1378,12 +1379,23 @@ this.tocSubmissionData = toc_data.info
         this.noValuesAssigned[partner.code] = {};
       if (!this.centerHasError[partner.code])
         this.centerHasError[partner.code] = false;
+      if (!this.aowHasError[partner.code])
+        this.aowHasError[partner.code] = {};
+      if (!this.w3HasError[partner.code])
+        this.w3HasError[partner.code] = false;
+      if (!this.meliaHasError[partner.code])
+        this.meliaHasError[partner.code] = false;
       if (!this.itemHasError[partner.code])
         this.itemHasError[partner.code] = {};
       if (!this.geoLocationErrors[partner.code])
         this.geoLocationErrors[partner.code] = {};
       if (!this.itemIndicatorHasError[partner.code])
         this.itemIndicatorHasError[partner.code] = {};
+      this.actualWps?.forEach((wp: any) => {
+        if (this.aowHasError[partner.code][wp.ost_wp.wp_official_code] === undefined) {
+          this.aowHasError[partner.code][wp.ost_wp.wp_official_code] = false;
+        }
+      });
 
       for(let wp of this.actualWps) {
         if (!this.anaplanBudgets[partner.code][wp.ost_wp.wp_official_code]) {
@@ -1442,18 +1454,25 @@ this.tocSubmissionData = toc_data.info
           wp.category
         );
      
-        console.log('RESULT', )
         
         if (result.length) {
           if (!this.partnersData[partner.code])
             this.partnersData[partner.code] = {};
 
          const filterd_results = result.filter((r: any) => r.category.includes('OUTPUT'))
-          if(filterd_results.length > 0 && this.toggleIndicatorValues)
-          this.partnersData[partner.code][wp.ost_wp.wp_official_code] = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
-         else
+          if(filterd_results.length > 0 && this.toggleIndicatorValues){
+          const indicator_filterd = [...result.filter((r: any) => !r.category.includes('OUTPUT')),...filterd_results.filter((d:any)=> d?.pooled_centers?.map((d:any)=>d.code).includes(partner.code))];
+          const updatedIndicators = indicator_filterd.map((res: any) => ({
+                          ...res,
+                          quantitative_indicators: (res.quantitative_indicators ?? []).filter((i: any) =>
+                            i.targets?.some((t: any) =>
+                              t.centers?.some((co: any) => co.code === partner.code)
+                            )
+                          )
+                        }));
+        this.partnersData[partner.code][wp.ost_wp.wp_official_code] = updatedIndicators;
+         } else
           this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
-          // this.partnersData[partner.code][wp.ost_wp.wp_official_code] = result;
         }
 
         if (!this.perValuesSammary[wp.ost_wp.wp_official_code])
@@ -1660,7 +1679,6 @@ this.tocSubmissionData = toc_data.info
     
     this.setvaluesForIndicators(this.savedValuesForIndicator);
     this.setPartnervaluesForIndicators(this.savedValuesForIndicator);
-    console.log('allBudgetAssumptions', this.allBudgetAssumptions);
 
     this.setTotalTargetForIndicators();
     this.setTotalTargetForIndicatorsForPartners();
@@ -1689,8 +1707,6 @@ this.tocSubmissionData = toc_data.info
       newCROSS.forEach((d: any) => this.allData[firstKey].unshift(d))
     
 
-    console.log(this.allData)
-    console.log(this.results)
 
 
     //sort WP titles
@@ -1715,7 +1731,6 @@ this.tocSubmissionData = toc_data.info
          this.notes[partner.code]=[]
          let flagNoPartners=true;
           let flagNoProject=true;
-        console.log('this.notes[partner.code]=[]',partner.code)
       for(let wp of this.wps){
       if(this.partnersData[partner.code]?.[wp.ost_wp.wp_official_code + '-partners']?.length)
         flagNoPartners=false;
@@ -1768,6 +1783,14 @@ this.tocSubmissionData = toc_data.info
     this.dialog.closeAll();
   }
 
+  emitOnlineUserPresence() {
+    if (!this.initiative_data?.id) return;
+    this.socket.emit('userOnline', {
+      initiative_id: this.initiative_data.id,
+      sp: this.initiative_data.official_code || this.params?.code,
+    });
+  }
+
   user_info: any;
   my_roles: any;
   allBudgetAssumptions: any[] = [];
@@ -1775,22 +1798,27 @@ this.tocSubmissionData = toc_data.info
   anaplanValues: any[] = [];
   allCenterCountryValues: any[] = [];
   async ngOnInit() {
+    this.params = this.activatedRoute?.snapshot.params;
+    this.initiative_data = await this.submissionService.getInitiative( this.params.id );
+    if(this.initiative_data.official_code != this.params.code){
+    this.router.navigateByUrl('/')
+    return;
+    }
     this.socket.on('connect_error', this.handelDisconnect);
     this.socket.on('disconnect', this.handelDisconnect);
-    this.socket.on('connect', this.handelConnect);
+    this.socket.on('connect', () => {
+      this.handelConnect();
+      this.emitOnlineUserPresence();
+    });
     this.user = this.AuthService.getLoggedInUser();
-    this.params = this.activatedRoute?.snapshot.params;
     this.phase = await this.phasesService.getActivePhase();
     this.user_info = this.userService.getLogedInUser();
-    this.initiative_data = await this.submissionService.getInitiative(
-      this.params.id
-    );
-
     this.InitiativeUsers = await this.initiativeService.getInitiativeUsers(
       this.params.id
     );
     const tab = this.activatedRoute.snapshot.queryParamMap.get('tab');
     if (tab) {
+      console.log('Tabbbbb',tab)
       this.selectedTabIndex = tab ? +tab : 0;
 
     } 
@@ -1863,7 +1891,7 @@ this.tocSubmissionData = toc_data.info
       if (d[3] && d[3]?.path == "center") this.isCenter = true;
     });
 
-    this.organizationSelected = this.partners[0];
+    this.organizationSelected = this.partners[tab ? +tab : 0];
     this.InitData();
 
     this.period = await this.submissionService.getPeriods(this.phase.id);
@@ -1888,8 +1916,11 @@ this.tocSubmissionData = toc_data.info
       'custom-OUTCOME'
     ];
 
-    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+    this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
     this.socket.connect();
+    if ((this.socket as any).ioSocket?.connected) {
+      this.emitOnlineUserPresence();
+    }
     this.socket.on("setDataValues-" + this.params.id, (data: any) => {
       const { partner_code, wp_id, item_id, per_id, value } = data;
       this.changes(partner_code, wp_id, item_id, per_id, value);
@@ -1956,7 +1987,7 @@ this.tocSubmissionData = toc_data.info
       this.budgetValues[partner_code][wp_id][item_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] =
         Math.round(budgetValue);
-      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
       this.hasBudgetAssumptions(partner_code, item_id, wp_id);
       this.hasBudgetAssumptionsSummary(item_id, wp_id);
 
@@ -1969,7 +2000,7 @@ this.tocSubmissionData = toc_data.info
       const { partner_code, wp_id, item_id, indicator_id, budgetValue, subTotalBudgetIndicator } = data;
       this.displayBudgetValuesIndicator[partner_code][wp_id][item_id][indicator_id] = budgetValue;
       this.displayBudgetValues[partner_code][wp_id][item_id] = subTotalBudgetIndicator;
-      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+      this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
       this.hasBudgetAssumptions(partner_code, item_id, wp_id);
       this.hasBudgetAssumptionsSummary(item_id, wp_id);
 
@@ -2007,6 +2038,15 @@ this.tocSubmissionData = toc_data.info
 
     this.socket.on("markPORBAsValid", (data: any) => {
       this.initiative_data = data.initiative_data;
+    });
+
+    this.socket.on("refreshPORB", async (data: any) => {
+      if (data?.initiative_id == this.params.id) {
+        this.toastrService.info(
+          "We updated your PORB to match the latest TOC. Refreshing now...",
+        );
+        await this.refresh();
+      }
     });
 
     this.socket.on("changeSubmissionStatus", async (data: any) => {
@@ -2055,13 +2095,12 @@ this.tocSubmissionData = toc_data.info
     this.dialog
       .open(DeleteConfirmDialogComponent, {
         data: {
-          title: "Cancel submission",
-          message: `Are you sure you want to Cancel submission ?`,
+          title: "Cancel PORB",
+          message: `Are you sure you want to cancel PORB?`,
         },
       })
       .afterClosed()
       .subscribe(async (dialogResult) => {
-        console.log(this.initiative_data);
         if (dialogResult == true) {
           await this.submissionService.cancelSubmission(
             this.initiative_data.latest_submission.id,
@@ -2202,10 +2241,7 @@ this.tocSubmissionData = toc_data.info
               valuesToSet[code][wp_id][item_id]
             ) {
               let percentValue = +valuesToSet[code][wp_id][item_id];
-              let budgetValue = this.budgetValue(
-                percentValue,
-                this.wp_budgets[code][wp_id]
-              );
+              let budgetValue = percentValue
               this.values[code][wp_id][item_id] = percentValue;
               this.displayValues[code][wp_id][item_id] =
                 Math.round(percentValue);
@@ -3005,6 +3041,14 @@ this.submitDialog()
   let message = "";
 
   const visited = new Set<string>(); // will hold official codes per partner
+  this.aowHasError[partner_code] = this.aowHasError[partner_code] || {};
+  this.w3HasError[partner_code] = false;
+  this.meliaHasError[partner_code] = false;
+  this.actualWps?.forEach((wp: any) => {
+    this.aowHasError[partner_code][wp.ost_wp.wp_official_code] = false;
+  });
+  const pooledFundingMismatchMsg =
+    "The sum of Total Pooled Funding budget (USD) in each AOW must equal the Subtotal of each AOW Anaplan.";
 
   const partnerWps = Object.keys(this.partnersData[partner_code] || {});
   for (const wp of this.actualWps)
@@ -3013,6 +3057,19 @@ this.submitDialog()
           if (!result.valid) {
               valid = false;
               message = result.message;
+              const isProject = wp_id.toLowerCase().includes('-project');
+              const isMelia = wp_id.toLowerCase().includes('-melia');
+              const isPooledFundingMismatch =
+                message?.includes(pooledFundingMismatchMsg);
+              if (isProject) {
+                if (!isPooledFundingMismatch) {
+                  this.w3HasError[partner_code] = true;
+                }
+              } else if (isMelia) {
+                this.meliaHasError[partner_code] = true;
+              } else {
+                this.aowHasError[partner_code][wp.ost_wp.wp_official_code] = true;
+              }
               // if one failure is enough, you can break earlier:
               // break;
             }
@@ -3157,15 +3214,24 @@ this.submitDialog()
       this.organizationSelected
     );
   }
+  hasAowError(partnerCode: any, wpOfficialCode: string): boolean {
+    return !!this.aowHasError?.[partnerCode]?.[wpOfficialCode];
+  }
+  hasW3Error(partnerCode: any): boolean {
+    return !!this.w3HasError?.[partnerCode];
+  }
+  hasMeliaError(partnerCode: any): boolean {
+    return !!this.meliaHasError?.[partnerCode];
+  }
 
 
   openHistoryDialog(initiative_id: number) {
     this.dialog
       .open(HistoryOfChangeComponent, {
-        width: '600px',
-        maxWidth: '700px',
-        maxHeight: '500px',
-        height: '500px',
+        width: '750px',
+        maxWidth: '90vw',
+        height: '80vh',
+        maxHeight: '85vh',
         data: {
           initiative_id: initiative_id
         },
@@ -3316,7 +3382,6 @@ totalConsolidatedTargetPartner: any;
     });
   });
   this.totalConsolidatedTargetPartner = totals;
-  console.log(totals)
   return totals;
 }
 
@@ -3348,8 +3413,15 @@ totalConsolidatedTargetPartner: any;
       return scope
   }
 
-  getTargetValue(targets: any[]) {
-    return targets.reduce((sum, target) => {
+  getTargetValue(targets: any[],code:string='') {
+   let  filterd;
+    
+    if(code!='')
+      filterd = targets.filter((target:any)=>target?.centers?.map((d:any)=>d.code).includes(code))
+    else
+      filterd = targets;
+   
+    return filterd.reduce((sum, target) => {
       const val = parseFloat(target?.[this.phase.reportingYear]) || 0; 
       return sum + val;
     }, 0);
@@ -3392,18 +3464,18 @@ totalConsolidatedTargetPartner: any;
         }
       }
     }
-   
+    let targetsCounted:any=[];
     for (let wp of this.actualWps) {
       const wpDataArray = this.allData[wp.ost_wp.wp_official_code];
     
       for (let wpData of wpDataArray) {
         const wpCode = wpData.ost_wp?.wp_official_code || wp.ost_wp.wp_official_code;
-    
+     
         for (let indicator of wpData.quantitative_indicators || []) {
           const indicatorType = this.highLevelOutputIndicatorTypes.includes(indicator?.type?.value)
             ? indicator.type.value
-            : 'Other';
-    
+            : indicator?.type?.value + '-' + wpData.category;
+        
           for (let target of indicator.targets || []) {
             for (let targetPartner of target.centers || []) {
               const partnerCode = targetPartner.code;
@@ -3421,7 +3493,8 @@ totalConsolidatedTargetPartner: any;
               }
     
               const value = parseFloat(target[this.phase.reportingYear]); 
-              if (!isNaN(value)) {
+              if (!isNaN(value) && !targetsCounted.includes(target.id)) {
+                targetsCounted.push(target.id)
                 this.totalTargetsIndicatorPartners[partnerCode][wpCode][indicatorType] += value;
               }
             }
@@ -3429,10 +3502,10 @@ totalConsolidatedTargetPartner: any;
         }
       }
     }
+
   }
 
   openBudgetAssumptionsDialog(partner: number, item_id: string, wp_id: string, budget: number, type: string, parent_id: any) { 
-    console.log('partnersStatus', this.partnersStatus[partner])
  const  disbaled= this.partnersStatus[partner] || this.initStatus == 'Pending' || this.initStatus == 'Approved';
                                   
     
@@ -3440,6 +3513,7 @@ totalConsolidatedTargetPartner: any;
       organization_code: partner,
       item_id: item_id,
       wp_id: wp_id,
+      initiative_id:this.initiative_data.id,
       item_budget: budget,
       type: type,
       phase_id: this.phase.id,
@@ -3457,7 +3531,7 @@ totalConsolidatedTargetPartner: any;
     }).afterClosed()
     .subscribe(async dialogResult => {
       if (dialogResult) {
-        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id);
+        this.allBudgetAssumptions = await this.budgetAssumptionsService.getAll(this.phase.id,this.initiative_data.id);
         this.hasBudgetAssumptions(dialogResult.data.organization_code, dialogResult.data.item_id, dialogResult.data.wp_id);
         this.validateCenter(partner )
       }
@@ -3474,11 +3548,11 @@ totalConsolidatedTargetPartner: any;
   
 
   openBudgetAssumptionsDialogSummary(item_id: string) {
-    console.log(item_id)
     this.dialog
     .open(BudgetAssumptionSummaryComponent, {
       data: {
-        item_id
+        item_id,
+      initiative_id:  this.initiative_data.id
       },
       width: '800px',
       maxWidth: '850px',
@@ -3516,7 +3590,6 @@ totalConsolidatedTargetPartner: any;
 
   async setAnaplanValues() {
     this.anaplanValues = await this.anaplanService.getAllValues(this.params.id,this.phase.id);
-    console.log('anaplanValues', this.anaplanValues)
     for(let values of this.anaplanValues){
      this.anaplanBudgets[values.organization.code][values.workPackage.wp_official_code][values.anaplan.id] = values.value
     }

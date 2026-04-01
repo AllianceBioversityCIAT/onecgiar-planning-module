@@ -1,207 +1,88 @@
-<header class="header-risk">
-  <!-- section header -->
+<header class="header-bar">
+  <div class="header-bar__left">
+    <a routerLink="/" class="header-bar__brand">
+      <img
+        src="../../assets/shared-image/mask-group.svg"
+        class="header-bar__logo"
+        alt="CGIAR Logo"
+      />
+      <span class="header-bar__title">
+        <strong>PRMS</strong> Planning
+      </span>
+    </a>
 
-  <div
-    [style.background]="headerService.background"
-    class="header-risk__content"
-  >
-    <div class="header-content-box">
-      <div routerLink="/" class="header-content-box--1">
-        <img
-          src="../../assets/shared-image/mask-group.svg"
-          class="header-logo-size"
-          alt="~/Frontend/images/question-circular-button.svg"
-        />
-      </div>
-      <div routerLink="/" class="header-content-box--2">
-        <p class="header-content-box--2__title">
-          <span class="header-content-box--2__title--1">CGIAR</span>
-          Planning
-        </p>
-      </div>
-    </div>
-
-    <nav class="header-user-nav-box">
-      <!-- <a
+    <nav class="header-bar__nav">
+      <a
+        routerLink="/"
+        class="header-bar__nav-item"
+        routerLinkActive="header-bar__nav-item--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="accessHome()"
+      >
+        Home
+      </a>
+      <a
+        routerLink="/budget-summary"
+        class="header-bar__nav-item"
+        routerLinkActive="header-bar__nav-item--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        Budget Summary
+      </a>
+      <a
         *ngIf="user_info && isAdmin"
-        class="user-nav-button"
-        mat-icon-button
         routerLink="admin"
+        class="header-bar__nav-item"
+        routerLinkActive="header-bar__nav-item--active"
       >
-        <span class="user-nav-button__title--1">Admin Area</span>
-      </a> -->
-      <!-- 
-      <button [style.background]="headerService.backgroundUserNavButton" class="user-nav-button" mat-icon-button *ngIf="user_info">
-        <mat-icon class="user-nav-button__icon">
-          <img
-            class="user-nav-button__icon--1"
-            src="../../assets/shared-image/🦆 icon _User avatar filled_.svg"
-            alt="~/Frontend/images/icon _User avatar"
-        /></mat-icon>
-        <span class="user-nav-button__title--1">{{
-          user_info?.full_name
-        }}</span>
-      </button> -->
-
-      <button
-        [style.background]="headerService.backgroundUserNavButton"
-        class="user-nav-button"
-        mat-icon-button
-        *ngIf="user_info"
+        Admin Module
+      </a>
+      <a
+        routerLink="/archive"
+        class="header-bar__nav-item"
+        routerLinkActive="header-bar__nav-item--active"
+        [routerLinkActiveOptions]="{ exact: true }"
       >
-        <span class="user-nav-button__visible">
-          <mat-icon class="user-nav-button__icon">
-            <img
-              class="user-nav-button__icon--1"
-              src="../../assets/shared-image/🦆 icon _User avatar filled_.svg"
-              alt="~/Frontend/images/icon _User avatar"
-          /></mat-icon>
-          <span class="user-nav-button__title--1">{{
-            user_info?.full_name
-          }}</span>
-        </span>
-
-        <span class="user-nav-button__invisible">
-          <span class="user-nav-button__title--3">{{
-            user_info?.full_name
-          }}</span></span
-        >
-      </button>
-
-      <!-- ///////////////////////////////////////////// -->
-
-      <button
-        [style.background]="headerService.backgroundUserNavButton"
-        class="user-nav-button"
-        mat-icon-button
-        (click)="logout()"
-        *ngIf="user_info"
-      >
-        <span class="user-nav-button__visible">
-          <span class="user-nav-button__title--2">Logout</span></span
-        >
-        <span class="user-nav-button__invisible">
-          <mat-icon class="user-nav-button__icon">
-            <img
-            
-              src="../../assets/shared-image/🦆 icon _logout_.svg"
-              class="user-nav-button__icon--2"
-              alt="~/Frontend/images/icon _logout"
-          /></mat-icon>
-        </span>
-      </button>
-
-      <button
-        [style.background]="headerService.backgroundUserNavButton"
-        class="user-nav-button"
-        mat-icon-button
-        (click)="login()"
-        *ngIf="!user_info"
-      >
-        <span class="user-nav-button__visible">
-          <span class="user-nav-button__title--2">Login</span>
-        </span>
-        <span class="user-nav-button__invisible">
-          <mat-icon class="user-nav-button__icon">
-            <img
-              src="../../assets/shared-image/login-planning.png"
-              class="user-nav-button__icon--3"
-              alt="~/Frontend/images/icon _logout"
-          /></mat-icon>
-        </span>
-      </button>
+        Archive
+      </a>
     </nav>
   </div>
 
-  <!-- section nav -->
-  <nav
-    class="header-risk__main-nav"
-    [style.background]="headerService.backgroundNavMain"
-  >
-    <ul class="main-nav-list">
-      <li>
-        <a
-          (click)="accessHome()"
-          routerLink="/"
-          class="main-nav-link cool-link"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: true }"
-        >
-          <span>Home</span>
-        </a>
-      </li>
+  <div class="header-bar__right">
+    <span class="test-env-badge" *ngIf="isTestEnv">Testing Environment</span>
+    <button
+      *ngIf="user_info"
+      class="header-bar__user-btn"
+      type="button"
+    >
+      <mat-icon class="header-bar__user-icon">person</mat-icon>
+      <span class="header-bar__user-name">{{ user_info?.full_name }}</span>
+    </button>
 
-      <li>
-        <a
-          routerLink="/budget-summary"
-          class="main-nav-link cool-link"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: true }"
-        >
-          <span>Budget summary</span>
-        </a>
-      </li>
+    <button
+      *ngIf="user_info"
+      class="header-bar__logout-btn"
+      type="button"
+      (click)="logout()"
+    >
+      Logout
+      <mat-icon class="header-bar__logout-icon">exit_to_app</mat-icon>
+    </button>
 
-      <li *ngIf="user_info && isAdmin">
-        <a
-          routerLink="admin"
-          class="main-nav-link cool-link"
-          routerLinkActive="active"
-        >
-          <span>Admin Module</span>
-        </a>
-      </li>
-
-      <li>
-        <a
-          routerLink="/archive"
-          class="main-nav-link cool-link"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: true }"
-        >
-          <span>Archive</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
+    <button
+      *ngIf="!user_info"
+      class="header-bar__logout-btn"
+      type="button"
+      (click)="login()"
+    >
+      Login
+      <mat-icon class="header-bar__logout-icon">login</mat-icon>
+    </button>
+  </div>
 </header>
 
-<!-- section nav
-<nav class="sidebar">
-  <ul class="side-nav">
-    <li class="side-nav__item side-nav__item--active">
-      <a href="#" class="side-nav__link">
-        <svg class="side-nav__icon">
-          <use xlink:href="img/sprite.svg#icon-home"></use>
-        </svg>
-        <span>Hotel</span>
-      </a>
-    </li>
-    <li class="side-nav__item">
-      <a href="#" class="side-nav__link">
-        <svg class="side-nav__icon">
-          <use xlink:href="img/sprite.svg#icon-aircraft-take-off"></use>
-        </svg>
-        <span>Flight</span>
-      </a>
-    </li>
-    <li class="side-nav__item">
-      <a href="#" class="side-nav__link">
-        <svg class="side-nav__icon">
-          <use xlink:href="img/sprite.svg#icon-key"></use>
-        </svg>
-        <span>Car rental</span>
-      </a>
-    </li>
-    <li class="side-nav__item">
-      <a href="#" class="side-nav__link">
-        <svg class="side-nav__icon">
-          <use xlink:href="img/sprite.svg#icon-map"></use>
-        </svg>
-        <span>Tours</span>
-      </a>
-    </li>
-  </ul>
-
-  <div class="legal">&copy; 2017 by trillo. All rights reserved.</div>
-</nav> -->
+<div *ngIf="versionCheck.updateAvailable$ | async" class="version-update-banner">
+  <mat-icon class="version-update-banner__icon">system_update</mat-icon>
+  <span>A new version is available. Please save your work and reload.</span>
+  <button class="version-update-banner__btn" (click)="reloadPage()">Reload Now</button>
+</div>

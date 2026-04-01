@@ -9,9 +9,10 @@ import { ArchiveService } from 'src/app/services/archive.service';
 import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
-  selector: 'app-table',
-  templateUrl: './table.component.html',
-  styleUrls: ['./table.component.scss']
+    selector: 'app-table',
+    templateUrl: './table.component.html',
+    styleUrls: ['./table.component.scss'],
+    standalone: false
 })
 export class TableComponent implements OnInit {
   displayedColumns: string[] = [

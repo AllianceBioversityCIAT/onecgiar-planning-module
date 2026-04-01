@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from "src/environments/environment";
 import { firstValueFrom, map } from "rxjs";
 import { HttpClient } from "@angular/common/http";
+import { InitiativesComponent } from '../initiatives/initiatives.component';
 
 @Injectable({
   providedIn: 'root'
@@ -25,16 +26,16 @@ export class BudgetAssumptionsService {
     ).catch((e) => false);
   }
 
-  async getAllByItem(item_id: any) {
+  async getAllByItem(item_id: any,initiative_id:number) {
     return firstValueFrom(
-      this.http.get(environment.api_url+"/budget-assumptions/" + item_id).pipe(map((d: any) => d))
+      this.http.get(environment.api_url+"/budget-assumptions/" + item_id+'/'+initiative_id).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
 
 
-  async getAll(phase_id: number) {
+  async getAll(phase_id: number,initiative_id:number) {
     return firstValueFrom(
-      this.http.get(environment.api_url+"/budget-assumptions/all/" + phase_id).pipe(map((d: any) => d))
+      this.http.get(environment.api_url+"/budget-assumptions/all/" + phase_id+'/'+initiative_id).pipe(map((d: any) => d))
     ).catch((e) => false);
   }
 }

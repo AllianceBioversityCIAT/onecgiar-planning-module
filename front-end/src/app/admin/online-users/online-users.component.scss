@@ -1,0 +1,104 @@
+.online-users {
+  padding: 2.4rem;
+  color: #1f2937;
+}
+
+.online-users__header {
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #0f212f, #1d3041);
+  color: #fff;
+  padding: 1.2rem 1.6rem;
+  border-radius: 1.2rem;
+  margin-bottom: 1.6rem;
+}
+
+.online-users__badge {
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 1rem;
+  background: #5569dd;
+  color: #fff;
+}
+
+.online-users__title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.online-users__subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 1.3rem;
+  color: #dce6ff;
+}
+
+.online-users__refresh {
+  margin-left: auto;
+}
+
+.online-users__table {
+  background: #fff;
+  border-radius: 1.2rem;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+}
+
+th {
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 1.1rem;
+}
+
+td {
+  font-size: 1.3rem;
+}
+
+.online-users__name {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.online-users__avatar {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 1rem;
+  background: #eef2ff;
+  color: #1a2a6c;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+.online-users__primary {
+  font-weight: 600;
+}
+
+.online-users__secondary {
+  color: #6b7280;
+  font-size: 1.2rem;
+}
+
+.online-users__empty {
+  text-align: center;
+  padding: 3.2rem 1.6rem;
+  color: #6b7280;
+  display: grid;
+  gap: 0.8rem;
+  justify-items: center;
+}
+
+.online-users__empty mat-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+}

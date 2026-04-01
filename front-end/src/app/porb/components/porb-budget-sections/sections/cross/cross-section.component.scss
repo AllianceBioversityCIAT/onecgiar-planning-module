@@ -1,0 +1,145 @@
+.table-box {
+  border: 1px solid #b9b9b9b5;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.8rem;
+}
+
+.table-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.tool-input {
+  height: 3.2rem;
+  border: 1px solid #b9b9b9b5;
+  border-radius: 6px;
+  padding: 0 0.8rem;
+  font-size: 1.3rem;
+  color: #0f212f;
+  background: #ffffff;
+  min-width: 240px;
+}
+
+.export-btn,
+.add-btn {
+  height: 3.2rem;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 500;
+  padding: 0 1rem;
+  cursor: pointer;
+}
+
+.export-btn {
+  background: #5569dd;
+}
+
+.add-btn {
+  margin-left: auto;
+  background: #198754;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.additional-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 0;
+  table-layout: fixed;
+
+  th,
+  td {
+    border: 1px solid #b9b9b9b5;
+    padding: 0.65rem 0.7rem;
+    font-size: 1.3rem;
+    color: #0f212f;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    vertical-align: top;
+    font-family: "Poppins", sans-serif;
+  }
+
+  th {
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 600;
+    background: linear-gradient(to right, #2a2e45, #212537);
+  }
+
+  .row-title {
+    text-align: left;
+    font-weight: 500;
+    white-space: normal;
+  }
+
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 55%;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 45%;
+  }
+
+  .num-cell {
+    text-align: center;
+    vertical-align: middle;
+  }
+}
+
+.budget-cell-with-error {
+  position: relative;
+}
+
+.row-error-icon {
+  position: absolute;
+  left: -1.15rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: #dc3545;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.2rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  margin-top: 0.4rem;
+
+  mat-icon {
+    color: #94a3b8;
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  span {
+    font-family: "Poppins", sans-serif;
+    font-size: 1.25rem;
+    color: #64748b;
+    line-height: 1.5;
+  }
+}

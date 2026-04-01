@@ -4,7 +4,8 @@ export type SortOrder = "asc" | "desc";
 
 @Injectable()
 @Pipe({
-  name: "sort",
+    name: "sort",
+    standalone: false
 })
 export class SortPipe implements PipeTransform {
   transform(
