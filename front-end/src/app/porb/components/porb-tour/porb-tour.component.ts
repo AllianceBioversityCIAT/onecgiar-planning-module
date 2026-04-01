@@ -26,6 +26,7 @@ export class PorbTourComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() open = false;
   @Input() steps: PorbTourStep[] = [];
   @Output() closed = new EventEmitter<void>();
+  @Output() stepChanged = new EventEmitter<{ index: number; anchorId: string }>();
 
   currentIndex = 0;
   bubbleTop = 120;
@@ -78,8 +79,15 @@ export class PorbTourComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   previous() {
     if (!this.hasPrev) return;
-    this.currentIndex -= 1;
-    this.positionForCurrentStep();
+    // Search backward for a step whose anchor exists in the DOM.
+    for (let i = this.currentIndex - 1; i >= 0; i--) {
+      const sel = `[data-tour-anchor="${this.steps[i].anchorId}"]`;
+      if (document.querySelector(sel)) {
+        this.currentIndex = i;
+        this.positionForCurrentStep();
+        return;
+      }
+    }
   }
 
   next() {
@@ -108,7 +116,8 @@ export class PorbTourComponent implements AfterViewInit, OnChanges, OnDestroy {
     const selector = `[data-tour-anchor="${this.activeStep.anchorId}"]`;
     const target = document.querySelector(selector) as HTMLElement | null;
     if (!target) {
-      this.clearHighlight();
+      // Anchor not in DOM (e.g. HLO button hidden on AOW00) — skip to next visible step.
+      this.skipToNextVisible(this.currentIndex);
       return;
     }
 
@@ -139,6 +148,21 @@ export class PorbTourComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     this.bubbleLeft = left;
     this.bubbleTop = top;
+    this.stepChanged.emit({ index: this.currentIndex, anchorId: this.activeStep!.anchorId });
+  }
+
+  private skipToNextVisible(fromIndex: number) {
+    // Search forward for a step whose anchor exists in the DOM.
+    for (let i = fromIndex + 1; i < this.steps.length; i++) {
+      const sel = `[data-tour-anchor="${this.steps[i].anchorId}"]`;
+      if (document.querySelector(sel)) {
+        this.currentIndex = i;
+        this.positionForCurrentStep();
+        return;
+      }
+    }
+    // No visible steps remaining — finish the tour.
+    this.finish();
   }
 
   private highlight(target: HTMLElement) {

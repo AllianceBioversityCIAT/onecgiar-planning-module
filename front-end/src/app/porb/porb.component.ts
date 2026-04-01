@@ -175,7 +175,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       anchorId: "porb-center-tabs",
       title: "Center Navigation",
       description:
-        "Select the center you are budgeting for. The Summary tab shows overall consolidation. Error and check icons indicate status.",
+        "Select the center you are contributing to. The Summary tab provides an overall consolidated view. Error and check icons indicate the status of entries.",
     },
     {
       anchorId: "porb-center-view-mode",
@@ -193,13 +193,13 @@ export class PorbComponent implements OnInit, OnDestroy {
       anchorId: "porb-section-tabs",
       title: "Budget Sections",
       description:
-        "Pick a section (HLO, Partners, MELIA, Anaplan, Cross Cutting) to open the editable budget table. Disabled sections have no data.",
+        'Select a section (Pooled Funding HLO, Partners, MELIA Study, Anaplan, or Cross-Cutting) to open the editable budget table. For "Country of Implementation" and "Location of Benefit," only percentage inputs are required. Disabled sections indicate that no data is available.',
     },
     {
       anchorId: "porb-consolidation",
       title: "Consolidation",
       description:
-        "This table summarizes totals and indicator-level budgets for the selected center and AOW.",
+        "This table summarizes all pooled funding totals for the selected center and AoW, including Anaplan, partner allocations, and MELIA data.",
     },
     {
       anchorId: "porb-section-btn-pool-funding-hlo",
@@ -211,7 +211,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       anchorId: "porb-section-btn-partners",
       title: "Partners",
       description:
-        "Budget table for Partners. Each partner may have contracted partners per center. Unknown partners can be added manually and resolved later to CLARISA institutions.",
+        "This is the budget table for Partners. It includes a list of all partners, from which users can select contracted partners for each center to input budget allocations. Unknown partners can be added manually and later resolved to CLARISA institutions.",
     },
     {
       anchorId: "porb-section-btn-melia-study",
@@ -223,25 +223,25 @@ export class PorbComponent implements OnInit, OnDestroy {
       anchorId: "porb-section-btn-anaplan",
       title: "Anaplan",
       description:
-        "Budget table for Anaplan accounts. Budgets here are validated against Pool HLO + Cross-Cutting totals and Partner totals.",
+        "This is the budget table for Anaplan main accounts. Entries in this table are validated against the totals from Pooled Funding HLO, Cross-Cutting allocations, and Partner allocations.",
     },
     {
       anchorId: "porb-section-btn-cross-cutting",
       title: "Cross Cutting",
       description:
-        "Budget table for the 7 standard cross-cutting items (Gender, Youth, Climate, etc.). These are fixed items — no new items can be added.",
+        "The budget table includes seven standard cross-cutting items. These are fixed, and no additional items can be added.",
     },
     {
       anchorId: "porb-section-btn-countries-of-implementation",
       title: "Countries of Implementation",
       description:
-        "Shows countries extracted from HLO geographic data. Enter a percentage per country (total capped at 100%). Budget is computed automatically from the pooled total.",
+        "Displays the countries extracted from the KPI geographic data as defined in the ToC. Contributors are required to enter the percentage allocation per country (with a total capped at 100%). The budget is then automatically calculated based on the total pooled funding.",
     },
     {
       anchorId: "porb-section-btn-location-of-benefit",
       title: "Location of Benefit",
       description:
-        "Shows locations (countries, regions, global) extracted from outcome geographic data. Enter percentages like Countries of Implementation.",
+        "Displays locations (countries, regions, or global) extracted from the outcome-level geographic data. Contributors are required to enter the percentage allocation per location (with a total capped at 100%).",
     },
     {
       anchorId: "porb-section-btn-w3",
@@ -251,21 +251,21 @@ export class PorbComponent implements OnInit, OnDestroy {
     },
     {
       anchorId: "porb-section-tools",
-      title: "Table Tools",
+      title: "Search Filters",
       description:
-        "Use search and filters to find rows, and Export Excel to download the currently visible table.",
+        'Use the search and filter options to locate specific rows and select "Export Excel" to download the currently visible table.',
     },
     {
       anchorId: "porb-budget-input",
       title: "Budget Input",
       description:
-        "Enter budget directly in table cells. Values are formatted with commas when not editing. You can also paste values from a spreadsheet for faster entry.",
+        "Enter the budget directly into the table cells. Values will be automatically formatted with commas when not being edited. You can also paste values from a spreadsheet for faster data entry.",
     },
     {
       anchorId: "porb-assumption-icon",
       title: "Assumption Requirement",
       description:
-        "Use the assumption icon beside budget to add assumptions. If budget exists, assumption is required and row error icons will appear when missing.",
+        "Use the assumption icon next to each budget entry to add budget notes/assumptions. Where a budget is entered, an assumption is required. If missing, an error icon will appear at the row level.",
     },
   ];
 
@@ -1084,6 +1084,14 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   get extraNavigationItems(): string[] {
+    if (this.showTour) {
+      // Show all section buttons during tour so every step has a visible anchor.
+      const all = [...this.baseExtraNavigationItems];
+      if (!all.includes("Cross Cutting")) {
+        all.splice(4, 0, "Cross Cutting"); // After Anaplan, matching tour step order
+      }
+      return all;
+    }
     const selectedAowCode = String(
       this.selectedAow?.code || this.selectedAow?.aow_acrnum || ""
     ).toUpperCase();
@@ -1095,6 +1103,7 @@ export class PorbComponent implements OnInit, OnDestroy {
 
   /** Check if a center-level section has no items at all */
   isCenterSectionEmpty(section: string): boolean {
+    if (this.showTour) return false;
     const counts = this.consolidationRowCounts;
     if (!counts) return false;
     switch (section) {
