@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Initiative } from './initiative.entity';
 import { Organization } from './organization.entity';
 import { PorbAow } from './porb-aow.entity';
 import { Anaplan } from './anaplan.entity';
 
+@Index(['program_id', 'porb_aow_id', 'center_id'])
 @Entity('porb_anaplan')
 export class PorbAnaplan {
   @ApiProperty()

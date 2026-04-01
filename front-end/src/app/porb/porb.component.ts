@@ -315,8 +315,15 @@ export class PorbComponent implements OnInit, OnDestroy {
       }
     }
 
-    const activePhase = await this.phasesService.getActivePhase();
+    // Run independent calls in parallel
+    const [activePhase] = await Promise.all([
+      this.phasesService.getActivePhase(),
+      this.loadSubmissionStatus(initiativeId),
+      this.loadAowsFromDatabase(initiativeId),
+    ]);
     this.activePhaseId = Number(activePhase?.id) || null;
+
+    // getAssignedOrgs depends on activePhase
     let centers = await this.phasesService.getAssignedOrgs(
       activePhase?.id,
       initiativeId
@@ -328,10 +335,7 @@ export class PorbComponent implements OnInit, OnDestroy {
       ? centers.sort((a, b) => (a.acronym || a.name || '').localeCompare(b.acronym || b.name || ''))
       : [];
 
-    await this.loadSubmissionStatus(initiativeId);
     this.buildCanEditMap();
-
-    await this.loadAowsFromDatabase(initiativeId);
     await this.applySelectionFromUrl();
 
     this.setupOnlineUsersStream();
@@ -819,53 +823,39 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.clearBudgetRows();
     this.sectionLoading = true;
     try {
-      await this.refreshSectionValidation();
-      await this.refreshValidationSummary();
-      await this.loadConsolidation(programId, porbAowId, centerId);
-
-      if (this.selectedExtraNavigation === "Pool funding HLO") {
-        const hlos = await this.porbService.getHlos(programId, porbAowId, centerId);
-        this.poolFundingRows = Array.isArray(hlos) ? hlos : [];
-        return;
-      }
-
-      if (this.selectedExtraNavigation === "Partners") {
-        const partners = await this.porbService.getPartners(programId, porbAowId, centerId);
-        this.partnersRows = Array.isArray(partners) ? partners : [];
-        return;
-      }
-
-      if (this.selectedExtraNavigation === "MELIA Study") {
-        const melia = await this.porbService.getMelia(programId, porbAowId, centerId);
-        this.meliaRows = Array.isArray(melia) ? melia : [];
-        return;
-      }
-
-      if (this.selectedExtraNavigation === "Anaplan") {
-        const anaplan = await this.porbService.getAnaplan(programId, porbAowId, centerId);
-        this.anaplanRows = Array.isArray(anaplan) ? anaplan : [];
-        return;
-      }
-
-      if (this.selectedExtraNavigation === "Cross Cutting") {
-        const cross = await this.porbService.getCross(programId, porbAowId, centerId);
-        this.crossRows = Array.isArray(cross) ? cross : [];
-        return;
-      }
-
-      if (this.selectedExtraNavigation === "Countries of Implementation") {
-        const data = await this.porbService.getCountryPercentage(programId, porbAowId, centerId);
-        this.countryPercentageRows = Array.isArray(data) ? data : [];
-        return;
-      }
-
-      if (this.selectedExtraNavigation === "Location of Benefit") {
-        const data = await this.porbService.getLocationBenefit(programId, porbAowId, centerId);
-        this.locationBenefitRows = Array.isArray(data) ? data : [];
-        return;
-      }
+      await Promise.all([
+        this.refreshSectionValidation(),
+        this.refreshValidationSummary(),
+        this.loadConsolidation(programId, porbAowId, centerId),
+        this.loadCurrentSectionData(programId, porbAowId, centerId),
+      ]);
     } finally {
       this.sectionLoading = false;
+    }
+  }
+
+  private async loadCurrentSectionData(programId: number, porbAowId: number | undefined, centerId: number | undefined) {
+    if (this.selectedExtraNavigation === "Pool funding HLO") {
+      const hlos = await this.porbService.getHlos(programId, porbAowId, centerId);
+      this.poolFundingRows = Array.isArray(hlos) ? hlos : [];
+    } else if (this.selectedExtraNavigation === "Partners") {
+      const partners = await this.porbService.getPartners(programId, porbAowId, centerId);
+      this.partnersRows = Array.isArray(partners) ? partners : [];
+    } else if (this.selectedExtraNavigation === "MELIA Study") {
+      const melia = await this.porbService.getMelia(programId, porbAowId, centerId);
+      this.meliaRows = Array.isArray(melia) ? melia : [];
+    } else if (this.selectedExtraNavigation === "Anaplan") {
+      const anaplan = await this.porbService.getAnaplan(programId, porbAowId, centerId);
+      this.anaplanRows = Array.isArray(anaplan) ? anaplan : [];
+    } else if (this.selectedExtraNavigation === "Cross Cutting") {
+      const cross = await this.porbService.getCross(programId, porbAowId, centerId);
+      this.crossRows = Array.isArray(cross) ? cross : [];
+    } else if (this.selectedExtraNavigation === "Countries of Implementation") {
+      const data = await this.porbService.getCountryPercentage(programId, porbAowId, centerId);
+      this.countryPercentageRows = Array.isArray(data) ? data : [];
+    } else if (this.selectedExtraNavigation === "Location of Benefit") {
+      const data = await this.porbService.getLocationBenefit(programId, porbAowId, centerId);
+      this.locationBenefitRows = Array.isArray(data) ? data : [];
     }
   }
 

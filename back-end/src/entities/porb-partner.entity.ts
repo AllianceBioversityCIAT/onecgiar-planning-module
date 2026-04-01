@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Initiative } from './initiative.entity';
 import { PorbAow } from './porb-aow.entity';
 
+@Index(['program_id', 'porb_aow_id'])
 @Entity('porb_partner')
 export class PorbPartner {
   @ApiProperty()
