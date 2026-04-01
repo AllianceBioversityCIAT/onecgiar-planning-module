@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  planning_api:
+    container_name: planning_api
+    build: ./back-end
+    restart: always
+    environment:
+      - APP_BUILD_VERSION=${APP_BUILD_VERSION:-dev}
+    volumes:
+      - ./back-end/generated_files:/back-end/generated_files
+    networks:
+      - prms_network
+
+  planning_front_end:
+    container_name: planning_front_end
+    build:
+      context: ./front-end
+      args:
+        - APP_BUILD_VERSION=${APP_BUILD_VERSION:-dev}
+    restart: always
+    depends_on:
+      - planning_api
+    networks:
+      - prms_network
+
+networks:
+  prms_network:
+    external: true
