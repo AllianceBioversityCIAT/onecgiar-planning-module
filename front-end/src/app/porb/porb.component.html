@@ -786,6 +786,7 @@
           [class.porb-nav__item--active]="centerViewMode === 'budget-entry'"
           (click)="onCenterViewModeChange('budget-entry')">
           Budget Entry
+          <mat-icon class="nav-icon nav-icon--error" *ngIf="hasCenterError(selectedCenter)">error_outline</mat-icon>
         </button>
       </nav>
 
@@ -815,6 +816,7 @@
           (click)="selectW3View()"
         >
           W3/Bilateral
+          <mat-icon class="nav-icon nav-icon--error" *ngIf="hasW3Error()">error_outline</mat-icon>
         </button>
       </nav>
 

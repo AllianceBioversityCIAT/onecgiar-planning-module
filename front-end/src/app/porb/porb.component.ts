@@ -57,6 +57,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   locationBenefitRows: any[] = [];
   sectionValidation: Record<string, { hasError: boolean; message: string; partnerMismatch?: boolean; pooledMismatch?: boolean }> = {};
   centerErrorCodes: string[] = [];
+  w3CenterErrorCodes: string[] = [];
   aowErrorIds: number[] = [];
   consolidationIndicatorsData: Array<{ title: string; target: number; budget: number }> = [];
   consolidationBudgetSummaryData: any = null;
@@ -662,6 +663,7 @@ export class PorbComponent implements OnInit, OnDestroy {
   private async refreshValidationSummary() {
     if (!this.initiativeId) {
       this.centerErrorCodes = [];
+      this.w3CenterErrorCodes = [];
       this.aowErrorIds = [];
       return;
     }
@@ -676,6 +678,9 @@ export class PorbComponent implements OnInit, OnDestroy {
       ? summary.aow_error_ids
           .map((item: any) => Number(item))
           .filter((item: number) => Number.isFinite(item))
+      : [];
+    this.w3CenterErrorCodes = Array.isArray(summary?.w3_center_error_codes)
+      ? summary.w3_center_error_codes.map((item: any) => String(item))
       : [];
   }
 
@@ -1218,6 +1223,11 @@ export class PorbComponent implements OnInit, OnDestroy {
   hasCenterError(center: any): boolean {
     const key = this.getCenterKey(center);
     return !!key && this.centerErrorCodes.includes(key);
+  }
+
+  hasW3Error(): boolean {
+    const key = this.getCenterKey(this.selectedCenter);
+    return !!key && this.w3CenterErrorCodes.includes(key);
   }
 
   hasAowError(aow: any): boolean {
