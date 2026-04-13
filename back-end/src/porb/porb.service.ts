@@ -1132,6 +1132,7 @@ export class PorbService {
 
   async getValidationSummary(program_id: number, center_id?: number) {
     const centerErrorCodes = new Set<string>();
+    const w3CenterErrorCodes = new Set<string>();
     const aowErrorIds = new Set<number>();
     const includeAowForCenter = center_id != null;
 
@@ -1176,6 +1177,7 @@ export class PorbService {
         // W3/Bilateral is center-level — only flag the center, not any AOW
         if (row?.center_id != null) {
           centerErrorCodes.add(String(row.center_id));
+          w3CenterErrorCodes.add(String(row.center_id));
         }
       }
     }
@@ -1296,6 +1298,7 @@ export class PorbService {
     return {
       center_error_codes: Array.from(centerErrorCodes),
       aow_error_ids: Array.from(aowErrorIds),
+      w3_center_error_codes: Array.from(w3CenterErrorCodes),
     };
   }
 
@@ -2686,18 +2689,11 @@ export class PorbService {
     return '';
   }
 
-  private deriveHloGeo(item: any): string {
-    const direct = this.parseGeoFromLocation(item);
-    if (direct) return direct;
-
-    const indicators = Array.isArray(item?.quantitative_indicators)
-      ? item.quantitative_indicators
-      : [];
-    for (const indicator of indicators) {
-      const geo = this.parseGeoFromLocation(indicator);
-      if (geo) return geo;
+  private deriveHloGeo(item: any, indicator?: any): string {
+    // Use the specific indicator's geo only — don't inherit from the OUTPUT node
+    if (indicator) {
+      return this.parseGeoFromLocation(indicator);
     }
-
     return '';
   }
 
@@ -3080,7 +3076,7 @@ export class PorbService {
                 hlo_name: item?.title || '',
                 hlo_description: indicator?.description || '',
                 hlo_type: indicator?.type?.value || 'others',
-                hlo_geo: this.deriveHloGeo(item),
+                hlo_geo: this.deriveHloGeo(item, indicator),
                 hlo_target: target[activePhase.reportingYear] || null,
                 hlo_budget: 0,
                 hlo_assumption: '',
