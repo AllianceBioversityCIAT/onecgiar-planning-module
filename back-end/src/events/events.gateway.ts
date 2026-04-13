@@ -21,7 +21,7 @@ function loadAppVersion(): string {
     return process.env.APP_BUILD_VERSION;
   }
   try {
-    const versionFile = readFileSync(join(__dirname, '..', '..', '..', 'version.json'), 'utf8');
+    const versionFile = readFileSync(join(__dirname, '..', '..', 'version.json'), 'utf8');
     return JSON.parse(versionFile).version || 'dev';
   } catch {
     return 'dev';

@@ -41,6 +41,11 @@ server {
             proxy_set_header Host $host;
             proxy_pass http://api.planning.loc/socket.io/;
         }
+    location = /version.json {
+        root /front-end/dist/planning/browser;
+        add_header Cache-Control "no-store" always;
+    }
+
     location / {
         root   /front-end/dist/planning/browser;
         index  index.html index.htm;
