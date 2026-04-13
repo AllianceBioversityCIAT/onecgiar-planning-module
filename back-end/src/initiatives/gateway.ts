@@ -57,7 +57,7 @@ export class WSValidationPipe extends ValidationPipe {
 @UsePipes(WSValidationPipe)
 @WebSocketGateway({
   namespace: 'chat',
-  maxHttpBufferSize: 100000000000000,
+  maxHttpBufferSize: 10e6,
   pingTimeout: 10000,
   connectTimeout: 10000,
 

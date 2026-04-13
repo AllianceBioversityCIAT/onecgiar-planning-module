@@ -1,11 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Initiative } from './initiative.entity';
 import { Organization } from './organization.entity';
 import { PorbAow } from './porb-aow.entity';
 import { CrossCutting } from './cross-cutting.entity';
 import { StanderdCrossCutting } from './standerd-cross-cutting.entity';
 
+@Index(['program_id', 'porb_aow_id', 'center_id'])
 @Entity('porb_cross')
 export class PorbCross {
   @ApiProperty()

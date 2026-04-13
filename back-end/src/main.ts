@@ -3,9 +3,11 @@ import { AppModule } from './app.module';
 import { env } from 'process';
 import { HttpExceptionFilter } from './exception-filters/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as compression from 'compression';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule,{ cors: true });
   // //app.useGlobalFilters(new HttpExceptionFilter());
+  app.use(compression());
   app.enableCors({
     origin: '*',
     methods: 'GET, PUT, POST, PATCH, DELETE',

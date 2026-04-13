@@ -9,4 +9,4 @@ WORKDIR /back-end
 RUN npm i
 RUN npm run build
 
-CMD ["node", "dist/main"]
+CMD ["node", "--max-old-space-size=4096", "dist/main"]

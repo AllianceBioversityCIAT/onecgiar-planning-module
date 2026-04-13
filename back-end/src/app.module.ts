@@ -47,6 +47,9 @@ import { StanderdCrossCuttingModule } from './standerd-cross-cutting/standerd-cr
         entities: [`dist/**/*.entity{.ts,.js}`],
         autoLoadEntities: true,
         namingStrategy: new SnakeNamingStrategy(),
+        extra: {
+          connectionLimit: 50,
+        },
     }),
     ScheduleModule.forRoot(),
     InitiativesModule,
