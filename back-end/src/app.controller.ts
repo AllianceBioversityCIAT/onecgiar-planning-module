@@ -8,7 +8,7 @@ export class AppController {
   getVersion() {
     let version = 'dev';
     try {
-      const file = readFileSync(join(__dirname, '..', '..', 'version.json'), 'utf8');
+      const file = readFileSync(join(__dirname, '..', 'version.json'), 'utf8');
       version = JSON.parse(file).version || 'dev';
     } catch {}
     return { version };
