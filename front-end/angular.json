@@ -28,7 +28,7 @@
               "src/assets",
               {
                 "glob": "version.json",
-                "input": "../",
+                "input": "./",
                 "output": "/"
               },
               {

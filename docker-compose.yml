@@ -14,10 +14,7 @@ services:
     links:
       - planning_api  
     container_name: planning_front_end
-    build:
-      context: front-end
-      args:
-        - APP_BUILD_VERSION=${APP_BUILD_VERSION:-dev}
+    build: front-end
     restart: always
     ports:
       - 127.0.0.1:4240:80
