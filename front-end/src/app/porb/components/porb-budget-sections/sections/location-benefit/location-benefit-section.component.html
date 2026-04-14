@@ -9,10 +9,9 @@
     <button type="button" class="export-btn" (click)="export()" [disabled]="!rows.length">
       Export Excel
     </button>
-    <!-- Add Location button hidden for now -->
-    <!-- <button type="button" class="add-location-btn" (click)="openAddLocationDialog()" *ngIf="isAow00 && canEdit">
+    <button type="button" class="add-location-btn" (click)="openAddLocationDialog()" *ngIf="isAow00 && canEdit">
       + Add Location
-    </button> -->
+    </button>
   </div>
 
   <div class="table-scroll" *ngIf="rows.length">
