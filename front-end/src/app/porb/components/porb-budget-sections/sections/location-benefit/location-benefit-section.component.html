@@ -9,7 +9,7 @@
     <button type="button" class="export-btn" (click)="export()" [disabled]="!rows.length">
       Export Excel
     </button>
-    <button type="button" class="add-location-btn" (click)="openAddLocationDialog()" *ngIf="isAow00 && canEdit">
+    <button type="button" class="add-location-btn" (click)="openAddLocationDialog()" *ngIf="canEdit">
       + Add Location
     </button>
   </div>
@@ -21,7 +21,7 @@
           <th style="width: 50%">Location</th>
           <th style="width: 15%">Type</th>
           <th class="num-cell" style="width: 30%">Percentage (%)</th>
-          <th *ngIf="isAow00" style="width: 50px"></th>
+          <th style="width: 50px"></th>
         </tr>
       </thead>
       <tbody>
@@ -54,7 +54,7 @@
               <span>{{ row.percentage || 0 }}%</span>
             </ng-template>
           </td>
-          <td class="action-cell" *ngIf="isAow00">
+          <td class="action-cell">
             <button
               *ngIf="row.is_manual && canEdit"
               class="delete-btn"
@@ -67,7 +67,7 @@
         </tr>
 
         <tr *ngIf="!filteredRows.length">
-          <td [attr.colspan]="isAow00 ? 4 : 3">No locations found for the current search.</td>
+          <td colspan="4">No locations found for the current search.</td>
         </tr>
 
         <tr class="subtotal-row" *ngIf="filteredRows.length">
@@ -77,7 +77,7 @@
             {{ totalPercentage | number:'1.0-2' }}%
             <span *ngIf="isOverLimit" class="over-limit-badge" matTooltip="Total percentage exceeds 100%">!</span>
           </td>
-          <td *ngIf="isAow00"></td>
+          <td></td>
         </tr>
       </tbody>
     </table>
@@ -89,7 +89,6 @@
 
   <div class="empty-state" *ngIf="!rows.length">
     <mat-icon>info_outline</mat-icon>
-    <span *ngIf="isAow00">No location data found for this work package.</span>
-    <span *ngIf="!isAow00">No locations found in outcome data for this center and work package.</span>
+    <span>No locations found. Use "+ Add Location" to add locations manually.</span>
   </div>
 </div>
