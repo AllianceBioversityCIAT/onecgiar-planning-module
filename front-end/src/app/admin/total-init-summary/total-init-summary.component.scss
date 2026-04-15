@@ -521,6 +521,124 @@ td:empty::after {
   content: attr(data-val);
 }
 
+// ---------- Tab group ----------
+.budget-summary-tabs {
+  margin-top: 1.6rem;
+
+  ::ng-deep .mat-mdc-tab-header {
+    border-bottom: 1px solid #e0e0e0;
+  }
+}
+
+// ---------- Generic matrix table ----------
+.budget-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.3rem;
+  font-family: 'Poppins', sans-serif;
+
+  th, td {
+    padding: 7px 10px;
+    border: 1px solid #e0e0e0;
+    white-space: nowrap;
+  }
+
+  thead tr {
+    background-color: #0f212f;
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+
+    th {
+      color: #ffffff;
+      font-weight: 600;
+    }
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  tbody tr:hover {
+    background-color: #f0f4f8;
+  }
+
+  .col-code   { min-width: 100px; width: 100px; }
+  .col-acrnum { min-width: 100px; width: 100px; }
+  .col-name   { min-width: 240px; white-space: normal; }
+  .col-number { min-width: 110px; text-align: right; }
+
+  .sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: inherit;
+    box-shadow: 1px 0 0 #e0e0e0;
+  }
+
+  .sticky-col-2 {
+    position: sticky;
+    left: 100px;
+    z-index: 1;
+    background-color: inherit;
+    box-shadow: 1px 0 0 #e0e0e0;
+  }
+
+  tbody tr:nth-child(even) .sticky-col,
+  tbody tr:nth-child(even) .sticky-col-2 {
+    background-color: #f9f9f9;
+  }
+  tbody tr:nth-child(odd) .sticky-col,
+  tbody tr:nth-child(odd) .sticky-col-2 {
+    background-color: #ffffff;
+  }
+
+  thead .sticky-col,
+  thead .sticky-col-2 {
+    z-index: 3;
+    background-color: #0f212f;
+  }
+}
+
+.program-header-row .sticky-col,
+.program-header-row .sticky-col-2 {
+  background-color: #e8edf2 !important;
+}
+
+.budget-summary-table tfoot .subtotal-row {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+
+  td {
+    background-color: #f1f5f9;
+    font-weight: bold;
+    border-top: 2px solid #0f212f;
+  }
+
+  .sticky-col,
+  .sticky-col-2 {
+    z-index: 5;
+    background-color: #f1f5f9 !important;
+  }
+}
+
+// ---------- Program header rows ----------
+.program-header-row td {
+  background-color: #e8edf2 !important;
+  color: #0f212f;
+  font-size: 1.35rem;
+}
+
+// ---------- Loading placeholder ----------
+.loading-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 0;
+}
+
 .form {
     display: flex;
     justify-content: flex-start;

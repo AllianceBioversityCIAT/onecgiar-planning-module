@@ -75,6 +75,15 @@
         <mat-icon>file_download</mat-icon>
         {{ isExporting ? "Exporting..." : "Export Excel" }}
       </button>
+      <button
+        mat-raised-button
+        class="action-btn action-btn--export"
+        [disabled]="!initiatives.length || isExportingBudget"
+        (click)="exportBudgetSummary()"
+      >
+        <mat-icon>table_view</mat-icon>
+        {{ isExportingBudget ? "Exporting..." : "Export Budget Summary" }}
+      </button>
     </div>
   </div>
 

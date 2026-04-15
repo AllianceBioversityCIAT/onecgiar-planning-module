@@ -7404,7 +7404,7 @@ export class PorbService {
    * Build a full JSON snapshot of all PORB data for a program.
    * Used when submitting to freeze the data at that point in time.
    */
-  private async buildPorbSnapshot(programId: number) {
+  public async buildPorbSnapshot(programId: number) {
     // Get all AOWs
     const aows = await this.getAows(programId);
 

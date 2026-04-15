@@ -4,6 +4,47 @@ import { saveAs } from "file-saver";
 import { Observable, firstValueFrom, map } from "rxjs";
 import { environment } from "src/environments/environment";
 
+export interface BudgetMatrixCenter {
+  code: string;
+  acronym: string;
+  name: string;
+  kind: 'center' | 'so' | 'unknown';
+}
+
+export interface BudgetMatrixProgram {
+  id: number;
+  official_code: string;
+  name: string;
+}
+
+export interface BudgetMatrixAowRow {
+  aow_id: number;
+  aow_name: string;
+  aow_acrnum: string;
+  cells: Record<string, number>;
+  subtotal: number;
+}
+
+export interface UnknownBreakdownRow {
+  aowLeads: number;
+  pmuCosts: number;
+  consultants: number;
+  discretionary: number;
+  research: number;
+  travel: number;
+  total: number;
+}
+
+export interface MatrixResponse {
+  centers: BudgetMatrixCenter[];
+  alliance: { bioversityCode: string | null; ciatCode: string | null };
+  programs: BudgetMatrixProgram[];
+  byCenter: Record<number, Record<string, number>>;
+  byAow: Record<number, BudgetMatrixAowRow[]>;
+  bilateral: Record<number, BudgetMatrixAowRow[]>;
+  unknownBreakdown: Record<number, UnknownBreakdownRow>;
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -94,13 +135,42 @@ export class InitiativesService {
       });
     const data = await firstValueFrom(
       this.http
-        .get(environment.api_url + `/initiatives/budgetSummary`, {
+        .get(environment.api_url + `/initiatives/budgetSummary/excel`, {
           responseType: "blob",
           params: finalFilters
         })
         .pipe(map((d: Blob) => d))
     );
     saveAs(data, 'Budget-Summary.xlsx')
+  }
+
+  async exportBudgetSummaryBulk(programIds: number[], status: string, phaseId?: number): Promise<any> {
+    const body: Record<string, any> = { program_ids: programIds, status };
+    if (phaseId != null) body['phase_id'] = phaseId;
+    return firstValueFrom(
+      this.http.post(environment.api_url + '/initiatives/budgetSummary/excel-bulk', body, {
+        observe: 'response',
+        responseType: 'blob',
+      })
+    );
+  }
+
+  async getBudgetMatrix(filters: any = null): Promise<MatrixResponse> {
+    let finalFilters: any = {};
+    if (filters)
+      Object.keys(filters).forEach((element) => {
+        if (typeof filters[element] === "string")
+          filters[element] = filters[element].trim();
+
+        if (filters[element] != null && filters[element] != "")
+          finalFilters[element] = filters[element];
+      });
+    return firstValueFrom(
+      this.http
+        .get<MatrixResponse>(environment.api_url + `/initiatives/budgetSummary/matrix`, {
+          params: finalFilters
+        })
+    );
   }
 
 

@@ -74,12 +74,22 @@
 
   &--export {
     background-color: #9e553e !important;
-    color: #fff;
+    color: #ffffff !important;
+
+    ::ng-deep .mdc-button__label,
+    ::ng-deep .mat-icon {
+      color: #ffffff !important;
+    }
   }
 
   &--download {
     background-color: #198754 !important;
-    color: #fff;
+    color: #ffffff !important;
+
+    ::ng-deep .mdc-button__label,
+    ::ng-deep .mat-icon {
+      color: #ffffff !important;
+    }
   }
 
   &:disabled {

@@ -12,6 +12,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { InitiativesService } from './initiatives.service';
+import { BudgetSummaryService } from './budget-summary.service';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -44,6 +45,7 @@ import { HttpService } from '@nestjs/axios';
 @Controller('initiatives')
 export class InitiativesController {
   constructor(private readonly initiativesService: InitiativesService,
+    private readonly budgetSummaryService: BudgetSummaryService,
     private readonly httpService: HttpService) {}
 
   //(old sync)
@@ -143,6 +145,29 @@ export class InitiativesController {
   exportBudgetSummary(@Query() query: any) {
     console.log(query)
     return this.initiativesService.exportBudgetSummary(query);
+  }
+
+  @Get('budgetSummary/matrix')
+  @ApiBearerAuth()
+  getBudgetSummaryMatrix(@Query() query: any) {
+    return this.budgetSummaryService.getMatrix(query);
+  }
+
+  @Get('budgetSummary/excel')
+  @ApiBearerAuth()
+  getBudgetSummaryExcel(@Query() query: any) {
+    return this.budgetSummaryService.getWorkbook(query);
+  }
+
+  @Post('budgetSummary/excel-bulk')
+  @ApiBearerAuth()
+  budgetSummaryExcelBulk(
+    @Body() body: { program_ids: number[]; status?: string; phase_id?: number },
+  ) {
+    return this.budgetSummaryService.getWorkbook({
+      ...body,
+      initiatives: body.program_ids,
+    });
   }
 
   @Get('data-import')

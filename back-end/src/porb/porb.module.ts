@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { PorbController } from './porb.controller';
@@ -74,11 +74,11 @@ import { EventsModule } from 'src/events/events.module';
       Region,
     ]),
     HttpModule,
-    SubmissionModule,
-    InitiativesModule,
+    forwardRef(() => SubmissionModule),
+    forwardRef(() => InitiativesModule),
     PhasesModule,
     EmailModule,
-    EventsModule,
+    forwardRef(() => EventsModule),
   ],
   controllers: [PorbController],
   providers: [PorbService],

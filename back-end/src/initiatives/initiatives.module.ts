@@ -1,5 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { PorbModule } from 'src/porb/porb.module';
 import { InitiativesService } from './initiatives.service';
+import { BudgetSummaryService } from './budget-summary.service';
 import { InitiativesController } from './initiatives.controller';
 import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -46,15 +48,17 @@ import { Archive } from 'src/entities/archive.entity';
     HttpModule,
     UsersModule,
     EmailModule,
-    PhasesModule
+    PhasesModule,
+    forwardRef(() => PorbModule),
   ],
   controllers: [InitiativesController],
   providers: [
     InitiativesService,
+    BudgetSummaryService,
     ChatMessageRepositoryService,
     WsGuard,
     ChatGateway,
   ],
-  exports: [InitiativesService],
+  exports: [InitiativesService, BudgetSummaryService],
 })
 export class InitiativesModule {}

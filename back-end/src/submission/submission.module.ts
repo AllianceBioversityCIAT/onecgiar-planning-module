@@ -68,7 +68,7 @@ import { EventsModule } from 'src/events/events.module';
     CrossCuttingModule,
     IpsrValueModule,
     PhasesModule,
-    InitiativesModule,
+    forwardRef(() => InitiativesModule),
     PeriodsModule,
     AnaplanModule,
     BudgetAssumptionsModule,

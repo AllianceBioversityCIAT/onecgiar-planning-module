@@ -3,6 +3,7 @@ import { PageEvent } from "@angular/material/paginator";
 import { MatTableDataSource } from "@angular/material/table";
 import { Meta, Title } from "@angular/platform-browser";
 import { HeaderService } from "src/app/header.service";
+import { InitiativesService } from "src/app/services/initiatives.service";
 import { PhasesService } from "src/app/services/phases.service";
 import { PorbService } from "src/app/services/porb.service";
 import { AppSocket } from "src/app/socket.service";
@@ -16,6 +17,7 @@ import { AppSocket } from "src/app/socket.service";
 export class ExportComponent {
   constructor(
     private headerService: HeaderService,
+    private initiativesService: InitiativesService,
     private phasesService: PhasesService,
     private porbService: PorbService,
     public socket: AppSocket,
@@ -40,6 +42,7 @@ export class ExportComponent {
   initiatives: any = [];
   progressValue = 0;
   isExporting = false;
+  isExportingBudget = false;
   downloadReady = false;
   downloadUrl: string | null | undefined = null;
   downloadFilename: string | null | undefined = null;
@@ -149,6 +152,38 @@ export class ExportComponent {
         progressValue: 0,
       });
     }, 500);
+  }
+
+  async exportBudgetSummary() {
+    this.isExportingBudget = true;
+    const programIds = this.initiatives.map((item: any) => item.id);
+    try {
+      const response: any = await this.initiativesService.exportBudgetSummaryBulk(
+        programIds,
+        this.selectedStatus,
+        this.selectedPhase?.id
+      );
+      if (response?.body) {
+        const blob = response.body as Blob;
+        const contentDisposition = response.headers?.get('Content-Disposition');
+        let filename = `${this.selectedStatus}_Budget-Summary.xlsx`;
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) filename = match[1];
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error('Budget Summary export failed:', e);
+    }
+    this.isExportingBudget = false;
   }
 
   downloadFile() {
