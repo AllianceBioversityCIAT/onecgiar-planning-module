@@ -10,7 +10,7 @@ export class AppSocket extends Socket {
       url: environment.socket_url,
       options: {
         path: environment.socket_path,
-        autoConnect: false,
+        autoConnect: true,
         extraHeaders: { authorization: 'Bearer ' + token },
       },
     });
