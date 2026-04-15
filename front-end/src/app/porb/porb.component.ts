@@ -1112,11 +1112,7 @@ export class PorbComponent implements OnInit, OnDestroy {
         if (selectedAowCode === 'AOW00') return false;
         return (counts.countryPercentage || 0) === 0;
       }
-      case 'Location of Benefit': {
-        const selectedAowCode = String(this.selectedAow?.code || this.selectedAow?.aow_acrnum || '').toUpperCase();
-        if (selectedAowCode === 'AOW00') return false;
-        return (counts.locationBenefit || 0) === 0;
-      }
+      case 'Location of Benefit': return false;
       default: return false;
     }
   }
