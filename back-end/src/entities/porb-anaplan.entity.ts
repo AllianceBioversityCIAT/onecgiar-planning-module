@@ -45,7 +45,7 @@ export class PorbAnaplan {
   anaplan: Anaplan;
 
   @ApiProperty()
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'double', nullable: true })
   budget: number;
 
   @CreateDateColumn()

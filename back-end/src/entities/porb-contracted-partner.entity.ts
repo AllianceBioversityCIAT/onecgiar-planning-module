@@ -49,7 +49,7 @@ export class PorbContractedPartner {
   countries: string;
 
   @ApiProperty()
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'double', nullable: true })
   budget: number;
 
   @ApiProperty()

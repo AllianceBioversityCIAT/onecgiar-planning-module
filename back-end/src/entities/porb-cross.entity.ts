@@ -54,7 +54,7 @@ export class PorbCross {
   standerd_cross_cutting: StanderdCrossCutting;
 
   @ApiProperty()
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'double', nullable: true })
   budget: number;
 
   @ApiProperty()

@@ -44,7 +44,7 @@ export class PorbLocationBenefit {
   location_type: string;
 
   @ApiProperty()
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'double', nullable: true })
   percentage: number;
 
   @ApiProperty()

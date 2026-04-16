@@ -40,7 +40,7 @@ export class PorbCountryPercentage {
   country_name: string;
 
   @ApiProperty()
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'double', nullable: true })
   percentage: number;
 
   @ApiProperty()

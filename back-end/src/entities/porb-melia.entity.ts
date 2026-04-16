@@ -48,7 +48,7 @@ export class PorbMelia {
   melia_outputs: string;
 
   @ApiProperty()
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'double', nullable: true })
   melia_budget: number;
 
   @ApiProperty()

@@ -48,7 +48,7 @@ export class PorbBilateral {
   bilateral_outputs: string;
 
   @ApiProperty()
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'double', nullable: true })
   bilateral_budget: number;
 
   @ApiProperty()

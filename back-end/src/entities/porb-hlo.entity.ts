@@ -60,7 +60,7 @@ export class PorbHlo {
   hlo_target: number;
 
   @ApiProperty()
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'double', nullable: true })
   hlo_budget: number;
 
   @ApiProperty()
