@@ -296,9 +296,6 @@ export class PartnersSectionComponent implements OnInit, OnChanges {
     }
     const contracted = this.isContracted(row);
     const countryCodes = this.getCountryCodes(row);
-    if (contracted && !countryCodes.length) {
-      return;
-    }
 
     const geoLabel = this.getCountryNamesLabel(row);
     row.partner_geo = geoLabel;
