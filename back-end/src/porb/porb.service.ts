@@ -3192,7 +3192,7 @@ export class PorbService {
       : [];
     await this.syncTocDeletedFlags(
       this.porbPartnerRepository,
-      existingPartners as any,
+      existingPartners.filter((p: any) => !p.is_unknown) as any,
       new Set(partnerRows.map((row: any) => String(row.toc_id))),
     );
 
