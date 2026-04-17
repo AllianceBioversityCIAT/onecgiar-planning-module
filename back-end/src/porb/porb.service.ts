@@ -3151,14 +3151,15 @@ export class PorbService {
     const existingPartners = await this.porbPartnerRepository.find({
       where: { program_id: programId },
     });
-    const existingPartnerByTocId = new Map<string, PorbPartner>();
-    existingPartners.forEach((row) => existingPartnerByTocId.set(String(row.toc_id), row));
+    const existingPartnerByKey = new Map<string, PorbPartner>();
+    existingPartners.forEach((row) =>
+      existingPartnerByKey.set(`${String(row.toc_id)}::${Number(row.porb_aow_id || 0)}`, row),
+    );
     const partnerUpdates: Array<{ id: number; changes: any }> = [];
     for (const row of partnerRows) {
-      const existing = existingPartnerByTocId.get(String(row.toc_id));
+      const existing = existingPartnerByKey.get(`${String(row.toc_id)}::${Number(row.porb_aow_id || 0)}`);
       if (!existing) continue;
       const changes: any = {};
-      if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
       if ((existing.partner_name || '') !== (row.partner_name || '')) changes.partner_name = row.partner_name;
       if ((existing.partner_outputs || '') !== (row.partner_outputs || '')) changes.partner_outputs = row.partner_outputs;
       if (Object.keys(changes).length) {
@@ -3172,7 +3173,7 @@ export class PorbService {
       );
     }
     const newPartnerRows = partnerRows.filter(
-      (row) => !existingPartnerByTocId.has(String(row.toc_id)),
+      (row) => !existingPartnerByKey.has(`${String(row.toc_id)}::${Number(row.porb_aow_id || 0)}`),
     );
     if (setTocTimestamps) {
       newPartnerRows.forEach(r => {
