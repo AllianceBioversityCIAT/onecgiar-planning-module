@@ -2714,14 +2714,19 @@ export class PorbService {
 
   private async syncTocDeletedFlags(
     repository: Repository<any>,
-    existingRows: Array<{ id: number; toc_id: string; toc_is_deleted?: boolean }>,
+    existingRows: Array<{ id: number; toc_id: string; toc_is_deleted?: boolean; center_id?: number }>,
     currentTocIds: Set<string>,
+    useCompositeKey = false,
   ) {
+    const keyFn = useCompositeKey
+      ? (row: any) => `${String(row.toc_id)}::${Number(row.center_id)}`
+      : (row: any) => String(row.toc_id);
+
     const idsToDelete = existingRows
-      .filter((row) => !currentTocIds.has(String(row.toc_id)) && !row.toc_is_deleted)
+      .filter((row) => !currentTocIds.has(keyFn(row)) && !row.toc_is_deleted)
       .map((row) => row.id);
     const idsToRestore = existingRows
-      .filter((row) => currentTocIds.has(String(row.toc_id)) && row.toc_is_deleted)
+      .filter((row) => currentTocIds.has(keyFn(row)) && row.toc_is_deleted)
       .map((row) => row.id);
 
     if (idsToDelete.length) {
@@ -3133,7 +3138,8 @@ export class PorbService {
     await this.syncTocDeletedFlags(
       this.porbHloRepository,
       existingHlos as any,
-      new Set(hloRows.map((row: any) => String(row.toc_id))),
+      new Set(hloRows.map((row: any) => `${String(row.toc_id)}::${Number(row.center_id)}`)),
+      true,
     );
 
     const partnerNodes = results.filter((item: any) => item?.category === 'partners');
@@ -3264,7 +3270,8 @@ export class PorbService {
     await this.syncTocDeletedFlags(
       this.porbBilateralRepository,
       existingBilaterals as any,
-      new Set(validBilateralRows.map((row: any) => String(row.toc_id))),
+      new Set(validBilateralRows.map((row: any) => `${String(row.toc_id)}::${Number(row.center_id)}`)),
+      true,
     );
 
     const meliaNodes = results.filter((item: any) => item?.category === 'Melia');
