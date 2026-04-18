@@ -1525,6 +1525,8 @@ export class PorbComponent implements OnInit, OnDestroy {
     this.selectedCenter = center;
     this.activeView = "center";
 
+    this.preloadW3CenterCount();
+
     if (this.centerViewMode === 'consolidated') {
       this.loadCenterConsolidation();
       return;
