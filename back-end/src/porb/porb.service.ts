@@ -2924,6 +2924,30 @@ export class PorbService {
     return { hlos, partners, contractedPartners: contractedPartnersFormatted, melia, bilateral, cross, isAow00, subtotals, countryPercentageCount, countryPercentage, locationBenefitCount, locationBenefit, synergies, outcomes };
   }
 
+  /**
+   * Safely extract a string from a TOC API field that may be a string, an array
+   * of result objects (each with .title), or an object. Used for bilateral_outputs
+   * where the TOC API returns an array of result objects instead of a plain string.
+   */
+  private tocStrArray(val: any): string {
+    if (val == null) return '';
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val)) {
+      return val
+        .map((v) => {
+          if (typeof v === 'string') return v;
+          if (v && typeof v === 'object') return v.title || v.name || v.value || v.description || '';
+          return '';
+        })
+        .filter(Boolean)
+        .join(', ');
+    }
+    if (typeof val === 'object') {
+      return String(val.title || val.name || val.value || '');
+    }
+    return String(val);
+  }
+
   async importTocToPorbTables(programId: number, officialCode: string, tocDataOverride?: any, setTocTimestamps = true) {
     const CROSS_AOW_TOC_ID = '00000000-0000-0000-0000-000000000000';
     const activePhase =
@@ -3219,7 +3243,7 @@ export class PorbService {
         toc_id: String(item?.id || ''),
         center_id: centerId,
         bilateral_name: item?.title,
-        bilateral_outputs: item?.result || item?.results || '',
+        bilateral_outputs: this.tocStrArray(item?.result) || this.tocStrArray(item?.results) || '',
         bilateral_budget: 0,
         bilateral_assumption: '',
         toc_is_deleted: false,
@@ -4720,19 +4744,20 @@ export class PorbService {
                     const key = `${project.id}_${data.group}`;
                     if (projectMap.has(key)) {
                       const existing = projectMap.get(key);
-                      if (!existing.results.includes(data.title)) {
-                        existing.results += ', ' + data.title;
+                      if (data.title && !(existing.results || '').includes(data.title)) {
+                        existing.results = existing.results ? existing.results + ', ' + data.title : data.title;
                       }
                     } else {
                       projectMap.set(key, {
+                        ...project,
                         id: project.id,
                         parent_id: data.group,
-                        result: data.title,
+                        result: data.title || '',
+                        results: data.title || '',
                         category: 'Project',
                         projects_indicator_values:
                           data.projects_indicator_values?.[project.id],
                         title: project.name,
-                        ...project,
                       });
                     }
                   }
