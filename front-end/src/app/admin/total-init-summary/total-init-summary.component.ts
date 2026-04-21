@@ -216,6 +216,10 @@ export class TotalInitSummaryComponent implements OnInit {
     await this.initiativesService.exportExcel(this.filterForm.value);
   }
 
+  async exportAnaplanSummary() {
+    await this.initiativesService.exportAnaplanSummary(this.filterForm.value);
+  }
+
   get activePdfContent(): ElementRef | null {
     switch (this.selectedTabIndex) {
       case 0: return this.tab0content;

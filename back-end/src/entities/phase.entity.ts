@@ -82,6 +82,10 @@ export class Phase {
   @Column({ default: false })
   show_eoi: boolean;
 
+  @ApiProperty()
+  @Column({ type: 'varchar', length: 32, nullable: true })
+  anaplan_version: string;
+
   @OneToMany(() => AnaplanValues, (AnaplanValues) => AnaplanValues.phase)
   anaplan_values: AnaplanValues[];
 

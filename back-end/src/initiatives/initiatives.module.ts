@@ -2,6 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { PorbModule } from 'src/porb/porb.module';
 import { InitiativesService } from './initiatives.service';
 import { BudgetSummaryService } from './budget-summary.service';
+import { AnaplanSummaryService } from './anaplan-summary.service';
 import { InitiativesController } from './initiatives.controller';
 import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -25,6 +26,8 @@ import { PhasesModule } from 'src/phases/phases.module';
 import { WpBudget } from 'src/entities/wp-budget.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { Archive } from 'src/entities/archive.entity';
+import { Phase } from 'src/entities/phase.entity';
+import { ClarisaCountry } from 'src/entities/clarisa-country.entity';
 
 
 
@@ -43,7 +46,9 @@ import { Archive } from 'src/entities/archive.entity';
       Result,
       WpBudget,
       Organization,
-      Archive
+      Archive,
+      Phase,
+      ClarisaCountry,
     ]),
     HttpModule,
     UsersModule,
@@ -55,10 +60,11 @@ import { Archive } from 'src/entities/archive.entity';
   providers: [
     InitiativesService,
     BudgetSummaryService,
+    AnaplanSummaryService,
     ChatMessageRepositoryService,
     WsGuard,
     ChatGateway,
   ],
-  exports: [InitiativesService, BudgetSummaryService],
+  exports: [InitiativesService, BudgetSummaryService, AnaplanSummaryService],
 })
 export class InitiativesModule {}

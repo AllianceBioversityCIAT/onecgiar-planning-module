@@ -73,6 +73,7 @@
 //   margin-top: -2rem;
   .search {
     display: flex;
+    flex-wrap: wrap;
     padding: 16px 0;
     justify-content: space-between;
     align-items: center;
@@ -288,7 +289,6 @@
       margin-top: 3rem;
       display: flex;
       align-items: center;
-      margin-left: 8px;
     }
 
     .sec-9 {
@@ -660,9 +660,22 @@ tr.mat-footer-row {
 
 .btns {
   display: flex;
-  width: 40%;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: end;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  flex: 0 0 100%;
+  margin-top: 1.6rem;
+
+  .sec-7 {
+    margin-top: 0;
+  }
+
+  .risk-report-button-box__btn {
+    padding: 0 1.6rem;
+    white-space: nowrap;
+    min-width: max-content;
+  }
 }
 
 .section-risk-management-component {
