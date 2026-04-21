@@ -321,28 +321,25 @@ export class PorbService {
       where: contractedWhere,
       order: { id: 'DESC' },
     });
-    // Deduplicate: keep the row with highest budget per partner (first wins due to DESC order fallback)
+    // Build a map of (porb_partner_id -> representative contracted row) for the
+    // response shape, which is one entry per partner. When center_id is not
+    // provided, multiple centers' rows collide on this key — pick the highest
+    // budget as the representative. This is purely in-memory; do NOT delete
+    // the losing rows, as they are legitimate per-center records. Use the
+    // admin endpoint POST /porb/dedup-contracted-partners to clean up true
+    // (partner_id, center_id) duplicates.
     const contractedMap = new Map<number, PorbContractedPartner>();
-    const duplicateIds: number[] = [];
     for (const row of contractedRows) {
       const existing = contractedMap.get(row.porb_partner_id);
       if (!existing) {
         contractedMap.set(row.porb_partner_id, row);
-      } else {
-        // Keep the one with higher budget; delete the other
-        const existingBudget = Number(existing.budget) || 0;
-        const rowBudget = Number(row.budget) || 0;
-        if (rowBudget > existingBudget) {
-          duplicateIds.push(existing.id);
-          contractedMap.set(row.porb_partner_id, row);
-        } else {
-          duplicateIds.push(row.id);
-        }
+        continue;
       }
-    }
-    // Clean up duplicates in background
-    if (duplicateIds.length) {
-      this.porbContractedPartnerRepository.delete(duplicateIds).catch(() => {});
+      const existingBudget = Number(existing.budget) || 0;
+      const rowBudget = Number(row.budget) || 0;
+      if (rowBudget > existingBudget) {
+        contractedMap.set(row.porb_partner_id, row);
+      }
     }
 
     const countryCodes = [
