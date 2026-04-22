@@ -178,6 +178,12 @@ export class InitiativesController {
     return this.anaplanSummaryService.getWorkbook(query);
   }
 
+  @Get('budgetSummary/anaplan')
+  @ApiBearerAuth()
+  getBudgetSummaryAnaplan(@Query() query: any) {
+    return this.anaplanSummaryService.getTransactionalRows(query);
+  }
+
   @Post('anaplanSummary/excel-bulk')
   @ApiBearerAuth()
   anaplanSummaryExcelBulk(

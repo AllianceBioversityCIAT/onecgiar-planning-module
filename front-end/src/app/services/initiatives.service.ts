@@ -45,6 +45,19 @@ export interface MatrixResponse {
   unknownBreakdown: Record<number, UnknownBreakdownRow>;
 }
 
+export interface AnaplanTransactionalRow {
+  programName: string;
+  sp: string;
+  aow: string;
+  year: string;
+  version: string;
+  account: string;
+  accountCode: string;
+  entityName: string;
+  entityCode: string;
+  amount: number;
+}
+
 @Injectable({
   providedIn: "root",
 })
@@ -200,6 +213,24 @@ export class InitiativesService {
     return firstValueFrom(
       this.http
         .get<MatrixResponse>(environment.api_url + `/initiatives/budgetSummary/matrix`, {
+          params: finalFilters
+        })
+    );
+  }
+
+  async getBudgetAnaplanRows(filters: any = null): Promise<AnaplanTransactionalRow[]> {
+    let finalFilters: any = {};
+    if (filters)
+      Object.keys(filters).forEach((element) => {
+        if (typeof filters[element] === "string")
+          filters[element] = filters[element].trim();
+
+        if (filters[element] != null && filters[element] != "")
+          finalFilters[element] = filters[element];
+      });
+    return firstValueFrom(
+      this.http
+        .get<AnaplanTransactionalRow[]>(environment.api_url + `/initiatives/budgetSummary/anaplan`, {
           params: finalFilters
         })
     );

@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { HeaderService } from 'src/app/header.service';
-import { InitiativesService, MatrixResponse, BudgetMatrixCenter } from 'src/app/services/initiatives.service';
+import { InitiativesService, MatrixResponse, BudgetMatrixCenter, AnaplanTransactionalRow } from 'src/app/services/initiatives.service';
 import { PhasesService } from 'src/app/services/phases.service';
 import { jsPDF } from 'jspdf';
 import { LoaderService } from 'src/app/services/loader.service';
@@ -17,6 +17,7 @@ export class TotalInitSummaryComponent implements OnInit {
 
   @ViewChild('tab0content', { static: false }) tab0content!: ElementRef;
   @ViewChild('tab1content', { static: false }) tab1content!: ElementRef;
+  @ViewChild('tab2content', { static: false }) tab2content!: ElementRef;
 
   phases: any[] = [];
   initiatives: any[] = [];
@@ -35,6 +36,14 @@ export class TotalInitSummaryComponent implements OnInit {
   tab1ProgramTotals: Record<number, number> = {};
   tab1ColumnTotals: Record<string, number> = {};
   tab1GrandTotal = 0;
+
+  // ---- Tab 3: Anaplan ----
+  anaplanRows: AnaplanTransactionalRow[] = [];
+  anaplanLoading = false;
+  anaplanLoaded = false;
+  anaplanTotal = 0;
+  /** Per-row rowspan values for grouping columns. 0 = hide cell, 1+ = render with that rowspan. */
+  anaplanRowSpans: Array<{ programName: number; sp: number; aow: number; year: number; version: number }> = [];
 
   // ---- Alliance split ----
   useAllianceSplit = false;
@@ -74,6 +83,9 @@ export class TotalInitSummaryComponent implements OnInit {
 
     this.filterForm.valueChanges.subscribe(() => {
       this.loadMatrix(this.filterForm.value);
+      // Invalidate Anaplan tab; reload on next view.
+      this.anaplanLoaded = false;
+      if (this.selectedTabIndex === 2) this.loadAnaplanRows();
     });
 
     this.title.setTitle("Budget Summary");
@@ -244,6 +256,7 @@ export class TotalInitSummaryComponent implements OnInit {
     switch (this.selectedTabIndex) {
       case 0: return this.tab0content;
       case 1: return this.tab1content;
+      case 2: return this.tab2content;
       default: return this.tab0content;
     }
   }
@@ -275,9 +288,83 @@ export class TotalInitSummaryComponent implements OnInit {
 
   onTabChange(index: number) {
     this.selectedTabIndex = index;
+    if (index === 2 && !this.anaplanLoaded && !this.anaplanLoading) {
+      this.loadAnaplanRows();
+    }
+  }
+
+  async loadAnaplanRows() {
+    this.anaplanLoading = true;
+    try {
+      const raw = await this.initiativesService.getBudgetAnaplanRows(this.filterForm.value);
+      const rows = Array.isArray(raw) ? raw : [];
+
+      // Merge rows with the same (program, SP, AoW, account, entity) — sum AMOUNT.
+      const merged = new Map<string, AnaplanTransactionalRow>();
+      for (const r of rows) {
+        const key = [r.sp, r.aow, r.account, r.entityName, r.year, r.version].join('||');
+        const existing = merged.get(key);
+        if (existing) {
+          existing.amount = (Number(existing.amount) || 0) + (Number(r.amount) || 0);
+        } else {
+          merged.set(key, { ...r, amount: Number(r.amount) || 0 });
+        }
+      }
+
+      this.anaplanRows = Array.from(merged.values()).sort((a, b) => {
+        return a.sp.localeCompare(b.sp)
+          || a.aow.localeCompare(b.aow)
+          || a.entityName.localeCompare(b.entityName)
+          || a.account.localeCompare(b.account);
+      });
+      this.computeAnaplanRowSpans();
+      this.anaplanTotal = this.anaplanRows.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+      this.anaplanLoaded = true;
+    } catch {
+      this.anaplanRows = [];
+      this.anaplanTotal = 0;
+    } finally {
+      this.anaplanLoading = false;
+    }
   }
 
   get tab1FooterTotal(): number {
     return this.tab1GrandTotal;
+  }
+
+  /**
+   * For the Anaplan tab, compute rowspan values so consecutive rows with
+   * the same programName/SP/AoW/Year/Version render the value once with
+   * a rowspan across the group. A value of 0 means "skip this cell".
+   *
+   * Nesting: SP resets on program change, AoW resets on SP change, etc.
+   */
+  private computeAnaplanRowSpans() {
+    const rows = this.anaplanRows;
+    const spans = rows.map(() => ({ programName: 0, sp: 0, aow: 0, year: 0, version: 0 }));
+
+    const sameProgram = (i: number) => rows[i].programName === rows[i - 1].programName;
+    const sameSp = (i: number) => sameProgram(i) && rows[i].sp === rows[i - 1].sp;
+    const sameAow = (i: number) => sameSp(i) && rows[i].aow === rows[i - 1].aow;
+    const sameYear = (i: number) => sameAow(i) && rows[i].year === rows[i - 1].year;
+    const sameVersion = (i: number) => sameYear(i) && rows[i].version === rows[i - 1].version;
+
+    // Walk bottom-up so each "first" row in a group gets the full group size.
+    let runProgram = 0, runSp = 0, runAow = 0, runYear = 0, runVersion = 0;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      runProgram = (i < rows.length - 1 && rows[i].programName === rows[i + 1].programName) ? runProgram + 1 : 1;
+      runSp = (i < rows.length - 1 && rows[i].programName === rows[i + 1].programName && rows[i].sp === rows[i + 1].sp) ? runSp + 1 : 1;
+      runAow = (i < rows.length - 1 && rows[i].programName === rows[i + 1].programName && rows[i].sp === rows[i + 1].sp && rows[i].aow === rows[i + 1].aow) ? runAow + 1 : 1;
+      runYear = (i < rows.length - 1 && rows[i].programName === rows[i + 1].programName && rows[i].sp === rows[i + 1].sp && rows[i].aow === rows[i + 1].aow && rows[i].year === rows[i + 1].year) ? runYear + 1 : 1;
+      runVersion = (i < rows.length - 1 && rows[i].programName === rows[i + 1].programName && rows[i].sp === rows[i + 1].sp && rows[i].aow === rows[i + 1].aow && rows[i].year === rows[i + 1].year && rows[i].version === rows[i + 1].version) ? runVersion + 1 : 1;
+
+      spans[i].programName = i === 0 || !sameProgram(i) ? runProgram : 0;
+      spans[i].sp = i === 0 || !sameSp(i) ? runSp : 0;
+      spans[i].aow = i === 0 || !sameAow(i) ? runAow : 0;
+      spans[i].year = i === 0 || !sameYear(i) ? runYear : 0;
+      spans[i].version = i === 0 || !sameVersion(i) ? runVersion : 0;
+    }
+
+    this.anaplanRowSpans = spans;
   }
 }

@@ -251,6 +251,52 @@
           </div>
         </mat-tab>
 
+        <!-- TAB 3: Anaplan (mirrors Sheet 1 of the Anaplan Summary export, without code columns) -->
+        <mat-tab label="Anaplan">
+          <div class="table-box mat-elevation-z8" #tab2content>
+            <div *ngIf="anaplanLoading" class="loading-placeholder">
+              <mat-spinner diameter="40"></mat-spinner>
+            </div>
+            <table *ngIf="!anaplanLoading" class="budget-summary-table">
+              <thead>
+                <tr>
+                  <th class="col-name">P&A Name</th>
+                  <th class="col-acrnum">SP</th>
+                  <th class="col-acrnum">Area of Work</th>
+                  <th class="col-acrnum">YEAR</th>
+                  <th class="col-acrnum">VERSION</th>
+                  <th class="col-name">ACCOUNT</th>
+                  <th class="col-acrnum">ENTITY</th>
+                  <th class="col-number">AMOUNT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="anaplanRows.length === 0">
+                  <td [attr.colspan]="8" style="text-align:center; padding: 16px; color: #888;">
+                    No Anaplan data available.
+                  </td>
+                </tr>
+                <tr *ngFor="let r of anaplanRows; let i = index">
+                  <td *ngIf="anaplanRowSpans[i]?.programName" [attr.rowspan]="anaplanRowSpans[i].programName" class="col-name">{{r.programName}}</td>
+                  <td *ngIf="anaplanRowSpans[i]?.sp" [attr.rowspan]="anaplanRowSpans[i].sp" class="col-acrnum">{{r.sp}}</td>
+                  <td *ngIf="anaplanRowSpans[i]?.aow" [attr.rowspan]="anaplanRowSpans[i].aow" class="col-acrnum">{{r.aow}}</td>
+                  <td *ngIf="anaplanRowSpans[i]?.year" [attr.rowspan]="anaplanRowSpans[i].year" class="col-acrnum">{{r.year}}</td>
+                  <td *ngIf="anaplanRowSpans[i]?.version" [attr.rowspan]="anaplanRowSpans[i].version" class="col-acrnum">{{r.version}}</td>
+                  <td class="col-name">{{r.account}}</td>
+                  <td class="col-acrnum">{{r.entityName}}</td>
+                  <td class="col-number">{{fmtZero(r.amount)}}</td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="anaplanRows.length > 0">
+                <tr class="subtotal-row">
+                  <td colspan="7" style="font-weight:bold; text-align:left;">Total, USD</td>
+                  <td class="col-number">{{fmtZero(anaplanTotal)}}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </mat-tab>
+
       </mat-tab-group>
 
     </div>

@@ -388,6 +388,118 @@ export class AnaplanSummaryService {
     });
   }
 
+  /**
+   * Collect Sheet-1 (transactional) rows only — used by the Budget Summary
+   * "Anaplan" tab to render on-screen without generating an Excel file.
+   */
+  async getTransactionalRows(query: QueryParams = {}): Promise<TransactionalRow[]> {
+    const [allOrgs, phase] = await Promise.all([
+      this.organizationRepository.find(),
+      this.resolvePhase(query.phase_id),
+    ]);
+    const orgByCode = new Map<string, Organization>();
+    for (const o of allOrgs) orgByCode.set(String(o.code), o);
+
+    const year = formatYear(phase?.reportingYear);
+    const version = (phase?.anaplan_version || '').trim() || DEFAULT_VERSION;
+
+    const statusRaw = (query.status || '').toString().trim().toLowerCase();
+    let statusFilter: SubmissionStatus | 'Draft' = SubmissionStatus.APPROVED;
+    if (statusRaw === 'pending') statusFilter = SubmissionStatus.PENDING;
+    else if (statusRaw === 'draft') statusFilter = 'Draft';
+
+    const initQb = this.initiativeRepository
+      .createQueryBuilder('init')
+      .where('init.archived = :archived', { archived: false });
+    const rawIds = query.program_ids ?? query.initiatives;
+    if (rawIds) {
+      const ids = (Array.isArray(rawIds) ? rawIds : [rawIds])
+        .map((x) => Number(x))
+        .filter((n) => Number.isFinite(n));
+      if (ids.length) initQb.andWhere('init.id IN (:...ids)', { ids });
+    }
+    const initiatives = await initQb.getMany();
+    initiatives.sort((a, b) =>
+      (a.official_code || '').localeCompare(b.official_code || ''),
+    );
+
+    const latestByInit = new Map<number, Submission>();
+    if (statusFilter !== 'Draft' && initiatives.length) {
+      const subs = await this.submissionRepository
+        .createQueryBuilder('sub')
+        .where('sub.status = :status', { status: statusFilter })
+        .andWhere('sub.porb_data IS NOT NULL')
+        .andWhere("sub.porb_data != ''")
+        .andWhere('sub.initiative_id IN (:...ids)', {
+          ids: initiatives.map((i) => i.id),
+        })
+        .orderBy('sub.id', 'DESC')
+        .getMany();
+      for (const sub of subs) {
+        if (!latestByInit.has(sub.initiative_id)) {
+          latestByInit.set(sub.initiative_id, sub);
+        }
+      }
+    }
+
+    const rows: TransactionalRow[] = [];
+    for (const initiative of initiatives) {
+      let snap: any = null;
+      if (statusFilter === 'Draft') {
+        try {
+          snap = await this.porbService.buildPorbSnapshot(initiative.id);
+        } catch {
+          continue;
+        }
+      } else {
+        const sub = latestByInit.get(initiative.id);
+        if (!sub) continue;
+        try {
+          snap =
+            typeof sub.porb_data === 'string'
+              ? JSON.parse(sub.porb_data)
+              : sub.porb_data;
+        } catch {
+          continue;
+        }
+      }
+      if (!snap || !Array.isArray(snap.aows)) continue;
+
+      const programName = initiative.name || '';
+      const sp = initiative.official_code || '';
+
+      for (const aow of snap.aows) {
+        const aowLabel = formatAow(aow?.aow_acrnum);
+        if (!aowLabel) continue;
+        for (const center of aow?.centers || []) {
+          const centerCode = String(center?.center_code ?? '');
+          const org = orgByCode.get(centerCode) || null;
+          const entity = this.resolveEntity(centerCode, org);
+          for (const a of center?.anaplan || []) {
+            const amount = num(a?.porb_budget);
+            if (!amount) continue;
+            const rawLabel = String(a?.account || '').trim();
+            const map = ACCOUNT_MAP[rawLabel.toLowerCase()];
+            if (!map) continue;
+            rows.push({
+              programName,
+              sp,
+              aow: aowLabel,
+              year,
+              version,
+              account: map.account,
+              accountCode: map.code,
+              entityName: entity.name,
+              entityCode: entity.code,
+              amount,
+            });
+          }
+        }
+      }
+    }
+    return rows;
+  }
+
   // ========================================================================
   // Helpers
   // ========================================================================
@@ -720,7 +832,7 @@ export class AnaplanSummaryService {
 // Types
 // ==========================================================================
 
-interface TransactionalRow {
+export interface TransactionalRow {
   programName: string;
   sp: string;
   aow: string;
