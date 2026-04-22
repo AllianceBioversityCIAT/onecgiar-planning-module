@@ -26,6 +26,8 @@ export class TotalInitSummaryComponent implements OnInit {
   selectedTabIndex = 0;
 
   matrix: MatrixResponse | null = null;
+  /** Full center list from the first unfiltered load — powers the Center filter dropdown so it doesn't shrink when a center is selected. */
+  allCenters: BudgetMatrixCenter[] = [];
   loading = false;
 
   // ---- Tab 1: By Center ----
@@ -88,6 +90,11 @@ export class TotalInitSummaryComponent implements OnInit {
     this.loading = true;
     try {
       this.matrix = await this.initiativesService.getBudgetMatrix(filters);
+      const partnersSel = filters?.partners;
+      const hasPartnerFilter = Array.isArray(partnersSel) && partnersSel.length > 0;
+      if (this.matrix && !hasPartnerFilter) {
+        this.allCenters = this.matrix.centers;
+      }
       this.computeDerivedData();
     } catch {
       this.matrix = null;
@@ -102,12 +109,25 @@ export class TotalInitSummaryComponent implements OnInit {
     const { alliance, centers } = this.matrix;
     this.bioversityCode = alliance?.bioversityCode ?? null;
     this.ciatCode = alliance?.ciatCode ?? null;
-    this.useAllianceSplit = !!(this.bioversityCode && this.ciatCode);
+
+    // If the user selected a specific Center filter, honor it exactly — the
+    // backend force-includes SO and Unknown even when filtered out, so drop
+    // any center not in the selection.
+    const selected: string[] = this.filterForm.value?.partners || [];
+    const hasSelection = Array.isArray(selected) && selected.length > 0;
+    const selectedSet = new Set(selected.map(String));
+    const filteredCenters = hasSelection
+      ? centers.filter(c => selectedSet.has(String(c.code)))
+      : centers;
+
+    const hasBioversity = !!this.bioversityCode && filteredCenters.some(c => c.code === this.bioversityCode);
+    const hasCiat = !!this.ciatCode && filteredCenters.some(c => c.code === this.ciatCode);
+    this.useAllianceSplit = hasBioversity && hasCiat;
 
     // Centers excluding alliance codes when split mode
     this.visibleCenters = this.useAllianceSplit
-      ? centers.filter(c => c.code !== this.bioversityCode && c.code !== this.ciatCode)
-      : centers;
+      ? filteredCenters.filter(c => c.code !== this.bioversityCode && c.code !== this.ciatCode)
+      : filteredCenters;
 
     // Build tab1 column list
     this.tab1Columns = ['official_code', 'name', 'total'];

@@ -564,9 +564,9 @@ td:empty::after {
     background-color: #f0f4f8;
   }
 
-  .col-code   { min-width: 100px; width: 100px; }
-  .col-acrnum { min-width: 100px; width: 100px; }
-  .col-name   { min-width: 240px; white-space: normal; }
+  .col-code   { min-width: 100px; width: 100px; text-align: left; }
+  .col-acrnum { min-width: 100px; width: 100px; text-align: left; }
+  .col-name   { min-width: 240px; white-space: normal; text-align: left; }
   .col-number { min-width: 110px; text-align: right; }
 
   .sticky-col {
@@ -575,6 +575,18 @@ td:empty::after {
     z-index: 1;
     background-color: inherit;
     box-shadow: 1px 0 0 #e0e0e0;
+  }
+
+  .sticky-label {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+
+    .sticky-label__text {
+      position: sticky;
+      left: 10px;
+      display: inline-block;
+    }
   }
 
   .sticky-col-2 {

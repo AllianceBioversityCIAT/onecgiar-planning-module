@@ -44,7 +44,7 @@
               <mat-label class="risk-management-form-field__label">Center</mat-label>
               <mat-select formControlName="partners" class="risk-management-form-field-box__input-3"
                 [placeholder]="'All'" multiple>
-                <mat-option *ngFor="let partner of (matrix?.centers || [])"
+                <mat-option *ngFor="let partner of allCenters"
                   [value]="partner.code">{{partner.acronym}}</mat-option>
               </mat-select>
             </div>
@@ -164,7 +164,7 @@
               <thead>
                 <tr>
                   <th class="sticky-col col-acrnum">AoW</th>
-                  <th class="sticky-col-2 col-name">Name</th>
+                  <th class="sticky-col-2 col-name">AoW title</th>
                   <ng-container *ngIf="useAllianceSplit">
                     <th class="col-number">Bioversity</th>
                     <th class="col-number">CIAT</th>
@@ -179,8 +179,8 @@
                 <ng-container *ngFor="let prog of (matrix?.programs || [])">
                   <!-- Program header row -->
                   <tr class="program-header-row">
-                    <td [attr.colspan]="tab1Columns.length + 2" style="font-weight:bold; padding: 6px 8px;">
-                      {{prog.official_code}} — {{prog.name}}
+                    <td [attr.colspan]="tab1Columns.length + 2" class="sticky-label" style="font-weight:bold; padding: 6px 8px; text-align:left;">
+                      <span class="sticky-label__text">{{prog.official_code}} — {{prog.name}}</span>
                     </td>
                   </tr>
                   <!-- AoW rows (or synthetic no-data row when empty) -->
@@ -189,12 +189,12 @@
                       <td class="sticky-col col-acrnum">{{row.aow_acrnum}}</td>
                       <td class="sticky-col-2 col-name">{{row.aow_name}}</td>
                       <ng-container *ngIf="useAllianceSplit">
-                        <td class="col-number">{{fmt(getAowCellBioversity(row))}}</td>
-                        <td class="col-number">{{fmt(getAowCellCiat(row))}}</td>
-                        <td class="col-number">{{fmt(getAowCellAllianceSubtotal(row))}}</td>
+                        <td class="col-number">{{fmtZero(getAowCellBioversity(row))}}</td>
+                        <td class="col-number">{{fmtZero(getAowCellCiat(row))}}</td>
+                        <td class="col-number">{{fmtZero(getAowCellAllianceSubtotal(row))}}</td>
                       </ng-container>
                       <td class="col-number" *ngFor="let c of visibleCenters">
-                        {{fmt(getAowCenterCell(row, c.code))}}
+                        {{fmtZero(getAowCenterCell(row, c.code))}}
                       </td>
                       <td class="col-number">{{fmtZero(row.subtotal)}}</td>
                       <td class="col-number">{{getAowPct(row, prog.id)}}</td>
@@ -216,8 +216,8 @@
                   </ng-template>
                   <!-- Subtotal row for program -->
                   <tr class="subtotal-row">
-                    <td class="sticky-col" colspan="2" style="font-weight:bold;">
-                      Sub-Total {{prog.name}}
+                    <td class="sticky-col sticky-label" colspan="2" style="font-weight:bold; text-align:left;">
+                      <span class="sticky-label__text">Sub-Total {{prog.name}}</span>
                     </td>
                     <ng-container *ngIf="useAllianceSplit">
                       <td class="col-number"></td>
