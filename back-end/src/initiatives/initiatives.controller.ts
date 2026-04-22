@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { InitiativesService } from './initiatives.service';
 import { BudgetSummaryService } from './budget-summary.service';
+import { AnaplanSummaryService } from './anaplan-summary.service';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -46,6 +47,7 @@ import { HttpService } from '@nestjs/axios';
 export class InitiativesController {
   constructor(private readonly initiativesService: InitiativesService,
     private readonly budgetSummaryService: BudgetSummaryService,
+    private readonly anaplanSummaryService: AnaplanSummaryService,
     private readonly httpService: HttpService) {}
 
   //(old sync)
@@ -167,6 +169,23 @@ export class InitiativesController {
     return this.budgetSummaryService.getWorkbook({
       ...body,
       initiatives: body.program_ids,
+    });
+  }
+
+  @Get('anaplanSummary/excel')
+  @ApiBearerAuth()
+  getAnaplanSummaryExcel(@Query() query: any) {
+    return this.anaplanSummaryService.getWorkbook(query);
+  }
+
+  @Post('anaplanSummary/excel-bulk')
+  @ApiBearerAuth()
+  anaplanSummaryExcelBulk(
+    @Body() body: { program_ids: number[]; status?: string; phase_id?: number },
+  ) {
+    return this.anaplanSummaryService.getWorkbook({
+      ...body,
+      program_ids: body.program_ids,
     });
   }
 

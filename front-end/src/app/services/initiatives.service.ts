@@ -155,6 +155,38 @@ export class InitiativesService {
     );
   }
 
+  async exportAnaplanSummary(filters: any = null) {
+    let finalFilters: any = {};
+    if (filters)
+      Object.keys(filters).forEach((element) => {
+        if (typeof filters[element] === "string")
+          filters[element] = filters[element].trim();
+
+        if (filters[element] != null && filters[element] != "")
+          finalFilters[element] = filters[element];
+      });
+    const data = await firstValueFrom(
+      this.http
+        .get(environment.api_url + `/initiatives/anaplanSummary/excel`, {
+          responseType: "blob",
+          params: finalFilters
+        })
+        .pipe(map((d: Blob) => d))
+    );
+    saveAs(data, 'Anaplan-Summary.xlsx')
+  }
+
+  async exportAnaplanSummaryBulk(programIds: number[], status: string, phaseId?: number): Promise<any> {
+    const body: Record<string, any> = { program_ids: programIds, status };
+    if (phaseId != null) body['phase_id'] = phaseId;
+    return firstValueFrom(
+      this.http.post(environment.api_url + '/initiatives/anaplanSummary/excel-bulk', body, {
+        observe: 'response',
+        responseType: 'blob',
+      })
+    );
+  }
+
   async getBudgetMatrix(filters: any = null): Promise<MatrixResponse> {
     let finalFilters: any = {};
     if (filters)

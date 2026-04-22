@@ -43,6 +43,7 @@ export class ExportComponent {
   progressValue = 0;
   isExporting = false;
   isExportingBudget = false;
+  isExportingAnaplan = false;
   downloadReady = false;
   downloadUrl: string | null | undefined = null;
   downloadFilename: string | null | undefined = null;
@@ -184,6 +185,38 @@ export class ExportComponent {
       console.error('Budget Summary export failed:', e);
     }
     this.isExportingBudget = false;
+  }
+
+  async exportAnaplanSummary() {
+    this.isExportingAnaplan = true;
+    const programIds = this.initiatives.map((item: any) => item.id);
+    try {
+      const response: any = await this.initiativesService.exportAnaplanSummaryBulk(
+        programIds,
+        this.selectedStatus,
+        this.selectedPhase?.id
+      );
+      if (response?.body) {
+        const blob = response.body as Blob;
+        const contentDisposition = response.headers?.get('Content-Disposition');
+        let filename = `${this.selectedStatus}_Anaplan-Summary.xlsx`;
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          if (match) filename = match[1];
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error('Anaplan Summary export failed:', e);
+    }
+    this.isExportingAnaplan = false;
   }
 
   downloadFile() {
