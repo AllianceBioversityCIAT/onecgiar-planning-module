@@ -264,13 +264,13 @@ export class BudgetSummaryService {
           if (partnerFilter && !partnerFilter.has(code)) continue;
           seenCenterCodes.add(code);
 
+          // Pooled budget = HLO + Cross-Cutting only.
+          // Partners, MELIA, and Anaplan are breakdowns/views of the same pooled
+          // money (per PORB validation rules 12-13) — summing them would
+          // double-count. Bilaterals are separate (project funding) and are
+          // reported in their own table.
           let centerBudget = 0;
           for (const h of center.hlos || []) centerBudget += num(h.hlo_budget);
-          for (const p of center.partners || [])
-            centerBudget += num(p.partner_budget);
-          for (const m of center.melias || []) centerBudget += num(m.melia_budget);
-          for (const a of center.anaplan || [])
-            centerBudget += num(a.porb_budget);
           for (const c of center.cross_cutting || []) centerBudget += num(c.budget);
 
           if (centerBudget !== 0) {

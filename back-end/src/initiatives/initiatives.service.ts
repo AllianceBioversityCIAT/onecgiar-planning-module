@@ -928,11 +928,11 @@ async findOne(id: number) {
           const code = String(center.center_code);
           if (partnerFilter && !partnerFilter.has(code)) continue;
 
+          // Pooled budget = HLO + Cross-Cutting only.
+          // Partners/MELIA/Anaplan are breakdowns of the same pooled money
+          // (per PORB validation rules 12-13) — summing them double-counts.
           let budget = 0;
           for (const h of center.hlos || []) budget += Number(h.hlo_budget) || 0;
-          for (const p of center.partners || []) budget += Number(p.partner_budget) || 0;
-          for (const m of center.melias || []) budget += Number(m.melia_budget) || 0;
-          for (const a of center.anaplan || []) budget += Number(a.porb_budget) || 0;
           for (const c of center.cross_cutting || []) budget += Number(c.budget) || 0;
 
           centerBudgets.set(code, (centerBudgets.get(code) || 0) + budget);
