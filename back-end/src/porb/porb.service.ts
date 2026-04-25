@@ -1008,9 +1008,22 @@ export class PorbService {
     const poolMissing = hlos.filter(
       (row) => parseBudget(row?.hlo_budget) > 0 && !hasAssumption(row?.hlo_assumption),
     ).length;
+    // Rule 14: TOC-deleted rows with non-zero budget
+    const poolDeletedWithBudget = hlos.filter(
+      (row) => row?.toc_is_deleted && parseBudget(row?.hlo_budget) > 0,
+    ).length;
+    const poolMessages: string[] = [];
+    if (poolMissing > 0) {
+      poolMessages.push(`${poolMissing} row(s) have budget but missing assumption.`);
+    }
+    if (poolDeletedWithBudget > 0) {
+      poolMessages.push(
+        `${poolDeletedWithBudget} row(s) deleted from TOC still have budget. Please remove the row or clear its budget.`,
+      );
+    }
     emptyResult['Pool funding HLO'] = {
-      hasError: poolMissing > 0,
-      message: poolMissing > 0 ? `${poolMissing} row(s) have budget but missing assumption.` : '',
+      hasError: poolMessages.length > 0,
+      message: poolMessages.join(' '),
     };
 
     const partnerIds = new Set(partners.map((row) => row.id));
@@ -1042,6 +1055,16 @@ export class PorbService {
         `${contractedMissingBudgetOrAssumption} contracted partner row(s) must include both budget and assumption.`,
       );
     }
+    // Rule 14: TOC-deleted partners with non-zero contracted budget
+    const partnerDeletedWithBudget = relevantContracted.filter((contracted) => {
+      const parent = partnerById.get(contracted?.porb_partner_id);
+      return parent?.toc_is_deleted && parseBudget(contracted?.budget) > 0;
+    }).length;
+    if (partnerDeletedWithBudget > 0) {
+      partnerMessages.push(
+        `${partnerDeletedWithBudget} row(s) deleted from TOC still have budget. Please remove the row or clear its budget.`,
+      );
+    }
     emptyResult['Partners'] = {
       hasError: partnerMessages.length > 0,
       message: partnerMessages.join(' '),
@@ -1050,9 +1073,22 @@ export class PorbService {
     const meliaMissing = meliaRows.filter(
       (row) => parseBudget(row?.melia_budget) > 0 && !hasAssumption(row?.melia_assumption),
     ).length;
+    // Rule 14: TOC-deleted rows with non-zero budget
+    const meliaDeletedWithBudget = meliaRows.filter(
+      (row) => row?.toc_is_deleted && parseBudget(row?.melia_budget) > 0,
+    ).length;
+    const meliaMessages: string[] = [];
+    if (meliaMissing > 0) {
+      meliaMessages.push(`${meliaMissing} row(s) have budget but missing assumption.`);
+    }
+    if (meliaDeletedWithBudget > 0) {
+      meliaMessages.push(
+        `${meliaDeletedWithBudget} row(s) deleted from TOC still have budget. Please remove the row or clear its budget.`,
+      );
+    }
     emptyResult['MELIA Study'] = {
-      hasError: meliaMissing > 0,
-      message: meliaMissing > 0 ? `${meliaMissing} row(s) have budget but missing assumption.` : '',
+      hasError: meliaMessages.length > 0,
+      message: meliaMessages.join(' '),
     };
 
     // --- Anaplan validation (Rules 12 & 13) ---
@@ -1193,7 +1229,9 @@ export class PorbService {
     }
 
     const partnerById = new Map<number, PorbPartner>();
+    const allPartnerById = new Map<number, PorbPartner>();
     for (const partner of partners) {
+      allPartnerById.set(partner.id, partner);
       if (partner?.toc_is_deleted) continue;
       partnerById.set(partner.id, partner);
     }
@@ -1208,6 +1246,32 @@ export class PorbService {
         continue;
       }
       if (budget <= 0 || !hasContractedAssumption) {
+        pushError(contracted?.center_id, partner?.porb_aow_id);
+      }
+    }
+
+    // Rule 14: TOC-deleted rows with non-zero budget
+    for (const hlo of hlos) {
+      if (hlo?.toc_is_deleted && parseBudget(hlo?.hlo_budget) > 0) {
+        pushError(hlo?.center_id, hlo?.porb_aow_id);
+      }
+    }
+    for (const row of bilaterals) {
+      if (row?.toc_is_deleted && parseBudget(row?.bilateral_budget) > 0) {
+        if (row?.center_id != null) {
+          centerErrorCodes.add(String(row.center_id));
+          w3CenterErrorCodes.add(String(row.center_id));
+        }
+      }
+    }
+    for (const row of melias) {
+      if (row?.toc_is_deleted && parseBudget(row?.melia_budget) > 0) {
+        pushError(row?.center_id, row?.porb_aow_id);
+      }
+    }
+    for (const contracted of contractedRows) {
+      const partner = allPartnerById.get(contracted?.porb_partner_id);
+      if (partner?.toc_is_deleted && parseBudget(contracted?.budget) > 0) {
         pushError(contracted?.center_id, partner?.porb_aow_id);
       }
     }

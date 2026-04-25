@@ -496,13 +496,13 @@ export class PorbComponent implements OnInit, OnDestroy {
   }
 
   async onSubmitClicked() {
-    // Block submission if validation errors exist (Rules 12, 13)
-    if (this.centerErrorCodes.length > 0 || this.aowErrorIds.length > 0) {
+    // Block submission if validation errors exist (Rules 12, 13, 14)
+    if (this.centerErrorCodes.length > 0 || this.w3CenterErrorCodes.length > 0 || this.aowErrorIds.length > 0) {
       this.dialog.open(ValidationErrorsDialogComponent, {
         data: {
           title: 'Cannot Submit',
           message: 'There are validation errors that must be resolved before submitting.',
-          centerErrorCodes: this.centerErrorCodes,
+          centerErrorCodes: [...new Set([...this.centerErrorCodes, ...this.w3CenterErrorCodes])],
           centers: this.centers,
           aowErrorIds: this.aowErrorIds,
           aows: this.aows,
@@ -1194,7 +1194,7 @@ export class PorbComponent implements OnInit, OnDestroy {
     if (centerCode == null) {
       return false;
     }
-    return this.centerErrorCodes.includes(centerCode);
+    return this.centerErrorCodes.includes(centerCode) || this.w3CenterErrorCodes.includes(centerCode);
   }
 
   canEditCenter(center: any): boolean {
