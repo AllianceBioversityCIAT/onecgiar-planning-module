@@ -2709,25 +2709,114 @@ export class PorbService {
     return uniqueTypes.join('');
   }
 
-  private async syncTocDeletedFlags(
+  /**
+   * Per-entity dedup behavior (called from `importTocToPorbTables`):
+   *
+   * - `porb_aow`         — keyed by `toc_id`. AOW rows are unique per program/toc_id by
+   *                        construction; defaults are sufficient.
+   * - `porb_hlo`         — composite key `toc_id::center_id`. Unique by construction
+   *                        (the harvest builder dedups by the same key); defaults are
+   *                        sufficient.
+   * - `porb_partner`     — single key `toc_id`. A given TOC partner can legitimately
+   *                        appear under multiple AOWs (existingPartnerByKey is keyed by
+   *                        `toc_id::porb_aow_id`), so the same toc_id may reference
+   *                        several rows. Defaults restore all of them, which is the
+   *                        intended behavior — partners share one TOC identity.
+   * - `porb_bilateral`   — composite key `toc_id::center_id`. Unique by construction.
+   * - `porb_melia`       — composite key `toc_id::center_id::porb_aow_id`. PRONE TO
+   *                        DUPLICATES — the prior cron deduped by `melia_name`, so the
+   *                        same study under a renamed title produced extra rows. The
+   *                        MELIA caller passes `groupKeyOf` + `pickCanonical` so only
+   *                        the canonical row in each duplicate group is restored;
+   *                        non-canonical rows stay (or become) `toc_is_deleted = 1`.
+   *                        Canonical rule: highest melia_budget → longest non-empty
+   *                        melia_assumption → most recent updated_at → lowest id.
+   * - `porb_synergy`     — single key `toc_id`. Unique within a program by construction.
+   * - `porb_outcome`     — single key `toc_id`. Unique within a program by construction.
+   *
+   * Net per cron tick (with overrides applied where natural duplicates exist):
+   *   Canonical row of each live group → `toc_is_deleted = 0`
+   *   Non-canonical rows of each live group → `toc_is_deleted = 1`
+   *   Rows whose toc_id is gone from TOC → `toc_is_deleted = 1` (regardless of group)
+   */
+  private async syncTocDeletedFlags<T extends { id: number; toc_id: string; toc_is_deleted?: boolean; center_id?: number }>(
     repository: Repository<any>,
-    existingRows: Array<{ id: number; toc_id: string; toc_is_deleted?: boolean; center_id?: number }>,
+    existingRows: T[],
     currentTocIds: Set<string>,
-    useCompositeKey = false,
+    useCompositeKey: boolean | ((row: T) => string) = false,
+    groupKeyOf?: (row: T) => string,
+    pickCanonical?: (rows: T[]) => T,
   ) {
-    const keyFn = useCompositeKey
-      ? (row: any) => `${String(row.toc_id)}::${Number(row.center_id)}`
-      : (row: any) => String(row.toc_id);
+    // Resolve the key used to look up each row in `currentTocIds` (the set of keys
+    // present in the latest TOC response).
+    let keyFn: (row: T) => string;
+    if (typeof useCompositeKey === 'function') {
+      keyFn = useCompositeKey;
+    } else if (useCompositeKey === true) {
+      keyFn = (row) => `${String(row.toc_id)}::${Number(row.center_id)}`;
+    } else {
+      keyFn = (row) => String(row.toc_id);
+    }
 
-    const idsToDelete = existingRows
-      .filter((row) => !currentTocIds.has(keyFn(row)) && !row.toc_is_deleted)
-      .map((row) => row.id);
-    const idsToRestore = existingRows
-      .filter((row) => currentTocIds.has(keyFn(row)) && row.toc_is_deleted)
-      .map((row) => row.id);
+    // Default canonical-grouping: every row is its own group (no dedup), and the
+    // single member is the canonical. This preserves the historical behavior for
+    // callers that don't pass overrides.
+    const defaultGroupKeyOf = (row: T) => String(row.id);
+    const defaultPickCanonical = (rows: T[]): T => {
+      // Most recent updated_at → lowest id.
+      return rows.reduce((best, r) => {
+        const bUpdated = (best as any).updated_at ? new Date((best as any).updated_at).getTime() : 0;
+        const rUpdated = (r as any).updated_at ? new Date((r as any).updated_at).getTime() : 0;
+        if (rUpdated !== bUpdated) return rUpdated > bUpdated ? r : best;
+        return Number(r.id) < Number(best.id) ? r : best;
+      });
+    };
+    const groupKey = groupKeyOf ?? defaultGroupKeyOf;
+    const pick = pickCanonical ?? defaultPickCanonical;
 
-    if (idsToDelete.length) {
-      await repository.update({ id: In(idsToDelete) }, { toc_is_deleted: true });
+    // Partition rows by whether their TOC key is still present in the latest TOC.
+    const liveRows: T[] = [];
+    const goneRows: T[] = [];
+    for (const row of existingRows) {
+      if (currentTocIds.has(keyFn(row))) {
+        liveRows.push(row);
+      } else {
+        goneRows.push(row);
+      }
+    }
+
+    // Group live rows by the caller-supplied groupKeyOf and pick a single canonical
+    // per group. Only the canonical is eligible to be restored; the rest stay flagged.
+    const liveGroups = new Map<string, T[]>();
+    for (const row of liveRows) {
+      const k = groupKey(row);
+      const arr = liveGroups.get(k);
+      if (arr) arr.push(row);
+      else liveGroups.set(k, [row]);
+    }
+
+    const idsToRestore: number[] = [];
+    const idsToFlag: number[] = [];
+
+    for (const [, group] of liveGroups) {
+      const canonical = pick(group);
+      for (const row of group) {
+        if (row.id === canonical.id) {
+          if (row.toc_is_deleted) idsToRestore.push(row.id);
+        } else {
+          // Non-canonical duplicate inside a live group — flag (or keep flagged).
+          if (!row.toc_is_deleted) idsToFlag.push(row.id);
+        }
+      }
+    }
+
+    // Rows whose TOC key is gone always get flagged.
+    for (const row of goneRows) {
+      if (!row.toc_is_deleted) idsToFlag.push(row.id);
+    }
+
+    if (idsToFlag.length) {
+      await repository.update({ id: In(idsToFlag) }, { toc_is_deleted: true });
     }
     if (idsToRestore.length) {
       await repository.update({ id: In(idsToRestore) }, { toc_is_deleted: false });
@@ -3352,7 +3441,13 @@ export class PorbService {
 
       for (const [, targetAow] of targetAows) {
         const meliaName = item?.title || item?.name || 'Melia';
-        const key = `${meliaName}::${centerId}::${Number(targetAow?.id || 0)}`;
+        const tocId = String(item?.id || '');
+        // Dedup by toc_id when available (stable identifier across TOC title renames).
+        // Fall back to name-based key only for legacy rows without a toc_id, so empty
+        // toc_ids don't all collide on a single shared key.
+        const key = tocId
+          ? `${tocId}::${centerId}::${Number(targetAow?.id || 0)}`
+          : `${meliaName}::${centerId}::${Number(targetAow?.id || 0)}`;
         if (meliaRowKeySet.has(key)) {
           continue;
         }
@@ -3361,7 +3456,7 @@ export class PorbService {
           this.porbMeliaRepository.create({
             program_id: programId,
             porb_aow_id: targetAow?.id ?? null,
-            toc_id: String(item?.id || ''),
+            toc_id: tocId,
             center_id: centerId,
             melia_name: item?.title || item?.name || 'Melia',
             melia_outputs: this.stripHtml(item?.supported_outcome || ''),
@@ -3376,25 +3471,48 @@ export class PorbService {
     const existingMeliaRows = await this.porbMeliaRepository.find({
       where: { program_id: programId },
     });
+    // Build the canonical existing-by-key map. Multiple existing rows may share the
+    // same (toc_id, center, aow) key because of the prior name-based dedup bug.
+    // For each key, pick the row most likely to hold real user data:
+    //   1. highest melia_budget
+    //   2. then most recent updated_at
+    //   3. then lowest id (oldest, to keep a stable choice)
+    // The cleanup SQL collapses the remaining duplicates after deployment.
+    const meliaKeyOf = (row: PorbMelia): string => {
+      const tocId = String(row.toc_id || '');
+      return tocId
+        ? `${tocId}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`
+        : `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
+    };
+    const meliaRowIsBetter = (candidate: PorbMelia, current: PorbMelia): boolean => {
+      const candBudget = Number(candidate.melia_budget || 0);
+      const currBudget = Number(current.melia_budget || 0);
+      if (candBudget !== currBudget) return candBudget > currBudget;
+      const candUpdated = candidate.updated_at ? new Date(candidate.updated_at).getTime() : 0;
+      const currUpdated = current.updated_at ? new Date(current.updated_at).getTime() : 0;
+      if (candUpdated !== currUpdated) return candUpdated > currUpdated;
+      return Number(candidate.id) < Number(current.id);
+    };
     const existingMeliaByKey = new Map<string, PorbMelia>();
-    existingMeliaRows.forEach((row) =>
-      existingMeliaByKey.set(
-        `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
-        row,
-      ),
-    );
-    const existingMeliaKeys = new Set(
-      existingMeliaRows.map(
-        (row) => `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
-      ),
-    );
+    existingMeliaRows.forEach((row) => {
+      const key = meliaKeyOf(row);
+      const current = existingMeliaByKey.get(key);
+      if (!current || meliaRowIsBetter(row, current)) {
+        existingMeliaByKey.set(key, row);
+      }
+    });
+    const existingMeliaKeys = new Set(existingMeliaByKey.keys());
     const meliaUpdates: Array<{ id: number; changes: any }> = [];
     for (const row of validMeliaRows) {
-      const key = `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
+      const tocId = String(row.toc_id || '');
+      const key = tocId
+        ? `${tocId}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`
+        : `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
       const existing = existingMeliaByKey.get(key);
       if (!existing) continue;
       const changes: any = {};
       if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
+      if ((existing.melia_name || '') !== (row.melia_name || '')) changes.melia_name = row.melia_name;
       if ((existing.melia_outputs || '') !== (row.melia_outputs || '')) changes.melia_outputs = row.melia_outputs;
       if ((existing.toc_id || '') !== (row.toc_id || '')) changes.toc_id = row.toc_id;
       if (Object.keys(changes).length) {
@@ -3407,12 +3525,13 @@ export class PorbService {
         meliaUpdates.map((item) => this.porbMeliaRepository.update(item.id, item.changes)),
       );
     }
-    const newMeliaRows = validMeliaRows.filter(
-      (row) =>
-        !existingMeliaKeys.has(
-          `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`,
-        ),
-    );
+    const newMeliaRows = validMeliaRows.filter((row) => {
+      const tocId = String(row.toc_id || '');
+      const key = tocId
+        ? `${tocId}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`
+        : `${String(row.melia_name)}::${Number(row.center_id)}::${Number(row.porb_aow_id || 0)}`;
+      return !existingMeliaKeys.has(key);
+    });
     if (setTocTimestamps) {
       newMeliaRows.forEach(r => {
         (r as any).toc_updated_at = new Date();
@@ -3420,10 +3539,20 @@ export class PorbService {
       });
     }
     const savedMelias = newMeliaRows.length ? await this.porbMeliaRepository.save(newMeliaRows) : [];
-    await this.syncTocDeletedFlags(
+    // MELIA can have natural duplicates per `toc_id::center_id::porb_aow_id` because
+    // the prior cron deduped by name. Pass dedup-aware callbacks so only the canonical
+    // row in each group is restored — non-canonical duplicates stay flagged
+    // (`toc_is_deleted = 1`) so the UI's "Deleted" badge surfaces them as unreliable.
+    // Canonical rule MUST match the cleanup SQL keeper rule:
+    //   highest melia_budget → longest non-empty melia_assumption →
+    //   most recent updated_at → lowest id.
+    await this.syncTocDeletedFlags<PorbMelia>(
       this.porbMeliaRepository,
       existingMeliaRows as any,
-      new Set(validMeliaRows.map((row: any) => String(row.toc_id))),
+      new Set(validMeliaRows.map((row: any) => meliaKeyOf(row as PorbMelia))),
+      (row) => meliaKeyOf(row),
+      (row) => meliaKeyOf(row),
+      (rows) => rows.reduce((best, r) => (meliaRowIsBetter(r, best) ? r : best)),
     );
 
     // ── Synergy Programs ──
