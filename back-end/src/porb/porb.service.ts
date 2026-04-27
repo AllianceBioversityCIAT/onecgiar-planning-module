@@ -1544,16 +1544,38 @@ export class PorbService {
       data.percentage = Math.min(100, Math.max(0, data.percentage));
     }
 
-    // Validate total doesn't exceed 100% for this center+AOW
-    const allRows = await this.porbCountryPercentageRepository.find({
-      where: {
-        program_id: data.program_id,
-        porb_aow_id: data.porb_aow_id,
-        center_id: data.center_id,
-      },
-    });
+    // Validate total doesn't exceed 100% for this center+AOW.
+    // Match the read path (getCountryPercentage): only count rows that are
+    // currently "live" — i.e. HLO-derived (country in current hlo_geo) or is_manual.
+    // Orphaned non-manual rows (country no longer in any HLO geo) are hidden in
+    // the UI, so counting them would produce phantom 100%-blocks.
+    const [allRows, hlos] = await Promise.all([
+      this.porbCountryPercentageRepository.find({
+        where: {
+          program_id: data.program_id,
+          porb_aow_id: data.porb_aow_id,
+          center_id: data.center_id,
+        },
+      }),
+      this.porbHloRepository.find({
+        where: {
+          program_id: data.program_id,
+          porb_aow_id: data.porb_aow_id,
+          center_id: data.center_id,
+        },
+      }),
+    ]);
+    const liveCountries = new Set<string>();
+    for (const hlo of hlos) {
+      if (!hlo.hlo_geo) continue;
+      for (const c of hlo.hlo_geo.split(', ')) {
+        const trimmed = c.trim();
+        if (trimmed) liveCountries.add(trimmed);
+      }
+    }
     const otherTotal = allRows
       .filter((r) => r.country_name !== data.country_name)
+      .filter((r) => r.is_manual || liveCountries.has(r.country_name))
       .reduce((sum, r) => sum + (Number(r.percentage) || 0), 0);
     if ((data.percentage || 0) + otherTotal > 100) {
       throw new BadRequestException('Total percentage cannot exceed 100%.');
@@ -1824,16 +1846,33 @@ export class PorbService {
       data.percentage = Math.min(100, Math.max(0, data.percentage));
     }
 
-    // Validate total doesn't exceed 100% for this center+AOW
-    const allRows = await this.porbLocationBenefitRepository.find({
-      where: {
-        program_id: data.program_id,
-        porb_aow_id: data.porb_aow_id,
-        center_id: data.center_id,
-      },
-    });
+    // Validate total doesn't exceed 100% for this center+AOW.
+    // Match the read path (getLocationBenefit): only count rows that are
+    // currently "live" — i.e. derived from a non-deleted outcome's outcome_geo
+    // for this (program, aow), or is_manual. Orphaned non-manual rows are
+    // hidden in the UI, so counting them would produce phantom 100%-blocks.
+    const [allRows, outcomes] = await Promise.all([
+      this.porbLocationBenefitRepository.find({
+        where: {
+          program_id: data.program_id,
+          porb_aow_id: data.porb_aow_id,
+          center_id: data.center_id,
+        },
+      }),
+      this.porbOutcomeRepository.find({
+        where: { program_id: data.program_id, porb_aow_id: data.porb_aow_id, toc_is_deleted: false },
+      }),
+    ]);
+    const liveKeys = new Set<string>();
+    for (const outcome of outcomes) {
+      if (!outcome.outcome_geo) continue;
+      for (const loc of this.parseOutcomeGeo(outcome.outcome_geo)) {
+        liveKeys.add(`${loc.type}::${loc.name}`);
+      }
+    }
     const otherTotal = allRows
       .filter((r) => !(r.location_name === data.location_name && r.location_type === data.location_type))
+      .filter((r) => r.is_manual || liveKeys.has(`${r.location_type}::${r.location_name}`))
       .reduce((sum, r) => sum + (Number(r.percentage) || 0), 0);
     if ((data.percentage || 0) + otherTotal > 100) {
       throw new BadRequestException('Total percentage cannot exceed 100%.');
