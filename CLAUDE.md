@@ -204,6 +204,9 @@ Guest users (logged in but no role on the initiative and not admin) are redirect
 ### Mark Complete Center Locking
 `PATCH /porb/center/status` persists completion status to `center_status` table (composite PK: initiative_id, organization_code, phase_id). Uses `centerStatusRepo.update()` (not `.save()`) due to TypeORM boolean bug on composite PKs. Completed centers (`status=false/0` in DB) become read-only: `buildCanEditMap()` sets `canEditMap[code]=false` for completed centers, disabling all budget inputs. Contributors can still click "Mark Incomplete" to re-enable editing (button uses `canToggleCenterCompletion` which checks base role permission, not completion status). Backend emits `porbBudgetChanged` socket event with `section: 'center-status'` so other connected users see the status change in real-time. Frontend handles this by reloading `initiative.center_status` and rebuilding `canEditMap`. History table records "Mark as complete"/"Mark as incomplete" with user ID.
 
+## TODO / Deferred Work
+- **Auto-cleanup of orphaned country/location percentage rows** — see spec at `docs/superpowers/specs/2026-04-27-orphan-percentage-auto-cleanup-design.md`. Recommended approach: Option C (soft-delete via `orphaned_at` column + 30-day grace period + daily cron). Current state: validator no longer counts orphans (commit `fb07809`), one-time cleanup SQL at `back-end/cleanup-orphan-percentage-rows.sql`. Not urgent — orphans cause no functional bugs, just storage waste.
+
 ## CI/CD
 - GitHub Actions triggers Jenkins on push to `development` branch
 - Jenkins builds Docker images and deploys with health checks
