@@ -3266,7 +3266,7 @@ export class PorbService {
 
     const outputNodes = results.filter((item: any) => item?.category === 'OUTPUT');
     const hloRows: any[] = [];
-    const hloRowKeySet = new Set<string>();
+    const hloRowByKey = new Map<string, any>();
     // Composite key: `output_id::indicator_id::center_id`. The same indicator
     // can appear under multiple OUTPUTs in TOC, so the key MUST include the
     // output id to avoid silently dropping rows that share an indicator.
@@ -3277,6 +3277,13 @@ export class PorbService {
       const outputId = String(item?.id || '');
       for (const indicator of item?.quantitative_indicators || []) {
         for (const target of indicator?.targets || []) {
+          // A center can appear in multiple `targets[]` (and even multiple times
+          // within one target.centers[]) for the same indicator — each occurrence
+          // contributes to the year's target. Sum the numeric value once per
+          // (target × center) occurrence; mirrors the OUTCOME path below.
+          const rawTarget = target?.[activePhase.reportingYear];
+          const targetNum = parseFloat(rawTarget);
+          const targetIsNumber = !isNaN(targetNum);
           for (const center of target?.centers || []) {
             const centerId = Number(center?.code);
             if (!Number.isFinite(centerId)) {
@@ -3287,27 +3294,31 @@ export class PorbService {
               continue;
             }
             const hloKey = buildHloKey(outputId, indicator?.id, centerId);
-            if (hloRowKeySet.has(hloKey)) {
+            const existingInMemory = hloRowByKey.get(hloKey);
+            if (existingInMemory) {
+              if (targetIsNumber) {
+                const prev = Number(existingInMemory.hlo_target);
+                existingInMemory.hlo_target = (isNaN(prev) ? 0 : prev) + targetNum;
+              }
               continue;
             }
-            hloRowKeySet.add(hloKey);
-            hloRows.push(
-              this.porbHloRepository.create({
-                program_id: programId,
-                porb_aow_id: parentAow?.id ?? null,
-                toc_id: String(indicator?.id || ''),
-                output_id: outputId || null,
-                center_id: centerId,
-                hlo_name: item?.title || '',
-                hlo_description: indicator?.description || '',
-                hlo_type: indicator?.type?.value || 'others',
-                hlo_geo: this.deriveHloGeo(item, indicator),
-                hlo_target: target[activePhase.reportingYear] || null,
-                hlo_budget: 0,
-                hlo_assumption: '',
-                toc_is_deleted: false,
-              }),
-            );
+            const newRow = this.porbHloRepository.create({
+              program_id: programId,
+              porb_aow_id: parentAow?.id ?? null,
+              toc_id: String(indicator?.id || ''),
+              output_id: outputId || null,
+              center_id: centerId,
+              hlo_name: item?.title || '',
+              hlo_description: indicator?.description || '',
+              hlo_type: indicator?.type?.value || 'others',
+              hlo_geo: this.deriveHloGeo(item, indicator),
+              hlo_target: targetIsNumber ? targetNum : null,
+              hlo_budget: 0,
+              hlo_assumption: '',
+              toc_is_deleted: false,
+            });
+            hloRowByKey.set(hloKey, newRow);
+            hloRows.push(newRow);
           }
         }
       }
