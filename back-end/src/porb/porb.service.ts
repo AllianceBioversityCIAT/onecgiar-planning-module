@@ -3551,12 +3551,27 @@ export class PorbService {
     const meliaRows: any[] = [];
     const meliaRowKeySet = new Set<string>();
     for (const item of meliaNodes) {
-      const centerId = Number(item?.center?.code);
-      if (!Number.isFinite(centerId)) {
-        continue;
+      const leadCenterId = Number(item?.center?.code);
+      // Collect lead + partner centers. Partners come from `item.partners[]`
+      // (CLARISA institutions); only those whose `code` matches a CGIAR center
+      // in our org table are kept — non-CGIAR partners (e.g., ILRI partners
+      // that aren't centers) are silently dropped.
+      const centerIds = new Set<number>();
+      if (Number.isFinite(leadCenterId)) {
+        if (validCenterIds.has(leadCenterId)) {
+          centerIds.add(leadCenterId);
+        } else {
+          skippedCenterIds.add(leadCenterId);
+        }
       }
-      if (!validCenterIds.has(centerId)) {
-        skippedCenterIds.add(centerId);
+      for (const partner of item?.partners || []) {
+        const partnerCode = Number(partner?.code);
+        if (!Number.isFinite(partnerCode)) continue;
+        if (validCenterIds.has(partnerCode)) {
+          centerIds.add(partnerCode);
+        }
+      }
+      if (!centerIds.size) {
         continue;
       }
       const groupKeys = new Set<string>();
@@ -3603,31 +3618,33 @@ export class PorbService {
       }
 
       for (const [, targetAow] of targetAows) {
-        const meliaName = item?.title || item?.name || 'Melia';
-        const tocId = String(item?.id || '');
-        // Dedup by toc_id when available (stable identifier across TOC title renames).
-        // Fall back to name-based key only for legacy rows without a toc_id, so empty
-        // toc_ids don't all collide on a single shared key.
-        const key = tocId
-          ? `${tocId}::${centerId}::${Number(targetAow?.id || 0)}`
-          : `${meliaName}::${centerId}::${Number(targetAow?.id || 0)}`;
-        if (meliaRowKeySet.has(key)) {
-          continue;
+        for (const centerId of centerIds) {
+          const meliaName = item?.title || item?.name || 'Melia';
+          const tocId = String(item?.id || '');
+          // Dedup by toc_id when available (stable identifier across TOC title renames).
+          // Fall back to name-based key only for legacy rows without a toc_id, so empty
+          // toc_ids don't all collide on a single shared key.
+          const key = tocId
+            ? `${tocId}::${centerId}::${Number(targetAow?.id || 0)}`
+            : `${meliaName}::${centerId}::${Number(targetAow?.id || 0)}`;
+          if (meliaRowKeySet.has(key)) {
+            continue;
+          }
+          meliaRowKeySet.add(key);
+          meliaRows.push(
+            this.porbMeliaRepository.create({
+              program_id: programId,
+              porb_aow_id: targetAow?.id ?? null,
+              toc_id: tocId,
+              center_id: centerId,
+              melia_name: meliaName,
+              melia_outputs: this.stripHtml(item?.supported_outcome || ''),
+              melia_budget: 0,
+              melia_assumption: '',
+              toc_is_deleted: false,
+            }),
+          );
         }
-        meliaRowKeySet.add(key);
-        meliaRows.push(
-          this.porbMeliaRepository.create({
-            program_id: programId,
-            porb_aow_id: targetAow?.id ?? null,
-            toc_id: tocId,
-            center_id: centerId,
-            melia_name: item?.title || item?.name || 'Melia',
-            melia_outputs: this.stripHtml(item?.supported_outcome || ''),
-            melia_budget: 0,
-            melia_assumption: '',
-            toc_is_deleted: false,
-          }),
-        );
       }
     }
     const validMeliaRows = meliaRows.filter(Boolean);
