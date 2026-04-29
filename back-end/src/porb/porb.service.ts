@@ -3267,8 +3267,14 @@ export class PorbService {
     const outputNodes = results.filter((item: any) => item?.category === 'OUTPUT');
     const hloRows: any[] = [];
     const hloRowKeySet = new Set<string>();
+    // Composite key: `output_id::indicator_id::center_id`. The same indicator
+    // can appear under multiple OUTPUTs in TOC, so the key MUST include the
+    // output id to avoid silently dropping rows that share an indicator.
+    const buildHloKey = (outputId: any, tocId: any, centerId: any) =>
+      `${String(outputId || '')}::${String(tocId || '')}::${Number(centerId)}`;
     for (const item of outputNodes) {
       const parentAow = resolveParentAow(item?.group, item?.parent_id);
+      const outputId = String(item?.id || '');
       for (const indicator of item?.quantitative_indicators || []) {
         for (const target of indicator?.targets || []) {
           for (const center of target?.centers || []) {
@@ -3280,7 +3286,7 @@ export class PorbService {
               skippedCenterIds.add(centerId);
               continue;
             }
-            const hloKey = `${String(indicator?.id || '')}::${centerId}`;
+            const hloKey = buildHloKey(outputId, indicator?.id, centerId);
             if (hloRowKeySet.has(hloKey)) {
               continue;
             }
@@ -3290,6 +3296,7 @@ export class PorbService {
                 program_id: programId,
                 porb_aow_id: parentAow?.id ?? null,
                 toc_id: String(indicator?.id || ''),
+                output_id: outputId || null,
                 center_id: centerId,
                 hlo_name: item?.title || '',
                 hlo_description: indicator?.description || '',
@@ -3309,23 +3316,49 @@ export class PorbService {
     const existingHlos = await this.porbHloRepository.find({
       where: { program_id: programId },
     });
+    // Existing rows may not have output_id yet (pre-backfill); use a fallback
+    // 2-part key for those so the import still treats them as the same row.
+    // After backfill, every row has output_id and the 3-part key is canonical.
     const existingHloByKey = new Map<string, PorbHlo>();
-    existingHlos.forEach((row) =>
-      existingHloByKey.set(`${String(row.toc_id)}::${Number(row.center_id)}`, row),
-    );
-    const existingHloKeys = new Set(
-      existingHlos.map((row) => `${String(row.toc_id)}::${Number(row.center_id)}`),
-    );
-    const newHloRows = hloRows.filter(
-      (row) => !existingHloKeys.has(`${String(row.toc_id)}::${Number(row.center_id)}`),
-    );
+    existingHlos.forEach((row) => {
+      const fullKey = buildHloKey(row.output_id, row.toc_id, row.center_id);
+      existingHloByKey.set(fullKey, row);
+      if (!row.output_id) {
+        const legacyKey = `legacy::${String(row.toc_id)}::${Number(row.center_id)}`;
+        if (!existingHloByKey.has(legacyKey)) {
+          existingHloByKey.set(legacyKey, row);
+        }
+      }
+    });
+    const newHloRows: any[] = [];
     const hloUpdates: Array<{ id: number; changes: any }> = [];
     for (const row of hloRows) {
-      const key = `${String(row.toc_id)}::${Number(row.center_id)}`;
-      const existing = existingHloByKey.get(key);
-      if (!existing) continue;
+      const key = buildHloKey(row.output_id, row.toc_id, row.center_id);
+      let existing = existingHloByKey.get(key);
+      // Fallback: pre-backfill rows have no output_id. Match on (toc_id, center_id, hlo_name)
+      // to claim the existing row and stamp output_id on it. Title match is what makes
+      // the claim unambiguous when multiple outputs share an indicator.
+      if (!existing) {
+        const legacyKey = `legacy::${String(row.toc_id)}::${Number(row.center_id)}`;
+        const candidate = existingHloByKey.get(legacyKey);
+        if (
+          candidate &&
+          !candidate.output_id &&
+          (candidate.hlo_name || '') === (row.hlo_name || '')
+        ) {
+          existing = candidate;
+          // Remove the legacy entry so a second output sharing this indicator
+          // doesn't also claim the same existing row.
+          existingHloByKey.delete(legacyKey);
+        }
+      }
+      if (!existing) {
+        newHloRows.push(row);
+        continue;
+      }
       const changes: any = {};
       if (Number(existing.porb_aow_id || 0) !== Number(row.porb_aow_id || 0)) changes.porb_aow_id = row.porb_aow_id;
+      if ((existing.output_id || '') !== (row.output_id || '')) changes.output_id = row.output_id;
       if ((existing.hlo_name || '') !== (row.hlo_name || '')) changes.hlo_name = row.hlo_name;
       if ((existing.hlo_description || '') !== (row.hlo_description || '')) changes.hlo_description = row.hlo_description;
       if ((existing.hlo_type || '') !== (row.hlo_type || '')) changes.hlo_type = row.hlo_type;
@@ -3348,11 +3381,27 @@ export class PorbService {
       });
     }
     const savedHlos = newHloRows.length ? await this.porbHloRepository.save(newHloRows) : [];
+    // Re-fetch existing rows so the deleted-flag sync sees the output_id values
+    // we just stamped via the import UPDATE branch above (and any newly saved
+    // rows). Without this, in-memory `existingHlos` still has the pre-update
+    // (often NULL) output_id values, which would cause keyFn to mismatch the
+    // live-key Set and flag valid rows as toc_is_deleted.
+    const refreshedHlos = await this.porbHloRepository.find({
+      where: { program_id: programId },
+    });
+    // syncTocDeletedFlags: identify live HLOs by full composite key. Pre-backfill
+    // rows that still have NULL output_id won't match — they'll be flagged as
+    // deleted, which is correct (run the admin backfill first to stamp them).
+    // Pass the keyFn as the 4th arg (the `useCompositeKey` slot accepts a
+    // function override).
+    const hloKeyFn = (row: any) =>
+      buildHloKey(row.output_id, row.toc_id, row.center_id);
+    const liveKeys = new Set(hloRows.map(hloKeyFn));
     await this.syncTocDeletedFlags(
       this.porbHloRepository,
-      existingHlos as any,
-      new Set(hloRows.map((row: any) => `${String(row.toc_id)}::${Number(row.center_id)}`)),
-      true,
+      refreshedHlos as any,
+      liveKeys,
+      hloKeyFn,
     );
 
     const partnerNodes = results.filter((item: any) => item?.category === 'partners');
@@ -6507,6 +6556,221 @@ export class PorbService {
       success: true,
       rowsCleared: cleared.affected ?? 0,
       rowsStrippedPrefix: stripped?.affectedRows ?? stripped?.[1] ?? 0,
+    };
+  }
+
+  /**
+   * Backfill output_id on existing porb_hlo rows that have output_id IS NULL.
+   *
+   * Pre-fix, the import dedup key was `indicator_id::center_id`, so when the same
+   * indicator appeared under multiple OUTPUTs in TOC, only the first OUTPUT's HLO
+   * row was created. The new key is `output_id::indicator_id::center_id`, but
+   * existing rows have no output_id stamped on them.
+   *
+   * Strategy: pull the live TOC, build a map of (indicator_id, output_title) →
+   * output_id. For each existing HLO with NULL output_id, look up by
+   * (toc_id, hlo_name). hlo_name was originally set from item.title (the OUTPUT
+   * title), so this is the natural disambiguator when an indicator is shared.
+   *
+   * Idempotent: safe to run multiple times. Rows that already have output_id
+   * are skipped. Rows whose (indicator, title) no longer exists in TOC stay NULL
+   * and will be flagged toc_is_deleted by syncTocDeletedFlags on the next import.
+   */
+  async backfillHloOutputId(programId: number) {
+    const program = await this.initService.initiativeRepository.findOne({
+      where: { id: programId },
+    });
+    if (!program) {
+      return { success: false, error: 'Program not found' };
+    }
+
+    const existingRows = await this.porbHloRepository.find({
+      where: { program_id: programId },
+    });
+    const totalRows = existingRows.length;
+    const alreadyHasOutputId = existingRows.filter((r) => !!r.output_id).length;
+    const candidates = existingRows.filter((r) => !r.output_id);
+
+    if (!candidates.length) {
+      return {
+        success: true,
+        program_id: programId,
+        program_code: program.official_code,
+        totalRows,
+        alreadyHasOutputId,
+        matched: 0,
+        ambiguous: 0,
+        orphaned: 0,
+        message: 'All rows already have output_id; nothing to backfill.',
+      };
+    }
+
+    // Pull live TOC (same path used by importTocToPorbTables)
+    const toc: any = await this.getTocs(program.official_code);
+    const results: any[] = Array.isArray(toc?.results) ? toc.results : [];
+    if (!results.length) {
+      return {
+        success: false,
+        program_id: programId,
+        program_code: program.official_code,
+        error: 'TOC returned no results — cannot backfill.',
+      };
+    }
+    const outputs = results.filter((item: any) => item?.category === 'OUTPUT');
+
+    // Build (indicator_id, normalized_title) → [output_id, ...] map.
+    // Multiple outputs can share the same (indicator, title) only in pathological
+    // data; we treat that as ambiguous.
+    type TitleMap = Map<string, Set<string>>; // title → output_ids
+    const indicatorToTitles = new Map<string, TitleMap>();
+    const normalizeTitle = (s: string) => String(s ?? '').trim();
+
+    for (const o of outputs) {
+      const outputId = String(o?.id || '');
+      if (!outputId) continue;
+      const title = normalizeTitle(o?.title);
+      for (const ind of o?.quantitative_indicators || []) {
+        const indId = String(ind?.id || '');
+        if (!indId) continue;
+        let titleMap = indicatorToTitles.get(indId);
+        if (!titleMap) {
+          titleMap = new Map();
+          indicatorToTitles.set(indId, titleMap);
+        }
+        let outputIdSet = titleMap.get(title);
+        if (!outputIdSet) {
+          outputIdSet = new Set();
+          titleMap.set(title, outputIdSet);
+        }
+        outputIdSet.add(outputId);
+      }
+    }
+
+    let matched = 0;
+    let ambiguous = 0;
+    let orphaned = 0;
+    const updates: Array<{ id: number; output_id: string }> = [];
+    const ambiguousRows: Array<{ id: number; toc_id: string; hlo_name: string; candidates: string[] }> = [];
+    const orphanedRows: Array<{ id: number; toc_id: string; hlo_name: string }> = [];
+
+    for (const row of candidates) {
+      const indId = String(row.toc_id || '');
+      const title = normalizeTitle(row.hlo_name);
+      const titleMap = indicatorToTitles.get(indId);
+      if (!titleMap) {
+        orphaned++;
+        orphanedRows.push({ id: row.id, toc_id: row.toc_id, hlo_name: row.hlo_name });
+        continue;
+      }
+      const outputIds = titleMap.get(title);
+      if (!outputIds || outputIds.size === 0) {
+        // Indicator exists in TOC but not under any output with this title —
+        // the OUTPUT title was renamed, or this row is from a stale import.
+        // Leave output_id NULL; syncTocDeletedFlags will flag it on next tick.
+        orphaned++;
+        orphanedRows.push({ id: row.id, toc_id: row.toc_id, hlo_name: row.hlo_name });
+        continue;
+      }
+      if (outputIds.size > 1) {
+        ambiguous++;
+        ambiguousRows.push({
+          id: row.id,
+          toc_id: row.toc_id,
+          hlo_name: row.hlo_name,
+          candidates: Array.from(outputIds),
+        });
+        continue;
+      }
+      const [outputId] = Array.from(outputIds);
+      updates.push({ id: row.id, output_id: outputId });
+      matched++;
+    }
+
+    if (updates.length) {
+      // Run updates in batches to avoid overwhelming the DB on large programs.
+      const batchSize = 100;
+      for (let i = 0; i < updates.length; i += batchSize) {
+        const chunk = updates.slice(i, i + batchSize);
+        await Promise.all(
+          chunk.map((u) =>
+            this.porbHloRepository.update(u.id, { output_id: u.output_id }),
+          ),
+        );
+      }
+    }
+
+    return {
+      success: true,
+      program_id: programId,
+      program_code: program.official_code,
+      totalRows,
+      alreadyHasOutputId,
+      candidatesProcessed: candidates.length,
+      matched,
+      ambiguous,
+      orphaned,
+      ambiguousRows: ambiguousRows.slice(0, 20),
+      orphanedRows: orphanedRows.slice(0, 20),
+    };
+  }
+
+  /**
+   * Bulk backfill: run backfillHloOutputId for every program that has porb_hlo
+   * rows. Sequential (not parallel) to avoid hammering the TOC API. Always
+   * returns a per-program summary, even when individual programs error out, so
+   * the admin UI can show the full picture instead of bailing on the first
+   * failure.
+   */
+  async backfillHloOutputIdAll() {
+    const rows: Array<{ program_id: number }> = await this.porbHloRepository
+      .createQueryBuilder('h')
+      .select('DISTINCT h.program_id', 'program_id')
+      .orderBy('h.program_id', 'ASC')
+      .getRawMany();
+    const programIds = rows
+      .map((r) => Number(r.program_id))
+      .filter((n) => Number.isFinite(n));
+
+    const results: any[] = [];
+    let totals = {
+      programsProcessed: 0,
+      programsFailed: 0,
+      totalRows: 0,
+      alreadyHasOutputId: 0,
+      matched: 0,
+      ambiguous: 0,
+      orphaned: 0,
+    };
+
+    for (const programId of programIds) {
+      try {
+        const r = await this.backfillHloOutputId(programId);
+        results.push(r);
+        if (r?.success) {
+          totals.programsProcessed += 1;
+          totals.totalRows += Number(r.totalRows || 0);
+          totals.alreadyHasOutputId += Number(r.alreadyHasOutputId || 0);
+          totals.matched += Number(r.matched || 0);
+          totals.ambiguous += Number(r.ambiguous || 0);
+          totals.orphaned += Number(r.orphaned || 0);
+        } else {
+          totals.programsFailed += 1;
+        }
+      } catch (err: any) {
+        totals.programsFailed += 1;
+        results.push({
+          success: false,
+          program_id: programId,
+          error: err?.message || 'Unknown error',
+        });
+      }
+    }
+
+    return {
+      success: true,
+      programsTotal: programIds.length,
+      ...totals,
+      perProgram: results,
     };
   }
 

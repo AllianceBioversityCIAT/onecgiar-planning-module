@@ -34,6 +34,11 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
   importResult: any = null;
   selectedImportProgramIds: number[] = [];
 
+  // Backfill HLO output_id
+  backfillProgramId: number | null = null;
+  backfillLoading = false;
+  backfillResult: any = null;
+
   // TOC Status
   tocStatus: any[] = [];
   tocStatusLoading = false;
@@ -239,6 +244,75 @@ export class PorbDangerZoneComponent implements OnInit, OnDestroy {
           );
         } finally {
           this.importLoading = false;
+        }
+      });
+  }
+
+  async backfillHloOutputId() {
+    if (!this.backfillProgramId) {
+      this.toastr.error('Please select a program');
+      return;
+    }
+    this.backfillLoading = true;
+    this.backfillResult = null;
+    try {
+      const result = await this.porbService.backfillHloOutputId(
+        this.backfillProgramId,
+      );
+      this.backfillResult = result;
+      if (result?.success === false) {
+        this.toastr.error(result?.error || 'Backfill failed');
+      } else {
+        const matched = Number(result?.matched || 0);
+        const ambiguous = Number(result?.ambiguous || 0);
+        const orphaned = Number(result?.orphaned || 0);
+        const msg = `Matched: ${matched}, Ambiguous: ${ambiguous}, Orphaned: ${orphaned}`;
+        if (ambiguous || orphaned) {
+          this.toastr.warning(msg, 'Backfill done with warnings');
+        } else {
+          this.toastr.success(msg, 'Backfill complete');
+        }
+      }
+    } catch (err: any) {
+      this.toastr.error(err?.error?.message || 'Backfill request failed');
+    } finally {
+      this.backfillLoading = false;
+    }
+  }
+
+  backfillHloOutputIdAll() {
+    this.dialog
+      .open(DeleteConfirmDialogComponent, {
+        data: {
+          message:
+            'Backfill output_id for ALL programs? This calls the TOC API once per program and may take a minute. Idempotent — safe to run more than once.',
+          svg: '../../../assets/shared-image/sync.png',
+        },
+      })
+      .afterClosed()
+      .subscribe(async (confirmed) => {
+        if (!confirmed) return;
+        this.backfillLoading = true;
+        this.backfillResult = null;
+        try {
+          const result = await this.porbService.backfillHloOutputIdAll();
+          this.backfillResult = result;
+          if (result?.success === false) {
+            this.toastr.error(result?.error || 'Bulk backfill failed');
+            return;
+          }
+          const msg = `Programs: ${result.programsProcessed}/${result.programsTotal} | Matched: ${result.matched} | Ambiguous: ${result.ambiguous} | Orphaned: ${result.orphaned}`;
+          if (result.programsFailed || result.ambiguous || result.orphaned) {
+            this.toastr.warning(msg, 'Bulk backfill done with warnings');
+          } else {
+            this.toastr.success(msg, 'Bulk backfill complete');
+          }
+        } catch (err: any) {
+          this.toastr.error(
+            err?.error?.message || 'Bulk backfill request failed',
+          );
+        } finally {
+          this.backfillLoading = false;
         }
       });
   }

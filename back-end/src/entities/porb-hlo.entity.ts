@@ -32,6 +32,10 @@ export class PorbHlo {
   toc_id: string;
 
   @ApiProperty()
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  output_id: string;
+
+  @ApiProperty()
   @Column()
   center_id: number;
 

@@ -586,6 +586,22 @@ export class PorbController {
     return this.porbService.cleanupHloGeo();
   }
 
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('backfill-hlo-output-id/:program_id')
+  backfillHloOutputId(
+    @Param('program_id', ParseIntPipe) program_id: number,
+  ) {
+    return this.porbService.backfillHloOutputId(program_id);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.Admin)
+  @Post('backfill-hlo-output-id-all')
+  backfillHloOutputIdAll() {
+    return this.porbService.backfillHloOutputIdAll();
+  }
+
   @Get('submission/:program_id')
   getSubmission(@Param('program_id', ParseIntPipe) program_id: number) {
     return this.porbService.getLatestSubmission(program_id);

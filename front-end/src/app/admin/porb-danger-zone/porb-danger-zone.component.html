@@ -124,6 +124,59 @@
     </div>
   </div>
 
+  <!-- Backfill HLO output_id -->
+  <div class="action-card">
+    <div class="action-card__header">
+      <mat-icon class="action-icon">build</mat-icon>
+      <h3>Backfill HLO output_id</h3>
+    </div>
+    <p class="action-card__description">
+      One-time fix for HLO rows missing the new <code>output_id</code> column.
+      Required after the schema upgrade so that indicators shared across
+      multiple OUTPUTs each get their own HLO row on the next TOC import.
+      Idempotent — safe to re-run. Existing budgets and assumptions are
+      preserved.
+    </p>
+
+    <div class="action-card__controls">
+      <mat-form-field appearance="outline" class="program-select">
+        <mat-label>Program</mat-label>
+        <mat-select [(value)]="backfillProgramId">
+          <mat-option *ngFor="let p of programs" [value]="p.id">
+            {{ p.official_code }} - {{ p.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button
+        mat-raised-button
+        class="action-btn"
+        (click)="backfillHloOutputId()"
+        [disabled]="backfillLoading || !backfillProgramId"
+      >
+        <mat-icon>build</mat-icon>
+        <span *ngIf="!backfillLoading">Backfill output_id</span>
+        <span *ngIf="backfillLoading">Backfilling...</span>
+      </button>
+
+      <button
+        mat-raised-button
+        class="action-btn"
+        (click)="backfillHloOutputIdAll()"
+        [disabled]="backfillLoading"
+      >
+        <mat-icon>done_all</mat-icon>
+        <span *ngIf="!backfillLoading">Backfill ALL programs</span>
+        <span *ngIf="backfillLoading">Backfilling...</span>
+      </button>
+    </div>
+
+    <div class="action-card__result" *ngIf="backfillResult">
+      <h4>Backfill Result</h4>
+      <pre>{{ backfillResult | json }}</pre>
+    </div>
+  </div>
+
   <!-- Section 3: Clear PORB Data -->
   <div class="danger-card">
     <div class="danger-card__header">

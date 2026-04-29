@@ -568,6 +568,28 @@ export class PorbService {
     );
   }
 
+  async backfillHloOutputId(programId: number): Promise<any> {
+    return firstValueFrom(
+      this.http
+        .post(
+          `${environment.api_url}/porb/backfill-hlo-output-id/${programId}`,
+          {},
+        )
+        .pipe(map((d: any) => d))
+    );
+  }
+
+  async backfillHloOutputIdAll(): Promise<any> {
+    return firstValueFrom(
+      this.http
+        .post(
+          `${environment.api_url}/porb/backfill-hlo-output-id-all`,
+          {},
+        )
+        .pipe(map((d: any) => d))
+    );
+  }
+
   async clearEmails(): Promise<any> {
     return firstValueFrom(
       this.http
