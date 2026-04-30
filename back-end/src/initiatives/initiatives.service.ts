@@ -313,7 +313,7 @@ async findAllFull(query: any, req: any) {
       baseQb.andWhere(
         new Brackets((qb) => {
           qb.where('init.last_submitted_at IS NULL')
-            .orWhere('init.last_update_at != init.last_submitted_at');
+            .orWhere('latest_history.createdAt > init.last_submitted_at');
         }),
       );
     } else if (query.status && query.status !== 'Draft') {
@@ -395,6 +395,13 @@ async findAllFull(query: any, req: any) {
       const submission = submissionByInitiative.get(ini.id);
       // This assumes the relation name is "latest_submission"
       (ini as any).latest_submission = submission ?? null;
+
+      // Derive last_update_at from latest_history (single source of truth) so the
+      // list reflects real edit activity, not just the last submission timestamp.
+      const lastHistoryAt = (ini as any).latest_history?.createdAt;
+      if (lastHistoryAt) {
+        (ini as any).last_update_at = lastHistoryAt;
+      }
     }
     let result;
     if(query.status && query.status !== 'Draft')
@@ -597,13 +604,17 @@ async findAllFull(query: any, req: any) {
     template['Program ID'] = element?.official_code;
     template['Program Title'] = element?.name;
     template['Updated by'] = element?.history;
+    const lastUpdate = element?.last_update_at
+      ? new Date(element.last_update_at).getTime()
+      : null;
+    const lastSubmit = element?.last_submitted_at
+      ? new Date(element.last_submitted_at).getTime()
+      : null;
     template['Current status'] =
-      new Date(element.last_submitted_at).getTime() != null &&
-      new Date(element.last_update_at).getTime() ==
-        new Date(element.last_submitted_at).getTime()
-        ? element?.latest_submission
-          ? element?.latest_submission?.status
-          : 'Draft'
+      element?.latest_submission &&
+      lastSubmit != null &&
+      (lastUpdate == null || lastUpdate <= lastSubmit)
+        ? element.latest_submission.status
         : 'Draft';
   }
 

@@ -374,7 +374,7 @@ export class PorbService {
     program_id: number;
     porb_aow_id: number;
     center_id: number;
-  }, emitterSocketId?: string) {
+  }, reqUser?: { id: number }, emitterSocketId?: string) {
     await this.assertNotLocked(data.program_id);
     const existingCount = await this.porbPartnerRepository.count({
       where: {
@@ -395,6 +395,14 @@ export class PorbService {
       partner_outputs: '',
       toc_is_deleted: false,
       is_unknown: true,
+    });
+
+    await this.logHistory({
+      initiative_id: data.program_id,
+      user_id: reqUser?.id,
+      item_name: name,
+      resource_property: 'Add Unknown Partner',
+      organization_id: data.center_id,
     });
 
     this.emitPorbBudgetChanged({
@@ -424,7 +432,7 @@ export class PorbService {
     });
   }
 
-  async resolveUnknownPartner(id: number, clarisa_partner_code: number, emitterSocketId?: string) {
+  async resolveUnknownPartner(id: number, clarisa_partner_code: number, reqUser?: { id: number }, emitterSocketId?: string) {
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) throw new NotFoundException('Partner not found');
     await this.assertNotLocked(partner.program_id);
@@ -437,9 +445,19 @@ export class PorbService {
     if (!clarisaPartner)
       throw new NotFoundException('CLARISA partner not found');
 
+    const oldName = partner.partner_name;
     partner.partner_name = clarisaPartner.name;
     partner.is_unknown = false;
     await this.porbPartnerRepository.save(partner);
+
+    await this.logHistory({
+      initiative_id: partner.program_id,
+      user_id: reqUser?.id,
+      item_name: clarisaPartner.name,
+      resource_property: 'Resolve Unknown Partner',
+      old_value: oldName,
+      new_value: clarisaPartner.name,
+    });
 
     this.emitPorbBudgetChanged({
       program_id: partner.program_id,
@@ -452,19 +470,26 @@ export class PorbService {
     return partner;
   }
 
-  async deleteUnknownPartner(id: number, emitterSocketId?: string) {
+  async deleteUnknownPartner(id: number, reqUser?: { id: number }, emitterSocketId?: string) {
     const partner = await this.porbPartnerRepository.findOne({ where: { id } });
     if (!partner) throw new NotFoundException('Partner not found');
     await this.assertNotLocked(partner.program_id);
     if (!partner.is_unknown && !partner.toc_is_deleted)
       throw new BadRequestException('Can only delete unknown or TOC-deleted partners');
 
-    const { program_id, porb_aow_id } = partner;
+    const { program_id, porb_aow_id, partner_name } = partner;
 
     if (partner.toc_is_deleted) {
       await this.porbContractedPartnerRepository.delete({ porb_partner_id: id });
     }
     await this.porbPartnerRepository.remove(partner);
+
+    await this.logHistory({
+      initiative_id: program_id,
+      user_id: reqUser?.id,
+      item_name: partner_name,
+      resource_property: 'Delete Partner',
+    });
 
     this.emitPorbBudgetChanged({
       program_id,
@@ -477,15 +502,23 @@ export class PorbService {
     return { deleted: true };
   }
 
-  async deleteTocDeletedHlo(id: number, emitterSocketId?: string) {
+  async deleteTocDeletedHlo(id: number, reqUser?: { id: number }, emitterSocketId?: string) {
     const row = await this.porbHloRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('HLO not found');
     await this.assertNotLocked(row.program_id);
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
 
-    const { program_id, center_id, porb_aow_id } = row;
+    const { program_id, center_id, porb_aow_id, hlo_name } = row;
     await this.porbHloRepository.remove(row);
+
+    await this.logHistory({
+      initiative_id: program_id,
+      user_id: reqUser?.id,
+      item_name: hlo_name,
+      resource_property: 'Delete TOC-Deleted HLO',
+      organization_id: center_id,
+    });
 
     this.emitPorbBudgetChanged({
       program_id,
@@ -499,15 +532,23 @@ export class PorbService {
     return { deleted: true };
   }
 
-  async deleteTocDeletedMelia(id: number, emitterSocketId?: string) {
+  async deleteTocDeletedMelia(id: number, reqUser?: { id: number }, emitterSocketId?: string) {
     const row = await this.porbMeliaRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('MELIA not found');
     await this.assertNotLocked(row.program_id);
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
 
-    const { program_id, center_id, porb_aow_id } = row;
+    const { program_id, center_id, porb_aow_id, melia_name } = row;
     await this.porbMeliaRepository.remove(row);
+
+    await this.logHistory({
+      initiative_id: program_id,
+      user_id: reqUser?.id,
+      item_name: melia_name,
+      resource_property: 'Delete TOC-Deleted MELIA',
+      organization_id: center_id,
+    });
 
     this.emitPorbBudgetChanged({
       program_id,
@@ -521,15 +562,23 @@ export class PorbService {
     return { deleted: true };
   }
 
-  async deleteTocDeletedBilateral(id: number, emitterSocketId?: string) {
+  async deleteTocDeletedBilateral(id: number, reqUser?: { id: number }, emitterSocketId?: string) {
     const row = await this.porbBilateralRepository.findOneBy({ id });
     if (!row) throw new NotFoundException('Bilateral not found');
     await this.assertNotLocked(row.program_id);
     if (!row.toc_is_deleted)
       throw new BadRequestException('Can only delete items removed from TOC');
 
-    const { program_id, center_id } = row;
+    const { program_id, center_id, bilateral_name } = row;
     await this.porbBilateralRepository.remove(row);
+
+    await this.logHistory({
+      initiative_id: program_id,
+      user_id: reqUser?.id,
+      item_name: bilateral_name,
+      resource_property: 'Delete TOC-Deleted Bilateral',
+      organization_id: center_id,
+    });
 
     this.emitPorbBudgetChanged({
       program_id,
@@ -1629,6 +1678,19 @@ export class PorbService {
       percentage: data.percentage ?? null,
     });
     const saved = await this.porbCountryPercentageRepository.save(created);
+
+    if (data.percentage != null && Number(data.percentage) !== 0) {
+      await this.logHistory({
+        initiative_id: data.program_id,
+        user_id: reqUser?.id,
+        item_name: data.country_name,
+        resource_property: 'Country Percentage',
+        old_value: '',
+        new_value: String(data.percentage),
+        organization_id: data.center_id,
+      });
+    }
+
     this.emitPorbBudgetChanged({
       program_id: data.program_id,
       center_id: data.center_id,
@@ -1928,6 +1990,19 @@ export class PorbService {
       percentage: data.percentage ?? null,
     });
     const saved = await this.porbLocationBenefitRepository.save(created);
+
+    if (data.percentage != null && Number(data.percentage) !== 0) {
+      await this.logHistory({
+        initiative_id: data.program_id,
+        user_id: reqUser?.id,
+        item_name: data.location_name,
+        resource_property: 'Location of Benefit',
+        old_value: '',
+        new_value: String(data.percentage),
+        organization_id: data.center_id,
+      });
+    }
+
     this.emitPorbBudgetChanged({
       program_id: data.program_id,
       center_id: data.center_id,
@@ -2716,6 +2791,30 @@ export class PorbService {
       assumption: String(data.assumption || ''),
     });
     const saved = await this.porbCrossRepository.save(created);
+
+    if (data.budget != null && Number(data.budget) !== 0) {
+      await this.logHistory({
+        initiative_id: data.program_id,
+        user_id: reqUser?.id,
+        item_name: itemName,
+        resource_property: 'Cross Cutting Budget',
+        old_value: '',
+        new_value: String(data.budget),
+        organization_id: data.center_id,
+      });
+    }
+    if (data.assumption && String(data.assumption).trim() !== '') {
+      await this.logHistory({
+        initiative_id: data.program_id,
+        user_id: reqUser?.id,
+        item_name: itemName,
+        resource_property: 'Cross Cutting Assumption',
+        old_value: '',
+        new_value: String(data.assumption),
+        organization_id: data.center_id,
+      });
+    }
+
     this.emitPorbBudgetChanged({
       program_id: data.program_id,
       center_id: data.center_id,
@@ -5261,22 +5360,21 @@ export class PorbService {
         reload: true,
       });
 
-      // Update initiative with latest submission reference
-      const date = new Date();
-      await this.initiativeRepository.update(programId, {
-        last_update_at: date,
-        last_submitted_at: date,
-        latest_submission_id: saved.id,
-      });
-
-      // Record history entry
+      // Record history entry first so its createdAt becomes the canonical "last update".
       const history = this.historyRepository.create();
       history.resource_property = 'PORB Submit';
       history.user_id = reqUser.id;
       history.initiative_id = programId;
-      await this.historyRepository.save(history);
+      const savedHistory = await this.historyRepository.save(history);
+
+      // Update initiative with latest submission reference. last_update_at mirrors the
+      // submit-history row's timestamp so the list view's status logic stays consistent
+      // (submission status shown when latest history <= submit; "Draft" when newer activity).
       await this.initiativeRepository.update(programId, {
-        latest_history_id: history.id,
+        last_update_at: savedHistory.createdAt,
+        last_submitted_at: savedHistory.createdAt,
+        latest_submission_id: saved.id,
+        latest_history_id: savedHistory.id,
       });
 
       // Send notification emails to admins

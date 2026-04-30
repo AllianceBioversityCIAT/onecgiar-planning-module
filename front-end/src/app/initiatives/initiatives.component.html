@@ -57,11 +57,11 @@
               </th>
               <td mat-cell *matCellDef="let row">
                 <span class="text-s-c-linear">{{
+                  row?.latest_submission &&
                   row.last_submitted_at != null &&
-                  row.last_update_at == row.last_submitted_at
-                    ? row?.latest_submission
-                      ? row?.latest_submission?.status
-                      : "Draft"
+                  (!row.last_update_at ||
+                    row.last_update_at <= row.last_submitted_at)
+                    ? row.latest_submission.status
                     : "Draft"
                 }}</span>
               </td>

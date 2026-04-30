@@ -87,6 +87,7 @@ export class PorbController {
         porb_aow_id: Number(data.porb_aow_id),
         center_id: Number(data.center_id),
       },
+      req.user,
       this.getSocketId(req),
     );
   }
@@ -408,28 +409,29 @@ export class PorbController {
     return this.porbService.resolveUnknownPartner(
       id,
       Number(data.clarisa_partner_code),
+      req.user,
       this.getSocketId(req),
     );
   }
 
   @Delete('partner/:id')
   deleteUnknownPartner(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.porbService.deleteUnknownPartner(id, this.getSocketId(req));
+    return this.porbService.deleteUnknownPartner(id, req.user, this.getSocketId(req));
   }
 
   @Delete('hlo/:id')
   deleteTocDeletedHlo(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.porbService.deleteTocDeletedHlo(id, this.getSocketId(req));
+    return this.porbService.deleteTocDeletedHlo(id, req.user, this.getSocketId(req));
   }
 
   @Delete('melia/:id')
   deleteTocDeletedMelia(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.porbService.deleteTocDeletedMelia(id, this.getSocketId(req));
+    return this.porbService.deleteTocDeletedMelia(id, req.user, this.getSocketId(req));
   }
 
   @Delete('bilateral/:id')
   deleteTocDeletedBilateral(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.porbService.deleteTocDeletedBilateral(id, this.getSocketId(req));
+    return this.porbService.deleteTocDeletedBilateral(id, req.user, this.getSocketId(req));
   }
 
   @Patch('partner/:id')
