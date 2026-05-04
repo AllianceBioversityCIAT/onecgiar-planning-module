@@ -2116,8 +2116,47 @@ export class PorbService {
         location_type: data.location_type,
       },
     });
+
+    // Only treat the row as a real duplicate if it's currently visible to the user.
+    // A row is visible when is_manual=true, or when an active (non-toc-deleted) outcome
+    // for this AOW still includes this location in its outcome_geo. Rows that fail both
+    // checks are orphans from a previous TOC state — promote them back to manual instead
+    // of erroring, so the user can re-add the location.
     if (existing) {
-      throw new BadRequestException('Location already exists for this AOW and center.');
+      let isLive = existing.is_manual;
+      if (!isLive) {
+        const outcomes = await this.porbOutcomeRepository.find({
+          where: { program_id: data.program_id, porb_aow_id: data.porb_aow_id, toc_is_deleted: false },
+        });
+        const targetKey = `${data.location_type}::${data.location_name}`;
+        outer: for (const outcome of outcomes) {
+          if (!outcome.outcome_geo) continue;
+          for (const loc of this.parseOutcomeGeo(outcome.outcome_geo)) {
+            if (`${loc.type}::${loc.name}` === targetKey) {
+              isLive = true;
+              break outer;
+            }
+          }
+        }
+      }
+
+      if (isLive) {
+        throw new BadRequestException('Location already exists for this AOW and center.');
+      }
+
+      await this.porbLocationBenefitRepository.update(existing.id, { is_manual: true });
+      const refreshed = await this.porbLocationBenefitRepository.findOne({ where: { id: existing.id } });
+
+      this.emitPorbBudgetChanged({
+        program_id: data.program_id,
+        center_id: data.center_id,
+        aow_id: data.porb_aow_id,
+        section: 'location-benefit',
+        type: 'add',
+        emitter_socket_id: emitterSocketId,
+      });
+
+      return refreshed;
     }
 
     const created = this.porbLocationBenefitRepository.create({
