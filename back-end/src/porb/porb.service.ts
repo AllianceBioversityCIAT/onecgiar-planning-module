@@ -6157,7 +6157,7 @@ export class PorbService {
    * Load all data needed for Excel generation, build workbook, return as sheets.
    */
   private async buildPorbWorkbook(programId: number, centerId?: any) {
-    const [aows, hlos, partners, bilaterals, melias, summaryData, countryPercentageRows, locationBenefitRows] = await Promise.all([
+    const [aows, hlos, partners, bilaterals, melias, summaryData, rawCountryPercentageRows, rawLocationBenefitRows, outcomesForExport] = await Promise.all([
       this.getAows(programId),
       this.getHlos(programId, undefined, centerId),
       this.getPartners(programId, undefined, centerId),
@@ -6170,7 +6170,52 @@ export class PorbService {
       this.porbLocationBenefitRepository.find({
         where: { program_id: programId, ...(centerId != null ? { center_id: centerId } : {}) },
       }),
+      this.porbOutcomeRepository.find({
+        where: { program_id: programId, toc_is_deleted: false },
+      }),
     ]);
+
+    // Filter out orphan rows (UI hides these; export should match).
+    // A country row is live if is_manual=true OR its country is in the current
+    // hlo_geo for that (center, AOW). A location row is live if is_manual=true OR
+    // its (type, name) is in an active outcome's outcome_geo for that AOW.
+    const liveCountriesByCenterAow = new Map<string, Set<string>>();
+    for (const hlo of hlos as any[]) {
+      if (!hlo?.hlo_geo || hlo.center_id == null || hlo.porb_aow_id == null) continue;
+      const key = `${hlo.center_id}::${hlo.porb_aow_id}`;
+      let set = liveCountriesByCenterAow.get(key);
+      if (!set) {
+        set = new Set<string>();
+        liveCountriesByCenterAow.set(key, set);
+      }
+      for (const c of String(hlo.hlo_geo).split(', ')) {
+        const trimmed = c.trim();
+        if (trimmed) set.add(trimmed);
+      }
+    }
+    const countryPercentageRows = rawCountryPercentageRows.filter((row) => {
+      if (row.is_manual) return true;
+      if (row.center_id == null || row.porb_aow_id == null) return false;
+      return !!liveCountriesByCenterAow.get(`${row.center_id}::${row.porb_aow_id}`)?.has(row.country_name);
+    });
+
+    const liveLocationsByAow = new Map<number, Set<string>>();
+    for (const outcome of outcomesForExport) {
+      if (!outcome?.outcome_geo || outcome.porb_aow_id == null) continue;
+      let set = liveLocationsByAow.get(outcome.porb_aow_id);
+      if (!set) {
+        set = new Set<string>();
+        liveLocationsByAow.set(outcome.porb_aow_id, set);
+      }
+      for (const loc of this.parseOutcomeGeo(outcome.outcome_geo)) {
+        set.add(`${loc.type}::${loc.name}`);
+      }
+    }
+    const locationBenefitRows = rawLocationBenefitRows.filter((row) => {
+      if (row.is_manual) return true;
+      if (row.porb_aow_id == null) return false;
+      return !!liveLocationsByAow.get(row.porb_aow_id)?.has(`${row.location_type}::${row.location_name}`);
+    });
 
     const aowMap = new Map<number, { code: string; name: string }>();
     if (Array.isArray(aows)) {
