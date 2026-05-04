@@ -1017,7 +1017,15 @@ export class PorbService {
   }
 
   async getValidation(program_id: number, porb_aow_id?: number, center_id?: number) {
-    const sectionNames = ['Pool funding HLO', 'Partners', 'MELIA Study', 'Anaplan', 'Cross Cutting'];
+    const sectionNames = [
+      'Pool funding HLO',
+      'Partners',
+      'MELIA Study',
+      'Anaplan',
+      'Cross Cutting',
+      'Countries of Implementation',
+      'Location of Benefit',
+    ];
     const emptyResult: Record<string, { hasError: boolean; message: string; partnerMismatch?: boolean; pooledMismatch?: boolean }> = {};
     sectionNames.forEach((name) => {
       emptyResult[name] = { hasError: false, message: '' };
@@ -1027,7 +1035,17 @@ export class PorbService {
       return emptyResult;
     }
 
-    const [hlos, partners, contractedRows, meliaRows, crossRows, selectedAow] = await Promise.all([
+    const [
+      hlos,
+      partners,
+      contractedRows,
+      meliaRows,
+      crossRows,
+      selectedAow,
+      countryPctRows,
+      locationBenefitRows,
+      outcomesForAow,
+    ] = await Promise.all([
       this.porbHloRepository.find({
         where: { program_id, porb_aow_id, center_id },
       }),
@@ -1044,6 +1062,15 @@ export class PorbService {
         where: { program_id, porb_aow_id, center_id },
       }),
       this.porbAowRepository.findOne({ where: { id: porb_aow_id } }),
+      this.porbCountryPercentageRepository.find({
+        where: { program_id, porb_aow_id, center_id },
+      }),
+      this.porbLocationBenefitRepository.find({
+        where: { program_id, porb_aow_id, center_id },
+      }),
+      this.porbOutcomeRepository.find({
+        where: { program_id, porb_aow_id, toc_is_deleted: false },
+      }),
     ]);
 
     const hasAssumption = (value: any) => String(value ?? '').trim().length > 0;
@@ -1209,6 +1236,52 @@ export class PorbService {
           ? `${crossMissing} row(s) have budget but missing assumption.`
           : '',
     };
+
+    // Rule 15: Countries of Implementation — total % per (center, AOW) must equal 0 or 100.
+    // Mirror getCountryPercentage's "live row" filter so orphan rows (hidden in UI) don't
+    // produce phantom errors users can't see/fix.
+    const liveCountries = new Set<string>();
+    for (const hlo of hlos) {
+      if (!hlo?.hlo_geo) continue;
+      for (const c of hlo.hlo_geo.split(', ')) {
+        const trimmed = c.trim();
+        if (trimmed) liveCountries.add(trimmed);
+      }
+    }
+    const liveCountryPctTotal = countryPctRows
+      .filter((r) => r.is_manual || liveCountries.has(r.country_name))
+      .reduce((sum, r) => sum + (Number(r.percentage) || 0), 0);
+    const countryPctRounded = Math.round(liveCountryPctTotal * 100) / 100;
+    emptyResult['Countries of Implementation'] = {
+      hasError: countryPctRounded !== 0 && countryPctRounded !== 100,
+      message:
+        countryPctRounded !== 0 && countryPctRounded !== 100
+          ? `Total percentage must be exactly 100% (or 0% if not used). Current total: ${countryPctRounded}%.`
+          : '',
+    };
+
+    // Rule 16: Location of Benefit — same rule.
+    const liveLocationKeys = new Set<string>();
+    for (const outcome of outcomesForAow) {
+      if (!outcome?.outcome_geo) continue;
+      for (const loc of this.parseOutcomeGeo(outcome.outcome_geo)) {
+        liveLocationKeys.add(`${loc.type}::${loc.name}`);
+      }
+    }
+    const liveLocationPctTotal = locationBenefitRows
+      .filter(
+        (r) => r.is_manual || liveLocationKeys.has(`${r.location_type}::${r.location_name}`),
+      )
+      .reduce((sum, r) => sum + (Number(r.percentage) || 0), 0);
+    const locationPctRounded = Math.round(liveLocationPctTotal * 100) / 100;
+    emptyResult['Location of Benefit'] = {
+      hasError: locationPctRounded !== 0 && locationPctRounded !== 100,
+      message:
+        locationPctRounded !== 0 && locationPctRounded !== 100
+          ? `Total percentage must be exactly 100% (or 0% if not used). Current total: ${locationPctRounded}%.`
+          : '',
+    };
+
     return emptyResult;
   }
 
