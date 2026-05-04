@@ -56,8 +56,9 @@ export class CountryPercentageSectionComponent implements OnChanges {
     }).format(total);
   }
 
-  get isOverLimit(): boolean {
-    return this.totalPercentage > 100;
+  get isInvalidTotal(): boolean {
+    const rounded = Math.round(this.totalPercentage * 100) / 100;
+    return rounded !== 0 && rounded !== 100;
   }
 
   getComputedBudget(row: any): number {
@@ -76,22 +77,7 @@ export class CountryPercentageSectionComponent implements OnChanges {
       return;
     }
 
-    // Cap individual value to 100
-    let pct = this.parsePercentageValue(row.percentage);
-    if (pct != null && pct > 100) {
-      pct = 100;
-      row.percentage = 100;
-    }
-    if (pct != null && pct < 0) {
-      pct = 0;
-      row.percentage = 0;
-    }
-
-    // Block if total exceeds 100
-    if (this.totalPercentage > 100) {
-      row.percentage = null;
-      return;
-    }
+    const pct = this.parsePercentageValue(row.percentage);
 
     const savingKey = String(row.country_name);
     this.errorIds.delete(savingKey);

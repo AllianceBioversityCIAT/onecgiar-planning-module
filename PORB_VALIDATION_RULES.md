@@ -188,6 +188,32 @@ Every rule has 5 parts:
 
 ---
 
+### Rule 15 — Country of Implementation: Total percentage must be exactly 100% (or 0%)
+
+| Field | Description |
+|-------|-------------|
+| **Section** | Country of Implementation |
+| **Rule** | For each center + AOW, the sum of country percentages must equal exactly 100%, or be 0% (nothing entered). Any other total (e.g., 80%, 105%) is invalid. |
+| **What the user sees** | The total cell shows a red badge with a tooltip and a warning message: "Total percentage must be exactly 100% (or 0% if not used)." Red error icons appear on the AOW and center tabs. The user's input value is preserved — nothing is reset or clamped. |
+| **Prevents Mark As Complete?** | Yes |
+| **Blocks submit?** | **Yes** |
+| **Notes** | Only "live" rows count toward the total — countries currently present in the HLO geographic location for that center+AOW, plus manually-added countries (AOW00 only). Orphan rows are hidden from the UI and excluded from the validation. |
+
+---
+
+### Rule 16 — Location of Benefit: Total percentage must be exactly 100% (or 0%)
+
+| Field | Description |
+|-------|-------------|
+| **Section** | Location of Benefit |
+| **Rule** | For each center + AOW, the sum of location percentages must equal exactly 100%, or be 0% (nothing entered). Any other total is invalid. |
+| **What the user sees** | The total cell shows a red badge with a tooltip and a warning message: "Total percentage must be exactly 100% (or 0% if not used)." Red error icons appear on the AOW and center tabs. The user's input value is preserved — nothing is reset or clamped. |
+| **Prevents Mark As Complete?** | Yes |
+| **Blocks submit?** | **Yes** |
+| **Notes** | Only "live" rows count toward the total — locations currently present in the outcomes' `outcome_geo` for that AOW, plus manually-added locations. Orphan rows are hidden from the UI and excluded from the validation. |
+
+---
+
 ## Quick Reference
 
 | # | Section | What is checked | Prevents Mark As Complete? | Blocks submit? |
@@ -206,6 +232,8 @@ Every rule has 5 parts:
 | 12 | Partners | Partners budget must match Anaplan "Collaborators non-CGIAR Centers" | Yes | **Yes** |
 | 13 | Submission | Total AOW budgets in Anaplan must match total AOW budgets in PORB | Yes | **Yes** |
 | 14 | All budget sections | Whole numbers only — no decimals allowed | Yes | N/A (prevented at input) |
+| 15 | Country of Implementation | Total percentage per center+AOW must be exactly 100% or 0% | Yes | **Yes** |
+| 16 | Location of Benefit | Total percentage per center+AOW must be exactly 100% or 0% | Yes | **Yes** |
 
 ---
 

@@ -56,8 +56,9 @@ export class LocationBenefitSectionComponent implements OnChanges {
     }).format(total);
   }
 
-  get isOverLimit(): boolean {
-    return this.totalPercentage > 100;
+  get isInvalidTotal(): boolean {
+    const rounded = Math.round(this.totalPercentage * 100) / 100;
+    return rounded !== 0 && rounded !== 100;
   }
 
   getComputedBudget(row: any): number {
@@ -90,20 +91,7 @@ export class LocationBenefitSectionComponent implements OnChanges {
       return;
     }
 
-    let pct = this.parsePercentageValue(row.percentage);
-    if (pct != null && pct > 100) {
-      pct = 100;
-      row.percentage = 100;
-    }
-    if (pct != null && pct < 0) {
-      pct = 0;
-      row.percentage = 0;
-    }
-
-    if (this.totalPercentage > 100) {
-      row.percentage = null;
-      return;
-    }
+    const pct = this.parsePercentageValue(row.percentage);
 
     const savingKey = `${row.location_name}::${row.location_type}`;
     this.errorIds.delete(savingKey);

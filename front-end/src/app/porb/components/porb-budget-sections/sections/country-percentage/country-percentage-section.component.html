@@ -26,7 +26,7 @@
       <tbody>
         <tr
           *ngFor="let row of filteredRows"
-          [class.row-error]="isOverLimit"
+          [class.row-error]="isInvalidTotal"
         >
           <td class="row-title">{{ row.country_name }}</td>
           <td class="num-cell">
@@ -68,17 +68,17 @@
 
         <tr class="subtotal-row" *ngIf="filteredRows.length">
           <td class="subtotal-label">Total</td>
-          <td class="num-cell" [class.over-limit]="isOverLimit">
+          <td class="num-cell" [class.over-limit]="isInvalidTotal">
             {{ totalPercentage | number:'1.0-2' }}%
-            <span *ngIf="isOverLimit" class="over-limit-badge" matTooltip="Total percentage exceeds 100%">!</span>
+            <span *ngIf="isInvalidTotal" class="over-limit-badge" matTooltip="Total percentage must be exactly 100% (or 0% if not used)">!</span>
           </td>
           <td *ngIf="isAow00"></td>
         </tr>
       </tbody>
     </table>
 
-    <div class="validation-warning" *ngIf="isOverLimit">
-      Total percentage exceeds 100%. Please adjust values.
+    <div class="validation-warning" *ngIf="isInvalidTotal">
+      Total percentage must be exactly 100% (or 0% if not used). Current total: {{ totalPercentage | number:'1.0-2' }}%.
     </div>
   </div>
 

@@ -1218,7 +1218,20 @@ export class PorbService {
     const aowErrorIds = new Set<number>();
     const includeAowForCenter = center_id != null;
 
-    const [hlos, bilaterals, melias, partners, contractedRows, crossRows, anaplanRows, anaplanAccounts, aows] = await Promise.all([
+    const [
+      hlos,
+      bilaterals,
+      melias,
+      partners,
+      contractedRows,
+      crossRows,
+      anaplanRows,
+      anaplanAccounts,
+      aows,
+      countryPctRows,
+      locationBenefitRows,
+      outcomes,
+    ] = await Promise.all([
       this.porbHloRepository.find({ where: { program_id } }),
       this.porbBilateralRepository.find({ where: { program_id } }),
       this.porbMeliaRepository.find({ where: { program_id } }),
@@ -1228,6 +1241,9 @@ export class PorbService {
       this.porbAnaplanRepository.find({ where: { program_id } }),
       this.anaplanRepository.find(),
       this.porbAowRepository.find({ where: { program_id } }),
+      this.porbCountryPercentageRepository.find({ where: { program_id } }),
+      this.porbLocationBenefitRepository.find({ where: { program_id } }),
+      this.porbOutcomeRepository.find({ where: { program_id, toc_is_deleted: false } }),
     ]);
 
     const hasAssumption = (value: any) => String(value ?? '').trim().length > 0;
@@ -1402,6 +1418,78 @@ export class PorbService {
         : 0;
       if (totalAnaplan !== totalHlo + totalCross) {
         pushError(cId, aowId);
+      }
+    }
+
+    // --- Rule 15: Country of Implementation percentage total per (center, AOW) must be 0 or 100 ---
+    // Mirror getCountryPercentage's "live row" filter: HLO-derived (country in current
+    // hlo_geo for that center+AOW) or is_manual. Orphan rows are hidden in the UI, so
+    // counting them would surface phantom errors users can't see/fix.
+    const liveCountriesByCenterAow = new Map<string, Set<string>>();
+    for (const hlo of hlos) {
+      if (!hlo?.hlo_geo || hlo.center_id == null || hlo.porb_aow_id == null) continue;
+      const key = `${hlo.center_id}::${hlo.porb_aow_id}`;
+      let set = liveCountriesByCenterAow.get(key);
+      if (!set) {
+        set = new Set<string>();
+        liveCountriesByCenterAow.set(key, set);
+      }
+      for (const c of hlo.hlo_geo.split(', ')) {
+        const trimmed = c.trim();
+        if (trimmed) set.add(trimmed);
+      }
+    }
+    const countryPctByCombo = new Map<string, number>();
+    for (const row of countryPctRows) {
+      if (row.center_id == null || row.porb_aow_id == null) continue;
+      const key = `${row.center_id}::${row.porb_aow_id}`;
+      const isLive =
+        row.is_manual ||
+        liveCountriesByCenterAow.get(key)?.has(row.country_name);
+      if (!isLive) continue;
+      countryPctByCombo.set(key, (countryPctByCombo.get(key) ?? 0) + (Number(row.percentage) || 0));
+    }
+    for (const [key, total] of countryPctByCombo) {
+      // 0 is fine (nothing entered); anything else must equal 100.
+      // Rounded to 2 decimals to match the "1.0-2" UI display.
+      const rounded = Math.round(total * 100) / 100;
+      if (rounded !== 0 && rounded !== 100) {
+        const [cIdStr, aowIdStr] = key.split('::');
+        pushError(Number(cIdStr), Number(aowIdStr));
+      }
+    }
+
+    // --- Rule 16: Location of Benefit percentage total per (center, AOW) must be 0 or 100 ---
+    // Mirror getLocationBenefit's "live row" filter: derived from a non-deleted outcome's
+    // outcome_geo for the same (program, aow), or is_manual. Outcomes are not center-scoped,
+    // so the live key set is per AOW only.
+    const liveLocationsByAow = new Map<number, Set<string>>();
+    for (const outcome of outcomes) {
+      if (!outcome?.outcome_geo || outcome.porb_aow_id == null) continue;
+      let set = liveLocationsByAow.get(outcome.porb_aow_id);
+      if (!set) {
+        set = new Set<string>();
+        liveLocationsByAow.set(outcome.porb_aow_id, set);
+      }
+      for (const loc of this.parseOutcomeGeo(outcome.outcome_geo)) {
+        set.add(`${loc.type}::${loc.name}`);
+      }
+    }
+    const locationPctByCombo = new Map<string, number>();
+    for (const row of locationBenefitRows) {
+      if (row.center_id == null || row.porb_aow_id == null) continue;
+      const key = `${row.center_id}::${row.porb_aow_id}`;
+      const isLive =
+        row.is_manual ||
+        liveLocationsByAow.get(row.porb_aow_id)?.has(`${row.location_type}::${row.location_name}`);
+      if (!isLive) continue;
+      locationPctByCombo.set(key, (locationPctByCombo.get(key) ?? 0) + (Number(row.percentage) || 0));
+    }
+    for (const [key, total] of locationPctByCombo) {
+      const rounded = Math.round(total * 100) / 100;
+      if (rounded !== 0 && rounded !== 100) {
+        const [cIdStr, aowIdStr] = key.split('::');
+        pushError(Number(cIdStr), Number(aowIdStr));
       }
     }
 
@@ -1588,47 +1676,6 @@ export class PorbService {
     emitterSocketId?: string,
   ) {
     await this.assertNotLocked(data.program_id);
-    // Cap individual percentage to 0-100
-    if (data.percentage != null) {
-      data.percentage = Math.min(100, Math.max(0, data.percentage));
-    }
-
-    // Validate total doesn't exceed 100% for this center+AOW.
-    // Match the read path (getCountryPercentage): only count rows that are
-    // currently "live" — i.e. HLO-derived (country in current hlo_geo) or is_manual.
-    // Orphaned non-manual rows (country no longer in any HLO geo) are hidden in
-    // the UI, so counting them would produce phantom 100%-blocks.
-    const [allRows, hlos] = await Promise.all([
-      this.porbCountryPercentageRepository.find({
-        where: {
-          program_id: data.program_id,
-          porb_aow_id: data.porb_aow_id,
-          center_id: data.center_id,
-        },
-      }),
-      this.porbHloRepository.find({
-        where: {
-          program_id: data.program_id,
-          porb_aow_id: data.porb_aow_id,
-          center_id: data.center_id,
-        },
-      }),
-    ]);
-    const liveCountries = new Set<string>();
-    for (const hlo of hlos) {
-      if (!hlo.hlo_geo) continue;
-      for (const c of hlo.hlo_geo.split(', ')) {
-        const trimmed = c.trim();
-        if (trimmed) liveCountries.add(trimmed);
-      }
-    }
-    const otherTotal = allRows
-      .filter((r) => r.country_name !== data.country_name)
-      .filter((r) => r.is_manual || liveCountries.has(r.country_name))
-      .reduce((sum, r) => sum + (Number(r.percentage) || 0), 0);
-    if ((data.percentage || 0) + otherTotal > 100) {
-      throw new BadRequestException('Total percentage cannot exceed 100%.');
-    }
 
     const existing = await this.porbCountryPercentageRepository.findOne({
       where: {
@@ -1902,43 +1949,6 @@ export class PorbService {
     emitterSocketId?: string,
   ) {
     await this.assertNotLocked(data.program_id);
-
-    // Cap individual percentage to 0-100
-    if (data.percentage != null) {
-      data.percentage = Math.min(100, Math.max(0, data.percentage));
-    }
-
-    // Validate total doesn't exceed 100% for this center+AOW.
-    // Match the read path (getLocationBenefit): only count rows that are
-    // currently "live" — i.e. derived from a non-deleted outcome's outcome_geo
-    // for this (program, aow), or is_manual. Orphaned non-manual rows are
-    // hidden in the UI, so counting them would produce phantom 100%-blocks.
-    const [allRows, outcomes] = await Promise.all([
-      this.porbLocationBenefitRepository.find({
-        where: {
-          program_id: data.program_id,
-          porb_aow_id: data.porb_aow_id,
-          center_id: data.center_id,
-        },
-      }),
-      this.porbOutcomeRepository.find({
-        where: { program_id: data.program_id, porb_aow_id: data.porb_aow_id, toc_is_deleted: false },
-      }),
-    ]);
-    const liveKeys = new Set<string>();
-    for (const outcome of outcomes) {
-      if (!outcome.outcome_geo) continue;
-      for (const loc of this.parseOutcomeGeo(outcome.outcome_geo)) {
-        liveKeys.add(`${loc.type}::${loc.name}`);
-      }
-    }
-    const otherTotal = allRows
-      .filter((r) => !(r.location_name === data.location_name && r.location_type === data.location_type))
-      .filter((r) => r.is_manual || liveKeys.has(`${r.location_type}::${r.location_name}`))
-      .reduce((sum, r) => sum + (Number(r.percentage) || 0), 0);
-    if ((data.percentage || 0) + otherTotal > 100) {
-      throw new BadRequestException('Total percentage cannot exceed 100%.');
-    }
 
     const existing = await this.porbLocationBenefitRepository.findOne({
       where: {
