@@ -3496,7 +3496,40 @@ export class PorbService {
     for (const item of outputNodes) {
       const parentAow = resolveParentAow(item?.group, item?.parent_id);
       const outputId = String(item?.id || '');
+      // TOC sometimes emits the same indicator id multiple times under one OUTPUT,
+      // once per country, each copy carrying `countries: [<one>]` and an identical
+      // `targets[]` array. Merging them before the loop is required so that:
+      //   (a) hlo_geo unions countries across all copies (otherwise only the first
+      //       country survives — the inner loop never updates geo on subsequent hits),
+      //   (b) hlo_target isn't multiplied by the duplicate count (the inner loop
+      //       sums target × center occurrences, which legitimately handles repeated
+      //       center groups but wrongly multiplies when entire indicator copies repeat).
+      const mergedIndicators = new Map<string, any>();
       for (const indicator of item?.quantitative_indicators || []) {
+        const indicatorId = String(indicator?.id || '');
+        if (!indicatorId) continue;
+        const existing = mergedIndicators.get(indicatorId);
+        if (!existing) {
+          mergedIndicators.set(indicatorId, {
+            ...indicator,
+            countries: Array.isArray(indicator?.countries) ? [...indicator.countries] : [],
+          });
+          continue;
+        }
+        // Union countries by `code` (fall back to `isoAlpha2`/`name`) to keep the
+        // surviving country list unique. `targets[]` is identical across copies, so
+        // we keep the first one — re-iterating duplicates would double-count.
+        const seen = new Set<string>(
+          (existing.countries || []).map((c: any) => String(c?.code ?? c?.isoAlpha2 ?? c?.name ?? '')),
+        );
+        for (const c of indicator?.countries || []) {
+          const key = String(c?.code ?? c?.isoAlpha2 ?? c?.name ?? '');
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          existing.countries.push(c);
+        }
+      }
+      for (const indicator of mergedIndicators.values()) {
         for (const target of indicator?.targets || []) {
           // A center can appear in multiple `targets[]` (and even multiple times
           // within one target.centers[]) for the same indicator — each occurrence
